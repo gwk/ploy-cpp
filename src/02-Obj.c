@@ -66,6 +66,11 @@ typedef struct {
   Int i:60; // shifted int value or ignored.
 } Val;
 
+Val mk_Val(Tag t, Int i) {
+  return (Val){.t=t, .i=i};
+}
+
+
 typedef enum {
   val_tag_managed   = 0,
   val_tag_reserved  = 1,
@@ -79,6 +84,7 @@ typedef enum {
   struct_tag_vec  = 2,
   struct_tag_ext  = 3,
 } Struct_tag;
+
 const U8 struct_tag_mask = 3;
 
 typedef enum {
@@ -87,6 +93,7 @@ typedef enum {
   ref_tag_strong   = 2 << 2,
   ref_tag_weak     = 3 << 2,
 } Ref_tag;
+
 const U8 ref_tag_mask = 3 << 2;
 
 typedef enum {
@@ -112,6 +119,7 @@ typedef struct {
   U32 w:29; // weak count.
   U8  t:3;  // type-specific tag; number of bits constrains possible variants of Word.
 } ALIGNED_TO_WORD RC;
+
 const Uns width_RC = sizeof(RC);
 const Uns max_rcs = max_Uns;
 const Uns max_rcw = (1<<29) - 1;
@@ -128,6 +136,7 @@ typedef struct {
   RC rc;
   Int len;
 } ALIGNED_TO_WORD SH;
+
 const Uns width_SH = sizeof(SH);
 
 // tag bits must be masked off before dereferencing all pointer types.
@@ -262,6 +271,15 @@ void release(Obj o) {
 }
 
 
+Obj alloc_struct(U8 rct, Int width) {
+  Obj s = (Obj) { .p = malloc((Uns)width) };
+  s.rc->s = 1;
+  s.rc->w = 0;
+  s.rc->t = rct;
+  return s;
+}
+
+
 void dealloc(Obj s, Struct_tag st) {
   if (st == struct_tag_vec) {
     Obj* els = el_Vec(s, st);
@@ -275,5 +293,10 @@ void dealloc(Obj s, Struct_tag st) {
      }
   }
   free(s.p);
+}
+
+
+Obj mk_Int(Int i) {
+  return (Obj){.v=mk_Val(val_tag_int, i)};
 }
 
