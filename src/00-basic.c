@@ -14,6 +14,19 @@
 #include <stdlib.h>
 #endif
 
+#if __SIZEOF_POINTER__ == 4
+#define ARCH_32_WORD 1
+#define ARCH_64_WORD 0
+// could also define ARCH_32_WIDE, which would use long long values.
+// this would require conditional typedefs below.
+#elif __SIZEOF_POINTER__ == 8
+#define ARCH_32_WORD 0
+#define ARCH_64_WORD 1
+#else
+#error "unknown alignment"
+#endif
+
+
 typedef unsigned char Byte;
 typedef long Int;
 typedef unsigned long Uns;
@@ -117,12 +130,10 @@ T raw_##T(t0 n0, t1 n1, t2 n2, t3 n3) { (T){.n0=n0, .n1=n1, .n2=n2, .n3=n3}; }
 #define ALIGNED_TO_4 __attribute__((__aligned__(4)))
 #define ALIGNED_TO_8 __attribute__((__aligned__(8)))
 
-#if __SIZEOF_POINTER__ == 4
+#if   ARCH_32_WORD
 #define ALIGNED_TO_WORD ALIGNED_TO_4
-#elif __SIZEOF_POINTER__ == 8
+#elif ARCH_64_WORD
 #define ALIGNED_TO_WORD ALIGNED_TO_8
-#else
-#error "unknown alignment"
 #endif
 
 
