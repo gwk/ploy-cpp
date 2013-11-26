@@ -129,15 +129,15 @@ const Uns max_str_len_med   = max_str_len_small + (1 << 3);
 
 // TODO: short string struct.
 
-// struct header for Array-like objects with variable-length allocations.
+// struct header for objects with large variable-length allocations.
 // len indicates additional allocated bytes (for Str) or words (for Vec).
 // len is declared as Int to preserve the alignment of subsequent words.
 typedef struct {
   RC rc;
   Int len;
-} ALIGNED_TO_WORD SH;
+} ALIGNED_TO_WORD VH;
 
-const Uns width_SH = sizeof(SH);
+const Uns width_VH = sizeof(VH);
 
 // tag bits must be masked off before dereferencing all pointer types.
 typedef union {
@@ -145,7 +145,7 @@ typedef union {
   Uns   u;
   void* p;
   RC*   rc;
-  SH*   sh;
+  VH*   vh;
 } Obj;
 
 
@@ -186,27 +186,27 @@ Obj add_tags(Obj s, Struct_tag st, Ref_tag rt) {
 Int len_Str(Obj s, Struct_tag st) {
   assert_ref_masked(s);
   assert(st == struct_tag_str);
-  return s.rc->t ? s.rc->t + max_str_len_small : s.sh->len;
+  return s.rc->t ? s.rc->t + max_str_len_small : s.vh->len;
 }
 
 Int len_Vec(Obj s, Struct_tag st) {
   assert_ref_masked(s);
   assert(st == struct_tag_vec);
-  return s.rc->t ? s.rc->t + 1 : s.sh->len;
+  return s.rc->t ? s.rc->t + 1 : s.vh->len;
 }
 
 
 Utf8 utf8_ptr(Obj s, Struct_tag st) {
   assert_ref_masked(s);
   check(st == struct_tag_str, "bad struct");
-  return s.rc->t ? (Utf8)(s.rc + 1) : (Utf8)(s.sh + 1);
+  return s.rc->t ? (Utf8)(s.rc + 1) : (Utf8)(s.vh + 1);
 }
 
 
 Obj* el_Vec(Obj s, Struct_tag st) {
   assert_ref_masked(s);
   check(st == struct_tag_vec, "bad struct");
-  return s.rc->t ? (Obj*)(s.rc + 1) : (Obj*)(s.sh + 1);
+  return s.rc->t ? (Obj*)(s.rc + 1) : (Obj*)(s.vh + 1);
 }
 
 
