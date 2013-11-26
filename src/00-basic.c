@@ -114,7 +114,17 @@ T raw_##T(t0 n0, t1 n1, t2 n2, t3 n3) { (T){.n0=n0, .n1=n1, .n2=n2, .n3=n3}; }
 
 // force struct alignment.
 // ex: typedef struct { I32 a, b; } ALIGNED_8 S;
-#define ALIGNED_8 __attribute__((__aligned__(8)))
+#define ALIGNED_TO_4 __attribute__((__aligned__(4)))
+#define ALIGNED_TO_8 __attribute__((__aligned__(8)))
+
+#if __SIZEOF_POINTER__ == 4
+#define ALIGNED_TO_WORD ALIGNED_TO_4
+#elif __SIZEOF_POINTER__ == 8
+#define ALIGNED_TO_WORD ALIGNED_TO_8
+#else
+#error "unknown alignment"
+#endif
+
 
 // suppress unused var warnings.
 #define QK_STRINGIFY(x) #x

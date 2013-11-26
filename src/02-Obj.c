@@ -23,7 +23,7 @@ each ref must be marked as borrowed, strong, or weak.
 rr00: Word: single unmanaged 8-byte word; any of I32, U32, F32, I64, U64, F64.
 rr01: Str.
 rr10: Vec:
-rr11: ? could be 32-byte aligned to gain extra tag bit.
+rr11: Extended.
 
 Special Values: 4 bit (1 nibble) tag, 28/60 bit (7/15 nibble) value.
 the next bit is the short-string bit.
@@ -77,7 +77,7 @@ typedef enum {
   struct_tag_word = 0,
   struct_tag_str  = 1,
   struct_tag_vec  = 2,
-  struct_tag_xxx  = 3,
+  struct_tag_ext  = 3,
 } Struct_tag;
 const U8 struct_tag_mask = 3;
 
@@ -88,6 +88,10 @@ typedef enum {
   ref_tag_weak     = 3 << 2,
 } Ref_tag;
 const U8 ref_tag_mask = 3 << 2;
+
+typedef enum {
+  ext_tag_xxx = 0,
+} Ext_tag;
 
 
 // special value constants.
@@ -107,7 +111,7 @@ typedef struct {
   U32 s;    // strong count.
   U32 w:29; // weak count.
   U8  t:3;  // type-specific tag; number of bits constrains possible variants of Word.
-} ALIGNED_8 RC;
+} ALIGNED_TO_WORD RC;
 const Uns width_RC = sizeof(RC);
 const Uns max_rcs = max_Uns;
 const Uns max_rcw = (1<<29) - 1;
@@ -123,7 +127,7 @@ const Uns max_str_len_med   = max_str_len_small + (1 << 3);
 typedef struct {
   RC rc;
   Int len;
-} ALIGNED_8 SH;
+} ALIGNED_TO_WORD SH;
 const Uns width_SH = sizeof(SH);
 
 // tag bits must be masked off before dereferencing all pointer types.
@@ -190,7 +194,7 @@ Utf8 utf8_ptr(Obj s, Struct_tag st) {
 }
 
 
-Obj* el_ptr(Obj s, Struct_tag st) {
+Obj* el_Vec(Obj s, Struct_tag st) {
   assert_ref_masked(s);
   check(st == struct_tag_vec, "bad struct");
   return s.rc->t ? (Obj*)(s.rc + 1) : (Obj*)(s.sh + 1);
@@ -260,10 +264,15 @@ void release(Obj o) {
 
 void dealloc(Obj s, Struct_tag st) {
   if (st == struct_tag_vec) {
-    Obj* els = el_ptr(s, st);
+    Obj* els = el_Vec(s, st);
     for_in(i, len_Vec(s, st)) {
       release(els[i]);
     }
+  }
+  else if (st == struct_tag_ext) {
+    switch (s.rc->t) {
+      default: break;
+     }
   }
   free(s.p);
 }
