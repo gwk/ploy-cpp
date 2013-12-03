@@ -1,2 +1,13 @@
 build/
 misc/
+
+# Xcode
+xcuserdata
+profile
+project.xcworkspace
+
+# finder
+.DS_Store
+
+# python
+__pycache__

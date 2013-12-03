@@ -1,16 +1,23 @@
-// Copyright 2011 George King.
+static // Copyright 2011 George King.
 // Permission to use this file is granted in ploy/license.txt.
 
-#include "00-basic.c"
+#include "01-basic.c"
 
 
-Bool eq_Utf8(Utf8 a, Utf8 b) {
+// rather than cast between const and mutable bytes, use this union.
+typedef union {
+  BC c;
+  BM m;
+} B;
+
+
+static Bool bc_eq(BC a, BC b) {
   return strcmp(a, b) == 0;
 }
 
 
 // get the base name of the path argument.
-Utf8 path_base(Utf8 path) {
+static BC path_base(BC path) {
   Int offset = 0;
   Int i = 0;
   loop {
@@ -24,13 +31,13 @@ Utf8 path_base(Utf8 path) {
 
 
 // errD prints if vol_err > 0.
-Int vol_err;
+static Int vol_err;
 
 // the name of the current process.
-Utf8 process_name;
+static BC process_name;
 
 // call in main to set process_name.
-void set_process_name(Utf8 arg0) {
+static void set_process_name(BC arg0) {
   process_name = path_base(arg0);
 }
 
@@ -49,10 +56,10 @@ void set_process_name(Utf8 arg0) {
 
 // error macros
 
+#define warn(fmt, ...) errL("warning: " fmt, ## __VA_ARGS__)
+
 #define error(fmt, ...) { \
-  err("%s error: %s:\n", (process_name ? process_name : __FILE__), __FUNCTION__); \
-  err(fmt, ## __VA_ARGS__); \
-  err("\n"); \
+  err("%s error: " fmt "\n", (process_name ? process_name : __FILE__), ## __VA_ARGS__); \
   exit(1); \
 }
 

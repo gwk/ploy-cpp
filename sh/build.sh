@@ -3,7 +3,7 @@
 
 root=$(dirname "$0")/..
 
-"$root"/sh/compile.sh -o "$root"/build/ploy
+"$root"/sh/_compile.sh -o "$root"/build/ploy
 
 
 #-fsanatize=adress,undefined,dataflow

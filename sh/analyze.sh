@@ -3,4 +3,4 @@
 
 root=$(dirname "$0")/..
 
-"$root"/sh/compile.sh --analyze -o "$root"/build/ploy-analysis.plist
+"$root"/sh/_compile.sh --analyze -o "$root"/build/ploy-analysis.plist

@@ -6,15 +6,17 @@
 
 root=$(dirname "$0")/..
 
+if [[ "$#" == 0 ]]; then
+  echo "no arguments; humans use build.sh or parse.sh."
+  exit 1
+fi
+
 clang \
 -std=c11 \
--pedantic \
+-Werror \
 -Weverything \
+-Wno-unused-function \
 -Wno-unused-parameter \
--Wno-unused-macros \
--Wno-missing-variable-declarations \
--Wno-missing-prototypes \
--Wno-vla \
 -Wno-gnu \
 -fstrict-aliasing \
 -fstack-protector \

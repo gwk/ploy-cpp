@@ -3,4 +3,4 @@
 
 root=$(dirname "$0")/..
 
-"$root"/sh/compile.sh -fsyntax-only
+"$root"/sh/_compile.sh -fsyntax-only
