@@ -1,0 +1,5 @@
+{
+  'code' : 1,
+
+  'err' : ('contain', 'tab.stork: 2:1: parsing failed at rules:'),
+}

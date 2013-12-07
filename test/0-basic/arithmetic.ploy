@@ -1,0 +1,9 @@
+(outLL
+  (add 1 2)
+  (sub 2 1)
+  (mul 2 -3)
+  (divi 5 -3)
+  (neg 1)
+  (neg -1)
+  (abs 1)
+  (abs -1))

@@ -1,0 +1,7 @@
+(out 'hi!')
+(out ' this' ' is' ' ')
+(outL 'std' 'out.')
+
+(err 'hi!')
+(err ' this' ' is' ' ')
+(errL 'std' 'err.')

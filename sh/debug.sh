@@ -11,4 +11,4 @@ if ! sh/is-product-current.sh build/ploy ploy.c sh/*; then
   echo "running..."
 fi
 
-build/ploy "$@"
+lldb build/ploy "$@"
