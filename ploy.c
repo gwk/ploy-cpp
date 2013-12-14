@@ -2,7 +2,7 @@
 // Permission to use this file is granted in ploy/license.txt.
 
 
-// exclude the standard libraries when preprocessing the source for brevity (see preprocess.sh)
+// exclude the standard libraries when preprocessing the source for review (see preprocess.sh).
 #ifndef SKIP_LIB_INCLUDES
 #include <assert.h>
 #include <ctype.h>
@@ -397,27 +397,6 @@ static Bool ss_ends_with_char(SS s, Char c) {
 }
 
 
-// return the index of the next occurrence of c, or -1 if not found.
-static Int ss_find_char(SS s, Char c, Int pos) {
-  for_imn(i, pos, s.len) {
-    if (s.b.c[i] == c) {
-      return i;
-    }
-  }
-  return -1;
-}
-
-
-static Int ss_find_char_rev(SS s, Char c, Int pos) {
-  for_imn_rev(i, pos, s.len) {
-    if (s.b.c[i] == c) {
-      return i;
-    }
-  }
-  return -1;
-}
-
-
 // create a substring offset by from.
 static SS ss_from(SS s, Int from) {
   assert(from >= 0);
@@ -441,9 +420,29 @@ static SS ss_slice(SS s, Int from, Int to) {
 }
 
 
+static Int ss_find_line_start(SS s, Int pos) {
+  for_imn_rev(i, pos - 1, s.len) {
+    if (s.b.c[i] == '\n') {
+      return i + 1;
+    }
+  }
+  return 0;
+}
+
+
+static Int ss_find_line_end(SS s, Int pos) {
+  for_imn(i, pos, s.len) {
+    if (s.b.c[i] == '\n') {
+      return i;
+    }
+  }
+  return s.len;
+}
+
+
 static SS ss_line_at_pos(SS s, Int pos) {
-  Int from = ss_find_char_rev(s, '\n', int_clamp(pos, 0, s.len - 1)) + 1;
-  Int to = ss_find_char(s, '\n', int_clamp(pos, 0, s.len - 1));
+  Int from = ss_find_line_start(s, pos);
+  Int to = ss_find_line_end(s, pos);
   assert(from >= 0);
   if (to < 0) to = s.len;
   errFL("%ld %ld %ld %ld", s.len, pos, from, to);
@@ -537,7 +536,8 @@ static const Int size_UH = sizeof(UH);
 // tagged pointer value mask.
 static const Uns tag_end = 1L << width_tag;
 static const Uns tag_mask = tag_end - 1;
-static const Uns val_mask = ~tag_mask;
+static const Uns body_mask = ~tag_mask;
+static const Uns flt_body_mask = max_Uns - 1;
 static const Int max_Int_tagged  = (1L  << width_tagged_word) - 1;
 static const Uns max_Uns_tagged  = max_Int_tagged;
 
@@ -557,27 +557,29 @@ each ref is tagged as either borrowed, strong, weak, or gc (possible future impl
 Masking out the low tag bits yields a heap pointer, whose low four bits are the struct tag.
 */
 
+// low bit indicates 32/64 bit IEEE 754 float with low bit rounded to even.
+static const Tag ot_flt_bit = 1; // only flt words have low bit set.
+static const Tag ot_unm_mask = 1 << 3; // unmanaged words have high tag bit set.
+static const Tag ot_val_mask = ot_flt_bit | ot_unm_mask; // val words have at least one of these bits set.
+
 typedef enum {
-  ot_managed   = 0,      // 0000; available for use in hosted system on top of ploy.
-  ot_flt_bit   = 1,      // xxx1; (float/double with low fraction bit rounded to even).
-  ot_reserved  = 1 << 1, // 0010
-  ot_int       = 2 << 1, // 0100; (28/60 bit signed int); 28 bits is +/-134M.
-  ot_sym       = 3 << 1, // 0110; interleaved Sym indices and Data-word values.
-  ot_borrowed  = 4 << 1, // 1000; ref is not retained by receiver.
-  ot_strong    = 5 << 1, // 1010; ref is strongly retained by receiver.
-  ot_weak      = 6 << 1, // 1100; ref is weakly reteined by receiver.
-  ot_gc        = 7 << 1, // 1110; reserved for possible future garbace collection implementation.
+  ot_borrowed  = 0 << 1, // ref is not retained by receiver.
+  ot_strong    = 1 << 1, // ref is strongly retained by receiver.
+  ot_weak      = 2 << 1, // ref is weakly reteined by receiver.
+  ot_gc        = 3 << 1, // ref; reserved for possible future garbace collection implementation.
+  ot_int       = 4 << 1, // val; 28/60 bit signed int; 28 bits is +/-134M.
+  ot_sym       = 5 << 1, // val; interleaved Sym indices and Data-word values.
+  ot_reserved0 = 6 << 1, // val.
+  ot_reserved1 = 7 << 1, // val.
 } Obj_tag;
 
-static const Tag ot_ref_bit = 1 << 3;
+
+static void assert_obj_tags_are_valid() {
+  assert(ot_val_mask & ot_int);
+}
+
 
 static BC obj_tag_names[] = {
-  "Managed",
-  "Flt",
-  "Int",
-  "Flt",
-  "Sym",
-  "Flt",
   "Borrowed",
   "Flt",
   "Strong",
@@ -586,8 +588,15 @@ static BC obj_tag_names[] = {
   "Flt",
   "GC",
   "Flt",
+  "Int",
+  "Flt",
+  "Sym",
+  "Flt",
+  "Reserved0",
+  "Flt",
+  "Reserved1",
+  "Flt",
 };
-UNUSED_VAR(obj_tag_names)
 
 
 typedef enum {
@@ -612,13 +621,13 @@ static BC struct_tag_names[] = {
   "U64",
   "F32",
   "F64",
-  "Unknown-struct-tag",
-  "Unknown-struct-tag",
-  "Unknown-struct-tag",
-  "Unknown-struct-tag",
-  "Unknown-struct-tag",
-  "Unknown-struct-tag",
   "Proxy",
+  "Unknown-struct-tag",
+  "Unknown-struct-tag",
+  "Unknown-struct-tag",
+  "Unknown-struct-tag",
+  "Unknown-struct-tag",
+  "Unknown-struct-tag",
   "DEALLOC",
 };
 
@@ -705,6 +714,7 @@ typedef union {
   Int i;
   Uns u;
   Ptr p;
+  Flt f;
   Struct_tag* st;
   //RCH* rch;
   RCW* rcw;
@@ -723,32 +733,43 @@ static void obj_err(Obj o);
 static void obj_errL(Obj o);
 
 
-#define assert_obj_is_strong(o) assert(obj_tag(o) == ot_strong || !(obj_tag(o) & ot_ref_bit))
-
-#define assert_ref_is_valid(r) assert(!obj_tag(r) && (*r.st & tag_mask) != st_DEALLOC)
-
-
-static Bool obj_is_ref(Obj o) {
-  return o.u & ot_ref_bit;
+static Bool obj_is_val(Obj o) {
+  return (o.u & ot_val_mask);
 }
 
 
-static Obj obj_strip_tag(Obj o) {
-  assert(obj_is_ref(o)); // may need to relax this or reimplement for Data-word implementation.
-  return (Obj){ .u = o.u & val_mask };
+static Bool obj_is_ref(Obj o) {
+  return !obj_is_val(o);
+}
+
+
+static void assert_obj_is_strong(Obj o) {
+  assert(obj_tag(o) == ot_strong || obj_is_val(o));
+}
+
+
+static void assert_ref_is_valid(Obj r) {
+  assert(!obj_tag(r));
+  assert((*r.st & tag_mask) != st_DEALLOC);
 }
 
 
 static Obj ref_add_tag(Obj r, Tag t) {
   assert_ref_is_valid(r);
+  assert(!(t & ot_val_mask)); // t must be a ref tag.
   return (Obj){ .u = r.u | t };
+}
+
+
+static Obj obj_ref_borrow(Obj o) {
+  assert(obj_is_ref(o));
+  return (Obj){ .u = o.u & body_mask };
 }
 
 
 static Obj obj_borrow(Obj o) {
   if (obj_is_ref(o)) {
-    Obj r = obj_strip_tag(o);
-    return ref_add_tag(r, ot_borrowed);
+    return obj_ref_borrow(o);
   }
   else return o;
 }
@@ -760,17 +781,19 @@ static Struct_tag ref_struct_tag(Obj r) {
 }
 
 
-#define assert_ref_is_vec(v)  assert(ref_struct_tag(v) == st_Vec_large)
-#define assert_ref_is_data(d) assert(ref_struct_tag(d) == st_Data_large)
-
 
 static Bool ref_is_vec(Obj r) {
   return ref_struct_tag(r) == st_Vec_large;
 }
 
 
+static Bool ref_is_data(Obj d) {
+  return ref_struct_tag(d) == st_Data_large;
+}
+
+
 static Bool obj_is_vec(Obj o) {
-  return obj_is_ref(o) && ref_is_vec(obj_strip_tag(o));
+  return obj_is_ref(o) && ref_is_vec(obj_ref_borrow(o));
 }
 
 
@@ -782,42 +805,38 @@ static Int ref_large_len(Obj r) {
 
 
 static B data_large_ptr(Obj d) {
-  assert_ref_is_data(d);
+  assert(ref_is_data(d));
   return (B){.m = cast(BM, d.rcwl + 1)}; // address past rcwl.
 }
 
 
 static Obj* vec_large_els(Obj v) {
-  assert_ref_is_vec(v);
+  assert(ref_is_vec(v));
   return cast(Obj*, v.rcwl + 1); // address past rcwl.
 }
 
 
-#define RETURN_IF_OT_VAL(...) \
-if (ot & ot_flt_bit || ot < ot_ref_bit) return __VA_ARGS__ // value; no counting.
+#define IF_OT_IS_VAL_RETURN(...) \
+if (ot & ot_val_mask) return __VA_ARGS__ // value; no counting.
 
 
 static Obj obj_retain_weak(Obj o) {
   Obj_tag ot = obj_tag(o);
-  RETURN_IF_OT_VAL(o);
-  assert(ot == ot_borrowed);
-  Obj r = obj_strip_tag(o);
-  assert_ref_is_valid(r);
-  errFLD("ret weak:  %p %s", r.p, struct_tag_names[ref_struct_tag(r)]);
-  rcw_inc_w(r.rcw);
-  return ref_add_tag(r, ot_weak);
+  IF_OT_IS_VAL_RETURN(o);
+  assert_ref_is_valid(o);
+  errFLD("ret weak:  %p %s", o.p, struct_tag_names[ref_struct_tag(o)]);
+  rcw_inc_w(o.rcw);
+  return ref_add_tag(o, ot_weak);
 }
 
 
 static Obj obj_retain_strong(Obj o) {
   Obj_tag ot = obj_tag(o);
-  RETURN_IF_OT_VAL(o);
-  assert(ot == ot_borrowed);
-  Obj r = obj_strip_tag(o);
-  assert_ref_is_valid(r);
-  errFLD("ret strong:  %p %s", r.p, struct_tag_names[ref_struct_tag(r)]);
-  rcw_inc_s(r.rcw);
-  return ref_add_tag(r, ot_strong);
+  IF_OT_IS_VAL_RETURN(o);
+  assert_ref_is_valid(o);
+  errFLD("ret strong: %p %s", o.p, struct_tag_names[ref_struct_tag(o)]);
+  rcw_inc_s(o.rcw);
+  return ref_add_tag(o, ot_strong);
 }
 
 
@@ -844,10 +863,10 @@ static void ref_release_strong(Obj r) {
 
 static void obj_release(Obj o) {
   Obj_tag ot = obj_tag(o);
-  RETURN_IF_OT_VAL();
-  Obj r = obj_strip_tag(o);
-  assert_ref_is_valid(r);
-  if (ot == ot_weak)        ref_release_weak(r);
+  IF_OT_IS_VAL_RETURN();
+  if (ot == ot_borrowed) return; // or error?
+  Obj r = obj_borrow(o);
+  if (ot == ot_weak) ref_release_weak(r);
   else if (ot == ot_strong) ref_release_strong(r);
   else {
     error("unknown tag: %x", ot);
@@ -953,33 +972,34 @@ static Obj* mem_end(Mem m) {
 }
 
 
-static Obj mem_el_borrow(Mem m, Int i) {
+static Obj mem_el(Mem m, Int i) {
   check_mem_index(m, i);
-  return obj_borrow(m.els[i]);
+  return m.els[i];
 }
 
 
-// TODO: mem_el_strong as optimization?
-
-
-static Int mem_append_strong(Mem* m, Obj o) {
-  assert_obj_is_strong(o);
+static Int mem_append(Mem* m, Obj o) {
   Int i = m->len++;
   m->els[i] = o;
   return i;
 }
 
-/*
-static Int mem_append_borrow(Mem* m, Obj o) {
-  return mem_append_strong(m, obj_retain_strong(o));
-}
-*/
 
-static void mem_free(Mem m) {
+static void mem_release_els(Mem m) {
   for_in(i, m.len) {
     obj_release(m.els[i]);
   }
+}
+
+
+static void mem_free(Mem m) {
   free(m.els);
+}
+
+
+static void mem_release_free(Mem m) {
+  mem_release_els(m);
+  mem_free(m);
 }
 
 
@@ -1026,11 +1046,6 @@ typedef struct {
 #define array0 (Array){.mem=mem0, .cap=0}
 
 
-static void array_free(Array a) {
-  mem_free(a.mem);
-}
-
-
 static bool array_is_valid(Array a) {
   return mem_is_valid(a.mem) && a.cap >= 0 && a.mem.len <= a.cap;
 }
@@ -1051,21 +1066,16 @@ static void array_grow_cap(Array* a) {
 }
 
 
-static Int array_append_strong(Array* a, Obj o) {
+static Int array_append(Array* a, Obj o) {
   if (a->mem.len == a->cap) {
     array_grow_cap(a);
   }
-  return mem_append_strong(&a->mem, o);
+  return mem_append(&a->mem, o);
 }
 
-/*
-static Int array_append_borrow(Array* a, Obj o) {
-  return array_append_strong(a, obj_retain_strong(o));
-}
-*/
 
-static Obj array_el_borrow(Array a, Int i) {
-  return mem_el_borrow(a.mem, i);
+static Obj array_el(Array a, Int i) {
+  return mem_el(a.mem, i);
 }
 
 
@@ -1156,8 +1166,9 @@ static Obj new_vec(Mem m) {
   v.rcwl->len = m.len;
   Obj* p = vec_large_els(v);
   for_in(i, m.len) {
-    Obj el = mem_el_borrow(m, i);
-    p[i] = obj_retain_strong(el);
+    Obj el = mem_el(m, i);
+    assert_obj_is_strong(el);
+    p[i] = el;
   }
   return ref_add_tag(v, ot_strong);
 }
@@ -1172,16 +1183,17 @@ static Obj new_v2(Obj a, Obj b) {
 static Obj new_chain(Mem m) {
   Obj c = E;
   for_in_rev(i, m.len) {
-    Obj el = mem_el_borrow(m, i);
-    c = new_v2(obj_retain_strong(el), c);
+    Obj el = mem_el(m, i);
+    c = new_v2(el, c);
   }
+  //obj_errL(c);
   return c;
 }
 
 
 static Obj new_sym(SS s) {
   Obj d = new_data(s);
-  Int i = array_append_strong(&global_sym_names, d);
+  Int i = array_append(&global_sym_names, d);
   return sym_with_index(i);
 }
 
@@ -1218,20 +1230,28 @@ static Int int_val(Obj i) {
 
 static Obj sym_data_borrow(Obj s) {
   assert(obj_tag(s) == ot_sym);
-  return mem_el_borrow(global_sym_names.mem, sym_index(s));
+  return obj_borrow(mem_el(global_sym_names.mem, sym_index(s)));
 }
 
 
 static void data_write(Obj d, File f) {
-  assert_ref_is_data(d);
+  assert(ref_is_data(d));
   Uns l = cast(Uns, d.rcwl->len);
   Uns n = fwrite(data_large_ptr(d).c, 1, l, f);
   check(n == l, "data_write failed.");
 }
 
 
-static Obj vec_last(Obj v) {
-  assert_ref_is_vec(v);
+static Obj vec_hd(Obj v) {
+  assert(ref_is_vec(v));
+  Obj* els = vec_large_els(v);
+  Obj el = els[0];
+  return obj_borrow(el);
+}
+
+
+static Obj vec_tl(Obj v) {
+  assert(ref_is_vec(v));
   Obj* els = vec_large_els(v);
   Int len = ref_large_len(v);
   Obj el = els[len - 1];
@@ -1240,12 +1260,12 @@ static Obj vec_last(Obj v) {
 
 
 static Bool vec_is_chain(Obj v) {
-  assert_ref_is_vec(v);
+  assert(ref_is_vec(v));
   loop {
-    Obj last = vec_last(v);
+    Obj last = vec_tl(v);
     if (last.u == E.u) return true;
     if (!obj_is_ref(last)) return false;
-    Obj r = obj_strip_tag(last);
+    Obj r = obj_ref_borrow(last);
     if (ref_struct_tag(r) != st_Vec_large) return false;
     v = r;
   }
@@ -1262,7 +1282,7 @@ static void data_err(Obj d) {
 
 
 static void chain_err_els(Obj c) {
-  assert_ref_is_vec(c);
+  assert(ref_is_vec(c));
   Bool first = true;
   loop {
     Obj* els = vec_large_els(c);
@@ -1277,21 +1297,29 @@ static void chain_err_els(Obj c) {
     Obj last = els[len - 1];
     if (last.u == E.u) return;
     assert(obj_is_vec(last));
-    c = obj_strip_tag(last);
+    c = obj_ref_borrow(last);
   }
 }
 
 
 static void chain_err(Obj c) {
-  assert_ref_is_vec(c);
-  err("[");
-  chain_err_els(c);
-  err("]");
+  assert(ref_is_vec(c));
+  Obj hd = vec_hd(c);
+  if (hd.u == QUO.u && ref_large_len(c) == 2 && obj_is_vec(vec_tl(c))) {
+    err("[");
+    chain_err_els(vec_tl(c));
+    err("]");
+  }
+  else {
+    err("(");
+    chain_err_els(c);
+    err(")");
+  }
 }
 
 
 static void vec_err(Obj v) {
-  assert_ref_is_vec(v);
+  assert(ref_is_vec(v));
   if (vec_is_chain(v)) {
     chain_err(v);
     return;
@@ -1309,23 +1337,25 @@ static void vec_err(Obj v) {
 static void obj_err(Obj o) {
   Obj_tag ot = obj_tag(o);
   if (ot & ot_flt_bit) {
-    err("(Flt?)");
-  }
-  else if (ot == ot_managed) {
-    errF("%p", o.p);
-  }
-  else if (ot == ot_reserved) {
-    err("(Reserved?)");
+    Obj f = o;
+    f.u &= flt_body_mask;
+    errF("(Flt %f)", f.f);
   }
   else if (ot == ot_int) {
     errF("%ld", int_val(o));
   }
   else if (ot == ot_sym) {
     Obj s = sym_data_borrow(o);
-    data_write(obj_strip_tag(s), stderr);
+    data_write(s, stderr);
+  }
+  else if (ot == ot_reserved0) {
+    errF("(reserved0 %p)", o.p);
+  }
+  else if (ot == ot_reserved1) {
+    errF("(reserved1 %p)", o.p);
   }
   else {
-    Obj r = obj_strip_tag(o);
+    Obj r = obj_ref_borrow(o);
     switch (ref_struct_tag(r)) {
       case st_Data_large: data_err(r);      break;
       case st_Vec_large:  vec_err(r);       break;
@@ -1346,6 +1376,20 @@ static void obj_err(Obj o) {
 static void obj_errL(Obj o) {
   obj_err(o);
   err_nl();
+}
+
+
+static void obj_err_tag(Obj o) {
+  BC otn = obj_tag_names[obj_tag(o)];
+  err(otn);
+}
+
+
+void dbg(Obj o);
+void dbg(Obj o) {
+  obj_err_tag(o);
+  err(" : ");
+  obj_errL(o);
 }
 
 
@@ -1379,7 +1423,7 @@ static Bool char_is_atom_term(Char c) {
 
 
 static void parser_err(Parser* p) {
-  errF("%s:%ld:%ld (%ld): ", p->path.b.c, p->line, p->col, p->pos);
+  errF("%s:%ld:%ld (%ld): ", p->path.b.c, p->line + 1, p->col + 1, p->pos);
   if (p->e) errF("(error: %s): ", p->e);
 }
 
@@ -1417,7 +1461,7 @@ if (!(condition)) return parse_error(p, fmt, ##__VA_ARGS__)
 #define PC1 p->src.b.c[p->pos + 1]
 #define PC2 p->src.b.c[p->pos + 2]
 
-#define P_ADV(n) p->pos += n; p->col += n
+#define P_ADV(n) { p->pos += n; p->col += n; }
 #define P_ADV1 P_ADV(1)
 
 
@@ -1440,14 +1484,16 @@ static U64 parse_U64(Parser* p) {
       base = 10;
     }
   }
+  BC start = p->src.b.c + p->pos;
   BM end;
-  U64 u = strtoull(p->src.b.c + p->pos, &end, base);
+  U64 u = strtoull(start, &end, base);
   int en = errno;
   if (en) {
     parse_error(p, "malformed number literal: %s", strerror(en));
     return 0;
   }
-  Int n = end - p->src.b.c;
+  assert(end > start); // strtoull man page is a bit confusing as to the precise semantics.
+  Int n = end - start;
   P_ADV(n);
   if (PP && !char_is_atom_term(PC)) {
     parse_error(p, "invalid number literal terminator: %c", PC);
@@ -1543,6 +1589,7 @@ static Obj parse_expr(Parser* p);
 static Bool parse_space(Parser* p) {
   while (PP) {
     Char c = PC;
+    //parser_err(p); errFL("space? '%c'", c);
     switch (c) {
       case ' ':
         P_ADV1;
@@ -1586,7 +1633,7 @@ static Mem parse_seq(Parser* p) {
   Array a = array0;
   while (parser_has_next_expr(p)) {
     Obj o = parse_expr(p);
-    array_append_strong(&a, o);
+    array_append(&a, o);
   }
   return a.mem;
 }
@@ -1606,7 +1653,7 @@ static Mem parse_blocks(Parser* p) {
     else {
       o = parse_expr(p);
     }
-    array_append_strong(&a, o);
+    array_append(&a, o);
   }
   return a.mem;
 }
@@ -1701,7 +1748,7 @@ static Obj parse_expr_sub(Parser* p) {
 
 static Obj parse_expr(Parser* p) {
   Obj o = parse_expr_sub(p);
-  parser_err(p); obj_errL(o);
+  //parser_err(p); obj_errL(o);
   return o;
 }
 
@@ -1741,11 +1788,13 @@ static Obj parse_ss(SS path, SS src, BM* e) {
 int main(int argc, BC argv[]) {
   
   assert_host_basic();
+  assert_obj_tags_are_valid();
   assert(size_Obj == size_Word);
   
   set_process_name(argv[0]);
   init_syms();
-
+  
+  //vol_err = 1;
   // parse arguments.
   BC paths[len_buffer];
   Int path_count = 0;
@@ -1779,7 +1828,7 @@ int main(int argc, BC argv[]) {
   }
   
 #if OPT_ALLOC_COUNT
-  array_free(global_sym_names);
+  mem_release_free(global_sym_names.mem);
   if (vol_err || total_allocs != total_deallocs) {
     errL("\n======== PLOY ALLOC STATS ========");
     errFL("alloc: %ld; dealloc: %ld; diff = %ld", total_allocs, total_deallocs, total_allocs - total_deallocs);
