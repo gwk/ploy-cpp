@@ -6,6 +6,7 @@
 
 
 root=$(dirname "$0")/..
+cd "$root"
 
 if [[ "$1" == "-release" ]]; then
   shift
@@ -25,11 +26,12 @@ clang \
 -Wno-unused-function \
 -Wno-unused-parameter \
 -Wno-gnu \
+-fblocks \
 -fstrict-aliasing \
 -fstack-protector \
 -fcatch-undefined-behavior \
 -ftrapv \
 -g \
 "$release_defs" \
-"$root"/ploy.c \
+ploy.c \
 "$@"

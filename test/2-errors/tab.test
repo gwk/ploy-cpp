@@ -1,5 +1,4 @@
 {
   'code' : 1,
-
-  'err' : ('contain', 'tab.stork: 2:1: parsing failed at rules:'),
+  'err' : ('match', 'parse error: .*/ploy/test/2-errors/tab.ploy:2:1: illegal tab character'),
 }

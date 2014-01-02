@@ -1,5 +1,4 @@
 {
   'code' : 1,
-
-  'err' : ('contain', 'error: cannot evaluate expr: (Dash)'),
+  'err' : ('search', 'parse error: .*/ploy/test/2-errors/dash.ploy:1:1: unexpected character')
 }

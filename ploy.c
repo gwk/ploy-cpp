@@ -249,7 +249,7 @@ static void out(BC s) { fputs(s, stdout); }
 static void err(BC s) { fputs(s, stderr); }
 
 static void out_nl() { out("\n"); }
-static void err_nl() { out("\n"); }
+static void err_nl() { err("\n"); }
 
 static void out_flush() { fflush(stdout); }
 static void err_flush() { fflush(stderr); }
@@ -421,7 +421,8 @@ static SS ss_slice(SS s, Int from, Int to) {
 
 
 static Int ss_find_line_start(SS s, Int pos) {
-  for_imn_rev(i, pos - 1, s.len) {
+  for_in_rev(i, pos - 1) {
+    //errFL("ss_find_line_start: pos:%ld i:%ld", pos, i);
     if (s.b.c[i] == '\n') {
       return i + 1;
     }
@@ -445,7 +446,7 @@ static SS ss_line_at_pos(SS s, Int pos) {
   Int to = ss_find_line_end(s, pos);
   assert(from >= 0);
   if (to < 0) to = s.len;
-  errFL("%ld %ld %ld %ld", s.len, pos, from, to);
+  //errFL("ss_line_at_pos: len:%ld pos:%ld from:%ld to:%ld", s.len, pos, from, to);
   return ss_slice(s, from, to);
 }
 
@@ -692,7 +693,8 @@ static void rc##s##_##dec##_##f(RC* rc) { \
 static void rc##s##_err(RC* rc) { \
   Struct_tag st = rc##s##_struct_tag(*rc); \
   errF(#RC "{st:%x:%s w:%lx sp:%d s:%lx}", \
-    st, struct_tag_names[st], cast(Uns, rc##s##_weak(*rc)), rc##s##_spec_tag(*rc), cast(Uns, rc##s##_strong(*rc))); \
+    st, struct_tag_names[st], \
+    cast(Uns, rc##s##_weak(*rc)), rc##s##_spec_tag(*rc), cast(Uns, rc##s##_strong(*rc))); \
 } \
 static void rc##s##_errL(RC* rc) { \
   rc##s##_err(rc); \
@@ -713,8 +715,8 @@ DEF_RC_ERRS(RCW, w)
 typedef union {
   Int i;
   Uns u;
-  Ptr p;
   Flt f;
+  Ptr p;
   Struct_tag* st;
   //RCH* rch;
   RCW* rcw;
@@ -781,9 +783,18 @@ static Struct_tag ref_struct_tag(Obj r) {
 }
 
 
+static Bool ref_is_vec_large(Obj r) {
+  return ref_struct_tag(r) == st_Vec_large;
+}
+
 
 static Bool ref_is_vec(Obj r) {
   return ref_struct_tag(r) == st_Vec_large;
+}
+
+
+static Bool ref_is_data_large(Obj d) {
+  return ref_struct_tag(d) == st_Data_large;
 }
 
 
@@ -800,19 +811,35 @@ static Bool obj_is_vec(Obj o) {
 static Int ref_large_len(Obj r) {
   assert_ref_is_valid(r);
   assert(ref_struct_tag(r) == st_Data_large || ref_struct_tag(r) == st_Vec_large);
+  assert(r.rcwl->len > 0);
   return r.rcwl->len;
 }
 
 
+static Int ref_len(Obj r) {
+  return ref_large_len(r);
+}
+
+
 static B data_large_ptr(Obj d) {
-  assert(ref_is_data(d));
+  assert(ref_is_data_large(d));
   return (B){.m = cast(BM, d.rcwl + 1)}; // address past rcwl.
 }
 
 
+static B data_ptr(Obj d) {
+  return data_large_ptr(d);
+}
+
+
 static Obj* vec_large_els(Obj v) {
-  assert(ref_is_vec(v));
+  assert(ref_is_vec_large(v));
   return cast(Obj*, v.rcwl + 1); // address past rcwl.
+}
+
+
+static Obj* vec_els(Obj v) {
+  return vec_large_els(v);
 }
 
 
@@ -1088,6 +1115,7 @@ typedef enum {
   si_E,
   si_N,
   si_VOID,
+  si_COMMENT,
   si_QUO,
   si_QUA,
   si_DO,
@@ -1124,6 +1152,7 @@ DEF_CONSTANT(T); // true
 DEF_CONSTANT(E); // empty
 DEF_CONSTANT(N); // none
 DEF_CONSTANT(VOID);
+DEF_CONSTANT(COMMENT);
 DEF_CONSTANT(QUO);
 DEF_CONSTANT(QUA);
 DEF_CONSTANT(DO);
@@ -1205,19 +1234,20 @@ static void init_syms() {
   assert(global_sym_names.mem.len == 0);
   Obj sym;
   #define A(i, n) sym = new_sym(ss_from_BC(n)); assert(sym_index(sym) == i)
-  A(si_F,     "#f");
-  A(si_T,     "#t");
-  A(si_E,     "#e");
-  A(si_N,     "#n");
-  A(si_VOID,  "#void");
-  A(si_QUO,   "QUO");
-  A(si_QUA,   "QUA");
-  A(si_DO,    "DO");
-  A(si_SCOPE, "SCOPE");
-  A(si_LET,   "LET");
-  A(si_IF,    "IF");
-  A(si_FN,    "FN");
-  A(si_EXPA,  "EXPA");
+  A(si_F,       "#f");
+  A(si_T,       "#t");
+  A(si_E,       "#e");
+  A(si_N,       "#n");
+  A(si_VOID,    "#void");
+  A(si_COMMENT, "COMMENT");
+  A(si_QUO,     "QUO");
+  A(si_QUA,     "QUA");
+  A(si_DO,      "DO");
+  A(si_SCOPE,   "SCOPE");
+  A(si_LET,     "LET");
+  A(si_IF,      "IF");
+  A(si_FN,      "FN");
+  A(si_EXPA,    "EXPA");
   #undef A
 }
 
@@ -1234,6 +1264,13 @@ static Obj sym_data_borrow(Obj s) {
 }
 
 
+#define error_sym(msg, sym) { \
+Obj _d = sym_data_borrow(sym); \
+I32 _l = cast(I32, ref_large_len(_d)); \
+B _b = data_large_ptr(_d); \
+error(msg ": %.*s", _l, _b.c); }
+
+
 static void data_write(Obj d, File f) {
   assert(ref_is_data(d));
   Uns l = cast(Uns, d.rcwl->len);
@@ -1244,7 +1281,7 @@ static void data_write(Obj d, File f) {
 
 static Obj vec_hd(Obj v) {
   assert(ref_is_vec(v));
-  Obj* els = vec_large_els(v);
+  Obj* els = vec_els(v);
   Obj el = els[0];
   return obj_borrow(el);
 }
@@ -1252,9 +1289,22 @@ static Obj vec_hd(Obj v) {
 
 static Obj vec_tl(Obj v) {
   assert(ref_is_vec(v));
-  Obj* els = vec_large_els(v);
-  Int len = ref_large_len(v);
+  Obj* els = vec_els(v);
+  Int len = ref_len(v);
   Obj el = els[len - 1];
+  return obj_borrow(el);
+}
+
+
+#define vec_a vec_hd
+
+
+static Obj vec_b(Obj v) {
+  assert(ref_is_vec(v));
+  Obj* els = vec_els(v);
+  Int len = ref_len(v);
+  assert(len > 1);
+  Obj el = els[1];
   return obj_borrow(el);
 }
 
@@ -1285,8 +1335,8 @@ static void chain_err_els(Obj c) {
   assert(ref_is_vec(c));
   Bool first = true;
   loop {
-    Obj* els = vec_large_els(c);
-    Int len = ref_large_len(c);
+    Obj* els = vec_els(c);
+    Int len = ref_len(c);
     if (len > 2) err("|");
     else if (!first) err(" ");
     if (first) first = false;
@@ -1325,8 +1375,8 @@ static void vec_err(Obj v) {
     return;
   }
   err("{");
-  Obj* els = vec_large_els(v);
-  for_in(i, ref_large_len(v)) {
+  Obj* els = vec_els(v);
+  for_in(i, ref_len(v)) {
     if (i) err(" ");
     obj_err(els[i]);
   }
@@ -1424,7 +1474,7 @@ static Bool char_is_atom_term(Char c) {
 
 static void parser_err(Parser* p) {
   errF("%s:%ld:%ld (%ld): ", p->path.b.c, p->line + 1, p->col + 1, p->pos);
-  if (p->e) errF("(error: %s): ", p->e);
+  if (p->e) errF("\nerror: %s\nobj:  ", p->e);
 }
 
 
@@ -1531,6 +1581,30 @@ static Obj parse_Sym(Parser* p) {
 }
 
 
+static Obj parse_comment(Parser* p) {
+  assert(PC == '#');
+  Int pos_report = p->pos;
+  do {
+    P_ADV1;
+    if (!PP) {
+      p->pos = pos_report; // better error message;
+      return parse_error(p, "unterminated comment (add newline)");
+    }
+  }  while (PC == ' ');
+  Int pos_start = p->pos;
+  do {
+    P_ADV1;
+    if (!PP) {
+      p->pos = pos_report; // better error message;
+      return parse_error(p, "unterminated comment (add newline)");
+    }
+  }  while (PC != '\n');
+  SS s = ss_slice(p->src, pos_start, p->pos);
+  Obj d = new_data(s);
+  return new_v2(COMMENT, d);
+}
+
+
 static Obj parse_Str(Parser* p, Char q) {
   assert(PC == q);
   Int pos_open = p->pos; // for error reporting.
@@ -1579,6 +1653,7 @@ static Obj parse_Str(Parser* p, Char q) {
     }
   }
   #undef APPEND
+  P_ADV1; // past closing quote.
   return new_data(ss_mk(s.b, i));
 }
 
@@ -1633,6 +1708,10 @@ static Mem parse_seq(Parser* p) {
   Array a = array0;
   while (parser_has_next_expr(p)) {
     Obj o = parse_expr(p);
+    if (p->e) {
+      mem_release_free(a.mem);
+      return mem0;
+    }
     array_append(&a, o);
   }
   return a.mem;
@@ -1648,10 +1727,18 @@ static Mem parse_blocks(Parser* p) {
     if (c == '|') {
       P_ADV1;
       Mem m = parse_seq(p);
+      if (p->e) {
+        mem_release_free(a.mem);
+        return mem0;
+      }
       o = new_vec(m);
     }
     else {
       o = parse_expr(p);
+      if (p->e) {
+        mem_release_free(a.mem);
+        return mem0;
+      }
     }
     array_append(&a, o);
   }
@@ -1660,8 +1747,8 @@ static Mem parse_blocks(Parser* p) {
 
 
 #define P_ADV_TERM(t) \
-if (!parse_terminator(p, t)) { \
-  mem_free(m); \
+if (p->e || !parse_terminator(p, t)) { \
+  mem_release_free(m); \
   return VOID; \
 }
 
@@ -1728,6 +1815,7 @@ static Obj parse_expr_sub(Parser* p) {
     case '`':   return parse_qua(p);
     case '\'':  return parse_Str(p, '\'');
     case '"':   return parse_Str(p, '"');
+    case '#':   return parse_comment(p);
     case '+':
       if (isdigit(PC1)) return parse_Int(p, 1);
       break;
@@ -1782,6 +1870,130 @@ static Obj parse_ss(SS path, SS src, BM* e) {
 }
 
 
+#pragma mark - env
+
+
+static Obj env_get(Obj env, Obj sym) {
+  assert_ref_is_valid(env);
+  while (env.u != E.u) {
+    Obj frame = vec_hd(env);
+    while (frame.u != E.u) {
+      Obj binding = vec_hd(frame);
+      assert(ref_large_len(binding) == 3);
+      Obj key = vec_a(binding);
+      if (key.u == sym.u) {
+        return vec_b(binding);
+      }
+      frame = vec_tl(frame);
+    }
+    env = vec_tl(env);
+  }
+  return VOID; // lookup failed.
+}
+
+
+#pragma mark - cont
+
+
+typedef struct _Step Step;
+typedef Step (^Cont)(Obj);
+
+struct _Step {
+  Cont cont;
+  Obj val;
+};
+
+
+#define Step0 (Step){ .cont=NULL, .val=VOID }
+
+static Step step_mk(Cont cont, Obj val) {
+  return (Step){.cont=cont, .val=val};
+}
+
+#define STEP(...) return step_mk(__VA_ARGS__)
+
+
+#pragma mark - eval
+
+
+static Step eval_sym(Cont cont, Obj env, Obj sym) {
+  Obj val = env_get(env, sym);
+  if (val.u == VOID.u) { // lookup failed.
+    Obj sym_data = sym_data_borrow(sym);
+    error_sym("lookup error", sym_data);
+  }
+  STEP(cont, val);
+}
+
+
+static Step eval_QUO(Cont cont, Obj env, Int len, Obj* args) {
+  check(len == 1, "call to QUO requires a single argument; found %ld", len);
+  STEP(cont, args[0]);
+}
+
+
+static Step eval_call_apply(Cont cont, Obj env, Obj callee, Int len, Obj* els) {
+  // TODO function call.
+  STEP(cont, callee);
+}
+
+
+static Step eval_Vec_large(Cont cont, Obj env, Obj code) {
+  Int len = ref_large_len(code);
+  Obj* els = vec_large_els(code);
+  Obj callee = obj_borrow(els[0]);
+  Obj* args = els + 1;
+  Tag ot = obj_tag(callee);
+  if (ot == ot_sym && len > 1) { // special forms must have args.
+    switch (sym_index(callee)) {
+      case si_QUO: return eval_QUO(cont, env, len, args);
+    }
+  }
+  // TODO: eval each el, then apply.
+  STEP(cont, code); // TODO
+}
+
+
+static Step eval(Cont cont, Obj env, Obj code) {
+  Obj_tag ot = obj_tag(code);
+  if (ot & ot_flt_bit || ot == ot_int) {
+    STEP(cont, code);
+  }
+  if (ot == ot_sym) {
+    return eval_sym(cont, env, code);
+  }
+  if (ot == ot_reserved0 || ot == ot_reserved1) {
+    error("cannot eval reserved0: %p", code.p);
+  }
+  assert_ref_is_valid(code);
+  switch (ref_struct_tag(code)) {
+    case st_Vec_large:
+      return eval_Vec_large(cont, env, code);
+    case st_Data_large:
+    case st_I32:
+    case st_I64:
+    case st_U32:
+    case st_U64:
+    case st_F32:
+    case st_F64:
+      STEP(cont, code);
+    case st_Proxy:
+      error("cannot eval Proxy object: %p", code.p);
+    case st_DEALLOC:
+      error("cannot eval deallocated object: %p", code.p);
+  }
+}
+
+
+static Obj eval_loop(Obj env, Obj code) {
+  Step s = eval(NULL, env, code);
+  while (s.cont) {
+    s = s.cont(s.val);
+  }
+  return s.val;
+}
+
+
 #pragma mark - main
 
 
@@ -1809,23 +2021,28 @@ int main(int argc, BC argv[]) {
       paths[path_count++] = arg;
     }
   }
+
+  Obj global_env = new_v2(E, E);
   
   // handle arguments.
   for_in(i, path_count) {
     SS path = ss_from_BC(paths[i]);
     SS str = ss_from_path(paths[i]); // never freed; used for error reporting.
     BM e = NULL;
-    Obj o = parse_ss(path, str, &e);
+    Obj code = parse_ss(path, str, &e);
     if (e) {
       err("parse error: ");
       errL(e);
       free(e);
+      exit(1);
     }
     else {
-      obj_errL(o);
+      Obj val = eval_loop(global_env, obj_borrow(code));
+      obj_release(val);
     }
-    obj_release(o);
+    obj_release(code);
   }
+  obj_release(global_env);
   
 #if OPT_ALLOC_COUNT
   mem_release_free(global_sym_names.mem);
