@@ -1,5 +1,6 @@
 build/
 misc/
+repro.ploy
 
 # Xcode
 xcuserdata
