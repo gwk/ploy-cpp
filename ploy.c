@@ -1361,14 +1361,6 @@ B _b = data_large_ptr(_d); \
 error(msg ": %.*s", _l, _b.c); }
 
 
-static void data_write(Obj d, File f) {
-  assert(ref_is_data(d));
-  Uns l = cast(Uns, d.rcwl->len);
-  Uns n = fwrite(data_large_ptr(d).c, 1, l, f);
-  check(n == l, "data_write failed.");
-}
-
-
 static Obj vec_hd(Obj v) {
   assert(ref_is_vec(v));
   Obj* els = vec_els(v);
@@ -1415,24 +1407,29 @@ static Bool vec_is_chain(Obj v) {
 #pragma mark - repr
 
 
-static void data_err(Obj d) {
-  assert_ref_is_valid(d);
-  data_write(d, stderr);
+static void write_data(File f, Obj d) {
+  assert(ref_is_data(d));
+  Uns l = cast(Uns, d.rcwl->len);
+  Uns n = fwrite(data_large_ptr(d).c, 1, l, f);
+  check(n == l, "write_data failed.");
 }
 
 
-static void chain_err_els(Obj c) {
+static void write_obj(File f, Obj o);
+
+
+static void write_chain_els(File f, Obj c) {
   assert(ref_is_vec(c));
   Bool first = true;
   loop {
     Obj* els = vec_els(c);
     Int len = ref_len(c);
-    if (len > 2) err("|");
-    else if (!first) err(" ");
+    if (len > 2) fputs("|", f);
+    else if (!first) fputs(" ", f);
     if (first) first = false;
     for_in(i, len - 1) {
-      if (i) err(" ");
-      obj_err(els[i]);
+      if (i) fputs(" ", f);
+      write_obj(f, els[i]);
     }
     Obj last = els[len - 1];
     if (last.u == E.u) return;
@@ -1442,70 +1439,76 @@ static void chain_err_els(Obj c) {
 }
 
 
-static void chain_err(Obj c) {
+static void write_chain(File f, Obj c) {
   assert(ref_is_vec(c));
   Obj hd = vec_hd(c);
   if (hd.u == QUO.u && ref_len(c) == 2 && obj_is_vec(vec_tl(c))) {
-    err("[");
-    chain_err_els(vec_tl(c));
-    err("]");
+    fputs("[", f);
+    write_chain_els(f, vec_tl(c));
+    fputs("]", f);
   }
   else {
-    err("(");
-    chain_err_els(c);
-    err(")");
+    fputs("(", f);
+    write_chain_els(f, c);
+    fputs(")", f);
   }
 }
 
 
-static void vec_err(Obj v) {
+static void write_vec(File f, Obj v) {
   assert(ref_is_vec(v));
   if (vec_is_chain(v)) {
-    chain_err(v);
+    write_chain(f, v);
     return;
   }
-  err("{");
+  fputs("{", f);
   Obj* els = vec_els(v);
   for_in(i, ref_len(v)) {
-    if (i) err(" ");
-    obj_err(els[i]);
+    if (i) fputs(" ", f);
+    write_obj(f, els[i]);
   }
-  err("}");
+  fputs("}", f);
 }
 
 
-static void obj_err(Obj o) {
+static void write_obj(File f, Obj o) {
   Obj_tag ot = obj_tag(o);
   if (ot & ot_flt_bit) {
-    Obj f = o;
-    f.u &= flt_body_mask;
-    errF("(Flt %f)", f.f);
+    Obj flt = o;
+    flt.u &= flt_body_mask;
+    fprintf(f, "(Flt %f)", flt.f);
   }
   else if (ot == ot_int) {
-    errF("%ld", int_val(o));
+    fprintf(f, "%ld", int_val(o));
   }
   else if (ot == ot_sym_data) {
-    Obj s = sym_data_borrow(o);
-    data_write(s, stderr);
+    if (o.u & data_word_bit) { // data-word
+      // TODO: support all word values.
+      fputs("''", f);
+    }
+    else { // sym
+      Obj s = sym_data_borrow(o);
+      write_data(f, s);
+    }
   }
   else if (ot == ot_reserved0) {
-    errF("(reserved0 %p)", o.p);
+    fprintf(f, "(reserved0 %p)", o.p);
   }
   else if (ot == ot_reserved1) {
-    errF("(reserved1 %p)", o.p);
+    fprintf(f, "(reserved1 %p)", o.p);
   }
   else {
     Obj r = obj_ref_borrow(o);
     switch (ref_struct_tag(r)) {
-      case st_Data_large: data_err(r);      break;
-      case st_Vec_large:  vec_err(r);       break;
-      case st_I32:        err("(I32?)");    break;
-      case st_I64:        err("(I64?)");    break;
-      case st_U32:        err("(U32?)");    break;
-      case st_U64:        err("(U64?)");    break;
-      case st_F32:        err("(F32?)");    break;
-      case st_F64:        err("(F64?)");    break;
-      case st_Proxy:      err("(Proxy?)");  break;
+      case st_Data_large: write_data(f, r);     break;
+      case st_Vec_large:  write_vec(f, r);      break;
+      case st_I32:        fputs("(I32?)", f);   break;
+      case st_I64:        fputs("(I64?)", f);   break;
+      case st_U32:        fputs("(U32?)", f);   break;
+      case st_U64:        fputs("(U64?)", f);   break;
+      case st_F32:        fputs("(F32?)", f);   break;
+      case st_F64:        fputs("(F64?)", f);   break;
+      case st_Proxy:      fputs("(Proxy?)", f); break;
       case st_DEALLOC:    error("deallocated object is still referenced: %p", r.p);
     }
   }
@@ -1514,7 +1517,7 @@ static void obj_err(Obj o) {
 
 
 static void obj_errL(Obj o) {
-  obj_err(o);
+  write_obj(stderr, o);
   err_nl();
 }
 
@@ -2086,6 +2089,27 @@ static Obj eval_loop(Obj env, Obj code) {
 }
 
 
+static void parse_and_eval(Obj env, Obj path, Obj src, Array* sources, Bool out_val) {
+    BM e = NULL;
+    Obj code = parse_data(obj_borrow(path), obj_borrow(src), &e);
+    if (e) {
+      err("parse error: ");
+      errL(e);
+      raw_dealloc(e);
+      exit(1);
+    }
+    else {
+      array_append(sources, new_v2(path, src));
+      Obj val = eval_loop(env, obj_borrow(code));
+      if (out_val) {
+        write_obj(stdout, val);
+      }
+      obj_release(val);
+    }
+    obj_release(code);
+}
+
+
 #pragma mark - main
 
 
@@ -2101,12 +2125,21 @@ int main(int argc, BC argv[]) {
   //vol_err = 1;
   // parse arguments.
   BC paths[len_buffer];
+  BC expr = NULL;
+  Bool out_expr = false;
   Int path_count = 0;
   for_imn(i, 1, argc) {
     BC arg = argv[i];
     errFLD("   %s", arg);
     if (bc_eq(arg, "-v")) {
       vol_err = 1;
+    }
+    else if (bc_eq(arg, "-e") || bc_eq(arg, "-E")) {
+      check(!expr, "multiple expression arguments");
+      i++;
+      check(i < argc, "missing expression argument");
+      expr = argv[i];
+      out_expr = bc_eq(arg, "-e");
     }
     else {
       check(path_count < len_buffer, "exceeded max paths: %d", len_buffer);
@@ -2121,21 +2154,12 @@ int main(int argc, BC argv[]) {
   for_in(i, path_count) {
     Obj path = new_data_from_BC(paths[i]);
     Obj src = new_data_from_path(paths[i]);
-    
-    BM e = NULL;
-    Obj code = parse_data(obj_borrow(path), obj_borrow(src), &e);
-    if (e) {
-      err("parse error: ");
-      errL(e);
-      raw_dealloc(e);
-      exit(1);
-    }
-    else {
-      array_append(&sources, new_v2(path, src));
-      Obj val = eval_loop(global_env, obj_borrow(code));
-      obj_release(val);
-    }
-    obj_release(code);
+    parse_and_eval(global_env, path, src, &sources, false);
+  }
+  if (expr) {
+    Obj path = new_data_from_BC("<expr>");
+    Obj src = new_data_from_BC(expr);
+    parse_and_eval(global_env, path, src, &sources, out_expr);
   }
   obj_release(global_env);
   

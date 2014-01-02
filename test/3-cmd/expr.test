@@ -1,0 +1,4 @@
+{
+  'cmd' : '$ROOT/build/ploy -e "1"',
+  'out' : '1\n',
+}
