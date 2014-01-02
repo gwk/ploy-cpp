@@ -16,6 +16,19 @@
 #endif
 
 
+#ifndef OPT_DEALLOC_MARK
+#define OPT_DEALLOC_MARK 1
+#endif
+
+#ifndef OPT_ALLOC_COUNT
+#define OPT_ALLOC_COUNT 1
+#endif
+
+#ifndef OPT_MEM_CLEAR_ELS
+#define OPT_MEM_CLEAR_ELS 1
+#endif
+
+
 typedef char Char;
 typedef unsigned char Byte;
 typedef long Int;
@@ -290,6 +303,39 @@ static Int vol_err;
 #define check(condition, fmt, ...) { if (!(condition)) error(fmt, ## __VA_ARGS__); }
 
 
+#pragma mark - raw
+
+
+#if OPT_ALLOC_COUNT
+static Int total_allocs_raw = 0;
+static Int total_allocs_mem = 0;
+static Int total_allocs_ref = 0;
+static Int total_deallocs_raw = 0;
+static Int total_deallocs_mem = 0;
+static Int total_deallocs_ref = 0;
+#endif
+
+static Ptr raw_alloc(Int size) {
+  assert(size >= 0);
+#if OPT_ALLOC_COUNT
+  if (size > 0) {
+    total_allocs_raw++;
+  }
+#endif
+  return malloc(cast(Uns, size));
+}
+
+
+static void raw_dealloc(Ptr p) {
+#if OPT_ALLOC_COUNT
+  if (p) {
+    total_deallocs_raw++;
+  }
+#endif
+  free(p);
+}
+
+
 #pragma mark - SS
 
 
@@ -317,14 +363,14 @@ static SS ss_mk_m(BM m, Int len) {
 }
 
 
-static void ss_free(SS s) {
-  free(s.b.m);
+static void ss_dealloc(SS s) {
+  raw_dealloc(s.b.m);
 }
 
 
 static SS ss_alloc(Int len) {
   // add null terminator for easier debugging.
-  BM m = malloc(cast(Uns, len + 1));
+  BM m = raw_alloc(len + 1);
   m[len] = 0;
   return ss_mk_m(m, len);
 }
@@ -338,7 +384,7 @@ static void ss_realloc(SS* s, Int len) {
 
 // return B must be freed.
 static B ss_copy_to_B(SS ss) {
-  B b = (B){.m=malloc(cast(Uns, ss.len + 1))};
+  B b = (B){.m=raw_alloc(ss.len + 1)};
   b.m[ss.len] = 0;
   memcpy(b.m, ss.b.c, ss.len);
   return b;
@@ -451,20 +497,6 @@ static SS ss_line_at_pos(SS s, Int pos) {
 }
 
 
-static SS ss_from_path(BC path) {
-  File f = fopen(path, "r");
-  check(f, "could not open file: %s", path);
-  fseek(f, 0, SEEK_END);
-  Int len = ftell(f);
-  SS s = ss_alloc(len);
-  fseek(f, 0, SEEK_SET);
-  Uns items_read = fread(s.b.m, size_Char, (Uns)s.len, f);
-  check((Int)items_read == s.len, "read failed; expected len: %ld; actual bytes: %lu", s.len, items_read);
-  fclose(f);
-  return s;
-}
-
-
 static void ss_write(File f, SS s) {
   Uns items_written = fwrite(s.b.c, size_Char, (Uns)s.len, f);
   check((Int)items_written == s.len, "write SS failed: len: %ld; written: %lu", s.len, items_written);
@@ -569,10 +601,15 @@ typedef enum {
   ot_weak      = 2 << 1, // ref is weakly reteined by receiver.
   ot_gc        = 3 << 1, // ref; reserved for possible future garbace collection implementation.
   ot_int       = 4 << 1, // val; 28/60 bit signed int; 28 bits is +/-134M.
-  ot_sym       = 5 << 1, // val; interleaved Sym indices and Data-word values.
+  ot_sym_data  = 5 << 1, // val; interleaved Sym indices and Data-word values.
   ot_reserved0 = 6 << 1, // val.
   ot_reserved1 = 7 << 1, // val.
 } Obj_tag;
+
+// the plan is to pack small data objects into words, interleaved with syms.
+// for the time being though we will define only the blank string.
+static const Uns data_word_bit = (1 << width_tag);
+
 
 
 static void assert_obj_tags_are_valid() {
@@ -740,6 +777,16 @@ static Bool obj_is_val(Obj o) {
 }
 
 
+static Bool obj_is_sym(Obj o) {
+  return obj_tag(o) == ot_sym_data && !(o.u & data_word_bit);
+}
+
+
+static Bool obj_is_data_word(Obj o) {
+  return obj_tag(o) == ot_sym_data && (o.u & data_word_bit);
+}
+
+
 static Bool obj_is_ref(Obj o) {
   return !obj_is_val(o);
 }
@@ -821,17 +868,6 @@ static Int ref_len(Obj r) {
 }
 
 
-static B data_large_ptr(Obj d) {
-  assert(ref_is_data_large(d));
-  return (B){.m = cast(BM, d.rcwl + 1)}; // address past rcwl.
-}
-
-
-static B data_ptr(Obj d) {
-  return data_large_ptr(d);
-}
-
-
 static Obj* vec_large_els(Obj v) {
   assert(ref_is_vec_large(v));
   return cast(Obj*, v.rcwl + 1); // address past rcwl.
@@ -901,19 +937,19 @@ static void obj_release(Obj o) {
 }
 
 
-#ifndef OPT_DEALLOC_MARK
-#define OPT_DEALLOC_MARK 1
-#endif
-
-
-#ifndef OPT_ALLOC_COUNT
-#define OPT_ALLOC_COUNT 1
-#endif
-
+// return Obj must be tagged ot_strong or else dealloced directly.
+static Obj ref_alloc(Struct_tag st, Int width) {
+  assert(width > 0);
+  Obj r = (Obj){.p=malloc(cast(Uns, width))};
+  assert(!obj_tag(r)); // check that malloc is really aligned to the width of the tag.
+  errFLD("alloc:      %p %s; %ld", r.p, struct_tag_names[st], width);
+  r.rcw->w = st;
+  r.rcw->s = count_inc;
 #if OPT_ALLOC_COUNT
-static Int total_allocs = 0;
-static Int total_deallocs = 0;
+  total_allocs_ref++;
 #endif
+  return r;
+}
 
 
 static void ref_dealloc(Obj r) {
@@ -923,7 +959,7 @@ static void ref_dealloc(Obj r) {
   Struct_tag st = ref_struct_tag(r);
   if (st == st_Vec_large) {
     Obj* els = vec_large_els(r);
-    for_in(i, ref_large_len(r)) {
+    for_in(i, ref_len(r)) {
       obj_release(els[i]); // TODO: make this tail recursive for deallocating long chains?
     }
   }
@@ -932,31 +968,12 @@ static void ref_dealloc(Obj r) {
 #endif
   free(r.p);
 #if OPT_ALLOC_COUNT
-  total_deallocs++;
+  total_deallocs_ref++;
 #endif
-}
-
-
-// return Obj must be tagged ot_strong or else dealloced directly.
-static Obj ref_alloc(Struct_tag st, Int width) {
-  Obj r = (Obj){.p=malloc((Uns)width)};
-  assert((r.u & tag_mask) == 0);
-  errFLD("alloc:      %p %s; %ld", r.p, struct_tag_names[st], width);
-  r.rcw->w = st;
-  r.rcw->s = count_inc;
-#if OPT_ALLOC_COUNT
-  total_allocs++;
-#endif
-  return r;
 }
 
 
 #pragma mark - Mem
-
-
-#ifndef OPT_MEM_CLEAR_ELS
-#define OPT_MEM_CLEAR_ELS 1
-#endif
 
 
 typedef struct {
@@ -1019,14 +1036,17 @@ static void mem_release_els(Mem m) {
 }
 
 
-static void mem_free(Mem m) {
+static void mem_dealloc(Mem m) {
+#if OPT_ALLOC_COUNT
+  if (m.els) total_deallocs_mem++;
+#endif
   free(m.els);
 }
 
 
-static void mem_release_free(Mem m) {
+static void mem_release_dealloc(Mem m) {
   mem_release_els(m);
-  mem_free(m);
+  mem_dealloc(m);
 }
 
 
@@ -1040,11 +1060,14 @@ static void mem_realloc(Mem* m, Int len) {
   }
   // realloc.
   if (len > 0) {
+#if OPT_ALLOC_COUNT
+    if (!m->els) total_allocs_mem++;
+#endif
     m->els = realloc(m->els, (Uns)(len * size_Obj));
     check(m->els, "realloc failed; len: %ld; width: %ld", len, size_Obj);
   }
   else if (len == 0) {
-    free(m->els);
+    mem_dealloc(*m); // realloc does something different, plus we must count deallocs.
     m->els = NULL;
   }
   else error("bad len: %ld", len);
@@ -1130,7 +1153,7 @@ typedef enum {
 static const Int shift_sym = width_tag + 1; // 1 bit reserved for Data-word flag.
 static const Int max_sym_index = 1L << (size_Int * 8 - shift_sym);
 
-#define _sym_with_index(index) (Obj){ .i = (index << shift_sym) | ot_sym }
+#define _sym_with_index(index) (Obj){ .u = (cast(Uns, index) << shift_sym) | ot_sym_data }
 
 static Obj sym_with_index(Int i) {
   check(i < max_sym_index, "Sym index is too large: %lx", i);
@@ -1138,7 +1161,7 @@ static Obj sym_with_index(Int i) {
 }
 
 static Int sym_index(Obj s) {
-  assert(obj_tag(s) == ot_sym);
+  assert(obj_tag(s) == ot_sym_data && s.i );
   return s.i >> shift_sym;
 }
 
@@ -1167,6 +1190,43 @@ DEF_CONSTANT(EXPA);
 static Array global_sym_names = array0;
 
 
+#pragma mark - data
+
+
+static const Obj blank = (Obj){.u = data_word_bit | ot_sym_data };
+
+
+static Bool obj_is_data(Obj o) {
+  return obj_is_data_word(o) || (obj_is_ref(o) && ref_is_data(obj_ref_borrow(o)));
+}
+
+
+
+#define assert_is_data(d) \
+assert(d.u == blank.u || (obj_tag(d) == ot_sym_data && ref_
+static Int data_len(Obj d) {
+  if (d.u == blank.u) return 0; // TODO: support all data-word values.
+  return ref_len(obj_borrow(d));
+}
+
+
+static B data_large_ptr(Obj d) {
+  assert(ref_is_data_large(d));
+  return (B){.m = cast(BM, d.rcwl + 1)}; // address past rcwl.
+}
+
+
+static B data_ptr(Obj d) {
+  if (d.u == blank.u) return (B){.c=NULL}; // TODO: supoprt all data-word values.
+  return data_large_ptr(d);
+}
+
+
+static SS data_SS(Obj d) {
+  return ss_mk(data_ptr(d), data_len(d));
+}
+
+
 #pragma mark - new
 
 
@@ -1182,12 +1242,40 @@ static Obj new_uns(Uns u) {
 }
 
 
-static Obj new_data(SS s) {
-  Obj d = ref_alloc(st_Data_large, size_RCWL + s.len);
-  d.rcwl->len = s.len;
+static Obj data_empty(Int len) {
+  Obj d = ref_alloc(st_Data_large, size_RCWL + len);
+  d.rcwl->len = len;
+  return d; // borrowed.
+}
+
+
+static Obj new_data_from_SS(SS s) {
+  if (!s.len) return blank;
+  Obj d = data_empty(s.len);
   memcpy(data_large_ptr(d).m, s.b.c, s.len);
   return ref_add_tag(d, ot_strong);
 }
+
+
+static Obj new_data_from_BC(BC bc) {
+  return new_data_from_SS(ss_from_BC(bc));
+}
+
+
+static Obj new_data_from_path(BC path) {
+  File f = fopen(path, "r");
+  check(f, "could not open file: %s", path);
+  fseek(f, 0, SEEK_END);
+  Int len = ftell(f);
+  if (!len) return blank;
+  Obj d = data_empty(len);
+  fseek(f, 0, SEEK_SET);
+  Uns items_read = fread(data_large_ptr(d).m, size_Char, cast(Uns, len), f);
+  check(cast(Int, items_read) == len, "read failed; expected len: %ld; actual bytes: %lu", len, items_read);
+  fclose(f);
+  return ref_add_tag(d, ot_strong);
+}
+
 
 
 static Obj new_vec(Mem m) {
@@ -1221,7 +1309,7 @@ static Obj new_chain(Mem m) {
 
 
 static Obj new_sym(SS s) {
-  Obj d = new_data(s);
+  Obj d = new_data_from_SS(s);
   Int i = array_append(&global_sym_names, d);
   return sym_with_index(i);
 }
@@ -1234,11 +1322,11 @@ static void init_syms() {
   assert(global_sym_names.mem.len == 0);
   Obj sym;
   #define A(i, n) sym = new_sym(ss_from_BC(n)); assert(sym_index(sym) == i)
-  A(si_F,       "#f");
-  A(si_T,       "#t");
-  A(si_E,       "#e");
-  A(si_N,       "#n");
-  A(si_VOID,    "#void");
+  A(si_F,       "F");
+  A(si_T,       "T");
+  A(si_E,       "E");
+  A(si_N,       "N");
+  A(si_VOID,    "VOID");
   A(si_COMMENT, "COMMENT");
   A(si_QUO,     "QUO");
   A(si_QUA,     "QUA");
@@ -1258,15 +1346,17 @@ static Int int_val(Obj i) {
 }
 
 
+// borrow the data for a sym.
+// the name is a bit confusing due to overlap with ot_sym_data (the tag for sym or data-word).
 static Obj sym_data_borrow(Obj s) {
-  assert(obj_tag(s) == ot_sym);
+  assert(obj_tag(s) == ot_sym_data);
   return obj_borrow(mem_el(global_sym_names.mem, sym_index(s)));
 }
 
 
 #define error_sym(msg, sym) { \
 Obj _d = sym_data_borrow(sym); \
-I32 _l = cast(I32, ref_large_len(_d)); \
+I32 _l = cast(I32, ref_len(_d)); \
 B _b = data_large_ptr(_d); \
 error(msg ": %.*s", _l, _b.c); }
 
@@ -1355,7 +1445,7 @@ static void chain_err_els(Obj c) {
 static void chain_err(Obj c) {
   assert(ref_is_vec(c));
   Obj hd = vec_hd(c);
-  if (hd.u == QUO.u && ref_large_len(c) == 2 && obj_is_vec(vec_tl(c))) {
+  if (hd.u == QUO.u && ref_len(c) == 2 && obj_is_vec(vec_tl(c))) {
     err("[");
     chain_err_els(vec_tl(c));
     err("]");
@@ -1394,7 +1484,7 @@ static void obj_err(Obj o) {
   else if (ot == ot_int) {
     errF("%ld", int_val(o));
   }
-  else if (ot == ot_sym) {
+  else if (ot == ot_sym_data) {
     Obj s = sym_data_borrow(o);
     data_write(s, stderr);
   }
@@ -1494,7 +1584,7 @@ static Obj parse_error(Parser* p, BC fmt, ...) {
   check(msg_len >= 0, "parse_error allocation failed: %s", fmt);
   // e must be freed by parser owner.
   p->e = ss_src_loc_str(p->src, p->path, p->pos, 0, p->line, p->col, msg);
-  free(msg);
+  raw_dealloc(msg);
   return VOID;
 }
 
@@ -1600,7 +1690,7 @@ static Obj parse_comment(Parser* p) {
     }
   }  while (PC != '\n');
   SS s = ss_slice(p->src, pos_start, p->pos);
-  Obj d = new_data(s);
+  Obj d = new_data_from_SS(s);
   return new_v2(COMMENT, d);
 }
 
@@ -1654,7 +1744,9 @@ static Obj parse_Str(Parser* p, Char q) {
   }
   #undef APPEND
   P_ADV1; // past closing quote.
-  return new_data(ss_mk(s.b, i));
+  Obj d = new_data_from_SS(ss_mk(s.b, i));
+  ss_dealloc(s);
+  return d;
 }
 
 
@@ -1709,7 +1801,7 @@ static Mem parse_seq(Parser* p) {
   while (parser_has_next_expr(p)) {
     Obj o = parse_expr(p);
     if (p->e) {
-      mem_release_free(a.mem);
+      mem_release_dealloc(a.mem);
       return mem0;
     }
     array_append(&a, o);
@@ -1728,7 +1820,7 @@ static Mem parse_blocks(Parser* p) {
       P_ADV1;
       Mem m = parse_seq(p);
       if (p->e) {
-        mem_release_free(a.mem);
+        mem_release_dealloc(a.mem);
         return mem0;
       }
       o = new_vec(m);
@@ -1736,7 +1828,7 @@ static Mem parse_blocks(Parser* p) {
     else {
       o = parse_expr(p);
       if (p->e) {
-        mem_release_free(a.mem);
+        mem_release_dealloc(a.mem);
         return mem0;
       }
     }
@@ -1748,7 +1840,7 @@ static Mem parse_blocks(Parser* p) {
 
 #define P_ADV_TERM(t) \
 if (p->e || !parse_terminator(p, t)) { \
-  mem_release_free(m); \
+  mem_release_dealloc(m); \
   return VOID; \
 }
 
@@ -1758,7 +1850,7 @@ static Obj parse_call(Parser* p) {
   Mem m = parse_seq(p);
   P_ADV_TERM(')');
   Obj c = new_chain(m);
-  mem_free(m);
+  mem_dealloc(m);
   return c;
 }
 
@@ -1768,7 +1860,7 @@ static Obj parse_expa(Parser* p) {
   Mem m = parse_seq(p);
   P_ADV_TERM('>');
   Obj c = new_chain(m);
-  mem_free(m);
+  mem_dealloc(m);
   Obj e = new_v2(EXPA, c);
   return e;
 }
@@ -1779,7 +1871,7 @@ static Obj parse_vec(Parser* p) {
   Mem m = parse_seq(p);
   P_ADV_TERM('}');
   Obj v = new_vec(m);
-  mem_free(m);
+  mem_dealloc(m);
   Obj q = new_v2(QUO, v);
   return q;
 }
@@ -1790,7 +1882,7 @@ static Obj parse_chain(Parser* p) {
   Mem m = parse_blocks(p);
   P_ADV_TERM(']');
   Obj c = new_chain(m);
-  mem_free(m);
+  mem_dealloc(m);
   Obj q = new_v2(QUO, c);
   return q;
 }
@@ -1842,10 +1934,10 @@ static Obj parse_expr(Parser* p) {
 
 
 // caller must free e.
-static Obj parse_ss(SS path, SS src, BM* e) {
+static Obj parse_data(Obj path, Obj src, BM* e) {
   Parser p = (Parser) {
-    .path=path,
-    .src=src,
+    .path=data_SS(path),
+    .src=data_SS(src),
     .pos=0,
     .line=0,
     .col=0,
@@ -1864,7 +1956,7 @@ static Obj parse_ss(SS path, SS src, BM* e) {
     Obj c = new_chain(m);
     o = new_v2(DO, c);
   }
-  mem_free(m);
+  mem_dealloc(m);
   *e = cast(BM, p.e);
   return o;
 }
@@ -1879,7 +1971,7 @@ static Obj env_get(Obj env, Obj sym) {
     Obj frame = vec_hd(env);
     while (frame.u != E.u) {
       Obj binding = vec_hd(frame);
-      assert(ref_large_len(binding) == 3);
+      assert(ref_len(binding) == 3);
       Obj key = vec_a(binding);
       if (key.u == sym.u) {
         return vec_b(binding);
@@ -1944,7 +2036,7 @@ static Step eval_Vec_large(Cont cont, Obj env, Obj code) {
   Obj callee = obj_borrow(els[0]);
   Obj* args = els + 1;
   Tag ot = obj_tag(callee);
-  if (ot == ot_sym && len > 1) { // special forms must have args.
+  if (ot == ot_sym_data && len > 1) { // special forms must have args.
     switch (sym_index(callee)) {
       case si_QUO: return eval_QUO(cont, env, len, args);
     }
@@ -1959,7 +2051,7 @@ static Step eval(Cont cont, Obj env, Obj code) {
   if (ot & ot_flt_bit || ot == ot_int) {
     STEP(cont, code);
   }
-  if (ot == ot_sym) {
+  if (ot == ot_sym_data) {
     return eval_sym(cont, env, code);
   }
   if (ot == ot_reserved0 || ot == ot_reserved1) {
@@ -2023,20 +2115,23 @@ int main(int argc, BC argv[]) {
   }
 
   Obj global_env = new_v2(E, E);
+  Array sources = array0;
   
   // handle arguments.
   for_in(i, path_count) {
-    SS path = ss_from_BC(paths[i]);
-    SS str = ss_from_path(paths[i]); // never freed; used for error reporting.
+    Obj path = new_data_from_BC(paths[i]);
+    Obj src = new_data_from_path(paths[i]);
+    
     BM e = NULL;
-    Obj code = parse_ss(path, str, &e);
+    Obj code = parse_data(obj_borrow(path), obj_borrow(src), &e);
     if (e) {
       err("parse error: ");
       errL(e);
-      free(e);
+      raw_dealloc(e);
       exit(1);
     }
     else {
+      array_append(&sources, new_v2(path, src));
       Obj val = eval_loop(global_env, obj_borrow(code));
       obj_release(val);
     }
@@ -2045,12 +2140,21 @@ int main(int argc, BC argv[]) {
   obj_release(global_env);
   
 #if OPT_ALLOC_COUNT
-  mem_release_free(global_sym_names.mem);
-  if (vol_err || total_allocs != total_deallocs) {
-    errL("\n======== PLOY ALLOC STATS ========");
-    errFL("alloc: %ld; dealloc: %ld; diff = %ld", total_allocs, total_deallocs, total_allocs - total_deallocs);
+  mem_release_dealloc(global_sym_names.mem);
+  mem_release_dealloc(sources.mem);
+
+#define CHECK_ALLOCS(group) \
+  if (vol_err || total_allocs_##group != total_deallocs_##group) { \
+    errFL("==== PLOY ALLOC STATS: " #group ": alloc: %ld; dealloc: %ld; diff = %ld", \
+     total_allocs_##group, total_deallocs_##group, total_allocs_##group - total_deallocs_##group); \
   }
-#endif
+
+  CHECK_ALLOCS(raw)
+  CHECK_ALLOCS(mem)
+  CHECK_ALLOCS(ref)
+
+#endif // OPT_ALLOC_COUNT
+
   return 0;
 }
 
