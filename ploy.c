@@ -13,6 +13,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <Block.h>
 #endif
 
 
@@ -27,6 +28,9 @@
 #ifndef OPT_MEM_CLEAR_ELS
 #define OPT_MEM_CLEAR_ELS 1
 #endif
+
+#define VERBOSE_PARSE 0
+#define VERBOSE_EVAL 0
 
 
 typedef char Char;
@@ -573,6 +577,7 @@ static const Uns body_mask = ~tag_mask;
 static const Uns flt_body_mask = max_Uns - 1;
 static const Int max_Int_tagged  = (1L  << width_tagged_word) - 1;
 static const Uns max_Uns_tagged  = max_Int_tagged;
+static const Int shift_factor_Int = 1L << width_tag; // cannot shift signed values in C so use multiplication instead.
 
 /*
 all ploy objects are tagged pointer/value words.
@@ -591,19 +596,20 @@ Masking out the low tag bits yields a heap pointer, whose low four bits are the 
 */
 
 // low bit indicates 32/64 bit IEEE 754 float with low bit rounded to even.
+// alternatively we could use two bits to indicate floats, and fit the remaining enum into a 3 bit tag (discarding reserved).
 static const Tag ot_flt_bit = 1; // only flt words have low bit set.
 static const Tag ot_unm_mask = 1 << 3; // unmanaged words have high tag bit set.
 static const Tag ot_val_mask = ot_flt_bit | ot_unm_mask; // val words have at least one of these bits set.
 
 typedef enum {
-  ot_borrowed  = 0 << 1, // ref is not retained by receiver.
-  ot_strong    = 1 << 1, // ref is strongly retained by receiver.
-  ot_weak      = 2 << 1, // ref is weakly reteined by receiver.
-  ot_gc        = 3 << 1, // ref; reserved for possible future garbace collection implementation.
-  ot_int       = 4 << 1, // val; 28/60 bit signed int; 28 bits is +/-134M.
-  ot_sym_data  = 5 << 1, // val; interleaved Sym indices and Data-word values.
-  ot_reserved0 = 6 << 1, // val.
-  ot_reserved1 = 7 << 1, // val.
+  ot_borrowed   = 0 << 1, // ref is not retained by receiver.
+  ot_strong     = 1 << 1, // ref is strongly retained by receiver.
+  ot_weak       = 2 << 1, // ref is weakly retained by receiver.
+  ot_gc         = 3 << 1, // ref; reserved for possible future garbage collection implementation.
+  ot_int        = 4 << 1, // val; 28/60 bit signed int; 28 bits is +/-134M.
+  ot_sym_data   = 5 << 1, // val; interleaved 27/59 bit Sym indices and 0-3/7 byte Data-word values.
+  ot_reserved0  = 6 << 1, // val.
+  ot_reserved1  = 7 << 1, // val.
 } Obj_tag;
 
 // the plan is to pack small data objects into words, interleaved with syms.
@@ -613,6 +619,7 @@ static const Uns data_word_bit = (1 << width_tag);
 
 
 static void assert_obj_tags_are_valid() {
+  assert(!(ot_val_mask & ot_strong));
   assert(ot_val_mask & ot_int);
 }
 
@@ -768,7 +775,6 @@ static Obj_tag obj_tag(Obj o) {
 }
 
 
-static void obj_err(Obj o);
 static void obj_errL(Obj o);
 
 
@@ -1133,35 +1139,39 @@ static Obj array_el(Array a, Int i) {
 
 
 typedef enum {
-  si_F,
-  si_T,
-  si_E,
-  si_N,
-  si_VOID,
+  si_NIL,
+  si_VEC0,
+  si_CHAIN0,
+  si_END,
+  si_FALSE,
+  si_TRUE,
   si_COMMENT,
-  si_QUO,
+  si_UNQ,
   si_QUA,
+  si_QUO,
   si_DO,
   si_SCOPE,
   si_LET,
   si_IF,
   si_FN,
+  si_CALL,
   si_EXPA,
+  si_VOID, // must be last.
 } Sym_index;
 
 
 static const Int shift_sym = width_tag + 1; // 1 bit reserved for Data-word flag.
-static const Int max_sym_index = 1L << (size_Int * 8 - shift_sym);
+static const Int sym_index_end = 1L << (size_Int * 8 - shift_sym);
 
 #define _sym_with_index(index) (Obj){ .u = (cast(Uns, index) << shift_sym) | ot_sym_data }
 
 static Obj sym_with_index(Int i) {
-  check(i < max_sym_index, "Sym index is too large: %lx", i);
+  check(i < sym_index_end, "Sym index is too large: %lx", i);
   return _sym_with_index(i);
 }
 
 static Int sym_index(Obj s) {
-  assert(obj_tag(s) == ot_sym_data && s.i );
+  assert(obj_is_sym(s));
   return s.i >> shift_sym;
 }
 
@@ -1170,20 +1180,24 @@ static Int sym_index(Obj s) {
 #define DEF_CONSTANT(c) \
 static const Obj c = _sym_with_index(si_##c)
 
-DEF_CONSTANT(F); // false
-DEF_CONSTANT(T); // true
-DEF_CONSTANT(E); // empty
-DEF_CONSTANT(N); // none
-DEF_CONSTANT(VOID);
+DEF_CONSTANT(NIL);
+DEF_CONSTANT(VEC0);
+DEF_CONSTANT(CHAIN0);
+DEF_CONSTANT(END);
+DEF_CONSTANT(FALSE);
+DEF_CONSTANT(TRUE);
 DEF_CONSTANT(COMMENT);
-DEF_CONSTANT(QUO);
+DEF_CONSTANT(UNQ);
 DEF_CONSTANT(QUA);
+DEF_CONSTANT(QUO);
 DEF_CONSTANT(DO);
 DEF_CONSTANT(SCOPE);
 DEF_CONSTANT(LET);
 DEF_CONSTANT(IF);
 DEF_CONSTANT(FN);
+DEF_CONSTANT(CALL);
 DEF_CONSTANT(EXPA);
+DEF_CONSTANT(VOID);
 
 
 // each Sym object is a small integer indexing into this array of strings.
@@ -1231,8 +1245,9 @@ static SS data_SS(Obj d) {
 
 
 static Obj new_int(Int i) {
-  check(i <= max_Int_tagged, "large Int values not yet suppported.");
-  return (Obj){ .i = (i << width_tag | ot_int) };
+  check(i >= -max_Int_tagged && i <= max_Int_tagged, "large Int values not yet suppported.");
+  Int shifted = i * shift_factor_Int;
+  return (Obj){ .i = (shifted | ot_int) };
 }
 
 
@@ -1278,7 +1293,10 @@ static Obj new_data_from_path(BC path) {
 
 
 
-static Obj new_vec(Mem m) {
+static Obj new_vec_M(Mem m) {
+  if (!m.len) {
+    return VEC0;
+  }
   Obj v = ref_alloc(st_Vec_large, size_RCWL + size_Obj * m.len);
   v.rcwl->len = m.len;
   Obj* p = vec_large_els(v);
@@ -1291,27 +1309,49 @@ static Obj new_vec(Mem m) {
 }
 
 
-static Obj new_v2(Obj a, Obj b) {
+static Obj new_vec_OO(Obj a, Obj b) {
   Mem m = mem_mk((Obj[]){a, b}, 2);
-  return new_vec(m);
+  return new_vec_M(m);
 }
 
 
-static Obj new_chain(Mem m) {
-  Obj c = E;
+static Obj new_chain_M(Mem m) {
+  if (!m.len) {
+    return CHAIN0;
+  }
+  Obj c = END;
   for_in_rev(i, m.len) {
     Obj el = mem_el(m, i);
-    c = new_v2(el, c);
+    c = new_vec_OO(el, c);
   }
   //obj_errL(c);
   return c;
 }
 
 
+static Obj new_chain_OO(Obj hd, Obj tl) {
+  if (tl.u == CHAIN0.u) {
+    tl = CHAIN0;
+  }
+  return new_vec_OO(hd, tl);
+}
+
+
+#define ERR_SYM(s) errFL("SYM %s: u:%lu; si:%li", #s, s.u, sym_index(s));
+
+
 static Obj new_sym(SS s) {
+  for_in(i, global_sym_names.mem.len) {
+    Obj d = obj_borrow(array_el(global_sym_names, i));
+    if (ss_eq(s, data_SS(d))) {
+      return sym_with_index(i);
+    }
+  }
   Obj d = new_data_from_SS(s);
   Int i = array_append(&global_sym_names, d);
-  return sym_with_index(i);
+  Obj sym = sym_with_index(i);
+  //errF("NEW SYM: %ld: ", i); obj_errL(sym);
+  return sym;
 }
 
 
@@ -1321,44 +1361,55 @@ static Obj new_sym(SS s) {
 static void init_syms() {
   assert(global_sym_names.mem.len == 0);
   Obj sym;
-  #define A(i, n) sym = new_sym(ss_from_BC(n)); assert(sym_index(sym) == i)
-  A(si_F,       "F");
-  A(si_T,       "T");
-  A(si_E,       "E");
-  A(si_N,       "N");
-  A(si_VOID,    "VOID");
-  A(si_COMMENT, "COMMENT");
-  A(si_QUO,     "QUO");
-  A(si_QUA,     "QUA");
-  A(si_DO,      "DO");
-  A(si_SCOPE,   "SCOPE");
-  A(si_LET,     "LET");
-  A(si_IF,      "IF");
-  A(si_FN,      "FN");
-  A(si_EXPA,    "EXPA");
-  #undef A
+#define SBC(bc, si) sym = new_sym(ss_from_BC(bc)); assert(sym_index(sym) == si)
+#define S(s) SBC(#s, si_##s)
+  S(NIL);
+  S(VEC0);
+  S(CHAIN0);
+  S(END);
+  SBC("false", si_FALSE);
+  SBC("true", si_TRUE);
+  S(COMMENT);
+  S(UNQ);
+  S(QUA);
+  S(QUO);
+  S(DO);
+  S(SCOPE);
+  S(LET);
+  S(IF);
+  S(FN);
+  S(CALL);
+  S(EXPA);
+  S(VOID);
+#undef SBC
+#undef S
 }
 
 
-static Int int_val(Obj i) {
-  assert(obj_tag(i) == ot_int);
-  return i.u >> width_tag;
+static Int int_val(Obj o) {
+  assert(obj_tag(o) == ot_int);
+  Int i = o.i & cast(Int, body_mask);
+  assert(i == 0 || i <= -shift_factor_Int || i >= shift_factor_Int);
+  return i / shift_factor_Int;
+}
+
+
+static Flt flt_val(Obj o) {
+  assert(obj_tag(o) & ot_flt_bit);
+  o.u &= flt_body_mask;
+  return o.f;
 }
 
 
 // borrow the data for a sym.
 // the name is a bit confusing due to overlap with ot_sym_data (the tag for sym or data-word).
 static Obj sym_data_borrow(Obj s) {
-  assert(obj_tag(s) == ot_sym_data);
+  assert(obj_is_sym(s));
   return obj_borrow(mem_el(global_sym_names.mem, sym_index(s)));
 }
 
 
-#define error_sym(msg, sym) { \
-Obj _d = sym_data_borrow(sym); \
-I32 _l = cast(I32, ref_len(_d)); \
-B _b = data_large_ptr(_d); \
-error(msg ": %.*s", _l, _b.c); }
+#define FMT_SYM(sym) cast(I32, ref_len(sym_data_borrow(sym))), data_large_ptr(sym_data_borrow(sym))
 
 
 static Obj vec_hd(Obj v) {
@@ -1391,92 +1442,136 @@ static Obj vec_b(Obj v) {
 }
 
 
-static Bool vec_is_chain(Obj v) {
+typedef enum {
+  vs_vec,
+  vs_chain,
+  vs_chain_blocks,
+} Vec_shape;
+
+
+static Vec_shape vec_shape(Obj v) {
   assert(ref_is_vec(v));
+  Vec_shape s = vs_chain;
   loop {
     Obj last = vec_tl(v);
-    if (last.u == E.u) return true;
-    if (!obj_is_ref(last)) return false;
+    if (last.u == END.u) return s;
+    if (!obj_is_ref(last)) return vs_vec;
     Obj r = obj_ref_borrow(last);
-    if (ref_struct_tag(r) != st_Vec_large) return false;
+    if (!ref_is_vec(r)) return vs_vec;
+    if (ref_len(v) != 2) s = vs_chain_blocks;
     v = r;
   }
 }
 
 
-#pragma mark - repr
+#pragma mark - write repr
 
 
-static void write_data(File f, Obj d) {
+static void write_repr_data(File f, Obj d) {
   assert(ref_is_data(d));
-  Uns l = cast(Uns, d.rcwl->len);
-  Uns n = fwrite(data_large_ptr(d).c, 1, l, f);
-  check(n == l, "write_data failed.");
+  Int l = d.rcwl->len;
+  BC p = data_large_ptr(d).c;
+  fputc('\'', f);
+  for_in(i, l) {
+    Char c = p[i];
+    switch (c) {
+      case '\a': fputc('\\', f); fputc('a', f);  continue; // bell - BEL
+      case '\b': fputc('\\', f); fputc('b', f);  continue; // backspace - BS
+      case '\f': fputc('\\', f); fputc('f', f);  continue; // form feed - FF
+      case '\n': fputc('\\', f); fputc('n', f);  continue; // line feed - LF
+      case '\r': fputc('\\', f); fputc('r', f);  continue; // carriage return - CR
+      case '\t': fputc('\\', f); fputc('t', f);  continue; // horizontal tab - TAB
+      case '\v': fputc('\\', f); fputc('v', f);  continue; // vertical tab - VT
+      case '\\': fputc('\\', f); fputc('\\', f); continue;
+      case '\'': fputc('\\', f); fputc('\'', f); continue;
+      case '"':  fputc('\\', f); fputc('"', f);  continue;
+    }
+    // TODO: escape non-printable characters
+    fputc(c, f);
+  }
+  fputc('\'', f);
 }
 
 
-static void write_obj(File f, Obj o);
+static void write_repr_obj(File f, Obj o);
 
 
-static void write_chain_els(File f, Obj c) {
+static void write_repr_vec_vec(File f, Obj v) {
+  assert(ref_is_vec(v));
+  Int len = ref_len(v);
+  Obj* els = vec_els(v);
+  Obj hd = els[0];
+  if (hd.u == CALL.u && ref_len(v) == 2 && obj_is_vec(vec_tl(v))) { // call
+    fputs("(", f);
+    for_imn(i, 1, len) { // skip the CALL sym.
+      if (i > 1) fputs(" ", f);
+      write_repr_obj(f, els[i]);
+    }
+    fputs(")", f);
+  }
+  else {
+    fputs("{", f);
+    for_in(i, len) {
+      if (i) fputs(" ", f);
+      write_repr_obj(f, els[i]);
+    }
+    fputs("}", f);
+  }
+}
+
+
+static void write_repr_chain(File f, Obj c) {
   assert(ref_is_vec(c));
+  fputs("[", f);
   Bool first = true;
+  loop {
+    if (first) first = false;
+    else fputs(" ", f);
+    write_repr_obj(f, vec_hd(c));
+    Obj tl = vec_tl(c);
+    if (tl.u == END.u) break;
+    assert(obj_is_vec(tl));
+    c = obj_ref_borrow(tl);
+  }
+  fputs("]", f);
+}
+
+
+static void write_repr_chain_blocks(File f, Obj c) {
+  assert(ref_is_vec(c));
+  fputs("[", f);
   loop {
     Obj* els = vec_els(c);
     Int len = ref_len(c);
-    if (len > 2) fputs("|", f);
-    else if (!first) fputs(" ", f);
-    if (first) first = false;
+    fputs("|", f);
     for_in(i, len - 1) {
       if (i) fputs(" ", f);
-      write_obj(f, els[i]);
+      write_repr_obj(f, els[i]);
     }
-    Obj last = els[len - 1];
-    if (last.u == E.u) return;
-    assert(obj_is_vec(last));
-    c = obj_ref_borrow(last);
+    Obj tl = els[len - 1];
+    if (tl.u == END.u) break;
+    assert(obj_is_vec(tl));
+    c = obj_ref_borrow(tl);
   }
+  fputs("]", f);
 }
 
 
-static void write_chain(File f, Obj c) {
-  assert(ref_is_vec(c));
-  Obj hd = vec_hd(c);
-  if (hd.u == QUO.u && ref_len(c) == 2 && obj_is_vec(vec_tl(c))) {
-    fputs("[", f);
-    write_chain_els(f, vec_tl(c));
-    fputs("]", f);
-  }
-  else {
-    fputs("(", f);
-    write_chain_els(f, c);
-    fputs(")", f);
-  }
-}
-
-
-static void write_vec(File f, Obj v) {
+static void write_repr_vec(File f, Obj v) {
   assert(ref_is_vec(v));
-  if (vec_is_chain(v)) {
-    write_chain(f, v);
-    return;
+  switch (vec_shape(v)) {
+    case vs_vec:          write_repr_vec_vec(f, v);       return;
+    case vs_chain:        write_repr_chain(f, v);         return;
+    case vs_chain_blocks: write_repr_chain_blocks(f, v);  return;
   }
-  fputs("{", f);
-  Obj* els = vec_els(v);
-  for_in(i, ref_len(v)) {
-    if (i) fputs(" ", f);
-    write_obj(f, els[i]);
-  }
-  fputs("}", f);
+  assert(0);
 }
 
 
-static void write_obj(File f, Obj o) {
+static void write_repr_obj(File f, Obj o) {
   Obj_tag ot = obj_tag(o);
   if (ot & ot_flt_bit) {
-    Obj flt = o;
-    flt.u &= flt_body_mask;
-    fprintf(f, "(Flt %f)", flt.f);
+    fprintf(f, "(Flt %f)", flt_val(o));
   }
   else if (ot == ot_int) {
     fprintf(f, "%ld", int_val(o));
@@ -1484,11 +1579,12 @@ static void write_obj(File f, Obj o) {
   else if (ot == ot_sym_data) {
     if (o.u & data_word_bit) { // data-word
       // TODO: support all word values.
+      assert(o.u == blank.u);
       fputs("''", f);
     }
     else { // sym
       Obj s = sym_data_borrow(o);
-      write_data(f, s);
+      write_repr_data(f, s);
     }
   }
   else if (ot == ot_reserved0) {
@@ -1500,15 +1596,15 @@ static void write_obj(File f, Obj o) {
   else {
     Obj r = obj_ref_borrow(o);
     switch (ref_struct_tag(r)) {
-      case st_Data_large: write_data(f, r);     break;
-      case st_Vec_large:  write_vec(f, r);      break;
-      case st_I32:        fputs("(I32?)", f);   break;
-      case st_I64:        fputs("(I64?)", f);   break;
-      case st_U32:        fputs("(U32?)", f);   break;
-      case st_U64:        fputs("(U64?)", f);   break;
-      case st_F32:        fputs("(F32?)", f);   break;
-      case st_F64:        fputs("(F64?)", f);   break;
-      case st_Proxy:      fputs("(Proxy?)", f); break;
+      case st_Data_large: write_repr_data(f, r);  break;
+      case st_Vec_large:  write_repr_vec(f, r);   break;
+      case st_I32:        fputs("(I32 ?)", f);    break;
+      case st_I64:        fputs("(I64 ?)", f);    break;
+      case st_U32:        fputs("(U32 ?)", f);    break;
+      case st_U64:        fputs("(U64 ?)", f);    break;
+      case st_F32:        fputs("(F32 ?)", f);    break;
+      case st_F64:        fputs("(F64 ?)", f);    break;
+      case st_Proxy:      fputs("(Proxy ?)", f);  break;
       case st_DEALLOC:    error("deallocated object is still referenced: %p", r.p);
     }
   }
@@ -1517,9 +1613,18 @@ static void write_obj(File f, Obj o) {
 
 
 static void obj_errL(Obj o) {
-  write_obj(stderr, o);
+  write_repr_obj(stderr, o);
   err_nl();
 }
+
+
+#define error_obj(msg, o) { \
+errF("%s error: " msg ": ", (process_name ? process_name : __FILE__)); \
+obj_errL(o); \
+exit(1); \
+}
+
+#define check_obj(condition, msg, o) { if (!(condition)) error_obj(msg, o); }
 
 
 static void obj_err_tag(Obj o) {
@@ -1646,12 +1751,12 @@ static U64 parse_U64(Parser* p) {
 }
 
 
-static Obj parse_Uns(Parser* p) {
+static Obj parse_uns(Parser* p) {
   return new_uns(parse_U64(p));
 }
 
 
-static Obj parse_Int(Parser* p, Int sign) {
+static Obj parse_int(Parser* p, Int sign) {
   assert(PC == '-' || PC == '+');
   P_ADV1;
   U64 u = parse_U64(p);
@@ -1660,7 +1765,7 @@ static Obj parse_Int(Parser* p, Int sign) {
 }
 
 
-static Obj parse_Sym(Parser* p) {
+static Obj parse_sym(Parser* p) {
   assert(PC == '_' || isalpha(PC));
   Int pos = p->pos;
   loop {
@@ -1694,11 +1799,11 @@ static Obj parse_comment(Parser* p) {
   }  while (PC != '\n');
   SS s = ss_slice(p->src, pos_start, p->pos);
   Obj d = new_data_from_SS(s);
-  return new_v2(COMMENT, d);
+  return new_vec_OO(COMMENT, d);
 }
 
 
-static Obj parse_Str(Parser* p, Char q) {
+static Obj parse_data(Parser* p, Char q) {
   assert(PC == q);
   Int pos_open = p->pos; // for error reporting.
   SS s = ss_alloc(16); // could declare as static to reduce reallocs.
@@ -1722,6 +1827,7 @@ static Obj parse_Str(Parser* p, Char q) {
       escape = false;
       Char ce = c;
       switch (c) {
+        case '0': ce = 0;     break; // NULL
         case 'a': ce = '\a';  break; // bell - BEL
         case 'b': ce = '\b';  break; // backspace - BS
         case 'f': ce = '\f';  break; // form feed - FF
@@ -1826,7 +1932,7 @@ static Mem parse_blocks(Parser* p) {
         mem_release_dealloc(a.mem);
         return mem0;
       }
-      o = new_vec(m);
+      o = new_vec_M(m);
     }
     else {
       o = parse_expr(p);
@@ -1852,8 +1958,9 @@ static Obj parse_call(Parser* p) {
   P_ADV1;
   Mem m = parse_seq(p);
   P_ADV_TERM(')');
-  Obj c = new_chain(m);
+  Obj v = new_vec_M(m);
   mem_dealloc(m);
+  Obj c = new_vec_OO(CALL, v);
   return c;
 }
 
@@ -1862,9 +1969,9 @@ static Obj parse_expa(Parser* p) {
   P_ADV1;
   Mem m = parse_seq(p);
   P_ADV_TERM('>');
-  Obj c = new_chain(m);
+  Obj v = new_vec_M(m);
   mem_dealloc(m);
-  Obj e = new_v2(EXPA, c);
+  Obj e = new_vec_OO(EXPA, v);
   return e;
 }
 
@@ -1873,10 +1980,9 @@ static Obj parse_vec(Parser* p) {
   P_ADV1;
   Mem m = parse_seq(p);
   P_ADV_TERM('}');
-  Obj v = new_vec(m);
+  Obj v = new_vec_M(m);
   mem_dealloc(m);
-  Obj q = new_v2(QUO, v);
-  return q;
+  return v;
 }
 
 
@@ -1884,10 +1990,9 @@ static Obj parse_chain(Parser* p) {
   P_ADV1;
   Mem m = parse_blocks(p);
   P_ADV_TERM(']');
-  Obj c = new_chain(m);
+  Obj c = new_chain_M(m);
   mem_dealloc(m);
-  Obj q = new_v2(QUO, c);
-  return q;
+  return c;
 }
 
 
@@ -1895,7 +2000,7 @@ static Obj parse_qua(Parser* p) {
   assert(PC == '`');
   P_ADV1;
   Obj o = parse_expr(p);
-  return new_v2(QUA, o);
+  return new_vec_OO(QUA, o);
 }
 
 
@@ -1908,22 +2013,22 @@ static Obj parse_expr_sub(Parser* p) {
     case '{':   return parse_vec(p);
     case '[':   return parse_chain(p);
     case '`':   return parse_qua(p);
-    case '\'':  return parse_Str(p, '\'');
-    case '"':   return parse_Str(p, '"');
+    case '\'':  return parse_data(p, '\'');
+    case '"':   return parse_data(p, '"');
     case '#':   return parse_comment(p);
     case '+':
-      if (isdigit(PC1)) return parse_Int(p, 1);
+      if (isdigit(PC1)) return parse_int(p, 1);
       break;
     case '-':
-      if (isdigit(PC1)) return parse_Int(p, -1);
+      if (isdigit(PC1)) return parse_int(p, -1);
       break;
 
   }
   if (isdigit(c)) {
-    return parse_Uns(p);
+    return parse_uns(p);
   }
   if (c == '_' || isalpha(c)) {
-    return parse_Sym(p);
+    return parse_sym(p);
   }
   return parse_error(p, "unexpected character");
 }
@@ -1931,13 +2036,15 @@ static Obj parse_expr_sub(Parser* p) {
 
 static Obj parse_expr(Parser* p) {
   Obj o = parse_expr_sub(p);
-  //parser_err(p); obj_errL(o);
+#if VERBOSE_PARSE
+  parser_err(p); obj_errL(o);
+#endif
   return o;
 }
 
 
 // caller must free e.
-static Obj parse_data(Obj path, Obj src, BM* e) {
+static Obj parse_src(Obj path, Obj src, BM* e) {
   Parser p = (Parser) {
     .path=data_SS(path),
     .src=data_SS(src),
@@ -1956,8 +2063,8 @@ static Obj parse_data(Obj path, Obj src, BM* e) {
     o = VOID;
   }
   else {
-    Obj c = new_chain(m);
-    o = new_v2(DO, c);
+    Obj c = new_vec_M(m);
+    o = new_vec_OO(DO, c);
   }
   mem_dealloc(m);
   *e = cast(BM, p.e);
@@ -1970,16 +2077,18 @@ static Obj parse_data(Obj path, Obj src, BM* e) {
 
 static Obj env_get(Obj env, Obj sym) {
   assert_ref_is_valid(env);
-  while (env.u != E.u) {
+  while (env.u != END.u) {
     Obj frame = vec_hd(env);
-    while (frame.u != E.u) {
-      Obj binding = vec_hd(frame);
-      assert(ref_len(binding) == 3);
-      Obj key = vec_a(binding);
-      if (key.u == sym.u) {
-        return vec_b(binding);
+    if (frame.u != CHAIN0.u) {
+      while (frame.u != END.u) {
+        Obj binding = vec_hd(frame);
+        assert(ref_len(binding) == 3);
+        Obj key = vec_a(binding);
+        if (key.u == sym.u) {
+          return vec_b(binding);
+        }
+        frame = vec_tl(frame);
       }
-      frame = vec_tl(frame);
     }
     env = vec_tl(env);
   }
@@ -2011,19 +2120,67 @@ static Step step_mk(Cont cont, Obj val) {
 #pragma mark - eval
 
 
-static Step eval_sym(Cont cont, Obj env, Obj sym) {
-  Obj val = env_get(env, sym);
+static Step eval(Cont cont, Obj env, Obj code);
+
+
+static Step eval_sym(Cont cont, Obj env, Obj code) {
+  assert(obj_is_sym(code));
+  if (code.u < VOID.u) STEP(cont, code); // constants are self-evaluating.
+  if (code.u == VOID.u) error("cannot eval VOID");
+  Obj val = env_get(env, code);
   if (val.u == VOID.u) { // lookup failed.
-    Obj sym_data = sym_data_borrow(sym);
-    error_sym("lookup error", sym_data);
+    error_obj("lookup error", code);
   }
   STEP(cont, val);
 }
 
 
 static Step eval_QUO(Cont cont, Obj env, Int len, Obj* args) {
-  check(len == 1, "call to QUO requires a single argument; found %ld", len);
+  check(len == 1, "QUO requires a single argument; found %ld", len);
   STEP(cont, args[0]);
+}
+
+
+static Step eval_DO(Cont cont, Obj env, Int len, Obj* args) {
+  check(len == 2, "DO requires a single argument; found %ld", len - 1);
+  Obj body = args[0];
+  if (body.u == VEC0.u) {
+    STEP(cont, VOID);
+  }
+  check_obj(obj_is_vec(body), "DO argument must be a vec; found", body);
+  body = obj_ref_borrow(body);
+  Int body_len = ref_len(body);
+  Obj* body_els = vec_els(body);
+  Cont next = cont;
+  for_in_rev(i, body_len) {
+    Obj a = obj_borrow(body_els[i]);
+    Cont c = ^(Obj o){
+      //errF("cont DO %li: ", i); obj_errL(a);
+      return eval(next, env, a);
+    };
+    next = Block_copy(c);
+  }
+  STEP(next, VOID);
+}
+
+
+static Step eval_SCOPE(Cont cont, Obj env, Int len, Obj* args) {
+  STEP(cont, VOID);
+}
+
+
+static Step eval_LET(Cont cont, Obj env, Int len, Obj* args) {
+  STEP(cont, VOID);
+}
+
+
+static Step eval_IF(Cont cont, Obj env, Int len, Obj* args) {
+  STEP(cont, VOID);
+}
+
+
+static Step eval_FN(Cont cont, Obj env, Int len, Obj* args) {
+  STEP(cont, VOID);
 }
 
 
@@ -2039,26 +2196,40 @@ static Step eval_Vec_large(Cont cont, Obj env, Obj code) {
   Obj callee = obj_borrow(els[0]);
   Obj* args = els + 1;
   Tag ot = obj_tag(callee);
-  if (ot == ot_sym_data && len > 1) { // special forms must have args.
-    switch (sym_index(callee)) {
-      case si_QUO: return eval_QUO(cont, env, len, args);
+  if (ot == ot_sym_data && !(ot & data_word_bit)) {
+    Int si = sym_index(callee);
+#define EVAL_CALL(s)    case si_##s: return eval_##s(cont, env, len, args)
+    switch (si) {
+      EVAL_CALL(QUO);
+      EVAL_CALL(DO);
+      EVAL_CALL(SCOPE);
+      EVAL_CALL(LET);
+      EVAL_CALL(IF);
+      EVAL_CALL(FN);
     }
   }
-  // TODO: eval each el, then apply.
-  STEP(cont, code); // TODO
+  error_obj("cannot call object", code);
 }
+
+
+static const BC trace_eval_prefix   = "▿ "; // during trace, printed before each eval; white_down_pointing_small_triangle.
+static const BC trace_cont_prefix   = "◦ "; // during trace, printed before calling continuation; white_bullet.
+static const BC trace_apply_prefix  = "▹ "; // called before each call apply;  white_right_pointing_small_triangle.
 
 
 static Step eval(Cont cont, Obj env, Obj code) {
   Obj_tag ot = obj_tag(code);
   if (ot & ot_flt_bit || ot == ot_int) {
-    STEP(cont, code);
+    STEP(cont, code); // self-evaluating.
   }
   if (ot == ot_sym_data) {
+    if (ot & data_word_bit) {
+      STEP(cont, code); // self-evaluating.
+    }
     return eval_sym(cont, env, code);
   }
   if (ot == ot_reserved0 || ot == ot_reserved1) {
-    error("cannot eval reserved0: %p", code.p);
+    error_obj("cannot eval reserved object", code);
   }
   assert_ref_is_valid(code);
   switch (ref_struct_tag(code)) {
@@ -2073,9 +2244,9 @@ static Step eval(Cont cont, Obj env, Obj code) {
     case st_F64:
       STEP(cont, code);
     case st_Proxy:
-      error("cannot eval Proxy object: %p", code.p);
+      error_obj("cannot eval proxy object", code);
     case st_DEALLOC:
-      error("cannot eval deallocated object: %p", code.p);
+      error_obj("cannot eval deallocated object", code);
   }
 }
 
@@ -2083,7 +2254,11 @@ static Step eval(Cont cont, Obj env, Obj code) {
 static Obj eval_loop(Obj env, Obj code) {
   Step s = eval(NULL, env, code);
   while (s.cont) {
+#if VERBOSE_EVAL
+    err(trace_cont_prefix); obj_errL(s.val);
+#endif
     s = s.cont(s.val);
+    Block_release(s.cont);
   }
   return s.val;
 }
@@ -2091,7 +2266,7 @@ static Obj eval_loop(Obj env, Obj code) {
 
 static void parse_and_eval(Obj env, Obj path, Obj src, Array* sources, Bool out_val) {
     BM e = NULL;
-    Obj code = parse_data(obj_borrow(path), obj_borrow(src), &e);
+    Obj code = parse_src(obj_borrow(path), obj_borrow(src), &e);
     if (e) {
       err("parse error: ");
       errL(e);
@@ -2099,10 +2274,12 @@ static void parse_and_eval(Obj env, Obj path, Obj src, Array* sources, Bool out_
       exit(1);
     }
     else {
-      array_append(sources, new_v2(path, src));
+      //obj_errL(code);
+      array_append(sources, new_vec_OO(path, src));
       Obj val = eval_loop(env, obj_borrow(code));
       if (out_val) {
-        write_obj(stdout, val);
+        write_repr_obj(stdout, val);
+        out_nl();
       }
       obj_release(val);
     }
@@ -2118,7 +2295,7 @@ int main(int argc, BC argv[]) {
   assert_host_basic();
   assert_obj_tags_are_valid();
   assert(size_Obj == size_Word);
-  
+  assert(int_val(new_int(-1)) == -1);
   set_process_name(argv[0]);
   init_syms();
   
@@ -2147,14 +2324,14 @@ int main(int argc, BC argv[]) {
     }
   }
 
-  Obj global_env = new_v2(E, E);
+  Obj global_env = new_vec_OO(CHAIN0, END);
   Array sources = array0;
   
   // handle arguments.
   for_in(i, path_count) {
     Obj path = new_data_from_BC(paths[i]);
     Obj src = new_data_from_path(paths[i]);
-    parse_and_eval(global_env, path, src, &sources, false);
+    parse_and_eval(obj_ref_borrow(global_env), path, src, &sources, false);
   }
   if (expr) {
     Obj path = new_data_from_BC("<expr>");

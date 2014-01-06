@@ -1,8 +1,24 @@
-(outLL
-  0
-  1
-  'abc'
-  "omg"
-  T
-  F)
-  
+NIL
+VEC0
+CHAIN0
+END
+false
+true
+COMMENT
+UNQ
+QUA
+QUO
+DO
+SCOPE
+LET
+IF
+FN
+EXPA
+0
+1
+-0
++0
+-1
++1
+'abc'
+"omg"
