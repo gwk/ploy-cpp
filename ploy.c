@@ -1175,6 +1175,11 @@ static Int sym_index(Obj s) {
   return s.i >> shift_sym;
 }
 
+static Bool sym_is_form(Obj s) {
+  assert(obj_is_sym(s));
+  return (s.u >= si_COMMENT && s.u <= si_CALL);
+}
+
 
 // special value constants.
 #define DEF_CONSTANT(c) \
@@ -1386,6 +1391,8 @@ static void init_syms() {
 }
 
 
+static const Obj int0 = (Obj){.i = ot_int };
+
 static Int int_val(Obj o) {
   assert(obj_tag(o) == ot_int);
   Int i = o.i & cast(Int, body_mask);
@@ -1461,6 +1468,18 @@ static Vec_shape vec_shape(Obj v) {
     if (ref_len(v) != 2) s = vs_chain_blocks;
     v = r;
   }
+}
+
+
+static Bool is_true(Obj o) {
+  if (obj_is_sym(o)) {
+    return (sym_index(o) >= si_TRUE);
+  }
+#define F(c) if (o.u == c.u) return false;
+  F(blank);
+  F(int0);
+#undef F
+  return true;
 }
 
 
@@ -2136,13 +2155,13 @@ static Step eval_sym(Cont cont, Obj env, Obj code) {
 
 
 static Step eval_QUO(Cont cont, Obj env, Int len, Obj* args) {
-  check(len == 1, "QUO requires a single argument; found %ld", len);
+  check(len == 1, "QUO requires 1 argument; found %ld", len);
   STEP(cont, args[0]);
 }
 
 
 static Step eval_DO(Cont cont, Obj env, Int len, Obj* args) {
-  check(len == 2, "DO requires a single argument; found %ld", len - 1);
+  check(len == 1, "DO requires 1 argument; found %ld", len);
   Obj body = args[0];
   if (body.u == VEC0.u) {
     STEP(cont, VOID);
@@ -2165,7 +2184,10 @@ static Step eval_DO(Cont cont, Obj env, Int len, Obj* args) {
 
 
 static Step eval_SCOPE(Cont cont, Obj env, Int len, Obj* args) {
-  STEP(cont, VOID);
+  check(len == 1, "SCOPE requires 1 argument; found %ld", len);
+  Obj body = args[0];
+  // TODO: create new env frame.
+  return eval(cont, env, body);
 }
 
 
@@ -2175,7 +2197,19 @@ static Step eval_LET(Cont cont, Obj env, Int len, Obj* args) {
 
 
 static Step eval_IF(Cont cont, Obj env, Int len, Obj* args) {
-  STEP(cont, VOID);
+  check(len == 3, "IF requires 3 arguments; found %ld", len);
+  Obj pred  = obj_borrow(args[0]);
+  Obj then_ = obj_borrow(args[1]);
+  Obj else_ = obj_borrow(args[2]);
+  Cont c = ^(Obj o){
+    if (is_true(o)) {
+      return eval(cont, env, then_);
+    }
+    else {
+      return eval(cont, env, else_);
+    }
+  };
+  return eval(Block_copy(c), env, pred);
 }
 
 
@@ -2184,29 +2218,30 @@ static Step eval_FN(Cont cont, Obj env, Int len, Obj* args) {
 }
 
 
-static Step eval_call_apply(Cont cont, Obj env, Obj callee, Int len, Obj* els) {
-  // TODO function call.
-  STEP(cont, callee);
+static Step eval_CALL(Cont cont, Obj env, Int len, Obj* args) {
+  STEP(cont, VOID);
 }
 
 
 static Step eval_Vec_large(Cont cont, Obj env, Obj code) {
   Int len = ref_large_len(code);
   Obj* els = vec_large_els(code);
-  Obj callee = obj_borrow(els[0]);
+  Obj form = obj_borrow(els[0]);
   Obj* args = els + 1;
-  Tag ot = obj_tag(callee);
+  Tag ot = obj_tag(form);
   if (ot == ot_sym_data && !(ot & data_word_bit)) {
-    Int si = sym_index(callee);
-#define EVAL_CALL(s)    case si_##s: return eval_##s(cont, env, len, args)
+    Int si = sym_index(form);
+#define EVAL_FORM(s) case si_##s: return eval_##s(cont, env, len - 1, args)
     switch (si) {
-      EVAL_CALL(QUO);
-      EVAL_CALL(DO);
-      EVAL_CALL(SCOPE);
-      EVAL_CALL(LET);
-      EVAL_CALL(IF);
-      EVAL_CALL(FN);
+      EVAL_FORM(QUO);
+      EVAL_FORM(DO);
+      EVAL_FORM(SCOPE);
+      EVAL_FORM(LET);
+      EVAL_FORM(IF);
+      EVAL_FORM(FN);
+      EVAL_FORM(CALL);
     }
+#undef EVAL_FORM
   }
   error_obj("cannot call object", code);
 }
