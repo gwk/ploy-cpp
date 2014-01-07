@@ -552,7 +552,7 @@ static BM ss_src_loc_str(SS src, SS path, Int pos, Int len, Int line_num, Int co
 typedef U8 Tag;
 typedef Uns Sym; // index into global_sym_table.
 
-#define width_tag 4
+#define width_obj_tag 4
 
 #if ARCH_32_WORD
 typedef U16 UH; // unsigned half-word.
@@ -571,13 +571,13 @@ typedef U32 UH; // unsigned half-word.
 static const Int size_UH = sizeof(UH);
 
 // tagged pointer value mask.
-static const Uns tag_end = 1L << width_tag;
-static const Uns tag_mask = tag_end - 1;
-static const Uns body_mask = ~tag_mask;
+static const Uns obj_tag_end = 1L << width_obj_tag;
+static const Uns obj_tag_mask = obj_tag_end - 1;
+static const Uns obj_body_mask = ~obj_tag_mask;
 static const Uns flt_body_mask = max_Uns - 1;
 static const Int max_Int_tagged  = (1L  << width_tagged_word) - 1;
 static const Uns max_Uns_tagged  = max_Int_tagged;
-static const Int shift_factor_Int = 1L << width_tag; // cannot shift signed values in C so use multiplication instead.
+static const Int shift_factor_Int = 1L << width_obj_tag; // cannot shift signed values in C so use multiplication instead.
 
 /*
 all ploy objects are tagged pointer/value words.
@@ -614,7 +614,7 @@ typedef enum {
 
 // the plan is to pack small data objects into words, interleaved with syms.
 // for the time being though we will define only the blank string.
-static const Uns data_word_bit = (1 << width_tag);
+static const Uns data_word_bit = (1 << width_obj_tag);
 
 
 
@@ -656,7 +656,7 @@ typedef enum {
   st_File,
   st_Func_host_large,
   st_Proxy,
-  st_DEALLOC = tag_mask, // this value must be equal to the mask for ref_dealloc.
+  st_DEALLOC = obj_tag_mask, // this value must be equal to the mask for ref_dealloc.
 } Struct_tag;
 
 static BC struct_tag_names[] = {
@@ -702,15 +702,18 @@ static const Int size_RCWL = sizeof(RCWL);
 
 // ref counts are unshifted high bits;
 // counting is done in count_inc increments to obviate tag masking.
-static const UH count_inc = tag_end;
-static const UH count_mask_h = (1L << width_UH) - tag_end; // also the max count value.
-static const Uns count_mask_w = max_Uns - tag_mask; // also the max count value.
+#define width_struct_tag 4
+static const Uns struct_tag_end = 1L << width_struct_tag;
+static const Uns struct_tag_mask = struct_tag_end - 1;
+static const UH count_inc = struct_tag_end;
+static const UH count_mask_h = (1L << width_UH) - struct_tag_end; // also the max count value.
+static const Uns count_mask_w = max_Uns - struct_tag_mask; // also the max count value.
 
 
-static Tag rch_struct_tag(RCH rch) { return rch.w & tag_mask; }
-static Tag rcw_struct_tag(RCW rcw) { return rcw.w & tag_mask; }
-static Tag rch_spec_tag(RCH rch)   { return rch.s & tag_mask; }
-static Tag rcw_spec_tag(RCW rcw)   { return rcw.s & tag_mask; }
+static Tag rch_struct_tag(RCH rch) { return rch.w & struct_tag_mask; }
+static Tag rcw_struct_tag(RCW rcw) { return rcw.w & struct_tag_mask; }
+static Tag rch_spec_tag(RCH rch)   { return rch.s & struct_tag_mask; }
+static Tag rcw_spec_tag(RCW rcw)   { return rcw.s & struct_tag_mask; }
 static UH rch_weak(RCH rch)        { return rch.w & count_mask_h; }
 static Uns rcw_weak(RCW rcw)       { return rcw.w & count_mask_w; }
 static UH rch_strong(RCH rch)      { return rch.s & count_mask_h; }
@@ -773,7 +776,7 @@ static Int size_Obj = sizeof(Obj);
 
 
 static Obj_tag obj_tag(Obj o) {
-  return o.u & tag_mask;
+  return o.u & obj_tag_mask;
 }
 
 
@@ -807,7 +810,7 @@ static void assert_obj_is_strong(Obj o) {
 
 static void assert_ref_is_valid(Obj r) {
   assert(!obj_tag(r));
-  assert((*r.st & tag_mask) != st_DEALLOC);
+  assert((*r.st & struct_tag_mask) != st_DEALLOC);
 }
 
 
@@ -820,7 +823,7 @@ static Obj ref_add_tag(Obj r, Tag t) {
 
 static Obj obj_ref_borrow(Obj o) {
   assert(obj_is_ref(o));
-  return (Obj){ .u = o.u & body_mask };
+  return (Obj){ .u = o.u & obj_body_mask };
 }
 
 
@@ -834,7 +837,7 @@ static Obj obj_borrow(Obj o) {
 
 static Struct_tag ref_struct_tag(Obj r) {
   assert_ref_is_valid(r);
-  return *r.st & tag_mask;
+  return *r.st & struct_tag_mask;
 }
 
 
@@ -1178,7 +1181,7 @@ typedef enum {
 } Sym_index;
 
 
-static const Int shift_sym = width_tag + 1; // 1 bit reserved for Data-word flag.
+static const Int shift_sym = width_obj_tag + 1; // 1 bit reserved for Data-word flag.
 static const Int sym_index_end = 1L << (size_Int * 8 - shift_sym);
 
 #define _sym_with_index(index) (Obj){ .u = (cast(Uns, index) << shift_sym) | ot_sym_data }
@@ -1444,7 +1447,7 @@ static const Obj int0 = (Obj){.i = ot_int };
 
 static Int int_val(Obj o) {
   assert(obj_tag(o) == ot_int);
-  Int i = o.i & cast(Int, body_mask);
+  Int i = o.i & cast(Int, obj_body_mask);
   assert(i == 0 || i <= -shift_factor_Int || i >= shift_factor_Int);
   return i / shift_factor_Int;
 }
