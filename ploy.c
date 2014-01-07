@@ -653,6 +653,8 @@ typedef enum {
   st_U64,
   st_F32,
   st_F64,
+  st_File,
+  st_Func_host_large,
   st_Proxy,
   st_DEALLOC = tag_mask, // this value must be equal to the mask for ref_dealloc.
 } Struct_tag;
@@ -666,9 +668,9 @@ static BC struct_tag_names[] = {
   "U64",
   "F32",
   "F64",
+  "File",
+  "Func-host-large",
   "Proxy",
-  "Unknown-struct-tag",
-  "Unknown-struct-tag",
   "Unknown-struct-tag",
   "Unknown-struct-tag",
   "Unknown-struct-tag",
@@ -856,6 +858,16 @@ static Bool ref_is_data(Obj d) {
 }
 
 
+static Bool ref_is_file(Obj f) {
+  return ref_struct_tag(f) == st_File;
+}
+
+
+static Bool ref_is_func_host(Obj f) {
+  return ref_struct_tag(f) == st_Func_host_large;
+}
+
+
 static Bool obj_is_vec(Obj o) {
   return obj_is_ref(o) && ref_is_vec(obj_ref_borrow(o));
 }
@@ -866,6 +878,12 @@ static Int ref_large_len(Obj r) {
   assert(ref_struct_tag(r) == st_Data_large || ref_struct_tag(r) == st_Vec_large);
   assert(r.rcwl->len > 0);
   return r.rcwl->len;
+}
+
+
+static Ptr ref_body(Obj r) {
+  assert_ref_is_valid(r);
+  return NULL; // TODO
 }
 
 
@@ -921,7 +939,7 @@ static void ref_dealloc(Obj r);
 static void ref_release_strong(Obj r) {
   assert_ref_is_valid(r);
   errFLD("rel strong: %p %s", r.p, struct_tag_names[ref_struct_tag(r)]);
-  if (r.rcw->s < count_inc * 2) { // ref count is 1.
+  if (r.rcw->s == count_inc) { // ref count is 1.
     ref_dealloc(r);
   }
   else {
@@ -1246,6 +1264,12 @@ static SS data_SS(Obj d) {
 }
 
 
+#pragma mark - Func-host
+
+
+
+
+
 #pragma mark - new
 
 
@@ -1360,35 +1384,60 @@ static Obj new_sym(SS s) {
 }
 
 
-#pragma mark - type-specific
+#pragma mark - File
 
 
-static void init_syms() {
-  assert(global_sym_names.mem.len == 0);
-  Obj sym;
-#define SBC(bc, si) sym = new_sym(ss_from_BC(bc)); assert(sym_index(sym) == si)
-#define S(s) SBC(#s, si_##s)
-  S(NIL);
-  S(VEC0);
-  S(CHAIN0);
-  S(END);
-  SBC("false", si_FALSE);
-  SBC("true", si_TRUE);
-  S(COMMENT);
-  S(UNQ);
-  S(QUA);
-  S(QUO);
-  S(DO);
-  S(SCOPE);
-  S(LET);
-  S(IF);
-  S(FN);
-  S(CALL);
-  S(EXPA);
-  S(VOID);
-#undef SBC
-#undef S
+static Obj new_File(File file) {
+  Obj o = ref_alloc(st_File, size_RCWL + sizeof(File));
+  File* f = cast(File*, o.rcwl + 1);
+  *f = file;
+  return ref_add_tag(o, ot_strong);
 }
+
+
+#pragma mark - Func-host
+
+
+typedef struct {
+  Ptr ptr;
+  Int arg_count;
+} ALIGNED_TO_WORD Func_host;
+
+
+typedef Obj(*Func_host1)(Obj);
+typedef Obj(*Func_host2)(Obj, Obj);
+typedef Obj(*Func_host3)(Obj, Obj, Obj);
+
+
+static Obj new_Func_host(Ptr ptr, Int arg_count) {
+  Obj o = ref_alloc(st_Func_host_large, size_RCWL + sizeof(Func_host));
+  Func_host* f = cast(Func_host*, o.rcwl + 1);
+  f->ptr = ptr;
+  f->arg_count = arg_count;
+  return ref_add_tag(o, ot_strong);
+}
+
+
+static Obj func_host_call(Obj func, Obj args) {
+  assert(ref_is_func_host(func));
+  assert(ref_is_vec(args));
+  Func_host* f = cast(Func_host*, func.rcwl + 1);
+  Int len = ref_len(args);
+  check(len == f->arg_count, "host function expects %ld arguments; received %ld",
+    len, f->arg_count);
+  Obj* els = vec_els(args);
+  #define CALL(c, ...) case c: return (cast(Func_host##c, f->ptr))(__VA_ARGS__)
+  switch (f->arg_count) {
+    CALL(1, obj_borrow(els[0]));
+    CALL(2, obj_borrow(els[0]), obj_borrow(els[1]));
+    CALL(3, obj_borrow(els[0]), obj_borrow(els[1]), obj_borrow(els[2]));
+    default: error("unsupported number of arguments to host function: %ld", f->arg_count);
+  }
+  #undef CALL
+}
+
+
+#pragma mark - type-specific
 
 
 static const Obj int0 = (Obj){.i = ot_int };
@@ -1623,6 +1672,8 @@ static void write_repr_obj(File f, Obj o) {
       case st_U64:        fputs("(U64 ?)", f);    break;
       case st_F32:        fputs("(F32 ?)", f);    break;
       case st_F64:        fputs("(F64 ?)", f);    break;
+      case st_File:       fputs("(File ?)", f);   break;
+      case st_Func_host_large: fputs("(Func-host ?)", f); break;
       case st_Proxy:      fputs("(Proxy ?)", f);  break;
       case st_DEALLOC:    error("deallocated object is still referenced: %p", r.p);
     }
@@ -1657,6 +1708,17 @@ void dbg(Obj o) {
   obj_err_tag(o);
   err(" : ");
   obj_errL(o);
+}
+
+
+#pragma mark - host functions
+
+
+static Obj func_host_write(Obj file, Obj data) {
+  check_obj(ref_is_file(file), "write expected File object; found", file);
+  check_obj(ref_is_data(data), "write expected Data object; found", data);
+
+  return new_int(0);
 }
 
 
@@ -2278,10 +2340,10 @@ static Step eval(Cont cont, Obj env, Obj code) {
     case st_F32:
     case st_F64:
       STEP(cont, code);
-    case st_Proxy:
-      error_obj("cannot eval proxy object", code);
-    case st_DEALLOC:
-      error_obj("cannot eval deallocated object", code);
+    case st_File:             error_obj("cannot eval File object", code);
+    case st_Func_host_large:  error_obj("canont eval Func-host object", code);
+    case st_Proxy:            error_obj("cannot eval proxy object", code);
+    case st_DEALLOC:          error_obj("cannot eval deallocated object", code);
   }
 }
 
@@ -2323,6 +2385,34 @@ static void parse_and_eval(Obj env, Obj path, Obj src, Array* sources, Bool out_
 
 
 #pragma mark - main
+
+
+static void init_syms() {
+  assert(global_sym_names.mem.len == 0);
+  Obj sym;
+#define SBC(bc, si) sym = new_sym(ss_from_BC(bc)); assert(sym_index(sym) == si)
+#define S(s) SBC(#s, si_##s)
+  S(NIL);
+  S(VEC0);
+  S(CHAIN0);
+  S(END);
+  SBC("false", si_FALSE);
+  SBC("true", si_TRUE);
+  S(COMMENT);
+  S(UNQ);
+  S(QUA);
+  S(QUO);
+  S(DO);
+  S(SCOPE);
+  S(LET);
+  S(IF);
+  S(FN);
+  S(CALL);
+  S(EXPA);
+  S(VOID);
+#undef SBC
+#undef S
+}
 
 
 int main(int argc, BC argv[]) {
