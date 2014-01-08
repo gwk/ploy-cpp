@@ -29,8 +29,12 @@
 #define OPT_MEM_CLEAR_ELS 1
 #endif
 
+#define VERBOSE 0
+#define VERBOSE_MM 0
 #define VERBOSE_PARSE 0
 #define VERBOSE_EVAL 0
+
+#define report_pinned_counts 1
 
 
 typedef char Char;
@@ -80,11 +84,13 @@ typedef FILE* File;
 #if __SIZEOF_POINTER__ == 4
 #define ARCH_32_WORD 1
 #define ARCH_64_WORD 0
+#define width_word 32
 typedef float Flt;
 
 #elif __SIZEOF_POINTER__ == 8
 #define ARCH_32_WORD 0
 #define ARCH_64_WORD 1
+#define width_word 64
 typedef double Flt;
 
 #else
@@ -554,23 +560,8 @@ typedef Uns Sym; // index into global_sym_table.
 
 #define width_obj_tag 4
 
-#if ARCH_32_WORD
-typedef U16 UH; // unsigned half-word.
-#define width_UH 16
-#define width_tagged_word 28
-#define width_tagged_UH 12
+static const Int width_tagged_word = width_word - width_obj_tag;
 
-#elif ARCH_64_WORD
-typedef U32 UH; // unsigned half-word.
-#define width_UH 32
-#define width_tagged_word 60
-#define width_tagged_UH 28
-
-#endif
-
-static const Int size_UH = sizeof(UH);
-
-// tagged pointer value mask.
 static const Uns obj_tag_end = 1L << width_obj_tag;
 static const Uns obj_tag_mask = obj_tag_end - 1;
 static const Uns obj_body_mask = ~obj_tag_mask;
@@ -582,8 +573,6 @@ static const Int shift_factor_Int = 1L << width_obj_tag; // cannot shift signed 
 /*
 all ploy objects are tagged pointer/value words.
 the 4-bit obj tag is guaranteed to be available by 16-byte aligned malloc.
-there is also a 4-bit tag carved out of each of the ref-count half-words.
-these are called the struct tag and spec tag.
 
 Sym/Data-word values: 4 bit (1 nibble) tag, 28/60 bit (7/15 nibble) value.
 the next bit is the data-word bit.
@@ -596,13 +585,13 @@ Masking out the low tag bits yields a heap pointer, whose low four bits are the 
 */
 
 // low bit indicates 32/64 bit IEEE 754 float with low bit rounded to even.
-// alternatively we could use two bits to indicate floats, and fit the remaining enum into a 3 bit tag (discarding reserved).
+// alternatively we could use two set bits to indicate floats, and fit the enum into a 3 bit tag (discarding the reserved tag values).
 static const Tag ot_flt_bit = 1; // only flt words have low bit set.
 static const Tag ot_unm_mask = 1 << 3; // unmanaged words have high tag bit set.
 static const Tag ot_val_mask = ot_flt_bit | ot_unm_mask; // val words have at least one of these bits set.
 
 typedef enum {
-  ot_borrowed   = 0 << 1, // ref is not retained by receiver.
+  ot_borrowed   = 0,      // ref is not retained by receiver.
   ot_strong     = 1 << 1, // ref is strongly retained by receiver.
   ot_weak       = 2 << 1, // ref is weakly retained by receiver.
   ot_gc         = 3 << 1, // ref; reserved for possible future garbage collection implementation.
@@ -617,13 +606,13 @@ typedef enum {
 static const Uns data_word_bit = (1 << width_obj_tag);
 
 
-
 static void assert_obj_tags_are_valid() {
   assert(!(ot_val_mask & ot_strong));
   assert(ot_val_mask & ot_int);
 }
 
 
+// to facilitate direct lookup we duplicate Flt across all possible bit patterns.
 static BC obj_tag_names[] = {
   "Borrowed",
   "Flt",
@@ -644,9 +633,15 @@ static BC obj_tag_names[] = {
 };
 
 
+#define width_struct_tag 4
+static const Uns struct_tag_end = 1L << width_struct_tag;
+static const Uns struct_tag_mask = struct_tag_end - 1;
+
+#define width_meta_tag 4
+
 typedef enum {
-  st_Data_large,
-  st_Vec_large,
+  st_Data,
+  st_Vec,
   st_I32,
   st_I64,
   st_U32,
@@ -654,14 +649,18 @@ typedef enum {
   st_F32,
   st_F64,
   st_File,
-  st_Func_host_large,
-  st_Proxy,
-  st_DEALLOC = obj_tag_mask, // this value must be equal to the mask for ref_dealloc.
+  st_Func_host,
+  st_Reserved_A,
+  st_Reserved_B,
+  st_Reserved_C,
+  st_Reserved_D,
+  st_Reserved_E,
+  st_DEALLOC = struct_tag_mask, // this value must be equal to the mask for ref_dealloc.
 } Struct_tag;
 
 static BC struct_tag_names[] = {
-  "Data-large",
-  "Vec-large",
+  "Data",
+  "Vec",
   "I32",
   "I64",
   "U32",
@@ -669,95 +668,46 @@ static BC struct_tag_names[] = {
   "F32",
   "F64",
   "File",
-  "Func-host-large",
-  "Proxy",
-  "Unknown-struct-tag",
-  "Unknown-struct-tag",
-  "Unknown-struct-tag",
-  "Unknown-struct-tag",
+  "Func-host",
+  "Reserved-A",
+  "Reserved-B",
+  "Reserved-C",
+  "Reserved-D",
+  "Reserved-E",
   "DEALLOC",
 };
 
-
-// Struct_tag bits must be the first four bits. This is not currently big-endian compatible.
-typedef struct {
-  UH w; // struct tag | weak count.
-  UH s; // spec_tag | strong count.
-} ALIGNED_TO_WORD RCH; // Reference count, half-words.
+static const Int width_sc  = width_word - width_struct_tag;
+static const Int width_wc  = width_word - width_meta_tag;
+static const Uns pinned_sc = (1L < width_sc) - 1;
+static const Uns pinned_wc = (1L < width_wc) - 1;
 
 typedef struct {
-  Uns w; // struct tag | weak count.
-  Uns s; // spec_tag | strong count.
-} RCW; // Reference count, full-words.
+  Tag st : width_struct_tag;
+  Uns wc : width_wc;
+  Tag mt : width_meta_tag;
+  Uns sc : width_sc;
+} RC; // Ref-counts. 
 
 typedef struct {
-  RCW rc;
+  RC rc;
   Int len;
-} RCWL;
+} RCL;
 
-static const Int size_RCH  = sizeof(RCH);
-static const Int size_RCW  = sizeof(RCW);
-static const Int size_RCWL = sizeof(RCWL);
-
-
-// ref counts are unshifted high bits;
-// counting is done in count_inc increments to obviate tag masking.
-#define width_struct_tag 4
-static const Uns struct_tag_end = 1L << width_struct_tag;
-static const Uns struct_tag_mask = struct_tag_end - 1;
-static const UH count_inc = struct_tag_end;
-static const UH count_mask_h = (1L << width_UH) - struct_tag_end; // also the max count value.
-static const Uns count_mask_w = max_Uns - struct_tag_mask; // also the max count value.
+static const Int size_RC  = sizeof(RC);
+static const Int size_RCL = sizeof(RCL);
 
 
-static Tag rch_struct_tag(RCH rch) { return rch.w & struct_tag_mask; }
-static Tag rcw_struct_tag(RCW rcw) { return rcw.w & struct_tag_mask; }
-static Tag rch_spec_tag(RCH rch)   { return rch.s & struct_tag_mask; }
-static Tag rcw_spec_tag(RCW rcw)   { return rcw.s & struct_tag_mask; }
-static UH rch_weak(RCH rch)        { return rch.w & count_mask_h; }
-static Uns rcw_weak(RCW rcw)       { return rcw.w & count_mask_w; }
-static UH rch_strong(RCH rch)      { return rch.s & count_mask_h; }
-static Uns rcw_strong(RCW rcw)     { return rcw.s & count_mask_w; }
-
-static const Bool report_pinned_counts = true;
-
-static Bool ch_is_pinned(UH c)   { return c >= count_mask_h; }
-static Bool cw_is_pinned(Uns c)  { return c >= count_mask_w; }
-
-#define DEF_RC_COUNTS(RC, s, f) \
-static void rc##s##_##inc##_##f(RC* rc) { \
-  if (c##s##_is_pinned(rc->f)) return; \
-  rc->f += count_inc; \
-  if (report_pinned_counts && c##s##_is_pinned(rc->f)) { \
-    errFL("object " #RC " " #s " count pinned: %p", rc); \
-  } \
-} \
-static void rc##s##_##dec##_##f(RC* rc) { \
-  if (c##s##_is_pinned(rc->f)) return; \
-  assert(rc->f >= count_inc); \
-  rc->f -= count_inc; \
+static void errL_rc(BC msg, RC* rc) {
+  errF("%s %p {st:%s w:%lx mt:%x s:%lx}\n",
+       msg, rc, struct_tag_names[rc->st], rc->wc, rc->mt, rc->sc);
 }
 
-#define DEF_RC_ERRS(RC, s) \
-static void rc##s##_err(RC* rc) { \
-  Struct_tag st = rc##s##_struct_tag(*rc); \
-  errF(#RC "{st:%x:%s w:%lx sp:%d s:%lx}", \
-    st, struct_tag_names[st], \
-    cast(Uns, rc##s##_weak(*rc)), rc##s##_spec_tag(*rc), cast(Uns, rc##s##_strong(*rc))); \
-} \
-static void rc##s##_errL(RC* rc) { \
-  rc##s##_err(rc); \
-  err_nl(); \
-}
-
-
-DEF_RC_COUNTS(RCH, h, w)
-DEF_RC_COUNTS(RCH, h, s)
-DEF_RC_COUNTS(RCW, w, w)
-DEF_RC_COUNTS(RCW, w, s)
-
-DEF_RC_ERRS(RCH, h)
-DEF_RC_ERRS(RCW, w)
+#if VERBOSE_MM
+#define errLV_rc(...) errL_rc(__VA_ARGS__)
+#else
+#define errLV_rc(...)
+#endif
 
 
 // tag bits must be masked off before dereferencing all pointer types.
@@ -766,13 +716,23 @@ typedef union {
   Uns u;
   Flt f;
   Ptr p;
-  Struct_tag* st;
-  //RCH* rch;
-  RCW* rcw;
-  RCWL* rcwl;
+  RC* rc;
+  RCL* rcl;
 } Obj;
 
 static Int size_Obj = sizeof(Obj);
+
+
+static void obj_errL(Obj o);
+
+static NORETURN error_obj(BC msg, Obj o) {
+  errF("%s error: %s: ", (process_name ? process_name : __FILE__), msg);
+  obj_errL(o);
+  exit(1);
+}
+
+#define check_obj(condition, msg, o) { if (!(condition)) error_obj(msg, o); }
+
 
 
 static Obj_tag obj_tag(Obj o) {
@@ -810,7 +770,7 @@ static void assert_obj_is_strong(Obj o) {
 
 static void assert_ref_is_valid(Obj r) {
   assert(!obj_tag(r));
-  assert((*r.st & struct_tag_mask) != st_DEALLOC);
+  assert(r.rc->st != st_DEALLOC);
 }
 
 
@@ -837,27 +797,17 @@ static Obj obj_borrow(Obj o) {
 
 static Struct_tag ref_struct_tag(Obj r) {
   assert_ref_is_valid(r);
-  return *r.st & struct_tag_mask;
-}
-
-
-static Bool ref_is_vec_large(Obj r) {
-  return ref_struct_tag(r) == st_Vec_large;
+  return r.rc->st;
 }
 
 
 static Bool ref_is_vec(Obj r) {
-  return ref_struct_tag(r) == st_Vec_large;
-}
-
-
-static Bool ref_is_data_large(Obj d) {
-  return ref_struct_tag(d) == st_Data_large;
+  return ref_struct_tag(r) == st_Vec;
 }
 
 
 static Bool ref_is_data(Obj d) {
-  return ref_struct_tag(d) == st_Data_large;
+  return ref_struct_tag(d) == st_Data;
 }
 
 
@@ -867,7 +817,7 @@ static Bool ref_is_file(Obj f) {
 
 
 static Bool ref_is_func_host(Obj f) {
-  return ref_struct_tag(f) == st_Func_host_large;
+  return ref_struct_tag(f) == st_Func_host;
 }
 
 
@@ -876,33 +826,30 @@ static Bool obj_is_vec(Obj o) {
 }
 
 
-static Int ref_large_len(Obj r) {
+static Int ref_len(Obj r) {
   assert_ref_is_valid(r);
-  assert(ref_struct_tag(r) == st_Data_large || ref_struct_tag(r) == st_Vec_large);
-  assert(r.rcwl->len > 0);
-  return r.rcwl->len;
+  assert(ref_struct_tag(r) == st_Data || ref_struct_tag(r) == st_Vec);
+  assert(r.rcl->len > 0);
+  return r.rcl->len;
 }
 
 
 static Ptr ref_body(Obj r) {
   assert_ref_is_valid(r);
-  return NULL; // TODO
+  assert(ref_struct_tag(r) != st_Data && ref_struct_tag(r) != st_Vec);
+  return r.rc + 1; // address past rc.
 }
 
 
-static Int ref_len(Obj r) {
-  return ref_large_len(r);
+static Obj* ref_vec_els(Obj v) {
+  assert(ref_is_vec(v));
+  return cast(Obj*, v.rcl + 1); // address past rcl.
 }
 
 
-static Obj* vec_large_els(Obj v) {
-  assert(ref_is_vec_large(v));
-  return cast(Obj*, v.rcwl + 1); // address past rcwl.
-}
-
-
-static Obj* vec_els(Obj v) {
-  return vec_large_els(v);
+static B ref_data_ptr(Obj d) {
+  assert(ref_is_data(d));
+  return (B){.m = cast(BM, d.rcl + 1)}; // address past rcl.
 }
 
 
@@ -910,30 +857,35 @@ static Obj* vec_els(Obj v) {
 if (ot & ot_val_mask) return __VA_ARGS__ // value; no counting.
 
 
-static Obj obj_retain_weak(Obj o) {
-  Obj_tag ot = obj_tag(o);
-  IF_OT_IS_VAL_RETURN(o);
-  assert_ref_is_valid(o);
-  errFLD("ret weak:  %p %s", o.p, struct_tag_names[ref_struct_tag(o)]);
-  rcw_inc_w(o.rcw);
-  return ref_add_tag(o, ot_weak);
-}
-
-
 static Obj obj_retain_strong(Obj o) {
   Obj_tag ot = obj_tag(o);
   IF_OT_IS_VAL_RETURN(o);
   assert_ref_is_valid(o);
-  errFLD("ret strong: %p %s", o.p, struct_tag_names[ref_struct_tag(o)]);
-  rcw_inc_s(o.rcw);
+  errLV_rc("ret strong", o.rc);
+  if (o.rc->sc < pinned_sc - 1) {
+    o.rc->sc++;
+  }
+  else if (o.rc->sc < pinned_sc) {
+    o.rc->sc++;
+    errFL("object strong count pinned: %p", o.p);
+  }
   return ref_add_tag(o, ot_strong);
 }
 
 
-static void ref_release_weak(Obj r) {
-  assert_ref_is_valid(r);
-  errFLD("rel weak:  %p %s", r.p, struct_tag_names[ref_struct_tag(r)]);
-  rcw_dec_w(r.rcw);
+static Obj obj_retain_weak(Obj o) {
+  Obj_tag ot = obj_tag(o);
+  IF_OT_IS_VAL_RETURN(o);
+  assert_ref_is_valid(o);
+  errLV_rc("ret weak ", o.rc);
+  if (o.rc->wc < pinned_wc - 1) {
+    o.rc->wc++;
+  }
+  else if (o.rc->wc < pinned_wc) {
+    o.rc->wc++;
+    errFL("object weak count pinned: %p", o.p);
+  }
+  return ref_add_tag(o, ot_weak);
 }
 
 
@@ -941,14 +893,26 @@ static void ref_dealloc(Obj r);
 
 static void ref_release_strong(Obj r) {
   assert_ref_is_valid(r);
-  errFLD("rel strong: %p %s", r.p, struct_tag_names[ref_struct_tag(r)]);
-  if (r.rcw->s == count_inc) { // ref count is 1.
+  if (r.rc->sc == 1) {
     ref_dealloc(r);
+    return;
   }
-  else {
-    rcw_dec_s(r.rcw);
+  errLV_rc("rel strong", r.rc);
+  if (r.rc->sc < pinned_sc) { // can only decrement if the count is not pinned.
+    r.rc->sc--;
   }
 }
+
+              
+static void ref_release_weak(Obj r) {
+  assert_ref_is_valid(r);
+  errLV_rc("rel weak ", r.rc);
+  check_obj(r.rc->wc > 0, "over-released weak ref", r);
+  // can only decrement if the count is not pinned.
+  if (r.rc->wc < pinned_wc) r.rc->wc--;
+}
+
+
 
 
 static void obj_release(Obj o) {
@@ -969,9 +933,11 @@ static Obj ref_alloc(Struct_tag st, Int width) {
   assert(width > 0);
   Obj r = (Obj){.p=malloc(cast(Uns, width))};
   assert(!obj_tag(r)); // check that malloc is really aligned to the width of the tag.
-  errFLD("alloc:      %p %s; %ld", r.p, struct_tag_names[st], width);
-  r.rcw->w = st;
-  r.rcw->s = count_inc;
+  r.rc->st = st;
+  r.rc->wc = 0;
+  r.rc->mt = 0;
+  r.rc->sc = 1;
+  errLV_rc("alloc     ", r.rc);
 #if OPT_ALLOC_COUNT
   total_allocs_ref++;
 #endif
@@ -981,17 +947,17 @@ static Obj ref_alloc(Struct_tag st, Int width) {
 
 static void ref_dealloc(Obj r) {
   assert_ref_is_valid(r);
-  errFLD("dealloc:    %p %s", r.p, struct_tag_names[ref_struct_tag(r)]);
-  check(r.rcw->w < count_inc, "attempt to deallocate object with non-zero weak count: %p", r.p);
+  errLV_rc("dealloc   ", r.rc);
+  check(r.rc->wc == 0, "attempt to deallocate object with non-zero weak count: %p", r.p);
   Struct_tag st = ref_struct_tag(r);
-  if (st == st_Vec_large) {
-    Obj* els = vec_large_els(r);
+  if (st == st_Vec) {
+    Obj* els = ref_vec_els(r);
     for_in(i, ref_len(r)) {
       obj_release(els[i]); // TODO: make this tail recursive for deallocating long chains?
     }
   }
 #if OPT_DEALLOC_MARK
-  *r.st &= st_DEALLOC;
+  r.rc->st = st_DEALLOC;
 #endif
   free(r.p);
 #if OPT_ALLOC_COUNT
@@ -1244,21 +1210,17 @@ static Bool obj_is_data(Obj o) {
 
 #define assert_is_data(d) \
 assert(d.u == blank.u || (obj_tag(d) == ot_sym_data && ref_
+
+
 static Int data_len(Obj d) {
   if (d.u == blank.u) return 0; // TODO: support all data-word values.
   return ref_len(obj_borrow(d));
 }
 
 
-static B data_large_ptr(Obj d) {
-  assert(ref_is_data_large(d));
-  return (B){.m = cast(BM, d.rcwl + 1)}; // address past rcwl.
-}
-
-
 static B data_ptr(Obj d) {
   if (d.u == blank.u) return (B){.c=NULL}; // TODO: supoprt all data-word values.
-  return data_large_ptr(d);
+  return ref_data_ptr(obj_borrow(d));
 }
 
 
@@ -1290,8 +1252,8 @@ static Obj new_uns(Uns u) {
 
 
 static Obj data_empty(Int len) {
-  Obj d = ref_alloc(st_Data_large, size_RCWL + len);
-  d.rcwl->len = len;
+  Obj d = ref_alloc(st_Data, size_RCL + len);
+  d.rcl->len = len;
   return d; // borrowed.
 }
 
@@ -1299,7 +1261,7 @@ static Obj data_empty(Int len) {
 static Obj new_data_from_SS(SS s) {
   if (!s.len) return blank;
   Obj d = data_empty(s.len);
-  memcpy(data_large_ptr(d).m, s.b.c, s.len);
+  memcpy(data_ptr(d).m, s.b.c, s.len);
   return ref_add_tag(d, ot_strong);
 }
 
@@ -1317,7 +1279,7 @@ static Obj new_data_from_path(BC path) {
   if (!len) return blank;
   Obj d = data_empty(len);
   fseek(f, 0, SEEK_SET);
-  Uns items_read = fread(data_large_ptr(d).m, size_Char, cast(Uns, len), f);
+  Uns items_read = fread(data_ptr(d).m, size_Char, cast(Uns, len), f);
   check(cast(Int, items_read) == len, "read failed; expected len: %ld; actual bytes: %lu", len, items_read);
   fclose(f);
   return ref_add_tag(d, ot_strong);
@@ -1329,9 +1291,9 @@ static Obj new_vec_M(Mem m) {
   if (!m.len) {
     return VEC0;
   }
-  Obj v = ref_alloc(st_Vec_large, size_RCWL + size_Obj * m.len);
-  v.rcwl->len = m.len;
-  Obj* p = vec_large_els(v);
+  Obj v = ref_alloc(st_Vec, size_RCL + size_Obj * m.len);
+  v.rcl->len = m.len;
+  Obj* p = ref_vec_els(v);
   for_in(i, m.len) {
     Obj el = mem_el(m, i);
     assert_obj_is_strong(el);
@@ -1391,8 +1353,8 @@ static Obj new_sym(SS s) {
 
 
 static Obj new_File(File file) {
-  Obj o = ref_alloc(st_File, size_RCWL + sizeof(File));
-  File* f = cast(File*, o.rcwl + 1);
+  Obj o = ref_alloc(st_File, size_RCL + sizeof(File));
+  File* f = cast(File*, o.rcl + 1);
   *f = file;
   return ref_add_tag(o, ot_strong);
 }
@@ -1413,8 +1375,8 @@ typedef Obj(*Func_host3)(Obj, Obj, Obj);
 
 
 static Obj new_Func_host(Ptr ptr, Int arg_count) {
-  Obj o = ref_alloc(st_Func_host_large, size_RCWL + sizeof(Func_host));
-  Func_host* f = cast(Func_host*, o.rcwl + 1);
+  Obj o = ref_alloc(st_Func_host, size_RCL + sizeof(Func_host));
+  Func_host* f = cast(Func_host*, o.rcl + 1);
   f->ptr = ptr;
   f->arg_count = arg_count;
   return ref_add_tag(o, ot_strong);
@@ -1424,11 +1386,11 @@ static Obj new_Func_host(Ptr ptr, Int arg_count) {
 static Obj func_host_call(Obj func, Obj args) {
   assert(ref_is_func_host(func));
   assert(ref_is_vec(args));
-  Func_host* f = cast(Func_host*, func.rcwl + 1);
+  Func_host* f = cast(Func_host*, func.rcl + 1);
   Int len = ref_len(args);
   check(len == f->arg_count, "host function expects %ld arguments; received %ld",
     len, f->arg_count);
-  Obj* els = vec_els(args);
+  Obj* els = ref_vec_els(args);
   #define CALL(c, ...) case c: return (cast(Func_host##c, f->ptr))(__VA_ARGS__)
   switch (f->arg_count) {
     CALL(1, obj_borrow(els[0]));
@@ -1468,12 +1430,12 @@ static Obj sym_data_borrow(Obj s) {
 }
 
 
-#define FMT_SYM(sym) cast(I32, ref_len(sym_data_borrow(sym))), data_large_ptr(sym_data_borrow(sym))
+#define FMT_SYM(sym) cast(I32, ref_len(sym_data_borrow(sym))), data_ptr(sym_data_borrow(sym))
 
 
 static Obj vec_hd(Obj v) {
   assert(ref_is_vec(v));
-  Obj* els = vec_els(v);
+  Obj* els = ref_vec_els(v);
   Obj el = els[0];
   return obj_borrow(el);
 }
@@ -1481,7 +1443,7 @@ static Obj vec_hd(Obj v) {
 
 static Obj vec_tl(Obj v) {
   assert(ref_is_vec(v));
-  Obj* els = vec_els(v);
+  Obj* els = ref_vec_els(v);
   Int len = ref_len(v);
   Obj el = els[len - 1];
   return obj_borrow(el);
@@ -1493,7 +1455,7 @@ static Obj vec_tl(Obj v) {
 
 static Obj vec_b(Obj v) {
   assert(ref_is_vec(v));
-  Obj* els = vec_els(v);
+  Obj* els = ref_vec_els(v);
   Int len = ref_len(v);
   assert(len > 1);
   Obj el = els[1];
@@ -1540,8 +1502,8 @@ static Bool is_true(Obj o) {
 
 static void write_repr_data(File f, Obj d) {
   assert(ref_is_data(d));
-  Int l = d.rcwl->len;
-  BC p = data_large_ptr(d).c;
+  Int l = d.rcl->len;
+  BC p = data_ptr(d).c;
   fputc('\'', f);
   for_in(i, l) {
     Char c = p[i];
@@ -1570,7 +1532,7 @@ static void write_repr_obj(File f, Obj o);
 static void write_repr_vec_vec(File f, Obj v) {
   assert(ref_is_vec(v));
   Int len = ref_len(v);
-  Obj* els = vec_els(v);
+  Obj* els = ref_vec_els(v);
   Obj hd = els[0];
   if (hd.u == CALL.u && ref_len(v) == 2 && obj_is_vec(vec_tl(v))) { // call
     fputs("(", f);
@@ -1612,7 +1574,7 @@ static void write_repr_chain_blocks(File f, Obj c) {
   assert(ref_is_vec(c));
   fputs("[", f);
   loop {
-    Obj* els = vec_els(c);
+    Obj* els = ref_vec_els(c);
     Int len = ref_len(c);
     fputs("|", f);
     for_in(i, len - 1) {
@@ -1667,8 +1629,8 @@ static void write_repr_obj(File f, Obj o) {
   else {
     Obj r = obj_ref_borrow(o);
     switch (ref_struct_tag(r)) {
-      case st_Data_large: write_repr_data(f, r);  break;
-      case st_Vec_large:  write_repr_vec(f, r);   break;
+      case st_Data: write_repr_data(f, r);  break;
+      case st_Vec:  write_repr_vec(f, r);   break;
       case st_I32:        fputs("(I32 ?)", f);    break;
       case st_I64:        fputs("(I64 ?)", f);    break;
       case st_U32:        fputs("(U32 ?)", f);    break;
@@ -1676,8 +1638,12 @@ static void write_repr_obj(File f, Obj o) {
       case st_F32:        fputs("(F32 ?)", f);    break;
       case st_F64:        fputs("(F64 ?)", f);    break;
       case st_File:       fputs("(File ?)", f);   break;
-      case st_Func_host_large: fputs("(Func-host ?)", f); break;
-      case st_Proxy:      fputs("(Proxy ?)", f);  break;
+      case st_Func_host:  fputs("(Func-host ?)", f); break;
+      case st_Reserved_A:
+      case st_Reserved_B:
+      case st_Reserved_C:
+      case st_Reserved_D:
+      case st_Reserved_E: fputs("(ReservedX)", f); break;
       case st_DEALLOC:    error("deallocated object is still referenced: %p", r.p);
     }
   }
@@ -1689,15 +1655,6 @@ static void obj_errL(Obj o) {
   write_repr_obj(stderr, o);
   err_nl();
 }
-
-
-#define error_obj(msg, o) { \
-errF("%s error: " msg ": ", (process_name ? process_name : __FILE__)); \
-obj_errL(o); \
-exit(1); \
-}
-
-#define check_obj(condition, msg, o) { if (!(condition)) error_obj(msg, o); }
 
 
 static void obj_err_tag(Obj o) {
@@ -2234,7 +2191,7 @@ static Step eval_DO(Cont cont, Obj env, Int len, Obj* args) {
   check_obj(obj_is_vec(body), "DO argument must be a vec; found", body);
   body = obj_ref_borrow(body);
   Int body_len = ref_len(body);
-  Obj* body_els = vec_els(body);
+  Obj* body_els = ref_vec_els(body);
   Cont next = cont;
   for_in_rev(i, body_len) {
     Obj a = obj_borrow(body_els[i]);
@@ -2288,9 +2245,9 @@ static Step eval_CALL(Cont cont, Obj env, Int len, Obj* args) {
 }
 
 
-static Step eval_Vec_large(Cont cont, Obj env, Obj code) {
-  Int len = ref_large_len(code);
-  Obj* els = vec_large_els(code);
+static Step eval_Vec(Cont cont, Obj env, Obj code) {
+  Int len = ref_len(code);
+  Obj* els = ref_vec_els(code);
   Obj form = obj_borrow(els[0]);
   Obj* args = els + 1;
   Tag ot = obj_tag(form);
@@ -2333,9 +2290,9 @@ static Step eval(Cont cont, Obj env, Obj code) {
   }
   assert_ref_is_valid(code);
   switch (ref_struct_tag(code)) {
-    case st_Vec_large:
-      return eval_Vec_large(cont, env, code);
-    case st_Data_large:
+    case st_Vec:
+      return eval_Vec(cont, env, code);
+    case st_Data:
     case st_I32:
     case st_I64:
     case st_U32:
@@ -2343,10 +2300,14 @@ static Step eval(Cont cont, Obj env, Obj code) {
     case st_F32:
     case st_F64:
       STEP(cont, code);
-    case st_File:             error_obj("cannot eval File object", code);
-    case st_Func_host_large:  error_obj("canont eval Func-host object", code);
-    case st_Proxy:            error_obj("cannot eval proxy object", code);
-    case st_DEALLOC:          error_obj("cannot eval deallocated object", code);
+    case st_File:
+    case st_Func_host:
+    case st_Reserved_A:
+    case st_Reserved_B:
+    case st_Reserved_C:
+    case st_Reserved_D:
+    case st_Reserved_E: error_obj("cannot eval object", code);
+    case st_DEALLOC:    error_obj("cannot eval deallocated object", code);
   }
 }
 
@@ -2426,8 +2387,8 @@ int main(int argc, BC argv[]) {
   assert(int_val(new_int(-1)) == -1);
   set_process_name(argv[0]);
   init_syms();
+  vol_err = VERBOSE;
   
-  //vol_err = 1;
   // parse arguments.
   BC paths[len_buffer];
   BC expr = NULL;
