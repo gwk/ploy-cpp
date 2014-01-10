@@ -33,5 +33,5 @@ clang \
 -ftrapv \
 -g \
 "$release_defs" \
-ploy.c \
+src/ploy.c \
 "$@"
