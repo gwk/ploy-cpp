@@ -23,3 +23,16 @@ static Obj env_get(Obj env, Obj sym) {
   }
   return VOID; // lookup failed.
 }
+
+
+static Obj env_cons(Obj env, Obj frame) {
+  return new_vec2(frame, env);
+}
+
+
+static void env_bind(Obj env, Obj sym, Obj val) {
+  // TODO: check for preexisting?
+  Obj f0 = vec_hd(env);
+  Obj f1 = new_vec3(sym, val, f0);
+  vec_put(env, 0, f1);
+}

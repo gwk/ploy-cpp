@@ -20,8 +20,14 @@ static Obj new_vec_M(Mem m) {
 }
 
 
-static Obj new_vec_OO(Obj a, Obj b) {
+static Obj new_vec2(Obj a, Obj b) {
   Mem m = mem_mk((Obj[]){a, b}, 2);
+  return new_vec_M(m);
+}
+
+
+static Obj new_vec3(Obj a, Obj b, Obj c) {
+  Mem m = mem_mk((Obj[]){a, b, c}, 3);
   return new_vec_M(m);
 }
 
@@ -33,48 +39,56 @@ static Obj new_chain_M(Mem m) {
   Obj c = END;
   for_in_rev(i, m.len) {
     Obj el = mem_el(m, i);
-    c = new_vec_OO(el, c);
+    c = new_vec2(el, c);
   }
   //obj_errL(c);
   return c;
 }
 
 
-static Obj new_chain_OO(Obj hd, Obj tl) {
+static Obj new_chain_2(Obj hd, Obj tl) {
   if (tl.u == CHAIN0.u) {
     tl = CHAIN0;
   }
-  return new_vec_OO(hd, tl);
+  return new_vec2(hd, tl);
+}
+
+
+static Obj vec_el(Obj v, Int i) {
+  // this assumes the caller knows the size of the vector.
+  assert(ref_is_vec(v));
+  assert(i < ref_len(v));
+  Obj* els = ref_vec_els(v);
+  return obj_borrow(els[i]);
+}
+
+
+static void vec_put(Obj v, Int i, Obj o) {
+  // this assumes the caller knows the size of the vector.
+  assert(ref_is_vec(v));
+  assert(i < ref_len(v));
+  Obj* els = ref_vec_els(v);
+  els[i] = obj_retain_strong(o);
 }
 
 
 static Obj vec_hd(Obj v) {
-  assert(ref_is_vec(v));
-  Obj* els = ref_vec_els(v);
-  Obj el = els[0];
-  return obj_borrow(el);
+  return vec_el(v, 0);
 }
 
 
 static Obj vec_tl(Obj v) {
-  assert(ref_is_vec(v));
-  Obj* els = ref_vec_els(v);
-  Int len = ref_len(v);
-  Obj el = els[len - 1];
-  return obj_borrow(el);
+  return vec_el(v, 1);
 }
 
 
-#define vec_a vec_hd
+static Obj vec_a(Obj v) {
+return vec_el(v, 0);
+}
 
 
 static Obj vec_b(Obj v) {
-  assert(ref_is_vec(v));
-  Obj* els = ref_vec_els(v);
-  Int len = ref_len(v);
-  assert(len > 1);
-  Obj el = els[1];
-  return obj_borrow(el);
+  return vec_el(v, 1);
 }
 
 

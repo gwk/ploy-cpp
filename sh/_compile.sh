@@ -29,8 +29,8 @@ clang \
 -fblocks \
 -fstrict-aliasing \
 -fstack-protector \
--fcatch-undefined-behavior \
--ftrapv \
+-fsanitize=undefined-trap \
+-fsanitize-undefined-trap-on-error \
 -g \
 "$release_defs" \
 src/ploy.c \

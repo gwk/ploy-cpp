@@ -6,10 +6,9 @@
 
 static void write_repr_data(File f, Obj d) {
   assert(ref_is_data(d));
-  Int l = d.rcl->len;
   BC p = data_ptr(d).c;
   fputc('\'', f);
-  for_in(i, l) {
+  for_in(i, ref_len(d)) {
     Char c = p[i];
     switch (c) {
       case '\a': fputc('\\', f); fputc('a', f);  continue; // bell - BEL

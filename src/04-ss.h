@@ -161,22 +161,6 @@ static SS ss_line_at_pos(SS s, Int pos) {
 }
 
 
-static void ss_write(File f, SS s) {
-  Uns items_written = fwrite(s.b.c, size_Char, (Uns)s.len, f);
-  check((Int)items_written == s.len, "write SS failed: len: %ld; written: %lu", s.len, items_written);
-}
-
-
-static void ss_out(SS s) {
-  ss_write(stdout, s);
-}
-
-
-static void ss_err(SS s) {
-  ss_write(stderr, s);
-}
-
-
 // return BC must be freed.
 static BM ss_src_loc_str(SS src, SS path, Int pos, Int len, Int line_num, Int col, BC msg) {
   // get source line.

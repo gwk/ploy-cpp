@@ -159,7 +159,7 @@ static Obj parse_comment(Parser* p) {
   }  while (PC != '\n');
   SS s = ss_slice(p->src, pos_start, p->pos);
   Obj d = new_data_from_SS(s);
-  return new_vec_OO(COMMENT, d);
+  return new_vec2(COMMENT, d);
 }
 
 
@@ -320,7 +320,7 @@ static Obj parse_call(Parser* p) {
   P_ADV_TERM(')');
   Obj v = new_vec_M(m);
   mem_dealloc(m);
-  Obj c = new_vec_OO(CALL, v);
+  Obj c = new_vec2(CALL, v);
   return c;
 }
 
@@ -331,7 +331,7 @@ static Obj parse_expa(Parser* p) {
   P_ADV_TERM('>');
   Obj v = new_vec_M(m);
   mem_dealloc(m);
-  Obj e = new_vec_OO(EXPA, v);
+  Obj e = new_vec2(EXPA, v);
   return e;
 }
 
@@ -360,7 +360,7 @@ static Obj parse_qua(Parser* p) {
   assert(PC == '`');
   P_ADV1;
   Obj o = parse_expr(p);
-  return new_vec_OO(QUA, o);
+  return new_vec2(QUA, o);
 }
 
 
@@ -424,7 +424,7 @@ static Obj parse_src(Obj path, Obj src, BM* e) {
   }
   else {
     Obj c = new_vec_M(m);
-    o = new_vec_OO(DO, c);
+    o = new_vec2(DO, c);
   }
   mem_dealloc(m);
   *e = cast(BM, p.e);

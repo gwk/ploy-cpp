@@ -5,8 +5,9 @@
 
 
 typedef struct {
-  Ptr ptr;
   Int arg_count;
+  Ptr ptr;
+  Obj sym;
 } ALIGNED_TO_WORD Func_host;
 
 
@@ -15,11 +16,13 @@ typedef Obj(*Func_host2)(Obj, Obj);
 typedef Obj(*Func_host3)(Obj, Obj, Obj);
 
 
-static Obj new_func_host(Ptr ptr, Int arg_count) {
-  Obj o = ref_alloc(st_Func_host, size_RCL + sizeof(Func_host));
-  Func_host* f = cast(Func_host*, o.rcl + 1);
-  f->ptr = ptr;
+static Obj new_func_host(Int arg_count, Ptr ptr, Obj sym) {
+  assert(obj_is_sym(sym));
+  Obj o = ref_alloc(st_Func_host, size_RC + sizeof(Func_host));
+  Func_host* f = ref_body(o);
   f->arg_count = arg_count;
+  f->ptr = ptr;
+  f->sym = sym;
   return ref_add_tag(o, ot_strong);
 }
 
@@ -27,7 +30,7 @@ static Obj new_func_host(Ptr ptr, Int arg_count) {
 static Obj func_host_call(Obj func, Obj args) {
   assert(ref_is_func_host(func));
   assert(ref_is_vec(args));
-  Func_host* f = cast(Func_host*, func.rcl + 1);
+  Func_host* f = ref_body(func);
   Int len = ref_len(args);
   check(len == f->arg_count, "host function expects %ld arguments; received %ld",
     len, f->arg_count);

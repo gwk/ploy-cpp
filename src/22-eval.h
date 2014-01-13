@@ -9,6 +9,7 @@ static Step eval(Cont cont, Obj env, Obj code);
 
 static Step eval_sym(Cont cont, Obj env, Obj code) {
   assert(obj_is_sym(code));
+  // TODO: remove this and place constants in global env?
   if (code.u < VOID.u) STEP(cont, code); // constants are self-evaluating.
   if (code.u == VOID.u) error("cannot eval VOID");
   Obj val = env_get(env, code);
@@ -83,8 +84,24 @@ static Step eval_FN(Cont cont, Obj env, Int len, Obj* args) {
 }
 
 
+static Step eval_call_func(Cont cont, Obj env, Int len, Obj* args) {
+
+}
+
+static Step eval_bind_args(Cont cont, Obj env, Int len, Obj* args) {
+  for_in_rev(i, len) {
+
+  }
+}
+
+
 static Step eval_CALL(Cont cont, Obj env, Int len, Obj* args) {
-  STEP(cont, VOID);
+  check(len > 0, "CALL requires at least one argument");
+  Obj callee_expr = args[0];
+  Cont c = ^(Obj callee){
+    return eval_bind_args(cont, env, len, args);
+  };
+  return eval(c, env, callee_expr);
 }
 
 
@@ -94,7 +111,7 @@ static Step eval_Vec(Cont cont, Obj env, Obj code) {
   Obj form = obj_borrow(els[0]);
   Obj* args = els + 1;
   Tag ot = obj_tag(form);
-  if (ot == ot_sym_data && !(ot & data_word_bit)) {
+  if (ot == ot_sym_data && !(form.u & data_word_bit)) {
     Int si = sym_index(form);
 #define EVAL_FORM(s) case si_##s: return eval_##s(cont, env, len - 1, args)
     switch (si) {
@@ -123,7 +140,7 @@ static Step eval(Cont cont, Obj env, Obj code) {
     STEP(cont, code); // self-evaluating.
   }
   if (ot == ot_sym_data) {
-    if (ot & data_word_bit) {
+    if (code.u & data_word_bit) {
       STEP(cont, code); // self-evaluating.
     }
     return eval_sym(cont, env, code);

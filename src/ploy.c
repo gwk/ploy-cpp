@@ -15,7 +15,7 @@ static void parse_and_eval(Obj env, Obj path, Obj src, Array* sources, Bool out_
     }
     else {
       //obj_errL(code);
-      array_append(sources, new_vec_OO(path, src));
+      array_append(sources, new_vec2(path, src));
       Obj val = eval_loop(env, obj_borrow(code));
       if (out_val) {
         write_repr_obj(stdout, val);
@@ -61,7 +61,9 @@ int main(int argc, BC argv[]) {
     }
   }
 
-  Obj global_env = new_vec_OO(CHAIN0, END);
+  Obj host_frame = host_init();
+  Obj global_env = env_cons(host_frame, END);
+  
   Array sources = array0;
   
   // handle arguments.

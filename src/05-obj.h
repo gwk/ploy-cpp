@@ -197,6 +197,21 @@ static Bool obj_is_val(Obj o) {
 }
 
 
+static Bool obj_is_flt(Obj o) {
+  return (o.u & ot_flt_bit);
+}
+
+
+static Bool obj_is_int(Obj o) {
+  return obj_tag(o) == ot_int;
+}
+
+
+static Bool obj_is_num(Obj o) {
+  return obj_is_flt(o) || obj_is_int(o);
+}
+
+
 static Bool obj_is_sym(Obj o) {
   return obj_tag(o) == ot_sym_data && !(o.u & data_word_bit);
 }
@@ -227,16 +242,28 @@ static Bool obj_is_data_word(Obj o) {
 
 
 static Bool ref_is_data(Obj o);
+static Bool ref_is_vec(Obj o);
+static Bool ref_is_file(Obj o);
+static Bool ref_is_func_host(Obj o);
+
 
 static Bool obj_is_data(Obj o) {
   return obj_is_data_word(o) || (obj_is_ref(o) && ref_is_data(obj_ref_borrow(o)));
 }
 
 
-static Bool ref_is_vec(Obj o);
-
 static Bool obj_is_vec(Obj o) {
   return obj_is_ref(o) && ref_is_vec(obj_ref_borrow(o));
+}
+
+
+static Bool obj_is_file(Obj o) {
+  return obj_is_ref(o) && ref_is_file(obj_ref_borrow(o));
+}
+
+
+static Bool obj_is_func_host(Obj o) {
+  return obj_is_ref(o) && ref_is_func_host(obj_ref_borrow(o));
 }
 
 
