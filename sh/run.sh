@@ -5,7 +5,7 @@ set -e
 root=$(dirname "$0")/..
 cd "$root"
 
-if ! sh/is-product-current.sh build/ploy ploy.c sh/*; then
+if ! sh/is-product-current.sh build/ploy src/* sh/*; then
   echo "building..."
   "$root"/sh/build.sh
   echo "running..."
