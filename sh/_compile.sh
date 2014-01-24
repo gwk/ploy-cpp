@@ -10,7 +10,9 @@ cd "$root"
 
 if [[ "$1" == "-release" ]]; then
   shift
-  release_defs="-DNDEBUG=1"
+  defs="-DDEBUG=0 -Ofast"
+else
+  defs="-DDEBUG=1"
 fi
 
 if [[ "$#" == 0 ]]; then
@@ -32,6 +34,29 @@ clang \
 -fsanitize=undefined-trap \
 -fsanitize-undefined-trap-on-error \
 -g \
-"$release_defs" \
+-ferror-limit=4 \
+"$defs" \
 src/ploy.c \
 "$@"
+
+
+#-fno-limit-debug-info      Do not limit debug information produced to reduce size of debug binary
+#-fsanitize-memory-track-origins  Enable origins tracking in MemorySanitizer
+#-fsanatize=adress,undefined
+#-ftrapv-handler=func-name  Specify the function to be called on overflow
+#-ftrapv                    Trap on integer overflow
+#-fwrapv                    Treat signed integer overflow as two's complement
+
+#-mms-bitfields             Set the default structure layout to be compatible with the Microsoft compiler standard
+
+#-fstrict-enums             Enable optimizations based on the strict definition of an enum's value range
+#-fvectorize                Enable the loop vectorization passes
+#-fslp-vectorize            Enable the superword-level parallelism vectorization passes
+#-funroll-loops             Turn on loop unroller
+#-freroll-loops             Turn on loop reroller
+
+#-foptimize-sibling-calls   tail call elimination
+#-mllvm -tailcallelim       tail calls?
+
+# -fpcc-struct-return       Override the default ABI to return all structs on the stack
+# -freg-struct-return       Override the default ABI to return small structs in registers
