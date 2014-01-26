@@ -14,7 +14,7 @@ struct Array;
 static Array global_sym_names = array0;
 
 
-#define _sym_with_index(index) (Obj){ .u = (cast(Uns, index) << shift_sym) | ot_sym_data }
+#define _sym_with_index(index) (Obj){ .u = (cast(Uns, index) << shift_sym) | ot_sym }
 
 static Obj sym_with_index(Int i) {
   check(i < sym_index_end, "Sym index is too large: %lx", i);
@@ -28,11 +28,9 @@ static Int sym_index(Obj s) {
 }
 
 
-// borrow the data for a sym.
-// the name is a bit confusing due to overlap with ot_sym_data (the tag for sym or data-word).
-static Obj sym_data_borrow(Obj s) {
+static Obj sym_data(Obj s) {
   assert(obj_is_sym(s));
-  return obj_borrow(mem_el(global_sym_names.mem, sym_index(s)));
+  return mem_el_borrowed(global_sym_names.mem, sym_index(s));
 }
 
 
@@ -41,20 +39,20 @@ static Obj new_data_from_SS(SS s);
 
 static Obj new_sym(SS s) {
   for_in(i, global_sym_names.mem.len) {
-    Obj d = obj_borrow(array_el(global_sym_names, i));
+    Obj d = mem_el_borrowed(global_sym_names.mem, i);
     if (ss_eq(s, data_SS(d))) {
       return sym_with_index(i);
     }
   }
   Obj d = new_data_from_SS(s);
-  Int i = array_append(&global_sym_names, d);
+  Int i = array_append_move(&global_sym_names, d);
   Obj sym = sym_with_index(i);
   //errF("NEW SYM: %ld: ", i); obj_errL(sym);
   return sym;
 }
 
-// for use with %*s formatter.
-#define FMT_SYM(sym) cast(I32, ref_len(sym_data_borrow(sym))), data_ptr(sym_data_borrow(sym))
+// for use with "%*s" formatter.
+#define FMT_SYM(sym) cast(I32, ref_len(sym_data(sym))), data_ptr(sym_data(sym))
 
 
 typedef enum {

@@ -31,7 +31,7 @@ static Bool char_is_atom_term(Char c) {
 
 
 static void parse_err(Parser* p) {
-  errF("%s:%ld:%ld (%ld): ", p->path.b.c, p->line + 1, p->col + 1, p->pos);
+  errF("%*s:%ld:%ld (%ld): ", FMT_SS(p->path), p->line + 1, p->col + 1, p->pos);
   if (p->e) errF("\nerror: %s\nobj:  ", p->e);
 }
 
@@ -213,7 +213,7 @@ static Obj parse_data(Parser* p, Char q) {
   }
   #undef APPEND
   P_ADV1; // past closing quote.
-  Obj d = new_data_from_SS(ss_mk(s.b, i));
+  Obj d = new_data_from_SS(ss_mk(i, s.b));
   ss_dealloc(s);
   return d;
 }
@@ -264,45 +264,40 @@ static Bool parser_has_next_expr(Parser* p) {
 }
 
 
-// return Mem must be freed.
-static Mem parse_seq(Parser* p) {
+static Mem parse_seq(Parser* p, Char term) {
+  // caller must free return Mem.
   Array a = array0;
   while (parser_has_next_expr(p)) {
+    if (term && PC == term) break;
     Obj o = parse_expr(p);
     if (p->e) {
       mem_release_dealloc(a.mem);
       return mem0;
     }
-    array_append(&a, o);
+    array_append_move(&a, o);
   }
   return a.mem;
 }
 
 
-// return Mem must be freed.
 static Mem parse_blocks(Parser* p) {
+  // caller must free return Mem.
   Array a = array0;
   while (parser_has_next_expr(p)) {
-    Char c = PC;
-    Obj o;
-    if (c == '|') {
-      P_ADV1;
-      Mem m = parse_seq(p);
-      if (p->e) {
-        mem_release_dealloc(a.mem);
-        return mem0;
-      }
-      o = new_vec_M(m);
+    if (PC != '|') {
+      parse_error(p, "expected '|'");
     }
-    else {
-      o = parse_expr(p);
-      if (p->e) {
-        mem_release_dealloc(a.mem);
-        return mem0;
-      }
+    P_ADV1;
+    Mem m = parse_seq(p, '|');
+    if (p->e) {
+      mem_release_dealloc(a.mem);
+      return mem0;
     }
-    array_append(&a, o);
+    Obj o = new_vec_HM(VOID, m);
+    mem_release_dealloc(m);
+    array_append_move(&a, o);
   }
+  for_in(i, a.mem.len) { errF("  pb %ld: ", i); dbg(a.mem.els[i]); }
   return a.mem;
 }
 
@@ -316,43 +311,53 @@ if (p->e || !parse_terminator(p, t)) { \
 
 static Obj parse_call(Parser* p) {
   P_ADV1;
-  Mem m = parse_seq(p);
+  Mem m = parse_seq(p, 0);
   P_ADV_TERM(')');
-  Obj v = new_vec_M(m);
-  mem_dealloc(m);
-  Obj c = new_vec2(CALL, v);
-  return c;
-}
-
-
-static Obj parse_expa(Parser* p) {
-  P_ADV1;
-  Mem m = parse_seq(p);
-  P_ADV_TERM('>');
-  Obj v = new_vec_M(m);
-  mem_dealloc(m);
-  Obj e = new_vec2(EXPA, v);
-  return e;
-}
-
-
-static Obj parse_vec(Parser* p) {
-  P_ADV1;
-  Mem m = parse_seq(p);
-  P_ADV_TERM('}');
-  Obj v = new_vec_M(m);
+  Obj v = new_vec_HM(CALL, m);
   mem_dealloc(m);
   return v;
 }
 
 
+static Obj parse_expa(Parser* p) {
+  P_ADV1;
+  Mem m = parse_seq(p, 0);
+  P_ADV_TERM('>');
+  Obj v = new_vec_HM(EXPA, m);
+  mem_dealloc(m);
+  return v;
+}
+
+
+static Obj parse_vec(Parser* p) {
+  P_ADV1;
+  Mem m = parse_seq(p, 0);
+  P_ADV_TERM('}');
+  Obj v = new_vec_M(m);
+  mem_dealloc(m);
+  Obj q = new_vec2(QUO, v);
+  return q;
+}
+
+
 static Obj parse_chain(Parser* p) {
   P_ADV1;
-  Mem m = parse_blocks(p);
+  Mem m;
+  Obj c;
+  if (PC == '|') {
+    m = parse_blocks(p);
+    c =  new_chain_blocks_M(m);
+  }
+  else {
+    m = parse_seq(p, 0);
+    c = new_chain_M(m);
+  }
   P_ADV_TERM(']');
-  Obj c = new_chain_M(m);
   mem_dealloc(m);
-  return c;
+  dbg(c);
+  Obj q = new_vec2(QUO, c);
+  dbg(q);
+  return q;
 }
 
 
@@ -403,8 +408,8 @@ static Obj parse_expr(Parser* p) {
 }
 
 
-// caller must free e.
 static Obj parse_src(Obj path, Obj src, BM* e) {
+  // caller must free e.
   Parser p = (Parser) {
     .path=data_SS(path),
     .src=data_SS(src),
@@ -413,7 +418,8 @@ static Obj parse_src(Obj path, Obj src, BM* e) {
     .col=0,
     .e=NULL,
   };
-  Mem m = parse_seq(&p);
+  Mem m = parse_seq(&p, 0);
+  //for_in(i, m.len) { errF("parse_src: %ld: ", i); obj_errL(mem_el_borrowed(m, i)); } // TEMP
   Obj o;
   if (p.e) {
     o = VOID;
@@ -423,8 +429,7 @@ static Obj parse_src(Obj path, Obj src, BM* e) {
     o = VOID;
   }
   else {
-    Obj c = new_vec_M(m);
-    o = new_vec2(DO, c);
+    o = new_vec_HM(DO, m);
   }
   mem_dealloc(m);
   *e = cast(BM, p.e);

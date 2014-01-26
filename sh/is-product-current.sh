@@ -3,6 +3,6 @@
 
 product=$1; shift
 
-for dependency in $@; do
+for dependency in "$@"; do
   [[ "$product" -nt "$dependency" ]] || exit 1
 done

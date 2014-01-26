@@ -8,7 +8,7 @@ static Obj new_file(File file) {
   Obj f = ref_alloc(st_File, size_RC + sizeof(File));
   File* p = ref_body(f);
   *p = file;
-  return ref_add_tag(f, ot_strong);
+  return f;
 }
 
 

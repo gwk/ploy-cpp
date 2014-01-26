@@ -4,14 +4,15 @@
 #include "02-bytes.h"
 
 
+static const Uns struct_tag_end;
+
 #if OPT_ALLOC_COUNT
 static Int total_allocs_raw = 0;
 static Int total_allocs_mem = 0;
-static Int total_allocs_ref = 0;
 static Int total_deallocs_raw = 0;
 static Int total_deallocs_mem = 0;
-static Int total_deallocs_ref = 0;
 #endif
+
 
 static Ptr raw_alloc(Int size) {
   assert(size >= 0);

@@ -32,15 +32,10 @@ static void array_grow_cap(Array* a) {
 }
 
 
-static Int array_append(Array* a, Obj o) {
+static Int array_append_move(Array* a, Obj o) {
   if (a->mem.len == a->cap) {
     array_grow_cap(a);
   }
-  return mem_append(&a->mem, o);
-}
-
-
-static Obj array_el(Array a, Int i) {
-  return mem_el(a.mem, i);
+  return mem_append_move(&a->mem, o);
 }
 

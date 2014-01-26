@@ -4,16 +4,14 @@
 #include "05-obj.h"
 
 
+#if OPT_ALLOC_COUNT
+static Int total_allocs_ref[struct_tag_end] = {};
+static Int total_deallocs_ref[struct_tag_end] = {};
+#endif
+
 static void assert_ref_is_valid(Obj r) {
-  assert(!obj_tag(r));
+  assert(obj_is_ref(r));
   assert(r.rc->st != st_DEALLOC);
-}
-
-
-static Obj ref_add_tag(Obj r, Tag t) {
-  assert_ref_is_valid(r);
-  assert(!(t & ot_val_mask)); // t must be a ref tag.
-  return (Obj){ .u = r.u | t };
 }
 
 
@@ -38,13 +36,7 @@ static Bool ref_is_file(Obj f) {
 }
 
 
-static Bool ref_is_func_host(Obj f) {
-  return ref_struct_tag(f) == st_Func_host;
-}
-
-
 static Int ref_len(Obj r) {
-  assert_ref_is_valid(r);
   assert(ref_struct_tag(r) == st_Data || ref_struct_tag(r) == st_Vec);
   assert(r.rcl->len > 0);
   return r.rcl->len;
@@ -52,15 +44,8 @@ static Int ref_len(Obj r) {
 
 
 static Ptr ref_body(Obj r) {
-  assert_ref_is_valid(r);
   assert(ref_struct_tag(r) != st_Data && ref_struct_tag(r) != st_Vec);
   return r.rc + 1; // address past rc.
-}
-
-
-static Obj* ref_vec_els(Obj v) {
-  assert(ref_is_vec(v));
-  return cast(Obj*, v.rcl + 1); // address past rcl.
 }
 
 
@@ -79,23 +64,28 @@ static Obj ref_alloc(Struct_tag st, Int width) {
   r.rc->wc = 0;
   r.rc->mt = 0;
   r.rc->sc = 1;
-  rc_errLV("alloc     ", r.rc);
+  rc_errMLV("alloc     ", r.rc);
 #if OPT_ALLOC_COUNT
-  total_allocs_ref++;
+  total_allocs_ref[st]++;
 #endif
   return r;
 }
 
 
+static Obj* vec_els(Obj v);
+
 static void ref_dealloc(Obj r) {
   assert_ref_is_valid(r);
-  rc_errLV("dealloc   ", r.rc);
+  rc_errMLV("dealloc   ", r.rc);
+  // TODO: could choose to pin the strong and weak counts and leak the object.
   check(r.rc->wc == 0, "attempt to deallocate object with non-zero weak count: %p", r.p);
   Struct_tag st = ref_struct_tag(r);
   if (st == st_Vec) {
-    Obj* els = ref_vec_els(r);
+    Obj* els = vec_els(r);
     for_in(i, ref_len(r)) {
-      obj_release(els[i]); // TODO: make this tail recursive for deallocating long chains?
+      //err("  el rel: "); dbg(els[i]);
+      // TODO: make this tail recursive for deallocating long chains?
+      obj_release_strong(els[i]);
     }
   }
 #if OPT_DEALLOC_MARK
@@ -103,29 +93,7 @@ static void ref_dealloc(Obj r) {
 #endif
   free(r.p);
 #if OPT_ALLOC_COUNT
-  total_deallocs_ref++;
+  total_deallocs_ref[st]++;
 #endif
-}
-
-
-static void ref_release_strong(Obj r) {
-  assert_ref_is_valid(r);
-  if (r.rc->sc == 1) {
-    ref_dealloc(r);
-    return;
-  }
-  rc_errLV("rel strong", r.rc);
-  if (r.rc->sc < pinned_sc) { // can only decrement if the count is not pinned.
-    r.rc->sc--;
-  }
-}
-
-              
-static void ref_release_weak(Obj r) {
-  assert_ref_is_valid(r);
-  rc_errLV("rel weak ", r.rc);
-  check_obj(r.rc->wc > 0, "over-released weak ref", r);
-  // can only decrement if the count is not pinned.
-  if (r.rc->wc < pinned_wc) r.rc->wc--;
 }
 

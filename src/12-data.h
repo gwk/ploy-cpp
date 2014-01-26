@@ -4,27 +4,28 @@
 #include "11-sym.h"
 
 
-static const Obj blank = (Obj){.u = data_word_bit | ot_sym_data };
+// zero length data word.
+static const Obj blank = (Obj){.u = ot_data };
 
 
 #define assert_is_data(d) \
-assert(d.u == blank.u || (obj_tag(d) == ot_sym_data && ref_
+assert(d.u == blank.u || obj_tag(d) == ot_data);
 
 
 static Int data_len(Obj d) {
   if (d.u == blank.u) return 0; // TODO: support all data-word values.
-  return ref_len(obj_borrow(d));
+  return ref_len(d);
 }
 
 
 static B data_ptr(Obj d) {
   if (d.u == blank.u) return (B){.c=NULL}; // TODO: supoprt all data-word values.
-  return ref_data_ptr(obj_borrow(d));
+  return ref_data_ptr(d);
 }
 
 
 static SS data_SS(Obj d) {
-  return ss_mk(data_ptr(d), data_len(d));
+  return ss_mk(data_len(d), data_ptr(d));
 }
 
 
@@ -39,7 +40,7 @@ static Obj new_data_from_SS(SS s) {
   if (!s.len) return blank;
   Obj d = data_empty(s.len);
   memcpy(data_ptr(d).m, s.b.c, s.len);
-  return ref_add_tag(d, ot_strong);
+  return d;
 }
 
 
@@ -59,6 +60,6 @@ static Obj new_data_from_path(BC path) {
   Uns items_read = fread(data_ptr(d).m, size_Char, cast(Uns, len), f);
   check(cast(Int, items_read) == len, "read failed; expected len: %ld; actual bytes: %lu", len, items_read);
   fclose(f);
-  return ref_add_tag(d, ot_strong);
+  return d;
 }
 

@@ -5,25 +5,28 @@
 
 
 typedef struct _SS {
-  B b;
   Int len;
+  B b;
 } SS; // Substring.
 
-#define ss0 (SS){.b=(B){.c=NULL}, .len=0}
+#define ss0 (SS){.len=0, .b=(B){.c=NULL}}
+
+// for use with "%*s" formatter.
+#define FMT_SS(ss) cast(I32, (ss).len), (ss).b.c
 
 
-static SS ss_mk(B b, Int len) {
-  return (SS){.b=b, .len=len};
+static SS ss_mk(Int len, B b) {
+  return (SS){.len=len, .b=b};
 }
 
 
-static SS ss_mk_c(BC c, Int len) {
-  return ss_mk((B){.c=c}, len);
+static SS ss_mk_c(Int len, BC c) {
+  return ss_mk(len, (B){.c=c});
 }
 
 
-static SS ss_mk_m(BM m, Int len) {
-  return ss_mk((B){.m=m}, len);
+static SS ss_mk_m(Int len, BM m) {
+  return ss_mk(len, (B){.m=m});
 }
 
 
@@ -36,7 +39,7 @@ static SS ss_alloc(Int len) {
   // add null terminator for easier debugging.
   BM m = raw_alloc(len + 1);
   m[len] = 0;
-  return ss_mk_m(m, len);
+  return ss_mk_m(len, m);
 }
 
 
@@ -58,14 +61,14 @@ static B ss_copy_to_B(SS ss) {
 static SS ss_from_BC(BC p) {
   Uns len = strlen(p);
   check(len <= max_Int, "string exceeded max length");
-  return ss_mk_c(p, cast(Int, len));
+  return ss_mk_c(cast(Int, len), p);
 }
 
 
 // create a string from a pointer range.
 static SS ss_from_range(BM start, BM end) {
   assert(end <= start);
-  return ss_mk_m(start, end - start);
+  return ss_mk_m(end - start, start);
 }
 
 
@@ -111,14 +114,14 @@ static Bool ss_ends_with_char(SS s, Char c) {
 static SS ss_from(SS s, Int from) {
   assert(from >= 0);
   if (from >= s.len) return ss0;
-  return ss_mk_c(s.b.c + from, s.len - from);
+  return ss_mk_c(s.len - from, s.b.c + from);
 }
 
 
 static SS ss_to(SS s, Int to) {
   assert(to >= 0);
   if (to <= s.len) return ss0;
-  return ss_mk(s.b, s.len - to);
+  return ss_mk(s.len - to, s.b);
 }
 
 
@@ -126,7 +129,7 @@ static SS ss_slice(SS s, Int from, Int to) {
   assert(from >= 0);
   assert(to >= 0);
   if (from >= s.len || from >= to) return ss0;
-  return ss_mk_c(s.b.c + from, to - from);
+  return ss_mk_c(to - from, s.b.c + from);
 }
 
 

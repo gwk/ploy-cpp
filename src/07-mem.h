@@ -44,13 +44,29 @@ static Obj* mem_end(Mem m) {
 }
 
 
-static Obj mem_el(Mem m, Int i) {
+static Obj mem_el_borrowed(Mem m, Int i) {
   check_mem_index(m, i);
   return m.els[i];
 }
 
 
-static Int mem_append(Mem* m, Obj o) {
+static Obj mem_el_ret(Mem m, Int i) {
+  return obj_retain_strong(mem_el_borrowed(m, i));
+}
+
+
+static const Obj VOID;
+
+static Obj mem_el_move(Mem m, Int i) {
+  Obj e = mem_el_borrowed(m, i);
+#if DEBUG
+  m.els[i] = VOID;
+#endif
+  return e;
+}
+
+
+static Int mem_append_move(Mem* m, Obj o) {
   Int i = m->len++;
   m->els[i] = o;
   return i;
@@ -59,7 +75,7 @@ static Int mem_append(Mem* m, Obj o) {
 
 static void mem_release_els(Mem m) {
   for_in(i, m.len) {
-    obj_release(m.els[i]);
+    obj_release_strong(m.els[i]);
   }
 }
 
@@ -84,7 +100,7 @@ static void mem_realloc(Mem* m, Int len) {
   Int old_len = m->len;
   // release any old elements.
   for_imn(i, len, old_len) {
-    obj_release(m->els[i]);
+    obj_release_strong(m->els[i]);
   }
   // realloc.
   if (len > 0) {

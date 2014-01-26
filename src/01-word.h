@@ -1,6 +1,9 @@
 // Copyright 2013 George King.
 // Permission to use this file is granted in ploy/license.txt.
 
+#if !DEBUG
+#define NDEBUG 1 // omit assertions.
+#endif
 
 // exclude the standard libraries when preprocessing the source for review (see preprocess.sh).
 #ifndef SKIP_LIB_INCLUDES
@@ -8,12 +11,12 @@
 #include <ctype.h>
 #include <errno.h>
 #include <limits.h>
+#include <math.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <Block.h>
 #endif
 
 
@@ -30,11 +33,12 @@
 #endif
 
 #define VERBOSE 0
-#define VERBOSE_MM 0
-#define VERBOSE_PARSE 0
-#define VERBOSE_EVAL 0
+#define VERBOSE_MM    VERBOSE
+#define VERBOSE_PARSE VERBOSE
+#define VERBOSE_EVAL  VERBOSE
 
-#define report_pinned_counts 1
+
+static const bool report_pinned_counts = true;
 
 
 typedef char Char;
