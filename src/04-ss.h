@@ -170,7 +170,7 @@ static BM ss_src_loc_str(SS src, SS path, Int pos, Int len, Int line_num, Int co
   SS line = ss_line_at_pos(src, pos);
   BC nl = ss_ends_with_char(line, '\n') ? "" : "\n";
   // create underline.
-  Char under[len_buffer] = {};
+  Char under[len_buffer] = {}; // zeroes all elements.
   if (line.len < len_buffer) { // draw underline
     for_in(i, col) under[i] = ' ';
     if (len > 0) {

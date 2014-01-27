@@ -34,7 +34,6 @@ static BC path_base(BC path) {
     if (path[i] == '/') offset = i + 1;
     i += 1;
   }
-
   return path + offset; 
 }
 

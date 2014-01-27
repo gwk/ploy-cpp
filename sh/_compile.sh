@@ -20,6 +20,23 @@ if [[ "$#" == 0 ]]; then
   exit 1
 fi
 
+if ! sh/is-product-current.sh build/text-to-c-literal sh/* src/text-to-c-literal.c; then
+  echo "text-to-c-literal..."
+  clang \
+  -std=c11 \
+  -Werror \
+  -Weverything \
+  src/text-to-c-literal.c \
+  -o build/text-to-c-literal
+fi
+
+if ! sh/is-product-current.sh build/ploy-core.h sh/* src/text-to-c-literal.c src/ploy-core.h; then
+  echo "ploy-core.h..."
+  build/text-to-c-literal core_src < src/core.ploy > build/ploy-core.h
+  echo "ploy..."
+fi
+
+# build ploy.
 clang \
 -std=c11 \
 -Werror \
@@ -28,7 +45,6 @@ clang \
 -Wno-unused-function \
 -Wno-unused-parameter \
 -Wno-gnu \
--fblocks \
 -fstrict-aliasing \
 -fstack-protector \
 -fsanitize=undefined-trap \
@@ -36,10 +52,12 @@ clang \
 -g \
 -ferror-limit=4 \
 "$defs" \
+-I build \
 src/ploy.c \
 "$@"
 
 
+# -fbounds-checking         Enable run-time bounds checks
 #-fno-limit-debug-info      Do not limit debug information produced to reduce size of debug binary
 #-fsanitize-memory-track-origins  Enable origins tracking in MemorySanitizer
 #-fsanatize=adress,undefined

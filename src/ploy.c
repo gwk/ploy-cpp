@@ -2,7 +2,7 @@
 // Permission to use this file is granted in ploy/license.txt.
 
 #include "21-eval.h"
-
+#include "ploy-core.h"
 
 static void parse_and_eval(Obj env, Obj path, Obj src, Array* sources, Bool out_val) {
     BM e = NULL;
@@ -43,9 +43,9 @@ int main(int argc, BC argv[]) {
   
   // parse arguments.
   BC paths[len_buffer];
+  Int path_count = 0;
   BC expr = NULL;
   Bool out_val = false;
-  Int path_count = 0;
   for_imn(i, 1, argc) {
     BC arg = argv[i];
     errFLD("   %s", arg);
@@ -70,15 +70,20 @@ int main(int argc, BC argv[]) {
   
   Array sources = array0;
   
+  // run embedded core file.
+  Obj path = new_data_from_BC("<core>");
+  Obj src = new_data_from_BC(core_src);
+  parse_and_eval(global_env, path, src, &sources, false);
+
   // handle arguments.
   for_in(i, path_count) {
-    Obj path = new_data_from_BC(paths[i]);
-    Obj src = new_data_from_path(paths[i]);
+    path = new_data_from_BC(paths[i]);
+    src = new_data_from_path(paths[i]);
     parse_and_eval(global_env, path, src, &sources, false);
   }
   if (expr) {
-    Obj path = new_data_from_BC("-e ");
-    Obj src = new_data_from_BC(expr);
+    path = new_data_from_BC("<cmd>");
+    src = new_data_from_BC(expr);
     parse_and_eval(global_env, path, src, &sources, out_val);
   }
   obj_release_strong(global_env);

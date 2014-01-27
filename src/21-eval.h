@@ -171,6 +171,11 @@ static Obj eval_CALL(Obj env, Int len, Obj* args) {
 }
 
 
+static Obj eval_COMMENT(Obj env, Int len, Obj* args) {
+  return VOID;
+}
+
+
 static Obj eval_Vec(Obj env, Obj code) {
   Int len = ref_len(code);
   Obj* els = vec_els(code);
@@ -189,6 +194,7 @@ static Obj eval_Vec(Obj env, Obj code) {
       EVAL_FORM(IF);
       EVAL_FORM(FN);
       EVAL_FORM(CALL);
+      EVAL_FORM(COMMENT);
     }
 #undef EVAL_FORM
   }
