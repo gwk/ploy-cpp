@@ -44,23 +44,12 @@ static void write_repr_vec_vec(File f, Obj v) {
   assert(ref_is_vec(v));
   Int len = ref_len(v);
   Obj* els = vec_els(v);
-  Obj hd = els[0];
-  if (hd.u == CALL.u && ref_len(v) == 2 && obj_is_vec(vec_tl(v))) { // call
-    fputs("(", f);
-    for_imn(i, 1, len) { // skip the CALL sym.
-      if (i > 1) fputs(" ", f);
-      write_repr_obj(f, els[i]);
-    }
-    fputs(")", f);
+  fputs("{", f);
+  for_in(i, len) {
+    if (i) fputs(" ", f);
+    write_repr_obj(f, els[i]);
   }
-  else {
-    fputs("{", f);
-    for_in(i, len) {
-      if (i) fputs(" ", f);
-      write_repr_obj(f, els[i]);
-    }
-    fputs("}", f);
-  }
+  fputs("}", f);
 }
 
 
@@ -71,8 +60,8 @@ static void write_repr_chain(File f, Obj c) {
   loop {
     if (first) first = false;
     else fputs(" ", f);
-    write_repr_obj(f, vec_hd(c));
-    Obj tl = vec_tl(c);
+    write_repr_obj(f, chain_hd(c));
+    Obj tl = chain_tl(c);
     if (tl.u == END.u) break;
     assert(obj_is_vec(tl));
     c = tl;

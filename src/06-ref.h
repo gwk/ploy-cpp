@@ -56,7 +56,6 @@ static B ref_data_ptr(Obj d) {
 
 
 static Obj ref_alloc(Struct_tag st, Int width) {
-  // return Obj must be tagged ot_strong or else dealloced directly.
   assert(width > 0);
   Obj r = (Obj){.p=malloc(cast(Uns, width))};
   assert(!obj_tag(r)); // check that malloc is really aligned to the width of the tag.
@@ -91,7 +90,9 @@ static void ref_dealloc(Obj r) {
 #if OPT_DEALLOC_MARK
   r.rc->st = st_DEALLOC;
 #endif
+#if !OPT_DEALLOC_PRESERVE
   free(r.p);
+#endif
 #if OPT_ALLOC_COUNT
   total_deallocs_ref[st]++;
 #endif

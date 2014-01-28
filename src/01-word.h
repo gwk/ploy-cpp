@@ -21,21 +21,25 @@
 
 
 #ifndef OPT_DEALLOC_MARK
-#define OPT_DEALLOC_MARK 1
+#define OPT_DEALLOC_MARK DEBUG
+#endif
+
+#ifndef OPT_DEALLOC_PRESERVE
+#define OPT_DEALLOC_PRESERVE DEBUG
 #endif
 
 #ifndef OPT_ALLOC_COUNT
-#define OPT_ALLOC_COUNT 1
+#define OPT_ALLOC_COUNT DEBUG
 #endif
 
 #ifndef OPT_MEM_CLEAR_ELS
-#define OPT_MEM_CLEAR_ELS 1
+#define OPT_MEM_CLEAR_ELS DEBUG
 #endif
 
 #define VERBOSE 0
-#define VERBOSE_MM    VERBOSE
-#define VERBOSE_PARSE VERBOSE
-#define VERBOSE_EVAL  VERBOSE
+#define VERBOSE_MM    VERBOSE || 0
+#define VERBOSE_PARSE VERBOSE || 0
+#define VERBOSE_EVAL  VERBOSE || 0
 
 
 static const bool report_pinned_counts = true;

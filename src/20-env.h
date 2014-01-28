@@ -12,7 +12,7 @@ static Obj env_get(Obj env, Obj sym) {
   assert(ref_is_vec(env));
   while (env.u != END.u) {
     assert(ref_len(env) == 2);
-    Obj frame = vec_hd(env);
+    Obj frame = chain_hd(env);
     if (frame.u != CHAIN0.u) {
       while (frame.u != END.u) {
         assert(ref_len(frame) == 3);
@@ -20,10 +20,10 @@ static Obj env_get(Obj env, Obj sym) {
         if (key.u == sym.u) {
           return vec_b(frame);
         }
-        frame = vec_tl(frame);
+        frame = chain_tl(frame);
       }
     }
-    env = vec_tl(env);
+    env = chain_tl(env);
   }
   return VOID; // lookup failed.
 }
@@ -48,7 +48,7 @@ static Obj env_frame_bind(Obj frame, Obj sym, Obj val) {
 
 static void env_bind(Obj env, Obj sym, Obj val) {
   // owns val.
-  Obj frame = vec_hd(env);
+  Obj frame = chain_hd(env);
   Obj frame1 = env_frame_bind(frame, sym, val);
   vec_put(env, 0, frame1);
 }

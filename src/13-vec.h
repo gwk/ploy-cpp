@@ -121,12 +121,12 @@ static void vec_put(Obj v, Int i, Obj el) {
 }
 
 
-static Obj vec_hd(Obj v) {
+static Obj chain_hd(Obj v) {
   return vec_el(v, 1); // note: unlike lisp, hd is in position 1.
 }
 
 
-static Obj vec_tl(Obj v) {
+static Obj chain_tl(Obj v) {
   return vec_el(v, 0); // note: unlike lisp, tl is in position 0.
 }
 
@@ -152,7 +152,7 @@ static Vec_shape vec_shape(Obj v) {
   assert(ref_is_vec(v));
   Vec_shape s = vs_chain;
   loop {
-    Obj tl = vec_tl(v);
+    Obj tl = chain_tl(v);
     if (tl.u == END.u) return s;
     if (!obj_is_vec(tl)) return vs_vec;
     if (ref_len(v) != 2) s = vs_chain_blocks;

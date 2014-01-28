@@ -1,7 +1,7 @@
 // Copyright 2013 George King.
 // Permission to use this file is granted in ploy/license.txt.
 
-#include "15-func-host.h"
+#include "15-func.h"
 
 
 static Obj host_write(Obj f, Obj d) {
@@ -120,6 +120,12 @@ static Obj host_exit(Obj n) {
 }
 
 
+static Obj run(Obj env, Obj code);
+
+static Obj host_run(Obj env, Obj code) {
+  return run(env, code);
+}
+
 
 static Obj env_frame_bind(Obj frame, Obj sym, Obj func);
 
@@ -153,10 +159,10 @@ frame = env_frame_bind(frame, s, f);
   DEF_FH(2, ge)
   DEF_FH(1, not)
   DEF_FH(1, exit)
+  DEF_FH(2, run)
   
 #undef DEF_FH
 
   return frame;
 }
-
 
