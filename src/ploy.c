@@ -70,7 +70,7 @@ int main(int argc, BC argv[]) {
   }
   
   Obj host_frame = host_init();
-  Obj global_env = env_cons(END, host_frame);
+  Obj global_env = env_push(END, host_frame);
   
   Array sources = array0;
   // run embedded core file.

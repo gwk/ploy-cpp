@@ -1,24 +1,27 @@
-NIL
-VEC0
-CHAIN0
-END
-false
-true
-COMMENT
-UNQ
-QUA
-QUO
-DO
-SCOPE
-LET
-IF
-FN
-EXPA
-0
-1
--0
-+0
--1
-+1
-'abc'
-"omg"
+(outLL
+  NIL
+  VEC0
+  CHAIN0
+  END
+  false
+  true
+  COMMENT
+  UNQ
+  QUA
+  QUO
+  DO
+  SCOPE
+  LET
+  IF
+  FN
+  EXPA
+  LABEL
+  VARIAD
+  0
+  1
+  -0
+  +0
+  -1
+  +1
+  'abc'
+  "omg")

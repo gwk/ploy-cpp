@@ -8,13 +8,14 @@ static const BC trace_expand_prefix = "◇";      // white diamond
 static const BC trace_post_expand_prefix = "▫"; // white small square
 
 
-static Obj run_macro(Obj env, Obj macro, Int len, Obj* args) {
-  return VOID;
-}
-
+static Obj run_call_native(Obj env, Obj func, Int len, Obj* args, Bool is_macro);
 
 static Obj expand_macro(Obj env, Int len, Obj* args) {
-  return run_macro(env, args[0], len - 1, args + 1);
+  check(len > 0, "empty macro expand");
+  Obj macro_sym = args[0];
+  check_obj(obj_is_sym(macro_sym), "expand argument 0 must be a Sym; found", macro_sym);
+  Obj macro = env_get(env, macro_sym);
+  return run_call_native(env, macro, len - 1, args + 1, true);
 }
 
 
@@ -29,19 +30,20 @@ static Obj expand(Obj env, Obj code) {
   if (hd.u == QUO.u) {
     return code;
   }
-  Obj expanded;
   if (hd.u == EXPA.u) {
-      expanded = expand_macro(env, len - 1, els + 1);
+      Obj expanded = expand_macro(env, len - 1, els + 1);
+      obj_release_strong(code);
+      return expand(env, expanded); // macro result may contain more expands; recursively expand.
   }
   else {
     // recursively expand vec.
-    expanded = new_vec_raw(len);
+    Obj expanded = new_vec_raw(len);
     Obj* expanded_els = vec_els(expanded);
     for_in(i, len) {
       expanded_els[i] = expand(env, obj_retain_strong(els[i]));
     }
+    obj_release_strong(code);
+    return expanded;
   }
-  obj_release_strong(code);
-  return expanded;
 }
 

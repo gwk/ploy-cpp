@@ -1,4 +1,4 @@
 {
   'code' : 1,
-  'err' : ('search', 'parse error: .*/ploy/test/2-errors/dash.ploy:1:1: unexpected character')
+  'err' : ('search', 'parse error: .*/ploy/test/2-errors/dash.ploy:1:2: unexpected character.*')
 }

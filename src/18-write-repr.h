@@ -1,7 +1,7 @@
 // Copyright 2013 George King.
 // Permission to use this file is granted in ploy/license.txt.
 
-#include "17-bool.h"
+#include "17-host.h"
 
 
 static void write_data(File f, Obj d) {
@@ -70,7 +70,7 @@ static void write_repr_chain(File f, Obj c) {
 }
 
 
-static void write_repr_chain_blocks(File f, Obj c) {
+static void write_repr_chain_blocks(File f, Obj c) {  
   assert(ref_is_vec(c));
   fputs("[", f);
   loop {
@@ -144,7 +144,7 @@ static void write_repr_obj(File f, Obj o) {
       case st_U64:          fputs("(U64 ?)", f); break;
       case st_F32:          fputs("(F32 ?)", f); break;
       case st_F64:          fputs("(F64 ?)", f); break;
-      case st_File:         fputs("(File ?)", f); break;
+      case st_File:         fprintf(f, "(File %p)", file_file(o)); break;
       case st_Func_host_1:  write_repr_Func_host(f, o, 1); break;
       case st_Func_host_2:  write_repr_Func_host(f, o, 2); break;
       case st_Func_host_3:  write_repr_Func_host(f, o, 3); break;

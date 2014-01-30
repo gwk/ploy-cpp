@@ -1,10 +1,10 @@
 // Copyright 2013 George King.
 // Permission to use this file is granted in ploy/license.txt.
 
-#include "15-func.h"
+#include "16-func.h"
 
 
-static Obj host_write(Obj f, Obj d) {
+static Obj host_raw_write(Obj f, Obj d) {
   check_obj(ref_is_file(f), "write expected arg 1 File; found", f);
   check_obj(ref_is_data(d), "write expected arg 2 Data; found", d);
   File file = file_file(f);
@@ -13,7 +13,7 @@ static Obj host_write(Obj f, Obj d) {
 }
 
 
-static Obj host_flush(Obj f) {
+static Obj host_raw_flush(Obj f) {
   check_obj(ref_is_file(f), "write expected arg 1 File; found", f);
   File file = file_file(f);
   fflush(file);
@@ -131,15 +131,15 @@ static Obj env_frame_bind(Obj frame, Obj sym, Obj func);
 
 static Obj host_init() {
   Obj frame = END;
-  Obj s, f;
+  Obj sym, val;
 
 #define DEF_FH(ac, n) \
-s = new_sym(ss_from_BC(#n)); \
-f = new_func_host(st_Func_host_##ac, s, cast(Ptr, host_##n)); \
-frame = env_frame_bind(frame, s, f);
+sym = new_sym(ss_from_BC(#n)); \
+val = new_func_host(st_Func_host_##ac, sym, cast(Ptr, host_##n)); \
+frame = env_frame_bind(frame, sym, val);
 
-  DEF_FH(2, write)
-  DEF_FH(1, flush)
+  DEF_FH(2, raw_write)
+  DEF_FH(1, raw_flush)
   DEF_FH(1, len)
   DEF_FH(2, el)
   DEF_FH(3, slice)
@@ -162,6 +162,17 @@ frame = env_frame_bind(frame, s, f);
   DEF_FH(2, run)
   
 #undef DEF_FH
+
+#define DEF_FILE(f, string, is_readable, is_writable) \
+sym = new_sym(ss_from_BC(string)); \
+val = new_vec2(new_data_from_BC("<" string ">"), new_file(f, is_readable, is_writable)); \
+frame = env_frame_bind(frame, sym, val);
+  
+  DEF_FILE(stdin, "std-in", true, false)
+  DEF_FILE(stdout, "std-out", false, true)
+  DEF_FILE(stderr, "std-err", false, true)
+  
+#undef DEF_FILE
 
   return frame;
 }

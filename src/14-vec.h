@@ -1,7 +1,7 @@
 // Copyright 2013 George King.
 // Permission to use this file is granted in ploy/license.txt.
 
-#include "12-data.h"
+#include "13-data.h"
 
 
 static Obj new_vec_raw(Int len) {
@@ -56,6 +56,19 @@ static Obj new_vec3(Obj a, Obj b, Obj c) {
   els[2] = c;
   return v;
 }
+
+
+static Obj new_vec4(Obj a, Obj b, Obj c, Obj d) {
+  // owns all arguments.
+  Obj v = new_vec_raw(4);
+  Obj* els = vec_els(v);
+  els[0] = a;
+  els[1] = b;
+  els[2] = c;
+  els[3] = d;
+  return v;
+}
+
 
 
 static Obj new_chain_M(Mem m) {

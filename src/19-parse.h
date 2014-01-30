@@ -391,6 +391,36 @@ static Obj parse_dequote(Parser* p) {
 }
 
 
+static Obj parse_label_sub(Parser* p, Obj sym) {
+  P_ADV1;
+  Obj name = parse_expr(p);
+  if (p->e) return VOID;
+  Char c = PC;
+  Obj type = NIL;
+  if (c == ':') {
+    P_ADV1;
+    type = parse_expr(p);
+    c = PC;
+  }
+  Obj val = NIL;
+  if (PC == '=') {
+    P_ADV1;
+    val = parse_expr(p);
+  }
+  return new_vec4(sym, name, type, val);
+}
+
+
+static Obj parse_label(Parser* p) {
+  return parse_label_sub(p, LABEL);
+}
+
+
+static Obj parse_variad(Parser* p) {
+  return parse_label_sub(p, VARIAD);
+}
+
+
 // parse an expression.
 static Obj parse_expr_sub(Parser* p) {
   Char c = PC;
@@ -404,12 +434,13 @@ static Obj parse_expr_sub(Parser* p) {
     case '"':   return parse_data(p, '"');
     case '#':   return parse_comment(p);
     case '~':   return parse_dequote(p);
+    case '&':   return parse_variad(p);
     case '+':
       if (isdigit(PC1)) return parse_int(p, 1);
       break;
     case '-':
       if (isdigit(PC1)) return parse_int(p, -1);
-      break;
+      return parse_label(p);
 
   }
   if (isdigit(c)) {

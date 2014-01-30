@@ -73,6 +73,8 @@ typedef enum {
   si_FN,
   si_CALL,
   si_EXPA,
+  si_LABEL,
+  si_VARIAD,
   si_VOID, // must be last.
 } Sym_index;
 
@@ -98,6 +100,8 @@ DEF_SYM(IF);
 DEF_SYM(FN);
 DEF_SYM(CALL);
 DEF_SYM(EXPA);
+DEF_SYM(LABEL);
+DEF_SYM(VARIAD);
 DEF_SYM(VOID);
 
 
@@ -123,6 +127,8 @@ static void sym_init() {
   S(FN);
   S(CALL);
   S(EXPA);
+  S(LABEL);
+  S(VARIAD);
   S(VOID);
 #undef SBC
 #undef S

@@ -73,37 +73,33 @@ static Obj run_IF(Obj env, Int len, Obj* args) {
 
 
 static Obj run_FN(Obj env, Int len, Obj* args) {
-  return VOID;
+  check(len == 3, "FN requires 3 arguments: name-sym parameters body; received %ld", len);
+  Obj sym   = args[0];
+  Obj pars  = args[1];
+  Obj body  = args[2];
+  check_obj(obj_is_sym(sym),  "FN name is not a sym", sym);
+  check_obj(obj_is_vec(pars), "FN parameters is not a Vec", pars);
+  Obj f = new_vec4(sym,
+    obj_retain_strong(pars),
+    obj_retain_strong(body),
+    obj_retain_strong(env));
+  return f;
 }
 
 
-static Obj run_call_native(Obj env, Obj func, Int len, Obj* args) {
+static Obj run_call_native(Obj env, Obj func, Int len, Obj* args, Bool is_macro) {
   Int func_len = ref_len(func);
-  // convert to assert pending parse verification?
-  check_obj(func_len == 2, "native function is malformed (length is not 2)", func);
+  check_obj(func_len == 4, "function is malformed (length is not 4)", func);
   Obj* func_els = vec_els(func);
-  Obj pars = func_els[0];
-  Obj body = func_els[1];
-  // convert to assert pending parse verification?
-  check_obj(obj_is_vec(pars), "native function is malformed (parameters is not a vec)", func);
-  Int pars_len = ref_len(pars);
-  check(pars_len == len, "native function expects %ld argument; received %ld",  pars_len, len);
-  Obj frame;
-  if (len) {
-    frame = END;
-    for_in(i, len) {
-      Obj sym = vec_el(pars, i);
-      Obj expr = args[i];
-      Obj val = run(env, expr);
-      // convert to assert pending parse verification?
-      check_obj(obj_is_sym(sym), "native function is malformed (parameter is not a sym)", sym);
-      frame = env_frame_bind(frame, sym, val);
-    }
-  }
-  else {
-    frame = CHAIN0;
-  }
-  Obj env1 = env_cons(env, frame);
+  Obj f_sym = func_els[0];
+  Obj pars  = func_els[1];
+  Obj body  = func_els[2];
+  Obj f_env = func_els[3];
+  check_obj(obj_is_sym(f_sym),  "function is malformed (name symbol is not a Sym)", f_sym);
+  check_obj(obj_is_vec(f_env),  "function is malformed (env is not a Vec)", f_env);
+  check_obj(obj_is_vec(pars),   "function is malformed (parameters is not a Vec)", pars);
+  Obj frame = env_frame_bind_args(env, func, ref_len(pars), vec_els(pars), len, args, is_macro);
+  Obj env1 = env_push(env, frame);
   Obj ret = run(env1, body);
   obj_release_strong(env1);
   return ret;
@@ -159,7 +155,7 @@ static Obj run_CALL(Obj env, Int len, Obj* args) {
   Int l = len - 1;
   Obj* a = args + 1;
   switch (st) {
-    case st_Vec:          return run_call_native(env, func, l, a);
+    case st_Vec:          return run_call_native(env, func, l, a, false);
     case st_Func_host_1:  return run_call_host1(env, func, l, a);
     case st_Func_host_2:  return run_call_host2(env, func, l, a);
     case st_Func_host_3:  return run_call_host3(env, func, l, a);

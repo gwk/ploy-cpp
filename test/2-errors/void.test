@@ -1,4 +1,4 @@
 {
   'code' : 1,
-  'err' : ('match', '??'),
+  'err' : ('match', 'ploy error: cannot run VOID'),
 }
