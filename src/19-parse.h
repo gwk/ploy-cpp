@@ -384,8 +384,8 @@ static Obj parse_dequote(Parser* p) {
     parse_error(p, "dequote expected quoted subexpression");
   }
   Obj tl = vec_el(o, 1);
-  obj_retain_strong(tl);
-  obj_release_strong(o);
+  obj_ret(tl);
+  obj_rel(o);
   return tl;
 }
 

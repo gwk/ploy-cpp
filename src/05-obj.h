@@ -240,7 +240,7 @@ static Bool obj_is_file(Obj o) {
 
 static void assert_ref_is_valid(Obj o);
 
-static Obj obj_retain_strong(Obj o) {
+static Obj obj_ret(Obj o) {
   Obj_tag ot = obj_tag(o);
   if (ot) return o;
   assert_ref_is_valid(o);
@@ -278,7 +278,7 @@ static Obj obj_retain_weak(Obj o) {
 
 static void ref_dealloc(Obj o);
 
-static void obj_release_strong(Obj o) {
+static void obj_rel(Obj o) {
   Obj_tag ot = obj_tag(o);
   if (ot) return;
   assert_ref_is_valid(o);

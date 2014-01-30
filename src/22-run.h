@@ -13,13 +13,13 @@ static Obj run_sym(Obj env, Obj code) {
   if (val.u == VOID.u) { // lookup failed.
     error_obj("lookup error", code);
   }
-  return obj_retain_strong(val);
+  return obj_ret(val);
 }
 
 
 static Obj run_QUO(Obj env, Int len, Obj* args) {
   check(len == 1, "QUO requires 1 argument; found %ld", len);
-  return obj_retain_strong(args[0]);
+  return obj_ret(args[0]);
 }
 
 
@@ -30,7 +30,7 @@ static Obj run_DO(Obj env, Int len, Obj* args) {
   Int last = len - 1;
   for_in(i, last) {
     Obj o = run(env, args[i]);
-    obj_release_strong(o); // value ignored.
+    obj_rel(o); // value ignored.
   };
   return run(env, args[last]); // put last run in tail position for optimization.
 }
@@ -62,11 +62,11 @@ static Obj run_IF(Obj env, Int len, Obj* args) {
   Obj e = args[2];
   Obj p_val = run(env, p);
   if (is_true(p_val)) {
-    obj_release_strong(p_val);
+    obj_rel(p_val);
     return run(env, t);
   }
   else {
-    obj_release_strong(p_val);
+    obj_rel(p_val);
     return run(env, e);
   }
 }
@@ -80,9 +80,9 @@ static Obj run_FN(Obj env, Int len, Obj* args) {
   check_obj(obj_is_sym(sym),  "FN name is not a sym", sym);
   check_obj(obj_is_vec(pars), "FN parameters is not a Vec", pars);
   Obj f = new_vec4(sym,
-    obj_retain_strong(pars),
-    obj_retain_strong(body),
-    obj_retain_strong(env));
+    obj_ret(pars),
+    obj_ret(body),
+    obj_ret(env));
   return f;
 }
 
@@ -101,7 +101,7 @@ static Obj run_call_native(Obj env, Obj func, Int len, Obj* args, Bool is_macro)
   Obj frame = env_frame_bind_args(env, func, ref_len(pars), vec_els(pars), len, args, is_macro);
   Obj env1 = env_push(env, frame);
   Obj ret = run(env1, body);
-  obj_release_strong(env1);
+  obj_rel(env1);
   return ret;
 }
 
@@ -112,7 +112,7 @@ static Obj run_call_host1(Obj env, Obj func, Int len, Obj* args) {
   Func_host* fh = ref_body(func);
   Func_host_ptr_1 f = cast(Func_host_ptr_1, fh->ptr);
   Obj ret = f(a0);
-  obj_release_strong(a0);
+  obj_rel(a0);
   return ret;
 }
 
@@ -124,8 +124,8 @@ static Obj run_call_host2(Obj env, Obj func, Int len, Obj* args) {
   Func_host* fh = ref_body(func);
   Func_host_ptr_2 f = cast(Func_host_ptr_2, fh->ptr);
   Obj ret = f(a0, a1);
-  obj_release_strong(a0);
-  obj_release_strong(a1);
+  obj_rel(a0);
+  obj_rel(a1);
   return ret;
 }
 
@@ -138,9 +138,9 @@ static Obj run_call_host3(Obj env, Obj func, Int len, Obj* args) {
   Func_host* fh = ref_body(func);
   Func_host_ptr_3 f = cast(Func_host_ptr_3, fh->ptr);
   Obj ret = f(a0, a1, a2);
-  obj_release_strong(a0);
-  obj_release_strong(a1);
-  obj_release_strong(a2);
+  obj_rel(a0);
+  obj_rel(a1);
+  obj_rel(a2);
   return ret;
 }
 
@@ -223,7 +223,7 @@ static Obj run(Obj env, Obj code) {
     case st_U64:
     case st_F32:
     case st_F64:
-      return obj_retain_strong(code); // self-evaluating.
+      return obj_ret(code); // self-evaluating.
     case st_File:
     case st_Func_host_1:
     case st_Func_host_2:

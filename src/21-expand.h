@@ -32,7 +32,7 @@ static Obj expand(Obj env, Obj code) {
   }
   if (hd.u == EXPA.u) {
       Obj expanded = expand_macro(env, len - 1, els + 1);
-      obj_release_strong(code);
+      obj_rel(code);
       return expand(env, expanded); // macro result may contain more expands; recursively expand.
   }
   else {
@@ -40,9 +40,9 @@ static Obj expand(Obj env, Obj code) {
     Obj expanded = new_vec_raw(len);
     Obj* expanded_els = vec_els(expanded);
     for_in(i, len) {
-      expanded_els[i] = expand(env, obj_retain_strong(els[i]));
+      expanded_els[i] = expand(env, obj_ret(els[i]));
     }
-    obj_release_strong(code);
+    obj_rel(code);
     return expanded;
   }
 }

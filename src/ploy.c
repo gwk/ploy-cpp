@@ -13,9 +13,9 @@ static void parse_and_eval(Obj env, Obj path, Obj src, Array* sources, Bool out_
     err("parse error: ");
     errL(e);
     raw_dealloc(e);
-    obj_release_strong(path);
-    obj_release_strong(src);
-    obj_release_strong(code);
+    obj_rel(path);
+    obj_rel(src);
+    obj_rel(code);
     exit(1);
   }
   else {
@@ -31,7 +31,7 @@ static void parse_and_eval(Obj env, Obj path, Obj src, Array* sources, Bool out_
       write_repr_obj(stdout, val);
       out_nl();
     }
-    obj_release_strong(val);
+    obj_rel(val);
   }
 }
 
@@ -91,7 +91,7 @@ int main(int argc, BC argv[]) {
    }
 
 #if OPT_ALLOC_COUNT
-  obj_release_strong(global_env);
+  obj_rel(global_env);
   mem_release_dealloc(global_sym_names.mem);
   mem_release_dealloc(sources.mem);
   

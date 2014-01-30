@@ -51,7 +51,7 @@ static Obj mem_el_borrowed(Mem m, Int i) {
 
 
 static Obj mem_el_ret(Mem m, Int i) {
-  return obj_retain_strong(mem_el_borrowed(m, i));
+  return obj_ret(mem_el_borrowed(m, i));
 }
 
 
@@ -75,7 +75,7 @@ static Int mem_append_move(Mem* m, Obj o) {
 
 static void mem_release_els(Mem m) {
   for_in(i, m.len) {
-    obj_release_strong(m.els[i]);
+    obj_rel(m.els[i]);
   }
 }
 
@@ -100,7 +100,7 @@ static void mem_realloc(Mem* m, Int len) {
   Int old_len = m->len;
   // release any old elements.
   for_imn(i, len, old_len) {
-    obj_release_strong(m->els[i]);
+    obj_rel(m->els[i]);
   }
   // realloc.
   if (len > 0) {

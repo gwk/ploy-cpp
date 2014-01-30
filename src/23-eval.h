@@ -7,7 +7,7 @@ static Obj eval(Obj env, Obj code) {
   // owns code.
   Obj expanded = expand(env, code); // owns code.
   Obj val = run(env, expanded); // does not own expanded.
-  obj_release_strong(expanded);
+  obj_rel(expanded);
   return val;
 }
 

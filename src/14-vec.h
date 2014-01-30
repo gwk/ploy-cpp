@@ -129,8 +129,8 @@ static void vec_put(Obj v, Int i, Obj el) {
   assert(i < ref_len(v));
   Obj* els = vec_els(v);
   // note: the order is release, then retain. this should always be sound.
-  obj_release_strong(els[i]);
-  els[i] = obj_retain_strong(el);
+  obj_rel(els[i]);
+  els[i] = obj_ret(el);
 }
 
 

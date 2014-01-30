@@ -84,7 +84,7 @@ static void ref_dealloc(Obj r) {
     for_in(i, ref_len(r)) {
       //err("  el rel: "); dbg(els[i]);
       // TODO: make this tail recursive for deallocating long chains?
-      obj_release_strong(els[i]);
+      obj_rel(els[i]);
     }
   }
 #if OPT_DEALLOC_MARK
