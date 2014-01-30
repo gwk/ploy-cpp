@@ -337,7 +337,7 @@ static Obj parse_expa(Parser* p) {
 static Obj parse_vec(Parser* p) {
   P_ADV1;
   Mem m = parse_seq(p, 0);
-  P_ADV_TERM('}');
+  P_ADV_TERM(']');
   Obj v = new_vec_M(m);
   mem_dealloc(m);
   Obj q = new_vec2(QUO, v);
@@ -357,7 +357,7 @@ static Obj parse_chain(Parser* p) {
     m = parse_seq(p, 0);
     c = new_chain_M(m);
   }
-  P_ADV_TERM(']');
+  P_ADV_TERM('}');
   mem_dealloc(m);
   dbg(c);
   Obj q = new_vec2(QUO, c);
@@ -427,8 +427,8 @@ static Obj parse_expr_sub(Parser* p) {
   switch (c) {
     case '(':   return parse_call(p);
     case '<':   return parse_expa(p);
-    case '{':   return parse_vec(p);
-    case '[':   return parse_chain(p);
+    case '[':   return parse_vec(p);
+    case '{':   return parse_chain(p);
     case '`':   return parse_qua(p);
     case '\'':  return parse_data(p, '\'');
     case '"':   return parse_data(p, '"');

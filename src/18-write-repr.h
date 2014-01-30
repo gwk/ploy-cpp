@@ -44,18 +44,18 @@ static void write_repr_vec_vec(File f, Obj v) {
   assert(ref_is_vec(v));
   Int len = ref_len(v);
   Obj* els = vec_els(v);
-  fputs("{", f);
+  fputs("[", f);
   for_in(i, len) {
     if (i) fputs(" ", f);
     write_repr_obj(f, els[i]);
   }
-  fputs("}", f);
+  fputs("]", f);
 }
 
 
 static void write_repr_chain(File f, Obj c) {
   assert(ref_is_vec(c));
-  fputs("[", f);
+  fputs("{", f);
   Bool first = true;
   loop {
     if (first) first = false;
@@ -66,13 +66,13 @@ static void write_repr_chain(File f, Obj c) {
     assert(obj_is_vec(tl));
     c = tl;
   }
-  fputs("]", f);
+  fputs("}", f);
 }
 
 
 static void write_repr_chain_blocks(File f, Obj c) {  
   assert(ref_is_vec(c));
-  fputs("[", f);
+  fputs("{", f);
   loop {
     Obj* els = vec_els(c);
     Int len = ref_len(c);
@@ -86,7 +86,7 @@ static void write_repr_chain_blocks(File f, Obj c) {
     assert(obj_is_vec(tl));
     c = tl;
   }
-  fputs("]", f);
+  fputs("}", f);
 }
 
 
