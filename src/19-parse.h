@@ -298,11 +298,11 @@ static Mem parse_blocks(Parser* p) {
       mem_release_dealloc(a.mem);
       return mem0;
     }
-    Obj o = new_vec_HM(VOID, m);
-    mem_release_dealloc(m);
+    Obj o = new_vec_HM(VOID, m); // alloc extra element for chaining; temporarily set to VOID.
+    mem_dealloc(m);
     array_append_move(&a, o);
   }
-  for_in(i, a.mem.len) { errF("  pb %ld: ", i); dbg(a.mem.els[i]); }
+  //for_in(i, a.mem.len) { errF("  pb %ld: ", i); dbg(a.mem.els[i]); }
   return a.mem;
 }
 
@@ -349,6 +349,7 @@ static Obj parse_chain(Parser* p) {
   P_ADV1;
   Mem m;
   Obj c;
+  parse_space(p);
   if (PC == '|') {
     m = parse_blocks(p);
     c =  new_chain_blocks_M(m);
@@ -357,11 +358,9 @@ static Obj parse_chain(Parser* p) {
     m = parse_seq(p, 0);
     c = new_chain_M(m);
   }
-  P_ADV_TERM('}');
   mem_dealloc(m);
-  dbg(c);
+  P_ADV_TERM('}');
   Obj q = new_vec2(QUO, c);
-  dbg(q);
   return q;
 }
 
@@ -480,7 +479,7 @@ static Obj parse_src(SS path, SS src, BM* e) {
     o = VOID;
   }
   else {
-    o = new_vec_HM(DO, m);
+    o = new_vec_HM(DO, m); // implicit top-level DO.
   }
   mem_dealloc(m);
   *e = cast(BM, p.e);
