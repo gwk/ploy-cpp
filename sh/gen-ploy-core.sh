@@ -1,6 +1,7 @@
 # Copyright 2013 George King.
 # Permission to use this file is granted in ploy/license.txt.
 
+set -e
 root=$(dirname "$0")/..
 cd "$root"
 
@@ -14,7 +15,7 @@ if ! sh/is-product-current.sh build/text-to-c-literal sh/* src/text-to-c-literal
   -o build/text-to-c-literal
 fi
 
-if ! sh/is-product-current.sh build/ploy-core.h sh/* src/text-to-c-literal.c src/ploy-core.h; then
+if ! sh/is-product-current.sh build/ploy-core.h sh/* src/text-to-c-literal.c src/core.ploy; then
   echo "  ploy-core.h"
   build/text-to-c-literal core_src < src/core.ploy > build/ploy-core.h
   echo "  ploy"
