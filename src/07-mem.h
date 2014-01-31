@@ -84,6 +84,9 @@ static void mem_dealloc(Mem m) {
 #if OPT_ALLOC_COUNT
   if (m.els) total_deallocs_mem++;
 #endif
+#if OPT_MEM_CLEAR_ELS
+  memset(m.els, 0, m.len * size_Obj);
+#endif
   free(m.els);
 }
 
