@@ -5,7 +5,7 @@
 
 
 static Obj new_vec_raw(Int len) {
-  if (!len) return VEC0;
+  if (!len) return obj_ret_val(VEC0);
   Obj v = ref_alloc(st_Vec, size_RCL + (size_Obj * len));
   v.rcl->len = len;
   return v;
@@ -14,7 +14,7 @@ static Obj new_vec_raw(Int len) {
 
 static Obj new_vec_M(Mem m) {
   // owns elements of m.
-  if (!m.len) return VEC0;
+  if (!m.len) return obj_ret_val(VEC0);
   Obj v = new_vec_raw(m.len);
   Obj* els = vec_els(v);
   for_in(i, m.len) {
@@ -74,9 +74,9 @@ static Obj new_vec4(Obj a, Obj b, Obj c, Obj d) {
 static Obj new_chain_M(Mem m) {
   // owns all elements from m.
   if (!m.len) {
-    return CHAIN0;
+    return obj_ret_val(CHAIN0);
   }
-  Obj c = END;
+  Obj c = obj_ret_val(END);
   for_in_rev(i, m.len) {
     Obj el = mem_el_move(m, i);
     c = new_vec2(c, el); // note: unlike lisp, the tail is in position 0.
@@ -92,13 +92,13 @@ static void vec_put(Obj v, Int i, Obj el);
 static Obj new_chain_blocks_M(Mem m) {
   // owns all elements from m.
   if (!m.len) {
-    return CHAIN0;
+    return obj_ret_val(CHAIN0);
   }
-  Obj c = END;
+  Obj c = obj_ret_val(END);
   for_in_rev(i, m.len) {
     Obj el = mem_el_move(m, i);
     assert(obj_is_vec(el));
-    assert(vec_el(el, 0).u == VOID.u);
+    assert(vec_el(el, 0).u == ILLEGAL.u);
     vec_put(el, 0, c);
     c = el;
   }

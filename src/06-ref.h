@@ -5,13 +5,13 @@
 
 
 #if OPT_ALLOC_COUNT
-static Int total_allocs_ref[struct_tag_end] = {};
-static Int total_deallocs_ref[struct_tag_end] = {};
+static Int total_allocs_ref[struct_tag_end][2] = {};
 #endif
+
 
 static void assert_ref_is_valid(Obj r) {
   assert(obj_is_ref(r));
-  assert(r.rc->st != st_DEALLOC);
+  assert(r.rc->sc > 0);
 }
 
 
@@ -65,7 +65,8 @@ static Obj ref_alloc(Struct_tag st, Int width) {
   r.rc->sc = 1;
   rc_errMLV("alloc     ", r.rc);
 #if OPT_ALLOC_COUNT
-  total_allocs_ref[st]++;
+  total_rets[0][0]++;
+  total_allocs_ref[st][0]++;
 #endif
   return r;
 }
@@ -88,13 +89,14 @@ static void ref_dealloc(Obj r) {
     }
   }
 #if OPT_DEALLOC_MARK
-  r.rc->st = st_DEALLOC;
+  assert(r.rc->sc == 1);
+  r.rc->sc = 0;
 #endif
 #if !OPT_DEALLOC_PRESERVE
   free(r.p);
 #endif
 #if OPT_ALLOC_COUNT
-  total_deallocs_ref[st]++;
+  total_allocs_ref[st][1]++;
 #endif
 }
 

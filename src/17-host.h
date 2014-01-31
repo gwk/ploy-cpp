@@ -4,11 +4,18 @@
 #include "16-func.h"
 
 
+static Obj host_identity(Obj o) {
+  return o;
+}
+
+
 static Obj host_raw_write(Obj f, Obj d) {
   check_obj(ref_is_file(f), "write expected arg 1 File; found", f);
   check_obj(ref_is_data(d), "write expected arg 2 Data; found", d);
   File file = file_file(f);
   Int i = cast(Int, fwrite(data_ptr(d).c, size_Char, cast(Uns, ref_len(d)), file));
+  obj_rel(f);
+  obj_rel(d);
   return new_int(i);
 }
 
@@ -17,7 +24,8 @@ static Obj host_raw_flush(Obj f) {
   check_obj(ref_is_file(f), "write expected arg 1 File; found", f);
   File file = file_file(f);
   fflush(file);
-  return VOID;
+  obj_rel(f);
+  return obj_ret_val(VOID);
 }
 
 
@@ -30,6 +38,7 @@ static Obj host_len(Obj o) {
     check_obj(ref_is_data(o) || ref_is_vec(o), "len expected Data or Vec; found", o);
     l = ref_len(o);
   }
+  obj_rel(o);
   return new_int(l);
 }
 
@@ -41,6 +50,8 @@ static Obj host_el(Obj v, Obj i) {
   Int l = ref_len(v);
   check(j >= 0 && j < l, "el index out of range; index: %ld; len: %ld", j, l);
   Obj el = vec_el(v, j);
+  obj_rel(v);
+  obj_rel_val(i);
   return obj_ret(el);
 }
 
@@ -57,11 +68,14 @@ static Obj host_slice(Obj v, Obj i0, Obj i1) {
   j0 = int_clamp(j0, 0, l - 1);
   j1 = int_clamp(j1, 0, l - 1);
   Int ls = j1 - j0;
-  if (ls < 1) return VEC0;
+  if (ls < 1) return obj_ret_val(VEC0);
   Mem m = mem_mk(vec_els(v) + j0, ls);
   for_in(i, m.len) {
     obj_ret(m.els[i]);
   }
+  obj_rel(v);
+  obj_rel_val(i0);
+  obj_rel_val(i1);
   return new_vec_M(m);
 }
 
@@ -69,6 +83,7 @@ static Obj host_slice(Obj v, Obj i0, Obj i1) {
 static Obj host_neg(Obj n) {
   check_obj(obj_is_int(n), "add expected Int; found", n);
   Int i = int_val(n);
+  obj_rel_val(n);
   return new_int(-i);
 }
 
@@ -76,6 +91,7 @@ static Obj host_neg(Obj n) {
 static Obj host_abs(Obj n) {
   check_obj(obj_is_int(n), "add expected Int; found", n);
   Int i = int_val(n);
+  obj_rel_val(n);
   return new_int(i < 0 ? -i : i);
 }
 
@@ -87,6 +103,8 @@ static Obj host_##name(Obj n0, Obj n1) { \
   check_obj(obj_is_int(n0), "add expected arg 1 Int; found", n0); \
   check_obj(obj_is_int(n1), "add expected arg 2 Int; found", n1); \
   Int i = int_##name(int_val(n0), int_val(n1)); \
+  obj_rel_val(n0); \
+  obj_rel_val(n1); \
   return new_int(i); \
 }
 
@@ -120,9 +138,13 @@ HOST_BIN_OP(ge)
 
 
 static Obj host_not(Obj b) {
-  if (b.u == FALSE.u) return TRUE;
-  if (b.u == TRUE.u) return FALSE;
-  error_obj("not requires a Bool value; found", b);
+  Obj r = FALSE;
+  if (b.u == FALSE.u) r = TRUE;
+  else if (b.u != TRUE.u) {
+    error_obj("not requires a Bool value; found", b);
+  }
+  obj_rel_val(b);
+  return r;
 }
 
 
@@ -135,6 +157,8 @@ static Obj run(Obj env, Obj code);
 
 static Obj host_run(Obj env, Obj code) {
   Obj val = run(env, code);
+  obj_rel(env);
+  obj_rel(code);
   return val;
 }
 
@@ -142,7 +166,7 @@ static Obj host_run(Obj env, Obj code) {
 static Obj env_frame_bind(Obj frame, Obj sym, Obj func);
 
 static Obj host_init() {
-  Obj frame = END;
+  Obj frame = obj_ret_val(END);
   Obj sym, val;
 
 #define DEF_FH(ac, n) \
@@ -150,6 +174,7 @@ sym = new_sym(ss_from_BC(#n)); \
 val = new_func_host(st_Func_host_##ac, sym, cast(Ptr, host_##n)); \
 frame = env_frame_bind(frame, sym, val);
 
+  DEF_FH(1, identity)
   DEF_FH(2, raw_write)
   DEF_FH(1, raw_flush)
   DEF_FH(1, len)

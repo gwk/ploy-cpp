@@ -8,16 +8,22 @@ typedef unsigned Tag;
 typedef Uns Sym; // index into global_sym_table.
 
 #define width_obj_tag 3
+#define obj_tag_end (1L << width_obj_tag)
 
 static const Int width_tagged_word = width_word - width_obj_tag;
 
-static const Uns obj_tag_end = 1L << width_obj_tag;
 static const Uns obj_tag_mask = obj_tag_end - 1;
 static const Uns obj_body_mask = ~obj_tag_mask;
 static const Uns flt_body_mask = max_Uns - 1;
 static const Int max_Int_tagged  = (1L  << width_tagged_word) - 1;
 static const Uns max_Uns_tagged  = max_Int_tagged;
 static const Int shift_factor_Int = 1L << width_obj_tag; // cannot shift signed values in C so use multiplication instead.
+
+
+#if OPT_ALLOC_COUNT
+static Int total_rets[obj_tag_end][2] = {};
+#endif
+
 
 /*
 all ploy objects are tagged pointer/value words.
@@ -79,7 +85,7 @@ typedef enum {
   st_Reserved_A,
   st_Reserved_B,
   st_Reserved_C,
-  st_DEALLOC = struct_tag_mask, // this value must be equal to the mask for ref_dealloc.
+  st_Reserved_D,
 } Struct_tag;
 
 static BC struct_tag_names[] = {
@@ -98,7 +104,7 @@ static BC struct_tag_names[] = {
   "Reserved-A",
   "Reserved-B",
   "Reserved-C",
-  "DEALLOC",
+  "Reserved-D",
 };
 
 static const Int width_sc  = width_word - width_struct_tag;
@@ -242,6 +248,9 @@ static void assert_ref_is_valid(Obj o);
 
 static Obj obj_ret(Obj o) {
   Obj_tag ot = obj_tag(o);
+#if  OPT_ALLOC_COUNT
+  total_rets[ot][0]++;
+#endif
   if (ot) return o;
   assert_ref_is_valid(o);
   rc_errMLV("ret strong", o.rc);
@@ -253,7 +262,50 @@ static Obj obj_ret(Obj o) {
     if (report_pinned_counts) {
       errFL("object strong count pinned: %p", o.p);
     }
+  } // else previously pinned.
+  return o;
+}
+
+
+static void ref_dealloc(Obj o);
+
+static void obj_rel(Obj o) {
+  Obj_tag ot = obj_tag(o);
+#if  OPT_ALLOC_COUNT
+  total_rets[ot][1]++;
+#endif
+  if (ot) return;
+  assert_ref_is_valid(o);
+  if (o.rc->sc == 1) {
+    ref_dealloc(o);
+    return;
   }
+  rc_errMLV("rel strong", o.rc);
+  if (o.rc->sc < pinned_sc) { // can only decrement if the count is not pinned.
+    o.rc->sc--;
+  }
+  rc_errMLV("rel s post", o.rc);
+}
+
+
+static Obj obj_ret_val(Obj o) {
+  // ret counting for non-ref objects. a no-op for optimized builds.
+#if  OPT_ALLOC_COUNT
+  Obj_tag ot = obj_tag(o);
+  assert(ot);
+  total_rets[ot][0]++;
+#endif
+  return o;
+}
+
+
+static Obj obj_rel_val(Obj o) {
+  // rel counting for non-ref objects. a no-op for optimized builds.
+#if  OPT_ALLOC_COUNT
+  Obj_tag ot = obj_tag(o);
+  assert(ot);
+  total_rets[ot][1]++;
+#endif
   return o;
 }
 
@@ -271,29 +323,11 @@ static Obj obj_retain_weak(Obj o) {
     if (report_pinned_counts) {
       errFL("object weak count pinned: %p", o.p);
     }
-  }
+  } // else previously pinned.
   return o;
 }
 
 
-static void ref_dealloc(Obj o);
-
-static void obj_rel(Obj o) {
-  Obj_tag ot = obj_tag(o);
-  if (ot) return;
-  assert_ref_is_valid(o);
-  if (o.rc->sc == 1) {
-    ref_dealloc(o);
-    return;
-  }
-  rc_errMLV("rel strong", o.rc);
-  if (o.rc->sc < pinned_sc) { // can only decrement if the count is not pinned.
-    o.rc->sc--;
-  }
-  rc_errMLV("rel s post", o.rc);
-}
-
-              
 static void obj_release_weak(Obj o) {
   Obj_tag ot = obj_tag(o);
   if (ot) return;

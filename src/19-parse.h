@@ -58,7 +58,7 @@ static Obj parse_error(Parser* p, BC fmt, ...) {
   // e must be freed by parser owner.
   p->e = ss_src_loc_str(p->src, p->path, p->sp.pos, 0, p->sp.line, p->sp.col, msg);
   raw_dealloc(msg);
-  return VOID;
+  return ILLEGAL;
 }
 
 
@@ -164,7 +164,7 @@ static Obj parse_comment(Parser* p) {
   }  while (PC != '\n');
   SS s = ss_slice(p->src, pos_start, p->sp.pos);
   Obj d = new_data_from_SS(s);
-  return new_vec2(COMMENT, d);
+  return new_vec2(obj_ret_val(COMMENT), d);
 }
 
 
@@ -298,7 +298,7 @@ static Mem parse_blocks(Parser* p) {
       mem_release_dealloc(a.mem);
       return mem0;
     }
-    Obj o = new_vec_HM(VOID, m); // alloc extra element for chaining; temporarily set to VOID.
+    Obj o = new_vec_HM(ILLEGAL, m); // alloc extra element for chaining; temporarily set to ILLEGAL.
     mem_dealloc(m);
     array_append_move(&a, o);
   }
@@ -310,7 +310,7 @@ static Mem parse_blocks(Parser* p) {
 #define P_ADV_TERM(t) \
 if (p->e || !parse_terminator(p, t)) { \
   mem_release_dealloc(m); \
-  return VOID; \
+  return ILLEGAL; \
 }
 
 
@@ -318,7 +318,7 @@ static Obj parse_call(Parser* p) {
   P_ADV1;
   Mem m = parse_seq(p, 0);
   P_ADV_TERM(')');
-  Obj v = new_vec_HM(CALL, m);
+  Obj v = new_vec_HM(obj_ret_val(CALL), m);
   mem_dealloc(m);
   return v;
 }
@@ -328,7 +328,7 @@ static Obj parse_expa(Parser* p) {
   P_ADV1;
   Mem m = parse_seq(p, 0);
   P_ADV_TERM('>');
-  Obj v = new_vec_HM(EXPA, m);
+  Obj v = new_vec_HM(obj_ret_val(EXPA), m);
   mem_dealloc(m);
   return v;
 }
@@ -340,7 +340,7 @@ static Obj parse_vec(Parser* p) {
   P_ADV_TERM(']');
   Obj v = new_vec_M(m);
   mem_dealloc(m);
-  Obj q = new_vec2(QUO, v);
+  Obj q = new_vec2(obj_ret_val(QUO), v);
   return q;
 }
 
@@ -360,7 +360,7 @@ static Obj parse_chain(Parser* p) {
   }
   mem_dealloc(m);
   P_ADV_TERM('}');
-  Obj q = new_vec2(QUO, c);
+  Obj q = new_vec2(obj_ret_val(QUO), c);
   return q;
 }
 
@@ -369,7 +369,7 @@ static Obj parse_qua(Parser* p) {
   assert(PC == '`');
   P_ADV1;
   Obj o = parse_expr(p);
-  return new_vec2(QUA, o);
+  return new_vec2(obj_ret_val(QUA), o);
 }
 
 
@@ -378,7 +378,7 @@ static Obj parse_dequote(Parser* p) {
   P_ADV1;
   Src_pos sp_sub = p->sp;
   Obj o = parse_expr(p);
-  if (p->e) return VOID;
+  if (p->e) return ILLEGAL;
   if (!(obj_is_vec(o) && ref_len(o) == 2 && vec_el(o, 0).u == QUO.u)) {
     p->sp = sp_sub; // better error message.
     parse_error(p, "dequote expected quoted subexpression");
@@ -393,7 +393,7 @@ static Obj parse_dequote(Parser* p) {
 static Obj parse_label_sub(Parser* p, Obj sym) {
   P_ADV1;
   Obj name = parse_expr(p);
-  if (p->e) return VOID;
+  if (p->e) return ILLEGAL;
   Char c = PC;
   Obj type = NIL;
   if (c == ':') {
@@ -406,7 +406,7 @@ static Obj parse_label_sub(Parser* p, Obj sym) {
     P_ADV1;
     val = parse_expr(p);
   }
-  return new_vec4(sym, name, type, val);
+  return new_vec4(obj_ret_val(sym), name, type, val);
 }
 
 
@@ -472,14 +472,14 @@ static Obj parse_src(SS path, SS src, BM* e) {
   Mem m = parse_seq(&p, 0);
   Obj o;
   if (p.e) {
-    o = VOID;
+    o = ILLEGAL;
   }
   else if (p.sp.pos != p.src.len) {
     parse_error(&p, "parsing terminated early");
-    o = VOID;
+    o = ILLEGAL;
   }
   else {
-    o = new_vec_HM(DO, m); // implicit top-level DO.
+    o = new_vec_HM(obj_ret_val(DO), m); // implicit top-level DO.
   }
   mem_dealloc(m);
   *e = cast(BM, p.e);

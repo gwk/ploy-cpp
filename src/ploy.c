@@ -40,7 +40,6 @@ int main(int argc, BC argv[]) {
   
   assert_host_basic();
   assert(size_Obj == size_Word);
-  assert(int_val(new_int(-1)) == -1);
   set_process_name(argv[0]);
   sym_init();
   vol_err = VERBOSE;
@@ -70,57 +69,47 @@ int main(int argc, BC argv[]) {
   }
   
   Obj host_frame = host_init();
-  Obj global_env = env_push(END, host_frame);
-  
+  Obj global_env = env_push(obj_ret_val(END), host_frame);
   Array sources = array0;
+#if 1
   // run embedded core file.
   Obj path = new_data_from_BC("<core>");
   Obj src = new_data_from_BC(core_src);
   parse_and_eval(global_env, path, src, &sources, false);
   
-   // handle arguments.
-   for_in(i, path_count) {
-   path = new_data_from_BC(paths[i]);
-   src = new_data_from_path(paths[i]);
-   parse_and_eval(global_env, path, src, &sources, false);
-   }
-   if (expr) {
-   path = new_data_from_BC("<cmd>");
-   src = new_data_from_BC(expr);
-   parse_and_eval(global_env, path, src, &sources, out_val);
-   }
+  // handle arguments.
+  for_in(i, path_count) {
+    path = new_data_from_BC(paths[i]);
+    src = new_data_from_path(paths[i]);
+    parse_and_eval(global_env, path, src, &sources, false);
+  }
+  if (expr) {
+    path = new_data_from_BC("<cmd>");
+    src = new_data_from_BC(expr);
+    parse_and_eval(global_env, path, src, &sources, out_val);
+  }
+#endif
 
 #if OPT_ALLOC_COUNT
   obj_rel(global_env);
   mem_release_dealloc(global_sym_names.mem);
   mem_release_dealloc(sources.mem);
   
-#define CHECK_ALLOCS(group, name) \
-if (vol_err || total_allocs_##group != total_deallocs_##group) { \
-errFL("==== PLOY ALLOC STATS: " name ": alloc: %ld; dealloc: %ld; diff = %ld", \
-total_allocs_##group, total_deallocs_##group, total_allocs_##group - total_deallocs_##group); \
+#define CHECK_ALLOCS(total, name, label0, label1) \
+if (vol_err || total[0] != total[1]) { \
+errFL("==== PLOY ALLOC STATS: %s: " label0 ": %ld; " label1 ": %ld; diff = %ld", \
+name, total[0], total[1], total[0] - total[1]); \
 }
   
-#define CHECK_ALLOCS_REF(n) CHECK_ALLOCS(ref[st_##n], #n)
+  CHECK_ALLOCS(total_allocs_raw, "raw", "allocs", "deallocs")
+  CHECK_ALLOCS(total_allocs_mem, "mem", "allocs", "deallocs")
   
-  CHECK_ALLOCS(raw, "raw")
-  CHECK_ALLOCS(mem, "mem")
-  CHECK_ALLOCS_REF(Data)
-  CHECK_ALLOCS_REF(Vec)
-  CHECK_ALLOCS_REF(I32)
-  CHECK_ALLOCS_REF(I64)
-  CHECK_ALLOCS_REF(U32)
-  CHECK_ALLOCS_REF(U64)
-  CHECK_ALLOCS_REF(F32)
-  CHECK_ALLOCS_REF(F64)
-  CHECK_ALLOCS_REF(File)
-  CHECK_ALLOCS_REF(Func_host_1)
-  CHECK_ALLOCS_REF(Func_host_2)
-  CHECK_ALLOCS_REF(Func_host_3)
-  CHECK_ALLOCS_REF(Reserved_A)
-  CHECK_ALLOCS_REF(Reserved_B)
-  CHECK_ALLOCS_REF(Reserved_C)
-  CHECK_ALLOCS_REF(DEALLOC)
+  for_in(i, struct_tag_end) {
+    CHECK_ALLOCS(total_allocs_ref[i], struct_tag_names[i], "allocs", "deallocs");
+  }
+  for_in(i, obj_tag_end) {
+    CHECK_ALLOCS(total_rets[i], obj_tag_names[i], "retains", "releases");
+  }
   
 #endif // OPT_ALLOC_COUNT
   

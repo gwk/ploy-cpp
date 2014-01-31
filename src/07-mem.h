@@ -55,12 +55,12 @@ static Obj mem_el_ret(Mem m, Int i) {
 }
 
 
-static const Obj VOID;
+static const Obj ILLEGAL;
 
 static Obj mem_el_move(Mem m, Int i) {
   Obj e = mem_el_borrowed(m, i);
 #if DEBUG
-  m.els[i] = VOID;
+  m.els[i] = ILLEGAL;
 #endif
   return e;
 }
@@ -82,7 +82,7 @@ static void mem_release_els(Mem m) {
 
 static void mem_dealloc(Mem m) {
 #if OPT_ALLOC_COUNT
-  if (m.els) total_deallocs_mem++;
+  if (m.els) total_allocs_mem[1]++;
 #endif
 #if OPT_MEM_CLEAR_ELS
   memset(m.els, 0, m.len * size_Obj);
@@ -108,7 +108,7 @@ static void mem_realloc(Mem* m, Int len) {
   // realloc.
   if (len > 0) {
 #if OPT_ALLOC_COUNT
-    if (!m->els) total_allocs_mem++;
+    if (!m->els) total_allocs_mem[0]++;
 #endif
     m->els = realloc(m->els, (Uns)(len * size_Obj));
     check(m->els, "realloc failed; len: %ld; width: %ld", len, size_Obj);

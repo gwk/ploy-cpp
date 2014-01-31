@@ -25,7 +25,7 @@ static Obj env_get(Obj env, Obj sym) {
     }
     env = chain_tl(env);
   }
-  return VOID; // lookup failed.
+  return ILLEGAL; // lookup failed.
 }
 
 
@@ -40,7 +40,7 @@ static Obj env_frame_bind(Obj frame, Obj sym, Obj val) {
   assert(obj_is_vec(frame) || frame.u == END.u || frame.u == CHAIN0.u);
   assert(obj_is_sym(sym));
   if (frame.u == CHAIN0.u) {
-    frame = END;
+    frame = obj_ret_val(END);
   }
   return new_vec3(frame, sym, val); // note: unlike lisp, tl is in position 0.
 }
@@ -58,7 +58,7 @@ static void env_bind(Obj env, Obj sym, Obj val) {
 //static void env_frame_bind_variad();
 
 static Obj env_frame_bind_args(Obj env, Obj func, Int len_pars, Obj* pars, Int len_args, Obj* args, Bool is_macro) {
-  Obj frame = CHAIN0;
+  Obj frame = obj_ret_val(CHAIN0);
   Int i_args = 0;
   for_in(i_pars, len_pars) {
     Obj par = pars[i_pars];

@@ -6,11 +6,11 @@
 
 static Obj run_sym(Obj env, Obj code) {
   assert(obj_is_sym(code));
-  // TODO: remove this and place constants in global env?
-  if (code.u < VOID.u) return code; // constants are self-evaluating.
+  assert(code.u != ILLEGAL.u); // anything that returns ILLEGAL should have raised an error.
+  if (code.u < VOID.u) return obj_ret_val(code); // constants are self-evaluating.
   if (code.u == VOID.u) error("cannot run VOID");
   Obj val = env_get(env, code);
-  if (val.u == VOID.u) { // lookup failed.
+  if (val.u == ILLEGAL.u) { // lookup failed.
     error_obj("lookup error", code);
   }
   return obj_ret(val);
@@ -25,7 +25,7 @@ static Obj run_QUO(Obj env, Int len, Obj* args) {
 
 static Obj run_DO(Obj env, Int len, Obj* args) {
   if (!len) {
-    return VOID;
+    return obj_ret_val(VOID);
   }
   Int last = len - 1;
   for_in(i, last) {
@@ -51,7 +51,7 @@ static Obj run_LET(Obj env, Int len, Obj* args) {
   check_obj(obj_is_sym(sym), "LET requires argument 1 to be a sym; found", sym);
   Obj val = run(env, expr);
   env_bind(env, sym, val); // owns val.
-  return VOID;
+  return obj_ret_val(VOID); // TODO: retain and return val?
 }
 
 
@@ -114,10 +114,8 @@ static Obj run_call_host1(Obj env, Obj func, Int len, Obj* args) {
   Obj a0 = run(env, args[0]);
   Func_host* fh = ref_body(func);
   Func_host_ptr_1 f = cast(Func_host_ptr_1, fh->ptr);
-  Obj ret = f(a0);
   obj_rel(func);
-  obj_rel(a0);
-  return ret;
+  return f(a0);
 }
 
 
@@ -128,11 +126,8 @@ static Obj run_call_host2(Obj env, Obj func, Int len, Obj* args) {
   Obj a1 = run(env, args[1]);
   Func_host* fh = ref_body(func);
   Func_host_ptr_2 f = cast(Func_host_ptr_2, fh->ptr);
-  Obj ret = f(a0, a1);
   obj_rel(func);
-  obj_rel(a0);
-  obj_rel(a1);
-  return ret;
+  return f(a0, a1);
 }
 
 
@@ -144,12 +139,8 @@ static Obj run_call_host3(Obj env, Obj func, Int len, Obj* args) {
   Obj a2 = run(env, args[2]);
   Func_host* fh = ref_body(func);
   Func_host_ptr_3 f = cast(Func_host_ptr_3, fh->ptr);
-  Obj ret = f(a0, a1, a2);
   obj_rel(func);
-  obj_rel(a0);
-  obj_rel(a1);
-  obj_rel(a2);
-  return ret;
+  return f(a0, a1, a2);
 }
 
 
@@ -173,7 +164,7 @@ static Obj run_CALL(Obj env, Int len, Obj* args) {
 
 
 static Obj run_COMMENT(Obj env, Int len, Obj* args) {
-  return VOID;
+  return obj_ret_val(VOID);
 }
 
 
@@ -215,7 +206,7 @@ static Obj run(Obj env, Obj code) {
 #endif
   Obj_tag ot = obj_tag(code);
   if (ot & ot_flt_bit || ot == ot_int || ot == ot_data) {
-    return obj_ret(code); // self-evaluating.
+    return obj_ret_val(code); // self-evaluating.
   }
   if (ot == ot_sym) {
     return run_sym(env, code);
@@ -238,8 +229,8 @@ static Obj run(Obj env, Obj code) {
     case st_Func_host_3:
     case st_Reserved_A:
     case st_Reserved_B:
-    case st_Reserved_C: error_obj("cannot run object", code);
-    case st_DEALLOC:    error_obj("cannot run deallocated object", code);
+    case st_Reserved_C:
+    case st_Reserved_D: error_obj("cannot run object", code);
   }
 }
 

@@ -5,7 +5,7 @@
 
 
 static Obj new_bool(Int i) {
-  return i ? TRUE : FALSE;
+  return obj_ret(i ? TRUE : FALSE); // optimize ret?
 }
 
 

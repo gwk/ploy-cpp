@@ -41,14 +41,14 @@ static Obj new_sym(SS s) {
   for_in(i, global_sym_names.mem.len) {
     Obj d = mem_el_borrowed(global_sym_names.mem, i);
     if (ss_eq(s, data_SS(d))) {
-      return sym_with_index(i);
+      return obj_ret_val(sym_with_index(i));
     }
   }
   Obj d = new_data_from_SS(s);
   Int i = array_append_move(&global_sym_names, d);
   Obj sym = sym_with_index(i);
   //errF("NEW SYM: %ld: ", i); obj_errL(sym);
-  return sym;
+  return obj_ret_val(sym);
 }
 
 // for use with "%*s" formatter.
@@ -56,6 +56,7 @@ static Obj new_sym(SS s) {
 
 
 typedef enum {
+  si_ILLEGAL, // special value for returning during error conditions; completely prohibited in code.
   si_NIL,
   si_VEC0,
   si_CHAIN0,
@@ -75,7 +76,7 @@ typedef enum {
   si_EXPA,
   si_LABEL,
   si_VARIAD,
-  si_VOID, // must be last.
+  si_VOID,  // all syms below VOID are self-evaluating; everything above is normal. VOID cannot be evaluated, but is otherwise legal.
 } Sym_index;
 
 
@@ -83,6 +84,7 @@ typedef enum {
 #define DEF_SYM(c) \
 static const Obj c = _sym_with_index(si_##c)
 
+DEF_SYM(ILLEGAL);
 DEF_SYM(NIL);
 DEF_SYM(VEC0);
 DEF_SYM(CHAIN0);
@@ -108,8 +110,9 @@ DEF_SYM(VOID);
 static void sym_init() {
   assert(global_sym_names.mem.len == 0);
   Obj sym;
-#define SBC(bc, si) sym = new_sym(ss_from_BC(bc)); assert(sym_index(sym) == si)
+#define SBC(bc, si) sym = new_sym(ss_from_BC(bc)); assert(sym_index(sym) == si); obj_rel_val(sym);
 #define S(s) SBC(#s, si_##s)
+  S(ILLEGAL);
   S(NIL);
   S(VEC0);
   S(CHAIN0);

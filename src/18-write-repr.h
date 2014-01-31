@@ -150,8 +150,8 @@ static void write_repr_obj(File f, Obj o) {
       case st_Func_host_3:  write_repr_Func_host(f, o, 3); break;
       case st_Reserved_A:
       case st_Reserved_B:
-      case st_Reserved_C: fputs("(ReservedX)", f); break;
-      case st_DEALLOC: error("deallocated object is still referenced: %p", o.p);
+      case st_Reserved_C:
+      case st_Reserved_D: fputs("(ReservedX)", f); break;
     }
   }
   err_flush(); // TODO: for debugging only?
