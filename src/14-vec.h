@@ -97,7 +97,6 @@ static Obj new_chain_blocks_M(Mem m) {
   Obj c = obj_ret_val(END);
   for_in_rev(i, m.len) {
     Obj el = mem_el_move(m, i);
-    assert(obj_is_vec(el));
     assert(vec_el(el, 0).u == ILLEGAL.u);
     vec_put(el, 0, c);
     c = el;
@@ -128,9 +127,8 @@ static void vec_put(Obj v, Int i, Obj el) {
   assert(ref_is_vec(v));
   assert(i < ref_len(v));
   Obj* els = vec_els(v);
-  // note: the order is release, then retain. this should always be sound.
-  obj_rel(els[i]);
-  els[i] = obj_ret(el);
+  obj_rel(els[i]); // safe to release els[i] first, el is owned by this function so even if it is the same as els[i] it is safe.
+  els[i] = el;
 }
 
 
@@ -165,10 +163,10 @@ static Vec_shape vec_shape(Obj v) {
   assert(ref_is_vec(v));
   Vec_shape s = vs_chain;
   loop {
+    if (ref_len(v) != 2) s = vs_chain_blocks;
     Obj tl = chain_tl(v);
     if (tl.u == END.u) return s;
     if (!obj_is_vec(tl)) return vs_vec;
-    if (ref_len(v) != 2) s = vs_chain_blocks;
     v = tl;
   }
 }

@@ -36,7 +36,7 @@ static Obj env_push(Obj env, Obj frame) {
 
 
 static Obj env_frame_bind(Obj frame, Obj sym, Obj val) {
-  // owns frame, val.
+  // owns frame, sym, val.
   assert(obj_is_vec(frame) || frame.u == END.u || frame.u == CHAIN0.u);
   assert(obj_is_sym(sym));
   if (frame.u == CHAIN0.u) {
@@ -47,15 +47,12 @@ static Obj env_frame_bind(Obj frame, Obj sym, Obj val) {
 
 
 static void env_bind(Obj env, Obj sym, Obj val) {
-  // owns val.
+  // owns sym, val.
   Obj frame = chain_hd(env);
   Obj frame1 = env_frame_bind(frame, sym, val);
   vec_put(env, 0, frame1);
 }
 
-
-//static void env_frame_bind_arg(Obj par, Obj arg);
-//static void env_frame_bind_variad();
 
 static Obj env_frame_bind_args(Obj env, Obj func, Int len_pars, Obj* pars, Int len_args, Obj* args, Bool is_macro) {
   Obj frame = obj_ret_val(CHAIN0);
@@ -81,8 +78,8 @@ static Obj env_frame_bind_args(Obj env, Obj func, Int len_pars, Obj* pars, Int l
       else {
         error_obj("not enough arguments provided to function", func);
       }
-      Obj val = (is_macro ? arg : run(env, arg));
-      frame = env_frame_bind(frame, par_sym, val);
+      Obj val = (is_macro ? obj_ret(arg) : run(env, arg));
+      frame = env_frame_bind(frame, obj_ret_val(par_sym), val);
     }
     else if (par_type.u == VARIAD.u) {
       error_obj("Variad parameters not yet supported", func);

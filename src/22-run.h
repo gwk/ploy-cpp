@@ -50,7 +50,7 @@ static Obj run_LET(Obj env, Int len, Obj* args) {
   Obj expr = args[1];
   check_obj(obj_is_sym(sym), "LET requires argument 1 to be a sym; found", sym);
   Obj val = run(env, expr);
-  env_bind(env, sym, val); // owns val.
+  env_bind(env, obj_ret_val(sym), val); // owns sym, val.
   return obj_ret_val(VOID); // TODO: retain and return val?
 }
 

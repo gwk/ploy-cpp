@@ -298,7 +298,8 @@ static Mem parse_blocks(Parser* p) {
       mem_release_dealloc(a.mem);
       return mem0;
     }
-    Obj o = new_vec_HM(ILLEGAL, m); // alloc extra element for chaining; temporarily set to ILLEGAL.
+    // alloc extra element for chaining; temporarily set to ILLEGAL, which is retained to match the vec_put call.
+    Obj o = new_vec_HM(obj_ret_val(ILLEGAL), m);
     mem_dealloc(m);
     array_append_move(&a, o);
   }
@@ -383,10 +384,10 @@ static Obj parse_dequote(Parser* p) {
     p->sp = sp_sub; // better error message.
     parse_error(p, "dequote expected quoted subexpression");
   }
-  Obj tl = vec_el(o, 1);
-  obj_ret(tl);
+  Obj sub = vec_el(o, 1);
+  obj_ret(sub);
   obj_rel(o);
-  return tl;
+  return sub;
 }
 
 

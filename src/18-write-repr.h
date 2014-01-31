@@ -78,7 +78,7 @@ static void write_repr_chain_blocks(File f, Obj c) {
     Int len = ref_len(c);
     fputs("|", f);
     for_imn(i, 1, len) { // note: unlike lisp, tl is in position 0.
-      if (i) fputs(" ", f);
+      if (i > 1) fputs(" ", f);
       write_repr_obj(f, els[i]);
     }
     Obj tl = els[0];
