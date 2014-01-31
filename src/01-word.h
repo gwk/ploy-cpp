@@ -20,18 +20,22 @@
 #endif
 
 
+// on ref object dealloc, changed Struct_tag to st_DEALLOC.
 #ifndef OPT_DEALLOC_MARK
 #define OPT_DEALLOC_MARK DEBUG
 #endif
 
+// on ref object dealloct, do not actually call free.
 #ifndef OPT_DEALLOC_PRESERVE
 #define OPT_DEALLOC_PRESERVE DEBUG
 #endif
 
+// count allocations and deallocations by Obj_tag and Struct_tag.
 #ifndef OPT_ALLOC_COUNT
 #define OPT_ALLOC_COUNT DEBUG
 #endif
 
+// zero 
 #ifndef OPT_MEM_CLEAR_ELS
 #define OPT_MEM_CLEAR_ELS DEBUG
 #endif
@@ -94,7 +98,7 @@ typedef double Flt;
 
 #else
 // could also define ARCH_32_WIDE, which would use long long values.
-// this would require additional conditionals.
+// this would require additional checks.
 #error "unknown architecture"
 #endif
 
