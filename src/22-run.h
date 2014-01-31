@@ -32,7 +32,7 @@ static Obj run_DO(Obj env, Int len, Obj* args) {
     Obj o = run(env, args[i]);
     obj_rel(o); // value ignored.
   };
-  return run(env, args[last]); // put last run in tail position for optimization.
+  return run(env, args[last]); // put last run() in tail position for TCO.
 }
 
 
@@ -88,6 +88,7 @@ static Obj run_FN(Obj env, Int len, Obj* args) {
 
 
 static Obj run_call_native(Obj env, Obj func, Int len, Obj* args, Bool is_macro) {
+  // owns func.
   Int func_len = ref_len(func);
   check_obj(func_len == 4, "function is malformed (length is not 4)", func);
   Obj* func_els = vec_els(func);
@@ -101,29 +102,34 @@ static Obj run_call_native(Obj env, Obj func, Int len, Obj* args, Bool is_macro)
   Obj frame = env_frame_bind_args(env, func, ref_len(pars), vec_els(pars), len, args, is_macro);
   Obj env1 = env_push(env, frame);
   Obj ret = run(env1, body);
+  obj_rel(func);
   obj_rel(env1);
   return ret;
 }
 
 
 static Obj run_call_host1(Obj env, Obj func, Int len, Obj* args) {
+  // owns func.
   check(len == 1, "host function expects 1 argument; received %ld", len);
   Obj a0 = run(env, args[0]);
   Func_host* fh = ref_body(func);
   Func_host_ptr_1 f = cast(Func_host_ptr_1, fh->ptr);
   Obj ret = f(a0);
+  obj_rel(func);
   obj_rel(a0);
   return ret;
 }
 
 
 static Obj run_call_host2(Obj env, Obj func, Int len, Obj* args) {
+  // owns func.
   check(len == 2, "host function expects 2 arguments; received %ld", len);
   Obj a0 = run(env, args[0]);
   Obj a1 = run(env, args[1]);
   Func_host* fh = ref_body(func);
   Func_host_ptr_2 f = cast(Func_host_ptr_2, fh->ptr);
   Obj ret = f(a0, a1);
+  obj_rel(func);
   obj_rel(a0);
   obj_rel(a1);
   return ret;
@@ -131,6 +137,7 @@ static Obj run_call_host2(Obj env, Obj func, Int len, Obj* args) {
 
 
 static Obj run_call_host3(Obj env, Obj func, Int len, Obj* args) {
+  // owns func.
   check(len == 2, "host function expects 3 arguments; received %ld", len);
   Obj a0 = run(env, args[0]);
   Obj a1 = run(env, args[1]);
@@ -138,6 +145,7 @@ static Obj run_call_host3(Obj env, Obj func, Int len, Obj* args) {
   Func_host* fh = ref_body(func);
   Func_host_ptr_3 f = cast(Func_host_ptr_3, fh->ptr);
   Obj ret = f(a0, a1, a2);
+  obj_rel(func);
   obj_rel(a0);
   obj_rel(a1);
   obj_rel(a2);
@@ -207,7 +215,7 @@ static Obj run(Obj env, Obj code) {
 #endif
   Obj_tag ot = obj_tag(code);
   if (ot & ot_flt_bit || ot == ot_int || ot == ot_data) {
-    return code; // self-evaluating.
+    return obj_ret(code); // self-evaluating.
   }
   if (ot == ot_sym) {
     return run_sym(env, code);

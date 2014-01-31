@@ -21,9 +21,16 @@ static Obj host_raw_flush(Obj f) {
 }
 
 
-static Obj host_len(Obj dv) {
-  check_obj(ref_is_data(dv) || ref_is_vec(dv), "len expected Data or Vec; found", dv);
-  return new_int(ref_len(dv));
+static Obj host_len(Obj o) {
+  Int l;
+  if (o.u == VEC0.u || o.u == blank.u) {
+    l = 0;
+  }
+  else {
+    check_obj(ref_is_data(o) || ref_is_vec(o), "len expected Data or Vec; found", o);
+    l = ref_len(o);
+  }
+  return new_int(l);
 }
 
 
@@ -33,7 +40,8 @@ static Obj host_el(Obj v, Obj i) {
   Int j = int_val(i);
   Int l = ref_len(v);
   check(j >= 0 && j < l, "el index out of range; index: %ld; len: %ld", j, l);
-  return vec_el(v, j);
+  Obj el = vec_el(v, j);
+  return obj_ret(el);
 }
 
 
@@ -48,9 +56,12 @@ static Obj host_slice(Obj v, Obj i0, Obj i1) {
   if (j1 < 0) j1 += l;
   j0 = int_clamp(j0, 0, l - 1);
   j1 = int_clamp(j1, 0, l - 1);
-  Int rl = j1 - j0;
-  if (rl < 1) return VEC0;
-  Mem m = mem_mk(vec_els(v) + j0, rl);
+  Int ls = j1 - j0;
+  if (ls < 1) return VEC0;
+  Mem m = mem_mk(vec_els(v) + j0, ls);
+  for_in(i, m.len) {
+    obj_ret(m.els[i]);
+  }
   return new_vec_M(m);
 }
 
@@ -123,7 +134,8 @@ static Obj host_exit(Obj n) {
 static Obj run(Obj env, Obj code);
 
 static Obj host_run(Obj env, Obj code) {
-  return run(env, code);
+  Obj val = run(env, code);
+  return val;
 }
 
 
