@@ -7,7 +7,7 @@
 static void write_data(File f, Obj d) {
   assert(ref_is_data(d));
   BC p = data_ptr(d).c;
-  fwrite(p, 1, cast(Uns, ref_len(d)), f);
+  fwrite(p, 1, cast(Uns, data_len(d)), f);
 }
 
 
@@ -16,7 +16,7 @@ static void write_repr_data(File f, Obj d) {
   assert(ref_is_data(d));
   BC p = data_ptr(d).c;
   fputc('\'', f);
-  for_in(i, ref_len(d)) {
+  for_in(i, data_len(d)) {
     Char c = p[i];
     switch (c) {
       case '\a': fputc('\\', f); fputc('a', f);  continue; // bell - BEL
@@ -42,7 +42,7 @@ static void write_repr_obj(File f, Obj o);
 
 static void write_repr_vec_vec(File f, Obj v) {
   assert(ref_is_vec(v));
-  Int len = ref_len(v);
+  Int len = vec_len(v);
   Obj* els = vec_els(v);
   fputs("[", f);
   for_in(i, len) {
@@ -75,7 +75,7 @@ static void write_repr_chain_blocks(File f, Obj c) {
   fputs("{", f);
   loop {
     Obj* els = vec_els(c);
-    Int len = ref_len(c);
+    Int len = vec_len(c);
     fputs("|", f);
     for_imn(i, 1, len) { // note: unlike lisp, tl is in position 0.
       if (i > 1) fputs(" ", f);

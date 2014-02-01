@@ -98,10 +98,17 @@ static Obj new_chain_blocks_M(Mem m) {
   for_in_rev(i, m.len) {
     Obj el = mem_el_move(m, i);
     assert(vec_el(el, 0).u == ILLEGAL.u);
-    vec_put(el, 0, c);
+    vec_put(el, 0, c); // owns c.
     c = el;
   }
   return c;
+}
+
+
+static Int vec_len(Obj v) {
+  assert(ref_is_vec(v));
+  assert(v.rcl->len > 0);
+  return v.rcl->len;
 }
 
 
@@ -112,10 +119,9 @@ static Obj* vec_els(Obj v) {
 
 
 static Obj vec_el(Obj v, Int i) {
-  // borrows el.
   // assumes the caller knows the size of the vector.
   assert(ref_is_vec(v));
-  assert(i < ref_len(v));
+  assert(i < vec_len(v));
   Obj* els = vec_els(v);
   return els[i];
 }
@@ -125,7 +131,7 @@ static void vec_put(Obj v, Int i, Obj el) {
   // owns el.
   // assumes the caller knows the size of the vector.
   assert(ref_is_vec(v));
-  assert(i < ref_len(v));
+  assert(i < vec_len(v));
   Obj* els = vec_els(v);
   obj_rel(els[i]); // safe to release els[i] first, el is owned by this function so even if it is the same as els[i] it is safe.
   els[i] = el;
@@ -163,7 +169,7 @@ static Vec_shape vec_shape(Obj v) {
   assert(ref_is_vec(v));
   Vec_shape s = vs_chain;
   loop {
-    if (ref_len(v) != 2) s = vs_chain_blocks;
+    if (vec_len(v) != 2) s = vs_chain_blocks;
     Obj tl = chain_tl(v);
     if (tl.u == END.u) return s;
     if (!obj_is_vec(tl)) return vs_vec;

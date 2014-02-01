@@ -12,9 +12,16 @@ static const Obj blank = (Obj){.u = ot_data };
 assert(d.u == blank.u || obj_tag(d) == ot_data);
 
 
+static Int data_ref_len(Obj d) {
+  assert(ref_is_data(d));
+  assert(d.rcl->len > 0);
+  return d.rcl->len;
+}
+
+
 static Int data_len(Obj d) {
   if (d.u == blank.u) return 0; // TODO: support all data-word values.
-  return ref_len(d);
+  return data_ref_len(d);
 }
 
 

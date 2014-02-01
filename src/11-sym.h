@@ -52,7 +52,7 @@ static Obj new_sym(SS s) {
 }
 
 // for use with "%*s" formatter.
-#define FMT_SYM(sym) cast(I32, ref_len(sym_data(sym))), data_ptr(sym_data(sym))
+#define FMT_SYM(sym) cast(I32, data_len(sym_data(sym))), data_ptr(sym_data(sym))
 
 
 typedef enum {

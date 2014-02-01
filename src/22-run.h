@@ -89,7 +89,7 @@ static Obj run_FN(Obj env, Int len, Obj* args) {
 
 static Obj run_call_native(Obj env, Obj func, Int len, Obj* args, Bool is_macro) {
   // owns func.
-  Int func_len = ref_len(func);
+  Int func_len = vec_len(func);
   check_obj(func_len == 4, "function is malformed (length is not 4)", func);
   Obj* func_els = vec_els(func);
   Obj f_sym = func_els[0];
@@ -99,7 +99,7 @@ static Obj run_call_native(Obj env, Obj func, Int len, Obj* args, Bool is_macro)
   check_obj(obj_is_sym(f_sym),  "function is malformed (name symbol is not a Sym)", f_sym);
   check_obj(obj_is_vec(f_env),  "function is malformed (env is not a Vec)", f_env);
   check_obj(obj_is_vec(pars),   "function is malformed (parameters is not a Vec)", pars);
-  Obj frame = env_frame_bind_args(env, func, ref_len(pars), vec_els(pars), len, args, is_macro);
+  Obj frame = env_frame_bind_args(env, func, vec_len(pars), vec_els(pars), len, args, is_macro);
   Obj env1 = env_push(env, frame);
   Obj ret = run(env1, body);
   obj_rel(func);
@@ -169,7 +169,7 @@ static Obj run_COMMENT(Obj env, Int len, Obj* args) {
 
 
 static Obj run_Vec(Obj env, Obj code) {
-  Int len = ref_len(code);
+  Int len = vec_len(code);
   Obj* els = vec_els(code);
   Obj form = els[0];
   Int len_args = len - 1;

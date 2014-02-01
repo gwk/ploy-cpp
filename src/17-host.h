@@ -13,7 +13,7 @@ static Obj host_raw_write(Obj f, Obj d) {
   check_obj(ref_is_file(f), "write expected arg 1 File; found", f);
   check_obj(ref_is_data(d), "write expected arg 2 Data; found", d);
   File file = file_file(f);
-  Int i = cast(Int, fwrite(data_ptr(d).c, size_Char, cast(Uns, ref_len(d)), file));
+  Int i = cast(Int, fwrite(data_ptr(d).c, size_Char, cast(Uns, data_len(d)), file));
   obj_rel(f);
   obj_rel(d);
   return new_int(i);
@@ -36,7 +36,7 @@ static Obj host_len(Obj o) {
   }
   else {
     check_obj(ref_is_data(o) || ref_is_vec(o), "len expected Data or Vec; found", o);
-    l = ref_len(o);
+    l = o.rcl->len;
   }
   obj_rel(o);
   return new_int(l);
@@ -47,7 +47,7 @@ static Obj host_el(Obj v, Obj i) {
   check_obj(obj_is_vec(v), "el expected arg 1 Vec; found", v);
   check_obj(obj_is_int(i), "el expected arg 2 Int; found", i);
   Int j = int_val(i);
-  Int l = ref_len(v);
+  Int l = vec_len(v);
   check(j >= 0 && j < l, "el index out of range; index: %ld; len: %ld", j, l);
   Obj el = vec_el(v, j);
   obj_rel(v);
@@ -62,7 +62,7 @@ static Obj host_slice(Obj v, Obj i0, Obj i1) {
   check_obj(obj_is_int(i1), "el expected arg 3 Int; found", i1);
   Int j0 = int_val(i0);
   Int j1 = int_val(i1);
-  Int l = ref_len(v);
+  Int l = vec_len(v);
   if (j0 < 0) j0 += l;
   if (j1 < 0) j1 += l;
   j0 = int_clamp(j0, 0, l - 1);

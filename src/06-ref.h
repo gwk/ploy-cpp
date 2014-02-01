@@ -36,16 +36,16 @@ static Bool ref_is_file(Obj f) {
 }
 
 
-static Int ref_len(Obj r) {
-  assert(ref_struct_tag(r) == st_Data || ref_struct_tag(r) == st_Vec);
-  assert(r.rcl->len > 0);
-  return r.rcl->len;
+static Ptr ref_body(Obj r) {
+  assert(!ref_is_data(r) && !ref_is_vec(r));
+  return r.rc + 1; // address past rc.
 }
 
 
-static Ptr ref_body(Obj r) {
-  assert(ref_struct_tag(r) != st_Data && ref_struct_tag(r) != st_Vec);
-  return r.rc + 1; // address past rc.
+static Int ref_data_len(Obj r) {
+  assert(ref_is_data(r));
+  assert(r.rcl->len > 0);
+  return r.rcl->len;
 }
 
 
@@ -72,6 +72,7 @@ static Obj ref_alloc(Struct_tag st, Int width) {
 }
 
 
+static Int vec_len(Obj v);
 static Obj* vec_els(Obj v);
 
 static void ref_dealloc(Obj r) {
@@ -82,7 +83,7 @@ static void ref_dealloc(Obj r) {
   Struct_tag st = ref_struct_tag(r);
   if (st == st_Vec) {
     Obj* els = vec_els(r);
-    for_in(i, ref_len(r)) {
+    for_in(i, vec_len(r)) {
       //err("  el rel: "); dbg(els[i]);
       // TODO: make this tail recursive for deallocating long chains?
       obj_rel(els[i]);

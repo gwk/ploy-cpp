@@ -380,7 +380,7 @@ static Obj parse_dequote(Parser* p) {
   Src_pos sp_sub = p->sp;
   Obj o = parse_expr(p);
   if (p->e) return ILLEGAL;
-  if (!(obj_is_vec(o) && ref_len(o) == 2 && vec_el(o, 0).u == QUO.u)) {
+  if (!(obj_is_vec(o) && vec_len(o) == 2 && vec_el(o, 0).u == QUO.u)) {
     p->sp = sp_sub; // better error message.
     parse_error(p, "dequote expected quoted subexpression");
   }

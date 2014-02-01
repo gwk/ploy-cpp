@@ -24,7 +24,7 @@ static Obj expand(Obj env, Obj code) {
   if (!obj_is_vec(code)) {
     return code;
   }
-  Int len = ref_len(code);
+  Int len = vec_len(code);
   Obj* els = vec_els(code);
   Obj hd = els[0];
   if (hd.u == QUO.u) {

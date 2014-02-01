@@ -11,11 +11,11 @@
 static Obj env_get(Obj env, Obj sym) {
   assert(ref_is_vec(env));
   while (env.u != END.u) {
-    assert(ref_len(env) == 2);
+    assert(vec_len(env) == 2);
     Obj frame = chain_hd(env);
     if (frame.u != CHAIN0.u) {
       while (frame.u != END.u) {
-        assert(ref_len(frame) == 3);
+        assert(vec_len(frame) == 3);
         Obj key = vec_a(frame);
         if (key.u == sym.u) {
           return vec_b(frame);
@@ -59,7 +59,7 @@ static Obj env_frame_bind_args(Obj env, Obj func, Int len_pars, Obj* pars, Int l
   Int i_args = 0;
   for_in(i_pars, len_pars) {
     Obj par = pars[i_pars];
-    check_obj(obj_is_vec(par) && ref_len(par) == 4, "function is malformed (parameter is not a Vec4)", par);
+    check_obj(obj_is_vec(par) && vec_len(par) == 4, "function is malformed (parameter is not a Vec4)", par);
     Obj* par_els = vec_els(par);
     Obj par_kind = par_els[0]; // LABEL or VARIAD
     Obj par_sym = par_els[1];
