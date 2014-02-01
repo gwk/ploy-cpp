@@ -17,6 +17,11 @@ static Obj run_sym(Obj env, Obj code) {
 }
 
 
+static Obj run_COMMENT(Obj env, Int len, Obj* args) {
+  return obj_ret_val(VOID);
+}
+
+
 static Obj run_QUO(Obj env, Int len, Obj* args) {
   check(len == 1, "QUO requires 1 argument; found %ld", len);
   return obj_ret(args[0]);
@@ -163,11 +168,6 @@ static Obj run_CALL(Obj env, Int len, Obj* args) {
 }
 
 
-static Obj run_COMMENT(Obj env, Int len, Obj* args) {
-  return obj_ret_val(VOID);
-}
-
-
 static Obj run_Vec(Obj env, Obj code) {
   Int len = vec_len(code);
   Obj* els = vec_els(code);
@@ -179,6 +179,7 @@ static Obj run_Vec(Obj env, Obj code) {
     Int si = sym_index(form);
 #define EVAL_FORM(s) case si_##s: return run_##s(env, len_args, args)
     switch (si) {
+      EVAL_FORM(COMMENT);
       EVAL_FORM(QUO);
       EVAL_FORM(DO);
       EVAL_FORM(SCOPE);
@@ -186,7 +187,6 @@ static Obj run_Vec(Obj env, Obj code) {
       EVAL_FORM(IF);
       EVAL_FORM(FN);
       EVAL_FORM(CALL);
-      EVAL_FORM(COMMENT);
     }
 #undef EVAL_FORM
   }

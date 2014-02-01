@@ -54,92 +54,53 @@ static Obj new_sym(SS s) {
 // for use with "%*s" formatter.
 #define FMT_SYM(sym) cast(I32, data_len(sym_data(sym))), data_ptr(sym_data(sym))
 
+// notes:
+// ILLEGAL is a special value for returning during error conditions; completely prohibited in ploy code.
+// syms with index lower than VOID are self-evaluating; syms after VOID are looked up.
+// the following "X Macro" is expanded with various temporary definitions of SYM.
+#define SYM_LIST \
+SYM(ILLEGAL) \
+SYM(NIL) \
+SYM(VEC0) \
+SYM(CHAIN0) \
+SYM(END) \
+SYM(FALSE) \
+SYM(TRUE) \
+SYM(LABEL) \
+SYM(VARIAD) \
+SYM(UNQ) \
+SYM(QUA) \
+SYM(EXPA) \
+SYM(COMMENT) \
+SYM(QUO) \
+SYM(DO) \
+SYM(SCOPE) \
+SYM(LET) \
+SYM(IF) \
+SYM(FN) \
+SYM(CALL) \
+SYM(VOID) \
 
+
+// sym indices.
+#define SYM(s) si_##s,
 typedef enum {
-  si_ILLEGAL, // special value for returning during error conditions; completely prohibited in code.
-  si_NIL,
-  si_VEC0,
-  si_CHAIN0,
-  si_END,
-  si_FALSE,
-  si_TRUE,
-  si_COMMENT,
-  si_UNQ,
-  si_QUA,
-  si_QUO,
-  si_DO,
-  si_SCOPE,
-  si_LET,
-  si_IF,
-  si_FN,
-  si_CALL,
-  si_EXPA,
-  si_LABEL,
-  si_VARIAD,
-  si_VOID,  // all syms below VOID are self-evaluating; everything above is normal. VOID cannot be evaluated, but is otherwise legal.
+  SYM_LIST
 } Sym_index;
+#undef SYM
 
-
-// special value constants.
-#define DEF_SYM(c) \
-static const Obj c = _sym_with_index(si_##c)
-
-DEF_SYM(ILLEGAL);
-DEF_SYM(NIL);
-DEF_SYM(VEC0);
-DEF_SYM(CHAIN0);
-DEF_SYM(END);
-DEF_SYM(FALSE);
-DEF_SYM(TRUE);
-DEF_SYM(COMMENT);
-DEF_SYM(UNQ);
-DEF_SYM(QUA);
-DEF_SYM(QUO);
-DEF_SYM(DO);
-DEF_SYM(SCOPE);
-DEF_SYM(LET);
-DEF_SYM(IF);
-DEF_SYM(FN);
-DEF_SYM(CALL);
-DEF_SYM(EXPA);
-DEF_SYM(LABEL);
-DEF_SYM(VARIAD);
-DEF_SYM(VOID);
+// sym Obj constants.
+#define SYM(s) static const Obj s = _sym_with_index(si_##s);
+SYM_LIST
+#undef SYM
 
 
 static void sym_init() {
   assert(global_sym_names.mem.len == 0);
   Obj sym;
-#define SBC(bc, si) sym = new_sym(ss_from_BC(bc)); assert(sym_index(sym) == si); obj_rel_val(sym);
-#define S(s) SBC(#s, si_##s)
-  S(ILLEGAL);
-  S(NIL);
-  S(VEC0);
-  S(CHAIN0);
-  S(END);
-  SBC("false", si_FALSE);
-  SBC("true", si_TRUE);
-  S(COMMENT);
-  S(UNQ);
-  S(QUA);
-  S(QUO);
-  S(DO);
-  S(SCOPE);
-  S(LET);
-  S(IF);
-  S(FN);
-  S(CALL);
-  S(EXPA);
-  S(LABEL);
-  S(VARIAD);
-  S(VOID);
-#undef SBC
-#undef S
-}
 
-
-static Bool sym_is_form(Obj s) {
-  assert(obj_is_sym(s));
-  return (s.u >= si_COMMENT && s.u <= si_CALL);
+#define SYM(s) sym = new_sym(ss_from_BC(#s)); assert(sym_index(sym) == si_##s); obj_rel_val(sym);
+SYM_LIST
+#undef SYM
 }
 
