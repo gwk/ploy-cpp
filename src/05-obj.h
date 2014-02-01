@@ -216,26 +216,26 @@ static Bool ref_is_vec(Obj o);
 static Bool ref_is_file(Obj o);
 
 
-static Bool obj_is_ref_data(Obj o) {
+static Bool obj_is_data_ref(Obj o) {
   return obj_is_ref(o) && ref_is_data(o);
 }
 
 
-static Bool obj_is_ref_vec(Obj o) {
-  return obj_is_ref(o) && ref_is_vec(o);
+static Bool obj_is_data(Obj o) {
+  return obj_is_data_word(o) || obj_is_data_ref(o);
 }
 
 
-static Bool obj_is_data(Obj o) {
-  return obj_is_data_word(o) || obj_is_ref_data(o);
+
+static Bool obj_is_vec_ref(Obj o) {
+  return obj_is_ref(o) && ref_is_vec(o);
 }
 
 
 static const Obj VEC0, CHAIN0;
 
 static Bool obj_is_vec(Obj o) {
-  // TODO: clarify convention for whether vec_ functions refer to refs only, or include CHAIN0 and VEC0.
-  return o.u == VEC0.u || o.u == CHAIN0.u || obj_is_ref_vec(o);
+  return o.u == VEC0.u || o.u == CHAIN0.u || obj_is_vec_ref(o);
 }
 
 

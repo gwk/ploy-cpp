@@ -172,7 +172,7 @@ static Vec_shape vec_shape(Obj v) {
     if (vec_len(v) != 2) s = vs_chain_blocks;
     Obj tl = chain_tl(v);
     if (tl.u == END.u) return s;
-    if (!obj_is_vec(tl)) return vs_vec;
+    if (!obj_is_vec_ref(tl)) return vs_vec;
     v = tl;
   }
 }

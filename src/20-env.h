@@ -10,6 +10,7 @@
 
 static Obj env_get(Obj env, Obj sym) {
   assert(ref_is_vec(env));
+  assert(obj_is_sym(sym));
   while (env.u != END.u) {
     assert(vec_len(env) == 2);
     Obj frame = chain_hd(env);
@@ -31,16 +32,21 @@ static Obj env_get(Obj env, Obj sym) {
 
 static Obj env_push(Obj env, Obj frame) {
   // owns env, frame.
+  assert(env.u == END.u || vec_len(env) == 2);
+  assert(frame.u == CHAIN0.u || vec_len(frame) == 3);
   return new_vec2(env, frame); // note: unlike lisp, tl is in position 0.
 }
 
 
 static Obj env_frame_bind(Obj frame, Obj sym, Obj val) {
   // owns frame, sym, val.
-  assert(obj_is_vec(frame) || frame.u == END.u || frame.u == CHAIN0.u);
   assert(obj_is_sym(sym));
   if (frame.u == CHAIN0.u) {
+    obj_rel_val(frame);
     frame = obj_ret_val(END);
+  }
+  else {
+    assert(vec_len(frame) == 3);
   }
   return new_vec3(frame, sym, val); // note: unlike lisp, tl is in position 0.
 }
@@ -48,9 +54,9 @@ static Obj env_frame_bind(Obj frame, Obj sym, Obj val) {
 
 static void env_bind(Obj env, Obj sym, Obj val) {
   // owns sym, val.
-  Obj frame = chain_hd(env);
-  Obj frame1 = env_frame_bind(obj_ret(frame), sym, val);
-  vec_put(env, 0, frame1);
+  Obj frame = obj_ret(chain_hd(env));
+  Obj frame1 = env_frame_bind(frame, sym, val);
+  vec_put(env, 1, frame1); // note: unlike lisp, hd is in position 1.
 }
 
 
@@ -59,7 +65,7 @@ static Obj env_frame_bind_args(Obj env, Obj func, Int len_pars, Obj* pars, Int l
   Int i_args = 0;
   for_in(i_pars, len_pars) {
     Obj par = pars[i_pars];
-    check_obj(obj_is_vec(par) && vec_len(par) == 4, "function is malformed (parameter is not a Vec4)", par);
+    check_obj(obj_is_vec_ref(par) && vec_len(par) == 4, "function is malformed (parameter is not a Vec4)", par);
     Obj* par_els = vec_els(par);
     Obj par_kind = par_els[0]; // LABEL or VARIAD
     Obj par_sym = par_els[1];

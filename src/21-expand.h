@@ -21,7 +21,7 @@ static Obj expand_macro(Obj env, Int len, Obj* args) {
 
 static Obj expand(Obj env, Obj code) {
   // owns code.
-  if (!obj_is_vec(code)) {
+  if (!obj_is_vec_ref(code)) {
     return code;
   }
   Int len = vec_len(code);

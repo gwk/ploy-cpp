@@ -97,7 +97,7 @@ static Obj run_call_native(Obj env, Obj func, Int len, Obj* args, Bool is_macro)
   Obj body  = func_els[2];
   Obj f_env = func_els[3];
   check_obj(obj_is_sym(f_sym),  "function is malformed (name symbol is not a Sym)", f_sym);
-  check_obj(obj_is_vec(f_env),  "function is malformed (env is not a Vec)", f_env);
+  check_obj(obj_is_vec_ref(f_env),  "function is malformed (env is not a substantial Vec)", f_env);
   check_obj(obj_is_vec(pars),   "function is malformed (parameters is not a Vec)", pars);
   Obj frame = env_frame_bind_args(env, func, vec_len(pars), vec_els(pars), len, args, is_macro);
   Obj env1 = env_push(env, frame);

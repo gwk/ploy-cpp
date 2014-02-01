@@ -166,7 +166,7 @@ static Obj host_run(Obj env, Obj code) {
 static Obj env_frame_bind(Obj frame, Obj sym, Obj func);
 
 static Obj host_init() {
-  Obj frame = obj_ret_val(END);
+  Obj frame = obj_ret_val(CHAIN0);
   Obj sym, val;
 
 #define DEF_FH(ac, n) \

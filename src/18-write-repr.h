@@ -63,7 +63,7 @@ static void write_repr_chain(File f, Obj c) {
     write_repr_obj(f, chain_hd(c));
     Obj tl = chain_tl(c);
     if (tl.u == END.u) break;
-    assert(obj_is_vec(tl));
+    assert(obj_is_vec_ref(tl));
     c = tl;
   }
   fputs("}", f);
@@ -83,7 +83,7 @@ static void write_repr_chain_blocks(File f, Obj c) {
     }
     Obj tl = els[0];
     if (tl.u == END.u) break;
-    assert(obj_is_vec(tl));
+    assert(obj_is_vec_ref(tl));
     c = tl;
   }
   fputs("}", f);
@@ -120,10 +120,10 @@ static void write_repr_obj(File f, Obj o) {
   }
   else if (ot == ot_sym) {
     if (o.u == VEC0.u) {
-      fputs("{}", f);
+      fputs("[]", f);
     }
     else if (o.u == CHAIN0.u) {
-      fputs("[]", f);
+      fputs("{}", f);
     }
     else {
       write_data(f, sym_data(o));
