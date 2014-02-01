@@ -59,7 +59,7 @@ static B ss_copy_to_B(SS ss) {
 
 
 static SS ss_from_BC(BC p) {
-  Uns len = strlen(p);
+  Uns len = strnlen(p, max_Int);
   check(len <= max_Int, "string exceeded max length");
   return ss_mk_c(cast(Int, len), p);
 }
