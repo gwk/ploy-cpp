@@ -298,7 +298,7 @@ static Mem parse_blocks(Parser* p) {
       mem_release_dealloc(a.mem);
       return mem0;
     }
-    // alloc extra element for chaining; temporarily set to ILLEGAL, which is retained to match the vec_put call.
+    // alloc extra element for chaining; temporarily set to ILLEGAL, which is retain-counted to match the vec_put call.
     Obj o = new_vec_HM(obj_ret_val(ILLEGAL), m);
     mem_dealloc(m);
     array_append_move(&a, o);

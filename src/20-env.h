@@ -49,7 +49,7 @@ static Obj env_frame_bind(Obj frame, Obj sym, Obj val) {
 static void env_bind(Obj env, Obj sym, Obj val) {
   // owns sym, val.
   Obj frame = chain_hd(env);
-  Obj frame1 = env_frame_bind(frame, sym, val);
+  Obj frame1 = env_frame_bind(obj_ret(frame), sym, val);
   vec_put(env, 0, frame1);
 }
 
