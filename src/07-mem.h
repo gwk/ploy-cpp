@@ -5,26 +5,26 @@
 
 
 typedef struct {
-  Obj* els;
   Int len;
+  Obj* els;
 } Mem;
 
 
-#define mem0 (Mem){.els=NULL, .len=0}
+#define mem0 (Mem){.len=0, .els=NULL}
 
 
-static Mem mem_mk(Obj* els, Int len) {
-  return (Mem){.els=els, .len=len};
+static Mem mem_mk(Int len, Obj* els) {
+  return (Mem){.len=len, .els=els};
 }
 
 
 static bool mem_eq(Mem a, Mem b) {
-  return a.len == b.len && memcmp(a.els, b.els, (Uns)(a.len * size_Obj)) == 0;
+  return a.len == b.len && memcmp(a.els, b.els, cast(Uns, a.len * size_Obj)) == 0;
 }
 
 
 static bool mem_is_valid(Mem m) {
-  return (m.len == 0) || (m.els && m.len > 0);
+  return (m.len == 0) || (m.len > 0 && m.els);
 }
 
 

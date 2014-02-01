@@ -69,7 +69,7 @@ static Obj host_slice(Obj v, Obj i0, Obj i1) {
   j1 = int_clamp(j1, 0, l - 1);
   Int ls = j1 - j0;
   if (ls < 1) return obj_ret_val(VEC0);
-  Mem m = mem_mk(vec_els(v) + j0, ls);
+  Mem m = mem_mk(ls, vec_els(v) + j0);
   for_in(i, m.len) {
     obj_ret(m.els[i]);
   }
