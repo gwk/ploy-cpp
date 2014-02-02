@@ -285,29 +285,6 @@ static Mem parse_seq(Parser* p, Char term) {
 }
 
 
-static Mem parse_blocks(Parser* p) {
-  // caller must free return Mem.
-  Array a = array0;
-  while (parser_has_next_expr(p)) {
-    if (PC != '|') {
-      parse_error(p, "expected '|'");
-    }
-    P_ADV1;
-    Mem m = parse_seq(p, '|');
-    if (p->e) {
-      mem_release_dealloc(a.mem);
-      return mem0;
-    }
-    // alloc extra element for chaining; temporarily set to ILLEGAL, which is retain-counted to match the vec_put call.
-    Obj o = new_vec_HM(obj_ret_val(ILLEGAL), m);
-    mem_dealloc(m);
-    array_append_move(&a, o);
-  }
-  //for_in(i, a.mem.len) { errF("  pb %ld: ", i); dbg(a.mem.els[i]); }
-  return a.mem;
-}
-
-
 #define P_ADV_TERM(t) \
 if (p->e || !parse_terminator(p, t)) { \
   mem_release_dealloc(m); \
@@ -339,30 +316,94 @@ static Obj parse_vec(Parser* p) {
   P_ADV1;
   Mem m = parse_seq(p, 0);
   P_ADV_TERM(']');
-  Obj v = new_vec_M(m);
+  if (!m.len) {
+    return obj_ret_val(VEC0);
+  }
+  Obj v = new_vec_HM(obj_ret_val(VEC), m);
   mem_dealloc(m);
-  Obj q = new_vec2(obj_ret_val(QUO), v);
-  return q;
+  return v;
+}
+
+
+static Obj parse_chain_simple(Parser* p) {
+  Mem m = parse_seq(p, 0);
+  P_ADV_TERM('}');
+  if (!m.len) {
+    return obj_ret_val(CHAIN0);
+  }
+  Obj c = obj_ret_val(END);
+  for_in_rev(i, m.len) {
+    Obj el = mem_el_move(m, i);
+    c = new_vec3(obj_ret_val(VEC), c, el); // note: unlike lisp, the tail is in position 0.
+  }
+  mem_dealloc(m);
+  return c;
+}
+
+
+static Obj parse_chain_blocks(Parser* p) {
+  Array a = array0;
+  while (parser_has_next_expr(p)) {
+    if (PC != '|') {
+      parse_error(p, "expected '|'");
+    }
+    P_ADV1;
+    Mem m = parse_seq(p, '|');
+    if (p->e) {
+      mem_release_dealloc(a.mem);
+      return ILLEGAL;
+    }
+    Obj o = new_vec_raw(m.len + 2);
+    Obj* els = vec_els(o);
+    els[0] = obj_ret_val(VEC);
+    els[1] = obj_ret_val(NIL); // will get filled in with tl below.
+    for_in(i, m.len) {
+      els[i + 2] = mem_el_move(m, i);
+    }
+    mem_dealloc(m);
+    array_append_move(&a, o);
+  }
+  Mem m = a.mem;
+  P_ADV_TERM('}');
+  // assemble the chain
+  if (!m.len) {
+    return obj_ret_val(CHAIN0);
+  }
+  Obj c = obj_ret_val(END);
+  for_in_rev(i, m.len) {
+    Obj el = mem_el_move(m, i);
+    vec_put(el, 1, c);
+    c = el;
+  }
+  mem_dealloc(m);
+  return c;
 }
 
 
 static Obj parse_chain(Parser* p) {
   P_ADV1;
-  Mem m;
-  Obj c;
   parse_space(p);
   if (PC == '|') {
-    m = parse_blocks(p);
-    c =  new_chain_blocks_M(m);
+    return parse_chain_blocks(p);
   }
   else {
-    m = parse_seq(p, 0);
-    c = new_chain_M(m);
+    return parse_chain_simple(p);
   }
+}
+
+
+static Obj parse_perform(Parser* p) {
+  assert(PC == '~');
+  P_ADV1;
+  if (PC != '(') {
+    return parse_error(p, "perform expected '('");
+  }
+  P_ADV1;
+  Mem m = parse_seq(p, 0);
+  P_ADV_TERM(')');
+  Obj v = new_vec_M(m);
   mem_dealloc(m);
-  P_ADV_TERM('}');
-  Obj q = new_vec2(obj_ret_val(QUO), c);
-  return q;
+  return v;
 }
 
 
@@ -371,23 +412,6 @@ static Obj parse_qua(Parser* p) {
   P_ADV1;
   Obj o = parse_expr(p);
   return new_vec2(obj_ret_val(QUA), o);
-}
-
-
-static Obj parse_dequote(Parser* p) {
-  assert(PC == '~');
-  P_ADV1;
-  Src_pos sp_sub = p->sp;
-  Obj o = parse_expr(p);
-  if (p->e) return ILLEGAL;
-  if (!(obj_is_vec_ref(o) && vec_len(o) == 2 && vec_el(o, 0).u == QUO.u)) {
-    p->sp = sp_sub; // better error message.
-    parse_error(p, "dequote expected quoted subexpression");
-  }
-  Obj sub = vec_el(o, 1);
-  obj_ret(sub);
-  obj_rel(o);
-  return sub;
 }
 
 
@@ -429,11 +453,11 @@ static Obj parse_expr_sub(Parser* p) {
     case '<':   return parse_expa(p);
     case '[':   return parse_vec(p);
     case '{':   return parse_chain(p);
+    case '~':   return parse_perform(p);
     case '`':   return parse_qua(p);
     case '\'':  return parse_data(p, '\'');
     case '"':   return parse_data(p, '"');
     case '#':   return parse_comment(p);
-    case '~':   return parse_dequote(p);
     case '&':   return parse_variad(p);
     case '+':
       if (isdigit(PC1)) return parse_int(p, 1);

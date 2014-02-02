@@ -70,41 +70,6 @@ static Obj new_vec4(Obj a, Obj b, Obj c, Obj d) {
 }
 
 
-
-static Obj new_chain_M(Mem m) {
-  // owns all elements from m.
-  if (!m.len) {
-    return obj_ret_val(CHAIN0);
-  }
-  Obj c = obj_ret_val(END);
-  for_in_rev(i, m.len) {
-    Obj el = mem_el_move(m, i);
-    c = new_vec2(c, el); // note: unlike lisp, the tail is in position 0.
-  }
-  //obj_errL(c);
-  return c;
-}
-
-
-static Obj vec_el(Obj v, Int i);
-static void vec_put(Obj v, Int i, Obj el);
-
-static Obj new_chain_blocks_M(Mem m) {
-  // owns all elements from m.
-  if (!m.len) {
-    return obj_ret_val(CHAIN0);
-  }
-  Obj c = obj_ret_val(END);
-  for_in_rev(i, m.len) {
-    Obj el = mem_el_move(m, i);
-    assert(vec_el(el, 0).u == ILLEGAL.u);
-    vec_put(el, 0, c); // owns c.
-    c = el;
-  }
-  return c;
-}
-
-
 static Int vec_len(Obj v) {
   assert(ref_is_vec(v));
   assert(v.rcl->len > 0);

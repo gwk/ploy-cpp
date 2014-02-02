@@ -57,6 +57,7 @@ static Obj new_sym(SS s) {
 // notes:
 // ILLEGAL is a special value for returning during error conditions; completely prohibited in ploy code.
 // syms with index lower than VOID are self-evaluating; syms after VOID are looked up.
+// VOID cannot be evaluated, but is a legal return value (which must be ignored).
 // the following "X Macro" is expanded with various temporary definitions of SYM.
 #define SYM_LIST \
 SYM(ILLEGAL) \
@@ -72,6 +73,7 @@ SYM(UNQ) \
 SYM(QUA) \
 SYM(EXPA) \
 SYM(COMMENT) \
+SYM(VEC) \
 SYM(QUO) \
 SYM(DO) \
 SYM(SCOPE) \

@@ -22,6 +22,16 @@ static Obj run_COMMENT(Obj env, Int len, Obj* args) {
 }
 
 
+static Obj run_VEC(Obj env, Int len, Obj* args) {
+  Obj v = new_vec_raw(len);
+  Obj* els = vec_els(v);
+  for_in(i, len) {
+    els[i] = run(env, args[i]);
+  }
+  return v;
+}
+
+
 static Obj run_QUO(Obj env, Int len, Obj* args) {
   check(len == 1, "QUO requires 1 argument; found %ld", len);
   return obj_ret(args[0]);
@@ -82,7 +92,7 @@ static Obj run_FN(Obj env, Int len, Obj* args) {
   Obj sym   = args[0];
   Obj pars  = args[1];
   Obj body  = args[2];
-  check_obj(obj_is_sym(sym),  "FN name is not a sym", sym);
+  check_obj(obj_is_sym(sym),  "FN name is not a Sym", sym);
   check_obj(obj_is_vec(pars), "FN parameters is not a Vec", pars);
   Obj f = new_vec4(sym,
     obj_ret(pars),
@@ -180,6 +190,7 @@ static Obj run_Vec(Obj env, Obj code) {
 #define EVAL_FORM(s) case si_##s: return run_##s(env, len_args, args)
     switch (si) {
       EVAL_FORM(COMMENT);
+      EVAL_FORM(VEC);
       EVAL_FORM(QUO);
       EVAL_FORM(DO);
       EVAL_FORM(SCOPE);
