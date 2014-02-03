@@ -106,3 +106,9 @@ SYM_LIST
 #undef SYM
 }
 
+
+static bool sym_is_symbol(Obj s) {
+  // this behavior matches that of run_sym.
+  return sym_index(s) > si_VOID;
+}
+

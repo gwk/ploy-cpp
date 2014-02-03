@@ -63,7 +63,7 @@ static Obj run_LET(Obj env, Int len, Obj* args) {
   check(len == 2, "LET requires 2 arguments; found %ld", len);
   Obj sym = args[0];
   Obj expr = args[1];
-  check_obj(obj_is_sym(sym), "LET requires argument 1 to be a sym; found", sym);
+  check_obj(obj_is_sym(sym) && sym_is_symbol(sym), "LET requires argument 1 to be a sym; found", sym);
   Obj val = run(env, expr);
   env_bind(env, obj_ret_val(sym), val); // owns sym, val.
   return obj_ret_val(VOID); // TODO: retain and return val?
@@ -88,34 +88,46 @@ static Obj run_IF(Obj env, Int len, Obj* args) {
 
 
 static Obj run_FN(Obj env, Int len, Obj* args) {
-  check(len == 3, "FN requires 3 arguments: name-sym parameters body; received %ld", len);
-  Obj sym   = args[0];
-  Obj pars  = args[1];
-  Obj body  = args[2];
-  check_obj(obj_is_sym(sym),  "FN name is not a Sym", sym);
-  check_obj(obj_is_vec(pars), "FN parameters is not a Vec", pars);
-  Obj f = new_vec4(sym,
-    obj_ret(pars),
-    obj_ret(body),
-    obj_ret(env));
+  check(len == 4, "FN requires 4 arguments: name:Sym is-macro:Bool parameters:Vec body:Obj; received %ld", len);
+  Obj name      = args[0];
+  Obj is_macro  = args[1];
+  Obj pars      = args[2];
+  Obj body      = args[3];
+  check_obj(obj_is_sym(name),  "FN: name is not a Sym", name);
+  check_obj(obj_is_bool(is_macro), "FN: is-macro is not a Bool", is_macro);
+  check_obj(obj_is_vec(pars), "FN: parameters is not a Vec", pars);
+  Obj f = new_vec_raw(5);
+  Obj* els = vec_els(f);
+  els[0] = obj_ret_val(name);
+  els[1] = obj_ret_val(is_macro);
+  els[2] = obj_ret(pars);
+  els[3] = obj_ret(body);
+  els[4] = obj_ret(env);
   return f;
 }
 
 
-static Obj run_call_native(Obj env, Obj func, Int len, Obj* args, Bool is_macro) {
+static Obj run_call_native(Obj env, Obj func, Int len, Obj* args, Bool is_expand) {
   // owns func.
   Int func_len = vec_len(func);
-  check_obj(func_len == 4, "function is malformed (length is not 4)", func);
-  Obj* func_els = vec_els(func);
-  Obj f_sym = func_els[0];
-  Obj pars  = func_els[1];
-  Obj body  = func_els[2];
-  Obj f_env = func_els[3];
-  check_obj(obj_is_sym(f_sym),  "function is malformed (name symbol is not a Sym)", f_sym);
-  check_obj(obj_is_vec_ref(f_env),  "function is malformed (env is not a substantial Vec)", f_env);
-  check_obj(obj_is_vec(pars),   "function is malformed (parameters is not a Vec)", pars);
-  Obj frame = env_frame_bind_args(env, func, vec_len(pars), vec_els(pars), len, args, is_macro);
-  Obj env1 = env_push(env, frame);
+  check_obj(func_len == 5, "function/macro is malformed (length is not 4)", func);
+  Obj* f_els = vec_els(func);
+  Obj name      = f_els[0];
+  Obj is_macro  = f_els[1];
+  Obj pars      = f_els[2];
+  Obj body      = f_els[3];
+  Obj f_env     = f_els[4];
+  if (is_expand) {
+    check_obj(bool_is_true(is_macro), "cannot expand function", func);
+  }
+  else {
+    check_obj(!bool_is_true(is_macro), "cannot call macro", func);
+  }
+  check_obj(obj_is_sym(name),       "function/macro is malformed (name symbol is not a Sym)", name);
+  check_obj(obj_is_vec(pars),       "function/macor is malformed (parameters is not a Vec)", pars);
+  check_obj(obj_is_vec_ref(f_env),  "function/macro is malformed (env is not a substantial Vec)", f_env);
+  Obj frame = env_frame_bind_args(env, func, vec_len(pars), vec_els(pars), len, args, is_expand);
+  Obj env1 = env_push(f_env, frame);
   Obj ret = run(env1, body);
   obj_rel(func);
   obj_rel(env1);

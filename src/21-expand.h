@@ -8,7 +8,7 @@ static const BC trace_expand_prefix = "◇";      // white diamond
 static const BC trace_post_expand_prefix = "▫"; // white small square
 
 
-static Obj run_call_native(Obj env, Obj func, Int len, Obj* args, Bool is_macro);
+static Obj run_call_native(Obj env, Obj func, Int len, Obj* args, Bool is_expand);
 
 static Obj expand_macro(Obj env, Int len, Obj* args) {
   check(len > 0, "empty macro expand");

@@ -392,15 +392,15 @@ static Obj parse_chain(Parser* p) {
 }
 
 
-static Obj parse_perform(Parser* p) {
-  assert(PC == '~');
+static Obj parse_raw(Parser* p) {
+  assert(PC == '^');
   P_ADV1;
-  if (PC != '(') {
-    return parse_error(p, "perform expected '('");
+  if (PC != '[') {
+    return parse_error(p, "raw expected '['");
   }
   P_ADV1;
   Mem m = parse_seq(p, 0);
-  P_ADV_TERM(')');
+  P_ADV_TERM(']');
   Obj v = new_vec_M(m);
   mem_dealloc(m);
   return v;
@@ -453,7 +453,7 @@ static Obj parse_expr_sub(Parser* p) {
     case '<':   return parse_expa(p);
     case '[':   return parse_vec(p);
     case '{':   return parse_chain(p);
-    case '~':   return parse_perform(p);
+    case '^':   return parse_raw(p);
     case '`':   return parse_qua(p);
     case '\'':  return parse_data(p, '\'');
     case '"':   return parse_data(p, '"');

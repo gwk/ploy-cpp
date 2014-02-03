@@ -10,7 +10,7 @@
 
 static Obj env_get(Obj env, Obj sym) {
   assert(ref_is_vec(env));
-  assert(obj_is_sym(sym));
+  assert(sym_is_symbol(sym));
   while (env.u != END.u) {
     assert(vec_len(env) == 2);
     Obj frame = chain_hd(env);
@@ -40,7 +40,7 @@ static Obj env_push(Obj env, Obj frame) {
 
 static Obj env_frame_bind(Obj frame, Obj sym, Obj val) {
   // owns frame, sym, val.
-  assert(obj_is_sym(sym));
+  assert(sym_is_symbol(sym));
   if (frame.u == CHAIN0.u) {
     obj_rel_val(frame);
     frame = obj_ret_val(END);
@@ -60,7 +60,7 @@ static void env_bind(Obj env, Obj sym, Obj val) {
 }
 
 
-static Obj env_frame_bind_args(Obj env, Obj func, Int len_pars, Obj* pars, Int len_args, Obj* args, Bool is_macro) {
+static Obj env_frame_bind_args(Obj env, Obj func, Int len_pars, Obj* pars, Int len_args, Obj* args, Bool is_expand) {
   Obj frame = obj_ret_val(CHAIN0);
   Int i_args = 0;
   for_in(i_pars, len_pars) {
@@ -84,7 +84,7 @@ static Obj env_frame_bind_args(Obj env, Obj func, Int len_pars, Obj* pars, Int l
       else {
         error_obj("not enough arguments provided to function", func);
       }
-      Obj val = (is_macro ? obj_ret(arg) : run(env, arg));
+      Obj val = (is_expand ? obj_ret(arg) : run(env, arg));
       frame = env_frame_bind(frame, obj_ret_val(par_sym), val);
     }
     else if (par_type.u == VARIAD.u) {

@@ -205,6 +205,13 @@ static Bool obj_is_sym(Obj o) {
 }
 
 
+static const Obj TRUE, FALSE;
+
+static bool obj_is_bool(Obj s) {
+  return s.u == TRUE.u || s.u == FALSE.u;
+}
+
+
 static Bool obj_is_data_word(Obj o) {
   // note: if we choose to interleave Sym and Data-word, this requires additonal checks.
   return obj_tag(o) == ot_data;
