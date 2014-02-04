@@ -12,7 +12,7 @@ static void parse_and_eval(Obj env, Obj path, Obj src, Array* sources, Bool out_
   if (e) {
     err("parse error: ");
     errL(e);
-    raw_dealloc(e);
+    free(e);
     obj_rel(path);
     obj_rel(src);
     obj_rel(code);
@@ -94,24 +94,8 @@ int main(int argc, BC argv[]) {
   obj_rel(global_env);
   mem_release_dealloc(global_sym_names.mem);
   mem_release_dealloc(sources.mem);
-  
-#define CHECK_ALLOCS(total, name, label0, label1) \
-if (vol_err || total[0] != total[1]) { \
-errFL("==== PLOY ALLOC STATS: %s: " label0 ": %ld; " label1 ": %ld; diff = %ld", \
-name, total[0], total[1], total[0] - total[1]); \
-}
-  
-  CHECK_ALLOCS(total_allocs_raw, "raw", "allocs", "deallocs")
-  CHECK_ALLOCS(total_allocs_mem, "mem", "allocs", "deallocs")
-  
-  for_in(i, struct_tag_end) {
-    CHECK_ALLOCS(total_allocs_ref[i], struct_tag_names[i], "allocs", "deallocs");
-  }
-  for_in(i, obj_tag_end) {
-    CHECK_ALLOCS(total_rets[i], obj_tag_names[i], "retains", "releases");
-  }
-  
-#endif // OPT_ALLOC_COUNT
+  counter_stats(vol_err);
+#endif
   
   return 0;
 }

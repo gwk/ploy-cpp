@@ -57,7 +57,7 @@ static Obj parse_error(Parser* p, BC fmt, ...) {
   check(msg_len >= 0, "parse_error allocation failed: %s", fmt);
   // e must be freed by parser owner.
   p->e = ss_src_loc_str(p->src, p->path, p->sp.pos, 0, p->sp.line, p->sp.col, msg);
-  raw_dealloc(msg);
+  free(msg);
   return ILLEGAL;
 }
 

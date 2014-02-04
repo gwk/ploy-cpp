@@ -7,6 +7,9 @@
 typedef unsigned Tag;
 typedef Uns Sym; // index into global_sym_table.
 
+#define width_obj_tag 3
+#define obj_tag_end (1L << width_obj_tag)
+
 static const Int width_tagged_word = width_word - width_obj_tag;
 
 static const Uns obj_tag_mask = obj_tag_end - 1;
@@ -55,12 +58,15 @@ static BC obj_tag_names[] = {
 };
 
 
+#define width_struct_tag 4
+#define struct_tag_end (1L << width_struct_tag)
+
 static const Uns struct_tag_mask = struct_tag_end - 1;
 
 #define width_meta_tag 4
 
 typedef enum {
-  st_Data,
+  st_Data = 0, // obj_counter_index assumes that this is the first index.
   st_Vec,
   st_I32,
   st_I64,
@@ -241,14 +247,25 @@ static Bool obj_is_file(Obj o) {
 }
 
 
+static Counter_index obj_counter_index(Obj o) {
+  Obj_tag ot = obj_tag(o);
+  if (ot & ot_flt_bit) return ci_Flt;
+  switch (ot) {
+    case ot_int: return ci_Int;
+    case ot_sym: return ci_Sym;
+    case ot_data: return ci_Data_word;
+    case ot_ref: break;
+  }
+  Struct_tag st = o.rc->st;
+  return ci_Data + (st * 2);
+}
+
+
 static void assert_ref_is_valid(Obj o);
 
 static Obj obj_ret(Obj o) {
-  Obj_tag ot = obj_tag(o);
-#if  OPT_ALLOC_COUNT
-  total_rets[ot][0]++;
-#endif
-  if (ot) return o;
+  counter_inc(obj_counter_index(o));
+  if (obj_tag(o)) return o;
   assert_ref_is_valid(o);
   rc_errMLV("ret strong", o.rc);
   if (o.rc->sc < pinned_sc - 1) {
@@ -267,11 +284,8 @@ static Obj obj_ret(Obj o) {
 static void ref_dealloc(Obj o);
 
 static void obj_rel(Obj o) {
-  Obj_tag ot = obj_tag(o);
-#if  OPT_ALLOC_COUNT
-  total_rets[ot][1]++;
-#endif
-  if (ot) return;
+  counter_dec(obj_counter_index(o));
+  if (obj_tag(o)) return;
   assert_ref_is_valid(o);
   if (o.rc->sc == 1) {
     ref_dealloc(o);
@@ -287,22 +301,16 @@ static void obj_rel(Obj o) {
 
 static Obj obj_ret_val(Obj o) {
   // ret counting for non-ref objects. a no-op for optimized builds.
-#if  OPT_ALLOC_COUNT
-  Obj_tag ot = obj_tag(o);
-  assert(ot);
-  total_rets[ot][0]++;
-#endif
+  assert(obj_tag(o));
+  counter_inc(obj_counter_index(o));
   return o;
 }
 
 
 static Obj obj_rel_val(Obj o) {
   // rel counting for non-ref objects. a no-op for optimized builds.
-#if  OPT_ALLOC_COUNT
-  Obj_tag ot = obj_tag(o);
-  assert(ot);
-  total_rets[ot][1]++;
-#endif
+  assert(obj_tag(o));
+  counter_dec(obj_counter_index(o));
   return o;
 }
 

@@ -28,10 +28,7 @@ static const Set set0 = {.count=0, .len=0, .buckets=NULL};
 
 
 static void hash_bucket_dealloc(Hash_bucket* b) {
-#if OPT_ALLOC_COUNT
-    if (b->els) total_allocs_raw[1]++; // TODO: dedicated counter.
-#endif
-    free(b->els);
+  raw_dealloc(b->els, ci_Hash_bucket);
 }
 
 
@@ -54,15 +51,11 @@ static void hash_bucket_append(Hash_bucket* b, Obj r) {
     }
     else {
       b->cap = size_min_malloc;
-#if OPT_ALLOC_COUNT
-    total_allocs_raw[0]++; // TODO: dedicated counter.
-#endif
     }
-    b->els = realloc(b->els, cast(Uns, b->cap * size_Obj));
+    b->els = raw_realloc(b->els, b->cap * size_Obj, ci_Hash_bucket);
 #if OPT_CLEAR_ELS
     memset(b->els + b->len, 0, (b->cap - b->len) * size_Obj);
 #endif
-    check(b->els, "Hash_bucket realloc failed; cap: %ld", b->cap);
   }
   b->els[b->len++] = r;
 }
@@ -73,9 +66,7 @@ static void set_dealloc(Set* s) {
   for_in(i, s->len) {
     hash_bucket_dealloc(s->buckets + i);
   }
-#if OPT_ALLOC_COUNT
-    if (s->buckets) total_allocs_raw[1]++; // TODO: dedicated counter.
-#endif
+  raw_dealloc(s->buckets, ci_Set);
     free(s->buckets);
 }
 

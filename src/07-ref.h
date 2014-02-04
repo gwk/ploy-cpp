@@ -66,8 +66,9 @@ static Obj ref_alloc(Struct_tag st, Int width) {
   r.rc->sc = 1;
   rc_errMLV("alloc     ", r.rc);
 #if OPT_ALLOC_COUNT
-  total_rets[0][0]++;
-  total_allocs_ref[st][0]++;
+  Counter_index ci = obj_counter_index(r);
+  counter_inc(ci); // ret counter.
+  counter_inc(ci + 1); // alloc counter.
 #endif
   return r;
 }
@@ -98,7 +99,8 @@ static void ref_dealloc(Obj r) {
   free(r.p);
 #endif
 #if OPT_ALLOC_COUNT
-  total_allocs_ref[st][1]++;
+  Counter_index ci = obj_counter_index(r);
+  counter_dec(ci + 1); // alloc counter.
 #endif
 }
 

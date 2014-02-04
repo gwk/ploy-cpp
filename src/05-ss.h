@@ -31,13 +31,13 @@ static SS ss_mk_m(Int len, BM m) {
 
 
 static void ss_dealloc(SS s) {
-  raw_dealloc(s.b.m);
+  raw_dealloc(s.b.m, ci_Str);
 }
 
 
 static SS ss_alloc(Int len) {
   // add null terminator for easier debugging.
-  BM m = raw_alloc(len + 1);
+  BM m = raw_alloc(len + 1, ci_Str);
   m[len] = 0;
   return ss_mk_m(len, m);
 }
@@ -51,7 +51,7 @@ static void ss_realloc(SS* s, Int len) {
 
 // return B must be freed.
 static B ss_copy_to_B(SS ss) {
-  B b = (B){.m=raw_alloc(ss.len + 1)};
+  B b = (B){.m=raw_alloc(ss.len + 1, ci_Bytes)};
   b.m[ss.len] = 0;
   memcpy(b.m, ss.b.c, ss.len);
   return b;
@@ -185,9 +185,8 @@ static BM ss_src_loc_str(SS src, SS path, Int pos, Int len, Int line_num, Int co
   BM s;
   Int s_len = asprintf(&s,
     "%s:%ld:%ld: %s\n%s%s%s\n",
-    path.b.c, line_num + 1, col + 1, msg,
-    l.c, nl, under);
-  free(l.m);
+    path.b.c, line_num + 1, col + 1, msg, l.c, nl, under);
+  raw_dealloc(l.m, ci_Bytes);
   check(s_len > 0, "ss_src_loc_str allocation failed: %s", msg);
   return s;
 }

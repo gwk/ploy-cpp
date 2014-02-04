@@ -81,9 +81,7 @@ static void mem_release_els(Mem m) {
 
 
 static void mem_dealloc(Mem m) {
-#if OPT_ALLOC_COUNT
-  if (m.els) total_allocs_mem[1]++;
-#endif
+  if (m.els) counter_dec(ci_Mem);
 #if OPT_CLEAR_ELS
   memset(m.els, 0, m.len * size_Obj);
 #endif
@@ -105,19 +103,7 @@ static void mem_realloc(Mem* m, Int len) {
   for_imn(i, len, old_len) {
     obj_rel(m->els[i]);
   }
-  // realloc.
-  if (len > 0) {
-#if OPT_ALLOC_COUNT
-    if (!m->els) total_allocs_mem[0]++;
-#endif
-    m->els = realloc(m->els, cast(Uns, len * size_Obj));
-    check(m->els, "realloc failed; len: %ld; width: %ld", len, size_Obj);
-  }
-  else if (len == 0) {
-    mem_dealloc(*m); // realloc does something different, plus we must count deallocs.
-    m->els = NULL;
-  }
-  else error("bad len: %ld", len);
+  m->els = raw_realloc(m->els, len * size_Obj, ci_Mem);
   // clear any new elements.
   if (OPT_CLEAR_ELS && old_len < len) {
     memset(m->els + old_len, 0, (len - old_len) * size_Obj);
