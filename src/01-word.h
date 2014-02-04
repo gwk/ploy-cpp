@@ -35,9 +35,9 @@
 #define OPT_ALLOC_COUNT DEBUG
 #endif
 
-// zero 
-#ifndef OPT_MEM_CLEAR_ELS
-#define OPT_MEM_CLEAR_ELS DEBUG
+// zero heap arrays.
+#ifndef OPT_CLEAR_ELS
+#define OPT_CLEAR_ELS DEBUG
 #endif
 
 #define VERBOSE 0
@@ -83,6 +83,14 @@ typedef union {
   U64 u;
   F64 f;
 } W64;
+
+
+// this alignment value is based on the OSX malloc man page,
+// which guarantees 16-byte-aligned malloc.
+// TODO: values for other platforms.
+static const Uns width_min_malloc = 4;
+static const Int size_min_malloc = 1 << width_min_malloc;
+
 
 #if __SIZEOF_POINTER__ == 4
 #define ARCH_32_WORD 1

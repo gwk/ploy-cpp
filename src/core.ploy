@@ -1,3 +1,10 @@
 # Copyright 2014 George King.
 # Permission to use this file is granted in ploy/license.txt.
 
+
+^[LET macro
+  ^[FN macro TRUE ^[sym pars body]
+    [FN sym TRUE pars body]]]
+
+
+  

@@ -1,7 +1,7 @@
 // Copyright 2013 George King.
 // Permission to use this file is granted in ploy/license.txt.
 
-#include "06-ref.h"
+#include "07-ref.h"
 
 
 typedef struct {
@@ -84,7 +84,7 @@ static void mem_dealloc(Mem m) {
 #if OPT_ALLOC_COUNT
   if (m.els) total_allocs_mem[1]++;
 #endif
-#if OPT_MEM_CLEAR_ELS
+#if OPT_CLEAR_ELS
   memset(m.els, 0, m.len * size_Obj);
 #endif
   free(m.els);
@@ -110,7 +110,7 @@ static void mem_realloc(Mem* m, Int len) {
 #if OPT_ALLOC_COUNT
     if (!m->els) total_allocs_mem[0]++;
 #endif
-    m->els = realloc(m->els, (Uns)(len * size_Obj));
+    m->els = realloc(m->els, cast(Uns, len * size_Obj));
     check(m->els, "realloc failed; len: %ld; width: %ld", len, size_Obj);
   }
   else if (len == 0) {
@@ -119,7 +119,7 @@ static void mem_realloc(Mem* m, Int len) {
   }
   else error("bad len: %ld", len);
   // clear any new elements.
-  if (OPT_MEM_CLEAR_ELS && old_len < len) {
+  if (OPT_CLEAR_ELS && old_len < len) {
     memset(m->els + old_len, 0, (len - old_len) * size_Obj);
   }
 }

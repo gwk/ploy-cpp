@@ -1,14 +1,11 @@
 // Copyright 2013 George King.
 // Permission to use this file is granted in ploy/license.txt.
 
-#include "04-ss.h"
+#include "05-ss.h"
 
 
 typedef unsigned Tag;
 typedef Uns Sym; // index into global_sym_table.
-
-#define width_obj_tag 3
-#define obj_tag_end (1L << width_obj_tag)
 
 static const Int width_tagged_word = width_word - width_obj_tag;
 
@@ -18,11 +15,6 @@ static const Uns flt_body_mask = max_Uns - 1;
 static const Int max_Int_tagged  = (1L  << width_tagged_word) - 1;
 static const Uns max_Uns_tagged  = max_Int_tagged;
 static const Int shift_factor_Int = 1L << width_obj_tag; // cannot shift signed values in C so use multiplication instead.
-
-
-#if OPT_ALLOC_COUNT
-static Int total_rets[obj_tag_end][2] = {};
-#endif
 
 
 /*
@@ -63,8 +55,6 @@ static BC obj_tag_names[] = {
 };
 
 
-#define width_struct_tag 4
-#define struct_tag_end (1L << width_struct_tag)
 static const Uns struct_tag_mask = struct_tag_end - 1;
 
 #define width_meta_tag 4
@@ -346,14 +336,14 @@ static void obj_release_weak(Obj o) {
 }
 
 
-static void write_repr_obj(File f, Obj o);
+static void write_repr(File f, Obj o);
 
 static void obj_err(Obj o) {
-  write_repr_obj(stderr, o);
+  write_repr(stderr, o);
 }
 
 static void obj_errL(Obj o) {
-  write_repr_obj(stderr, o);
+  write_repr(stderr, o);
   err_nl();
 }
 

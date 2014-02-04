@@ -1,7 +1,7 @@
 // Copyright 2013 George King.
 // Permission to use this file is granted in ploy/license.txt.
 
-#include "17-host.h"
+#include "19-host.h"
 
 
 static void write_data(File f, Obj d) {
@@ -37,30 +37,30 @@ static void write_repr_data(File f, Obj d) {
 }
 
 
-static void write_repr_obj(File f, Obj o);
+static void write_repr_obj(File f, Obj o, Set* s);
 
 
-static void write_repr_vec_vec(File f, Obj v) {
+static void write_repr_vec_vec(File f, Obj v, Set* s) {
   assert(ref_is_vec(v));
   Int len = vec_len(v);
   Obj* els = vec_els(v);
   fputs("[", f);
   for_in(i, len) {
     if (i) fputs(" ", f);
-    write_repr_obj(f, els[i]);
+    write_repr_obj(f, els[i], s);
   }
   fputs("]", f);
 }
 
 
-static void write_repr_chain(File f, Obj c) {
+static void write_repr_chain(File f, Obj c, Set* s) {
   assert(ref_is_vec(c));
   fputs("{", f);
   Bool first = true;
   loop {
     if (first) first = false;
     else fputs(" ", f);
-    write_repr_obj(f, chain_hd(c));
+    write_repr_obj(f, chain_hd(c), s);
     Obj tl = chain_tl(c);
     if (tl.u == END.u) break;
     assert(obj_is_vec_ref(tl));
@@ -70,7 +70,7 @@ static void write_repr_chain(File f, Obj c) {
 }
 
 
-static void write_repr_chain_blocks(File f, Obj c) {  
+static void write_repr_chain_blocks(File f, Obj c, Set* s) {  
   assert(ref_is_vec(c));
   fputs("{", f);
   loop {
@@ -79,7 +79,7 @@ static void write_repr_chain_blocks(File f, Obj c) {
     fputs("|", f);
     for_imn(i, 1, len) { // note: unlike lisp, tl is in position 0.
       if (i > 1) fputs(" ", f);
-      write_repr_obj(f, els[i]);
+      write_repr_obj(f, els[i], s);
     }
     Obj tl = els[0];
     if (tl.u == END.u) break;
@@ -90,12 +90,12 @@ static void write_repr_chain_blocks(File f, Obj c) {
 }
 
 
-static void write_repr_vec(File f, Obj v) {
+static void write_repr_vec(File f, Obj v, Set* s) {
   assert(ref_is_vec(v));
   switch (vec_shape(v)) {
-    case vs_vec:          write_repr_vec_vec(f, v);       return;
-    case vs_chain:        write_repr_chain(f, v);         return;
-    case vs_chain_blocks: write_repr_chain_blocks(f, v);  return;
+    case vs_vec:          write_repr_vec_vec(f, v, s);      return;
+    case vs_chain:        write_repr_chain(f, v, s);        return;
+    case vs_chain_blocks: write_repr_chain_blocks(f, v, s); return;
   }
   assert(0);
 }
@@ -110,7 +110,7 @@ static void write_repr_Func_host(File f, Obj func, Int i) {
 }
 
 
-static void write_repr_obj(File f, Obj o) {
+static void write_repr_obj(File f, Obj o, Set* s) {
   Obj_tag ot = obj_tag(o);
   if (ot & ot_flt_bit) {
     fprintf(f, "(Flt %f)", flt_val(o));
@@ -135,24 +135,38 @@ static void write_repr_obj(File f, Obj o) {
     fputs("''", f);
   }
   else {
-    switch (ref_struct_tag(o)) {
-      case st_Data: write_repr_data(f, o); break;
-      case st_Vec:  write_repr_vec(f, o); break;
-      case st_I32:          fputs("(I32 ?)", f); break;
-      case st_I64:          fputs("(I64 ?)", f); break;
-      case st_U32:          fputs("(U32 ?)", f); break;
-      case st_U64:          fputs("(U64 ?)", f); break;
-      case st_F32:          fputs("(F32 ?)", f); break;
-      case st_F64:          fputs("(F64 ?)", f); break;
-      case st_File:         fprintf(f, "(File %p)", file_file(o)); break;
-      case st_Func_host_1:  write_repr_Func_host(f, o, 1); break;
-      case st_Func_host_2:  write_repr_Func_host(f, o, 2); break;
-      case st_Func_host_3:  write_repr_Func_host(f, o, 3); break;
-      case st_Reserved_A:
-      case st_Reserved_B:
-      case st_Reserved_C:
-      case st_Reserved_D: fputs("(ReservedX)", f); break;
+    if (set_contains(s, o)) { // recursed
+      fputs("↺", f); // anticlockwise gapped circle arrow
+    }
+    else {
+      set_insert(s, o);
+      switch (ref_struct_tag(o)) {
+        case st_Data: write_repr_data(f, o); break;
+        case st_Vec:  write_repr_vec(f, o, s); break;
+        case st_I32:          fputs("(I32 ?)", f); break;
+        case st_I64:          fputs("(I64 ?)", f); break;
+        case st_U32:          fputs("(U32 ?)", f); break;
+        case st_U64:          fputs("(U64 ?)", f); break;
+        case st_F32:          fputs("(F32 ?)", f); break;
+        case st_F64:          fputs("(F64 ?)", f); break;
+        case st_File:         fprintf(f, "(File %p)", file_file(o)); break;
+        case st_Func_host_1:  write_repr_Func_host(f, o, 1); break;
+        case st_Func_host_2:  write_repr_Func_host(f, o, 2); break;
+        case st_Func_host_3:  write_repr_Func_host(f, o, 3); break;
+        case st_Reserved_A:
+        case st_Reserved_B:
+        case st_Reserved_C:
+        case st_Reserved_D: fputs("(ReservedX)", f); break;
+      }
     }
   }
   err_flush(); // TODO: for debugging only?
 }
+
+
+static void write_repr(File f, Obj o) {
+  Set r = set0;
+  write_repr_obj(f, o, &r);
+}
+
+

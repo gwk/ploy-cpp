@@ -1,15 +1,7 @@
 // Copyright 2013 George King.
 // Permission to use this file is granted in ploy/license.txt.
 
-#include "02-bytes.h"
-
-
-static const Uns struct_tag_end;
-
-#if OPT_ALLOC_COUNT
-static Int total_allocs_raw[2] = {};
-static Int total_allocs_mem[2] = {};
-#endif
+#include "03-bytes.h"
 
 
 static Ptr raw_alloc(Int size) {

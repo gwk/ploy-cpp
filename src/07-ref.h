@@ -1,12 +1,13 @@
 // Copyright 2013 George King.
 // Permission to use this file is granted in ploy/license.txt.
 
-#include "05-obj.h"
+#include "06-obj.h"
 
 
-#if OPT_ALLOC_COUNT
-static Int total_allocs_ref[struct_tag_end][2] = {};
-#endif
+static Uns ref_hash(Obj r) {
+  assert(obj_is_ref(r));
+  return r.u >> width_min_malloc;
+}
 
 
 static void assert_ref_is_valid(Obj r) {
