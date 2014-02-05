@@ -102,7 +102,7 @@ static void write_repr_vec(File f, Obj v, Set* s) {
 
 
 static void write_repr_Func_host(File f, Obj func) {
-  fputs("(Func-host", f);
+  fputs("(Func-host ", f);
   Func_host* fh = ref_body(func);
   Obj d = sym_data(fh->sym);
   write_data(f, d);
