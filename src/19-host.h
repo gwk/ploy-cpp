@@ -26,6 +26,22 @@ static Obj host_raw_write(Int len_pars, Obj* args) {
 }
 
 
+static void write_repr(File f, Obj o);
+
+static Obj host_raw_write_repr(Int len_pars, Obj* args) {
+  // owns elements of args.
+  assert(len_pars == 2);
+  Obj f = args[0];
+  Obj o = args[1];
+  check_obj(ref_is_file(f), "write expected arg 1 File; found", f);
+  File file = file_file(f);
+  write_repr(file, o);
+  obj_rel(f);
+  obj_rel(o);
+  return obj_ret_val(VOID);
+}
+
+
 static Obj host_raw_flush(Int len_pars, Obj* args) {
   // owns elements of args.
   assert(len_pars == 1);
@@ -229,6 +245,7 @@ frame = env_frame_bind(frame, sym, val);
 
   DEF_FH(1, identity)
   DEF_FH(2, raw_write)
+  DEF_FH(2, raw_write_repr)
   DEF_FH(1, raw_flush)
   DEF_FH(1, len)
   DEF_FH(2, el)
