@@ -144,8 +144,18 @@ static Obj parse_sym(Parser* p) {
 }
 
 
+static Obj parse_expr(Parser* p);
+
+
 static Obj parse_comment(Parser* p) {
   assert(PC == '#');
+  if (PP1 && PC1 == '#') { // double-hash comments out the following expression.
+    P_ADV(2);
+    Obj expr = parse_expr(p);
+    if (p->e) return ILLEGAL;
+    return new_vec2(obj_ret_val(COMMENT), expr); // TODO: differentiate expr from line comments?
+  }
+  // otherwise comment out a single line.
   Src_pos sp_report = p->sp;
   do {
     P_ADV1;
@@ -164,7 +174,7 @@ static Obj parse_comment(Parser* p) {
   }  while (PC != '\n');
   SS s = ss_slice(p->src, pos_start, p->sp.pos);
   Obj d = new_data_from_SS(s);
-  return new_vec2(obj_ret_val(COMMENT), d);
+  return new_vec2(obj_ret_val(COMMENT), d); // TODO: differentiate?
 }
 
 
@@ -222,9 +232,6 @@ static Obj parse_data(Parser* p, Char q) {
   ss_dealloc(s);
   return d;
 }
-
-
-static Obj parse_expr(Parser* p);
 
 
 static Bool parse_space(Parser* p) {
