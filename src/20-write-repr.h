@@ -126,6 +126,7 @@ static void write_repr_obj(File f, Obj o, Set* s) {
       fputs("{}", f);
     }
     else {
+      fputc('`', f);
       write_data(f, sym_data(o));
     }
   }
