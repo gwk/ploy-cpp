@@ -67,7 +67,6 @@ static void set_dealloc(Set* s) {
     hash_bucket_dealloc(s->buckets + i);
   }
   raw_dealloc(s->buckets, ci_Set);
-    free(s->buckets);
 }
 
 

@@ -165,8 +165,9 @@ static void write_repr_obj(File f, Obj o, Set* s) {
 
 
 static void write_repr(File f, Obj o) {
-  Set r = set0;
-  write_repr_obj(f, o, &r);
+  Set s = set0;
+  write_repr_obj(f, o, &s);
+  set_dealloc(&s);
 }
 
 
