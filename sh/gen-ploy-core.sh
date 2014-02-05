@@ -2,8 +2,7 @@
 # Permission to use this file is granted in ploy/license.txt.
 
 set -e
-root=$(dirname "$0")/..
-cd "$root"
+cd $(dirname "$0")/..
 
 if ! sh/is-product-current.sh build/text-to-c-literal sh/* src/text-to-c-literal.c; then
   echo "  text-to-c-literal"

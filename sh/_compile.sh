@@ -5,8 +5,7 @@
 # TODO: clang docs link?
 
 
-root=$(dirname "$0")/..
-cd "$root"
+cd $(dirname "$0")/..
 
 if [[ "$1" == "-release" ]]; then
   shift
