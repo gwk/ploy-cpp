@@ -135,39 +135,20 @@ static Obj run_call_native(Obj env, Obj func, Int len, Obj* args, Bool is_expand
 }
 
 
-static Obj run_call_host1(Obj env, Obj func, Int len, Obj* args) {
+static Obj run_call_host(Obj env, Obj func, Int len, Obj* args) {
   // owns func.
-  check(len == 1, "host function expects 1 argument; received %ld", len);
-  Obj a0 = run(env, args[0]);
   Func_host* fh = ref_body(func);
-  Func_host_ptr_1 f = cast(Func_host_ptr_1, fh->ptr);
+  Int len_pars = fh->len_pars;
+  Func_host_ptr f = fh->ptr;
+  // len_pars == -1 indicates a variadic function.
+  check(len == len_pars || len_pars == -1, "host function expects %ld argument%s; received %ld",
+    len_pars, (len_pars == 1 ? "" : "s"), len);
   obj_rel(func);
-  return f(a0);
-}
-
-
-static Obj run_call_host2(Obj env, Obj func, Int len, Obj* args) {
-  // owns func.
-  check(len == 2, "host function expects 2 arguments; received %ld", len);
-  Obj a0 = run(env, args[0]);
-  Obj a1 = run(env, args[1]);
-  Func_host* fh = ref_body(func);
-  Func_host_ptr_2 f = cast(Func_host_ptr_2, fh->ptr);
-  obj_rel(func);
-  return f(a0, a1);
-}
-
-
-static Obj run_call_host3(Obj env, Obj func, Int len, Obj* args) {
-  // owns func.
-  check(len == 2, "host function expects 3 arguments; received %ld", len);
-  Obj a0 = run(env, args[0]);
-  Obj a1 = run(env, args[1]);
-  Obj a2 = run(env, args[2]);
-  Func_host* fh = ref_body(func);
-  Func_host_ptr_3 f = cast(Func_host_ptr_3, fh->ptr);
-  obj_rel(func);
-  return f(a0, a1, a2);
+  Obj arg_vals[len]; // requires variable-length-array support from compiler.
+  for_in(i, len) {
+    arg_vals[i] = run(env, args[i]);
+  }
+  return f(len, arg_vals);
 }
 
 
@@ -181,11 +162,9 @@ static Obj run_CALL(Obj env, Int len, Obj* args) {
   Int l = len - 1;
   Obj* a = args + 1;
   switch (st) {
-    case st_Vec:          return run_call_native(env, func, l, a, false);
-    case st_Func_host_1:  return run_call_host1(env, func, l, a);
-    case st_Func_host_2:  return run_call_host2(env, func, l, a);
-    case st_Func_host_3:  return run_call_host3(env, func, l, a);
-    default: assert(false);
+    case st_Vec:        return run_call_native(env, func, l, a, false);
+    case st_Func_host:  return run_call_host(env, func, l, a);
+    default: error_obj("object is not callable", func);
   }
 }
 
@@ -247,13 +226,13 @@ static Obj run(Obj env, Obj code) {
     case st_F64:
       return obj_ret(code); // self-evaluating.
     case st_File:
-    case st_Func_host_1:
-    case st_Func_host_2:
-    case st_Func_host_3:
+    case st_Func_host:
     case st_Reserved_A:
     case st_Reserved_B:
     case st_Reserved_C:
-    case st_Reserved_D: error_obj("cannot run object", code);
+    case st_Reserved_D:
+    case st_Reserved_E:
+    case st_Reserved_F: error_obj("cannot run object", code);
   }
 }
 

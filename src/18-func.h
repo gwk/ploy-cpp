@@ -4,22 +4,22 @@
 #include "17-file.h"
 
 
+typedef Obj(*Func_host_ptr)(Int, Obj*);
+
+
 typedef struct {
   Obj sym;
-  Ptr ptr;
+  Int len_pars;
+  Func_host_ptr ptr;
 } ALIGNED_TO_WORD Func_host;
 
 
-typedef Obj(*Func_host_ptr_1)(Obj);
-typedef Obj(*Func_host_ptr_2)(Obj, Obj);
-typedef Obj(*Func_host_ptr_3)(Obj, Obj, Obj);
-
-
-static Obj new_func_host(Tag tag, Obj sym, Ptr ptr) {
+static Obj new_func_host(Obj sym, Int len_pars, Func_host_ptr ptr) {
   assert(obj_is_sym(sym));
-  Obj o = ref_alloc(tag, size_RC + sizeof(Func_host));
+  Obj o = ref_alloc(st_Func_host, size_RC + sizeof(Func_host));
   Func_host* f = ref_body(o);
   f->sym = sym;
+  f->len_pars = len_pars;
   f->ptr = ptr;
   return o;
 }

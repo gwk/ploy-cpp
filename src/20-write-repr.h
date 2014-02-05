@@ -101,8 +101,8 @@ static void write_repr_vec(File f, Obj v, Set* s) {
 }
 
 
-static void write_repr_Func_host(File f, Obj func, Int i) {
-  fprintf(f, "(Func-host-%ld ", i);
+static void write_repr_Func_host(File f, Obj func) {
+  fputs("(Func-host", f);
   Func_host* fh = ref_body(func);
   Obj d = sym_data(fh->sym);
   write_data(f, d);
@@ -150,13 +150,13 @@ static void write_repr_obj(File f, Obj o, Set* s) {
         case st_F32:          fputs("(F32 ?)", f); break;
         case st_F64:          fputs("(F64 ?)", f); break;
         case st_File:         fprintf(f, "(File %p)", file_file(o)); break;
-        case st_Func_host_1:  write_repr_Func_host(f, o, 1); break;
-        case st_Func_host_2:  write_repr_Func_host(f, o, 2); break;
-        case st_Func_host_3:  write_repr_Func_host(f, o, 3); break;
+        case st_Func_host:    write_repr_Func_host(f, o); break;
         case st_Reserved_A:
         case st_Reserved_B:
         case st_Reserved_C:
-        case st_Reserved_D: fputs("(ReservedX)", f); break;
+        case st_Reserved_D:
+        case st_Reserved_E:
+        case st_Reserved_F: fputs("(ReservedX)", f); break;
       }
     }
   }

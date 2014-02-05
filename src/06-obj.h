@@ -75,13 +75,13 @@ typedef enum {
   st_F32,
   st_F64,
   st_File,
-  st_Func_host_1,
-  st_Func_host_2,
-  st_Func_host_3,
+  st_Func_host,
   st_Reserved_A,
   st_Reserved_B,
   st_Reserved_C,
   st_Reserved_D,
+  st_Reserved_E,
+  st_Reserved_F,
 } Struct_tag;
 
 static BC struct_tag_names[] = {
@@ -94,13 +94,13 @@ static BC struct_tag_names[] = {
   "F32",
   "F64",
   "File",
-  "Func-host-1",
-  "Func-host-2",
-  "Func-host-3",
+  "Func-host",
   "Reserved-A",
   "Reserved-B",
   "Reserved-C",
   "Reserved-D",
+  "Reserved-E",
+  "Reserved-F",
 };
 
 static const Int width_sc  = width_word - width_struct_tag;

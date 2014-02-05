@@ -32,6 +32,7 @@ clang \
 -Wno-unused-function \
 -Wno-unused-parameter \
 -Wno-gnu \
+-Wno-vla \
 -fstrict-aliasing \
 -fstack-protector \
 -fsanitize=undefined-trap \
