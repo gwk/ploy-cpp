@@ -17,8 +17,6 @@ static Obj new_uns(Uns u) {
 }
 
 
-
-
 static const Obj int0 = (Obj){.i = ot_int };
 
 static Int int_val(Obj o) {
