@@ -73,7 +73,6 @@ SYM(UNQ) \
 SYM(QUA) \
 SYM(EXPA) \
 SYM(COMMENT) \
-SYM(VEC) \
 SYM(QUO) \
 SYM(DO) \
 SYM(SCOPE) \
@@ -82,6 +81,7 @@ SYM(IF) \
 SYM(FN) \
 SYM(CALL) \
 SYM(VOID) \
+SYM(Vec) \
 
 
 // sym indices.

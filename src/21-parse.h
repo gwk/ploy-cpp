@@ -296,7 +296,7 @@ static Obj parse_call(Parser* p) {
   P_ADV1;
   Mem m = parse_seq(p, 0);
   P_ADV_TERM(')');
-  Obj v = new_vec_HM(obj_ret_val(CALL), m);
+  Obj v = new_vec_EM(obj_ret_val(CALL), m);
   mem_dealloc(m);
   return v;
 }
@@ -306,7 +306,7 @@ static Obj parse_expa(Parser* p) {
   P_ADV1;
   Mem m = parse_seq(p, 0);
   P_ADV_TERM('>');
-  Obj v = new_vec_HM(obj_ret_val(EXPA), m);
+  Obj v = new_vec_EM(obj_ret_val(EXPA), m);
   mem_dealloc(m);
   return v;
 }
@@ -319,7 +319,7 @@ static Obj parse_vec(Parser* p) {
   if (!m.len) {
     return obj_ret_val(VEC0);
   }
-  Obj v = new_vec_HM(obj_ret_val(VEC), m);
+  Obj v = new_vec_EEM(obj_ret_val(CALL), obj_ret_val(Vec), m);
   mem_dealloc(m);
   return v;
 }
@@ -334,7 +334,7 @@ static Obj parse_chain_simple(Parser* p) {
   Obj c = obj_ret_val(END);
   for_in_rev(i, m.len) {
     Obj el = mem_el_move(m, i);
-    c = new_vec3(obj_ret_val(VEC), c, el); // note: unlike lisp, the tail is in position 0.
+    c = new_vec4(obj_ret_val(CALL), obj_ret_val(Vec), c, el); // note: unlike lisp, the tail is in position 0.
   }
   mem_dealloc(m);
   return c;
@@ -353,12 +353,13 @@ static Obj parse_chain_blocks(Parser* p) {
       mem_release_dealloc(a.mem);
       return ILLEGAL;
     }
-    Obj o = new_vec_raw(m.len + 2);
+    Obj o = new_vec_raw(m.len + 3);
     Obj* els = vec_els(o);
-    els[0] = obj_ret_val(VEC);
-    els[1] = obj_ret_val(NIL); // will get filled in with tl below.
+    els[0] = obj_ret_val(CALL);
+    els[1] = obj_ret_val(Vec);
+    els[2] = obj_ret_val(NIL); // will get filled in with tl below.
     for_in(i, m.len) {
-      els[i + 2] = mem_el_move(m, i);
+      els[i + 3] = mem_el_move(m, i);
     }
     mem_dealloc(m);
     array_append_move(&a, o);
@@ -504,7 +505,7 @@ static Obj parse_src(SS path, SS src, BM* e) {
     o = ILLEGAL;
   }
   else {
-    o = new_vec_HM(obj_ret_val(DO), m); // implicit top-level DO.
+    o = new_vec_EM(obj_ret_val(DO), m); // TODO: remove implicit top-level DO.
   }
   mem_dealloc(m);
   *e = cast(BM, p.e);

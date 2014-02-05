@@ -24,14 +24,28 @@ static Obj new_vec_M(Mem m) {
 }
 
 
-static Obj new_vec_HM(Obj hd, Mem m) {
-  // owns hd, elements of m.
+static Obj new_vec_EM(Obj el, Mem m) {
+  // owns el, elements of m.
   Int len = m.len + 1;
   Obj v = new_vec_raw(len);
   Obj* els = vec_els(v);
-  els[0] = hd;
+  els[0] = el;
   for_in(i, m.len) {
     els[i + 1] = mem_el_move(m, i);
+  }
+  return v;
+}
+
+
+static Obj new_vec_EEM(Obj e0, Obj e1, Mem m) {
+  // owns e0, e1, elements of m.
+  Int len = m.len + 2;
+  Obj v = new_vec_raw(len);
+  Obj* els = vec_els(v);
+  els[0] = e0;
+  els[1] = e1;
+  for_in(i, m.len) {
+    els[i + 2] = mem_el_move(m, i);
   }
   return v;
 }

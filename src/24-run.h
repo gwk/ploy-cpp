@@ -22,16 +22,6 @@ static Obj run_COMMENT(Obj env, Int len, Obj* args) {
 }
 
 
-static Obj run_VEC(Obj env, Int len, Obj* args) {
-  Obj v = new_vec_raw(len);
-  Obj* els = vec_els(v);
-  for_in(i, len) {
-    els[i] = run(env, args[i]);
-  }
-  return v;
-}
-
-
 static Obj run_QUO(Obj env, Int len, Obj* args) {
   check(len == 1, "QUO requires 1 argument; found %ld", len);
   return obj_ret(args[0]);
@@ -109,6 +99,12 @@ static Obj run_FN(Obj env, Int len, Obj* args) {
 
 static Obj run_call_native(Obj env, Obj func, Int len, Obj* args, Bool is_expand) {
   // owns func.
+  // a native function/macro is a vec consisting of:
+  //  name:Sym
+  //  is-macro:Bool
+  //  pars:Vec
+  //  body:Expr
+  //  env:Env (currently implemented as a nested Vec structure, likely to change)
   Int func_len = vec_len(func);
   check_obj(func_len == 5, "function/macro is malformed (length is not 4)", func);
   Obj* f_els = vec_els(func);
@@ -123,9 +119,9 @@ static Obj run_call_native(Obj env, Obj func, Int len, Obj* args, Bool is_expand
   else {
     check_obj(!bool_is_true(is_macro), "cannot call macro", func);
   }
-  check_obj(obj_is_sym(name),       "function/macro is malformed (name symbol is not a Sym)", name);
-  check_obj(obj_is_vec(pars),       "function/macor is malformed (parameters is not a Vec)", pars);
-  check_obj(obj_is_vec_ref(f_env),  "function/macro is malformed (env is not a substantial Vec)", f_env);
+  check_obj(obj_is_sym(name),   "function/macro is malformed (name symbol is not a Sym)", name);
+  check_obj(obj_is_vec(pars),   "function/macro is malformed (parameters is not a Vec)", pars);
+  check_obj(obj_is_vec(f_env),  "function/macro is malformed (env is not a Vec)", f_env);
   Obj frame = env_frame_bind_args(env, func, vec_len(pars), vec_els(pars), len, args, is_expand);
   Obj env1 = env_push(f_env, frame);
   Obj ret = run(env1, body);
@@ -181,7 +177,6 @@ static Obj run_Vec(Obj env, Obj code) {
 #define EVAL_FORM(s) case si_##s: return run_##s(env, len_args, args)
     switch (si) {
       EVAL_FORM(COMMENT);
-      EVAL_FORM(VEC);
       EVAL_FORM(QUO);
       EVAL_FORM(DO);
       EVAL_FORM(SCOPE);
