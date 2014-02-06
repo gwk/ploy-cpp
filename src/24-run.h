@@ -123,7 +123,7 @@ static Obj run_call_native(Obj env, Obj func, Int len, Obj* args, Bool is_expand
   check_obj(obj_is_vec(pars),   "function is malformed (parameters is not a Vec)", pars);
   check_obj(obj_is_vec(f_env),  "function is malformed (env is not a Vec)", f_env);
   Obj frame = env_frame_bind_args(env, func, vec_len(pars), vec_els(pars), len, args, is_expand);
-  Obj env1 = env_push(f_env, frame);
+  Obj env1 = env_push(obj_ret(f_env), frame);
   Obj ret = run(env1, body);
   obj_rel(func);
   obj_rel(env1);
