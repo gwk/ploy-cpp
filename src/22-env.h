@@ -32,7 +32,10 @@ static Obj env_get(Obj env, Obj sym) {
 
 static Obj env_push(Obj env, Obj frame) {
   // owns env, frame.
-  assert(env.u == END.u || vec_len(env) == 2);
+  if (env.u == CHAIN0.u) {
+    env = END;
+  }
+  else assert(vec_len(env) == 2);
   assert(frame.u == CHAIN0.u || vec_len(frame) == 3);
   return new_vec2(env, frame); // note: unlike lisp, tl is in position 0.
 }
@@ -63,17 +66,17 @@ static void env_bind(Obj env, Obj sym, Obj val) {
 static Obj env_frame_bind_args(Obj env, Obj func, Int len_pars, Obj* pars, Int len_args, Obj* args, Bool is_expand) {
   Obj frame = obj_ret_val(CHAIN0);
   Int i_args = 0;
+  Bool has_variad = false;
   for_in(i_pars, len_pars) {
     Obj par = pars[i_pars];
-    check_obj(obj_is_vec_ref(par) && vec_len(par) == 4, "function is malformed (parameter is not a Vec4)", par);
+    check_obj(obj_is_par(par), "function parameter is malformed", func);
     Obj* par_els = vec_els(par);
     Obj par_kind = par_els[0]; // LABEL or VARIAD
     Obj par_sym = par_els[1];
     //Obj par_type = par_els[2];
     Obj par_expr = par_els[3];
-    check_obj(obj_is_sym(par_sym), "function is malformed (parameter is not a sym)", par_sym);
-    Obj arg;
     if (par_kind.u == LABEL.u) {
+      Obj arg;
       if (i_args < len_args) {
         arg = args[i_args];
         i_args++;
@@ -87,10 +90,24 @@ static Obj env_frame_bind_args(Obj env, Obj func, Int len_pars, Obj* pars, Int l
       Obj val = (is_expand ? obj_ret(arg) : run(env, arg));
       frame = env_frame_bind(frame, obj_ret_val(par_sym), val);
     }
-    else if (par_kind.u == VARIAD.u) {
-      error_obj("Variad parameters not yet supported", func);
+    else {
+      assert(par_kind.u == VARIAD.u);
+      check_obj(!has_variad, "function has multiple variad parameters", func);
+      has_variad = true;
+      Int variad_count = 0;
+      for_imn(i, i_args, len_args) {
+        Obj arg = args[i];
+        if (obj_is_par(arg)) break;
+        variad_count++;
+      }
+      Obj variad_val = new_vec_raw(variad_count);
+      Obj* els = vec_els(variad_val);
+      for_in(i, variad_count) {
+        Obj arg = args[i_args++];
+        els[i] = (is_expand ? obj_ret(arg) : run(env, arg));
+      }
+      frame = env_frame_bind(frame, obj_ret_val(par_sym), variad_val);
     }
-    else error_obj("function is malformed (parameter is not a Label or Variad)", par);
   }
   return frame;
 }

@@ -255,6 +255,20 @@ static Bool obj_is_file(Obj o) {
 }
 
 
+static Int vec_len(Obj v);
+static Obj vec_el(Obj v, Int i);
+static const Obj LABEL, VARIAD;
+
+static Bool obj_is_par(Obj o) {
+  if (!obj_is_vec(o)) return false;
+  Int len = vec_len(o);
+  if (len != 4) return false;
+  if (!obj_is_symbol(vec_el(o, 1))) return false; // name must be a symbol.
+  Obj e0 = vec_el(o, 0);
+  return (e0.u == LABEL.u || e0.u == VARIAD.u);
+}
+
+
 static Counter_index obj_counter_index(Obj o) {
   Obj_tag ot = obj_tag(o);
   if (ot & ot_flt_bit) return ci_Flt;
@@ -324,8 +338,7 @@ static Obj obj_rel_val(Obj o) {
 
 
 static Obj obj_retain_weak(Obj o) {
-  Obj_tag ot = obj_tag(o);
-  if (ot) return o;
+  if (obj_tag(o)) return o;
   assert_ref_is_valid(o);
   rc_errMLV("ret weak ", o.rc);
   if (o.rc->wc < pinned_wc - 1) {
@@ -342,8 +355,7 @@ static Obj obj_retain_weak(Obj o) {
 
 
 static void obj_release_weak(Obj o) {
-  Obj_tag ot = obj_tag(o);
-  if (ot) return;
+  if (obj_tag(o)) return;
   assert_ref_is_valid(o);
   rc_errMLV("rel weak ", o.rc);
   check_obj(o.rc->wc > 0, "over-released weak ref", o);
