@@ -70,29 +70,34 @@ int main(int argc, BC argv[]) {
   }
   
   Obj host_frame = host_init();
-  Obj global_env = env_push(obj_ret_val(END), host_frame);
+  Obj host_env = env_push(obj_ret_val(CHAIN0), host_frame);
+  Obj core_frame = env_frame_bind(obj_ret_val(CHAIN0), new_sym_from_BC("host-env"), obj_ret(host_env));
+  Obj core_env = env_push(host_env, core_frame);
+  
   Array sources = array0;
 #if 1
   // run embedded core file.
   Obj path = new_data_from_BC("<core>");
   Obj src = new_data_from_BC(core_src);
-  parse_and_eval(global_env, path, src, &sources, false);
+  parse_and_eval(core_env, path, src, &sources, false);
   
+  Obj env = env_push(core_env, obj_ret_val(CHAIN0));
+
   // handle arguments.
   for_in(i, path_count) {
     path = new_data_from_BC(paths[i]);
     src = new_data_from_path(paths[i]);
-    parse_and_eval(global_env, path, src, &sources, true);
+    parse_and_eval(env, path, src, &sources, false);
   }
   if (expr) {
     path = new_data_from_BC("<cmd>");
     src = new_data_from_BC(expr);
-    parse_and_eval(global_env, path, src, &sources, out_val);
+    parse_and_eval(env, path, src, &sources, out_val);
   }
 #endif
 
 #if OPT_ALLOC_COUNT
-  obj_rel(global_env);
+  obj_rel(env);
   mem_release_dealloc(global_sym_names.mem);
   mem_release_dealloc(sources.mem);
   counter_stats(vol_err);
