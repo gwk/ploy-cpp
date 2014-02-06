@@ -239,7 +239,7 @@ static Obj host_init() {
   Obj sym, val;
 
 #define DEF_FH(len_pars, n) \
-sym = new_sym(ss_from_BC(#n)); \
+sym = new_sym_from_BC(#n); \
 val = new_func_host(sym, len_pars, host_##n); \
 frame = env_frame_bind(frame, sym, val);
 
@@ -272,7 +272,7 @@ frame = env_frame_bind(frame, sym, val);
 #undef DEF_FH
 
 #define DEF_FILE(f, string, is_readable, is_writable) \
-sym = new_sym(ss_from_BC(string)); \
+sym = new_sym_from_BC(string); \
 val = new_vec2(new_data_from_BC("<" string ">"), new_file(f, is_readable, is_writable)); \
 frame = env_frame_bind(frame, sym, val);
   

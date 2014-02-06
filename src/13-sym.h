@@ -51,6 +51,12 @@ static Obj new_sym(SS s) {
   return obj_ret_val(sym);
 }
 
+
+static Obj new_sym_from_BC(BC b) {
+  return new_sym(ss_from_BC(b));
+}
+
+
 // for use with "%*s" formatter.
 #define FMT_SYM(sym) cast(I32, data_len(sym_data(sym))), data_ptr(sym_data(sym))
 
