@@ -415,17 +415,19 @@ static Obj parse_par(Parser* p, Obj sym, BC par_desc) {
     return parse_error(p, "%s name is not a symbol", par_desc);
   }
   Char c = PC;
-  Obj type = NIL;
+  Obj type;
   if (c == ':') {
     P_ADV1;
     type = parse_expr(p);
     c = PC;
   }
-  Obj expr = NIL;
+  else type = obj_ret_val(NIL);
+  Obj expr;
   if (PC == '=') {
     P_ADV1;
     expr = parse_expr(p);
   }
+  else expr = obj_ret_val(NIL);
   return new_vec4(obj_ret_val(sym), name, type, expr);
 }
 

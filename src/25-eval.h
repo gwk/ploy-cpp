@@ -12,7 +12,7 @@ static Obj eval(Obj env, Obj code) {
 
 
 static Obj eval_vec(Obj env, Obj v) {
-  if (v.u == VEC0.u) return VOID;
+  if (v.u == VEC0.u) return obj_ret_val(VOID);
   Int len = vec_len(v);
   Obj* els = vec_els(v);
   for_in(i, len - 1) {
