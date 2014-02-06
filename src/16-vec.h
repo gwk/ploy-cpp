@@ -141,11 +141,19 @@ typedef enum {
   vs_vec,
   vs_chain,
   vs_chain_blocks,
+  vs_label,
+  vs_variad,
 } Vec_shape;
 
 
 static Vec_shape vec_shape(Obj v) {
   assert(ref_is_vec(v));
+  Int len = vec_len(v);
+  if (len == 4 && obj_is_symbol(vec_el(v, 1))) {
+    Obj e0 = vec_el(v, 0);
+    if (e0.u == LABEL.u) return vs_label;
+    if (e0.u == VARIAD.u) return vs_variad;
+  }
   Vec_shape s = vs_chain;
   loop {
     if (vec_len(v) != 2) s = vs_chain_blocks;

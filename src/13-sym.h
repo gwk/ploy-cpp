@@ -58,6 +58,7 @@ static Obj new_sym(SS s) {
 // ILLEGAL is a special value for returning during error conditions; completely prohibited in ploy code.
 // syms with index lower than VOID are self-evaluating; syms after VOID are looked up.
 // VOID cannot be evaluated, but is a legal return value (which must be ignored).
+// the special forms are COMMENT...FN.
 // the following "X Macro" is expanded with various temporary definitions of SYM.
 #define SYM_LIST \
 SYM(ILLEGAL) \
@@ -79,7 +80,6 @@ SYM(SCOPE) \
 SYM(LET) \
 SYM(IF) \
 SYM(FN) \
-SYM(CALL) \
 SYM(VOID) \
 SYM(Vec) \
 
@@ -104,6 +104,12 @@ static void sym_init() {
 #define SYM(s) sym = new_sym(ss_from_BC(#s)); assert(sym_index(sym) == si_##s); obj_rel_val(sym);
 SYM_LIST
 #undef SYM
+}
+
+
+static bool sym_is_form(Obj s) {
+  Int si = sym_index(s);
+  return si >= si_COMMENT && si <= si_FN;
 }
 
 

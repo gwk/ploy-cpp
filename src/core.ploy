@@ -2,9 +2,20 @@
 # Permission to use this file is granted in ploy/license.txt.
 
 
-^[LET macro
-  ^[FN macro TRUE ^[sym pars body]
-    [FN sym TRUE pars body]]]
+# define the 'macro' macro.
+# this definition uses the raw vec syntax ^[...] to build syntax vectors directly.
+# the definition is equivalent to:
 
+##<macro macro (-sym -pars &body)
+  (sym TRUE pars body {})>
 
-  
+(LET macro
+  (QUO 
+    ( macro
+      TRUE
+      (-sym -pars &body)
+      (sym TRUE pars body CHAIN0)
+      CHAIN0)))
+
+<macro quo (expr) [QUO expr]>
+

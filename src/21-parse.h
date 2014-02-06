@@ -1,4 +1,4 @@
-// Copyright 2013 George King.
+/// Copyright 2013 George King.
 // Permission to use this file is granted in ploy/license.txt.
 
 #include "20-write-repr.h"
@@ -153,7 +153,9 @@ static Obj parse_comment(Parser* p) {
     P_ADV(2);
     Obj expr = parse_expr(p);
     if (p->e) return ILLEGAL;
-    return new_vec2(obj_ret_val(COMMENT), expr); // TODO: differentiate expr from line comments?
+    // the QUO prevents macro expansion of the commented code,
+    // and also differentiates it from line comments.
+    return new_vec2(obj_ret_val(COMMENT), new_vec2(obj_ret_val(QUO), expr));
   }
   // otherwise comment out a single line.
   Src_pos sp_report = p->sp;
@@ -174,7 +176,7 @@ static Obj parse_comment(Parser* p) {
   }  while (PC != '\n');
   SS s = ss_slice(p->src, pos_start, p->sp.pos);
   Obj d = new_data_from_SS(s);
-  return new_vec2(obj_ret_val(COMMENT), d); // TODO: differentiate?
+  return new_vec2(obj_ret_val(COMMENT), d);
 }
 
 
@@ -303,7 +305,7 @@ static Obj parse_call(Parser* p) {
   P_ADV1;
   Mem m = parse_seq(p, 0);
   P_ADV_TERM(')');
-  Obj v = new_vec_EM(obj_ret_val(CALL), m);
+  Obj v = new_vec_M(m);
   mem_dealloc(m);
   return v;
 }
@@ -326,7 +328,7 @@ static Obj parse_vec(Parser* p) {
   if (!m.len) {
     return obj_ret_val(VEC0);
   }
-  Obj v = new_vec_EEM(obj_ret_val(CALL), obj_ret_val(Vec), m);
+  Obj v = new_vec_EM(obj_ret_val(Vec), m);
   mem_dealloc(m);
   return v;
 }
@@ -341,7 +343,7 @@ static Obj parse_chain_simple(Parser* p) {
   Obj c = obj_ret_val(END);
   for_in_rev(i, m.len) {
     Obj el = mem_el_move(m, i);
-    c = new_vec4(obj_ret_val(CALL), obj_ret_val(Vec), c, el); // note: unlike lisp, the tail is in position 0.
+    c = new_vec3(obj_ret_val(Vec), c, el); // note: unlike lisp, the tail is in position 0.
   }
   mem_dealloc(m);
   return c;
@@ -360,14 +362,8 @@ static Obj parse_chain_blocks(Parser* p) {
       mem_release_dealloc(a.mem);
       return ILLEGAL;
     }
-    Obj o = new_vec_raw(m.len + 3);
-    Obj* els = vec_els(o);
-    els[0] = obj_ret_val(CALL);
-    els[1] = obj_ret_val(Vec);
-    els[2] = obj_ret_val(NIL); // will get filled in with tl below.
-    for_in(i, m.len) {
-      els[i + 3] = mem_el_move(m, i);
-    }
+    // NIL will gets replaced by tl below.
+    Obj o = new_vec_EEM(obj_ret_val(Vec), obj_ret_val(NIL), m);
     mem_dealloc(m);
     array_append_move(&a, o);
   }
@@ -400,21 +396,6 @@ static Obj parse_chain(Parser* p) {
 }
 
 
-static Obj parse_raw(Parser* p) {
-  assert(PC == '^');
-  P_ADV1;
-  if (PC != '[') {
-    return parse_error(p, "raw expected '['");
-  }
-  P_ADV1;
-  Mem m = parse_seq(p, 0);
-  P_ADV_TERM(']');
-  Obj v = new_vec_M(m);
-  mem_dealloc(m);
-  return v;
-}
-
-
 static Obj parse_qua(Parser* p) {
   assert(PC == '`');
   P_ADV1;
@@ -423,10 +404,16 @@ static Obj parse_qua(Parser* p) {
 }
 
 
-static Obj parse_label_sub(Parser* p, Obj sym) {
+static Obj parse_par(Parser* p, Obj sym, BC par_desc) {
   P_ADV1;
+  Src_pos sp_open = p->sp; // for error reporting.
   Obj name = parse_expr(p);
   if (p->e) return ILLEGAL;
+  if (!obj_is_symbol(name)) {
+    obj_rel(name);
+    p->sp = sp_open;
+    return parse_error(p, "%s name is not a symbol", par_desc);
+  }
   Char c = PC;
   Obj type = NIL;
   if (c == ':') {
@@ -434,22 +421,12 @@ static Obj parse_label_sub(Parser* p, Obj sym) {
     type = parse_expr(p);
     c = PC;
   }
-  Obj val = NIL;
+  Obj expr = NIL;
   if (PC == '=') {
     P_ADV1;
-    val = parse_expr(p);
+    expr = parse_expr(p);
   }
-  return new_vec4(obj_ret_val(sym), name, type, val);
-}
-
-
-static Obj parse_label(Parser* p) {
-  return parse_label_sub(p, LABEL);
-}
-
-
-static Obj parse_variad(Parser* p) {
-  return parse_label_sub(p, VARIAD);
+  return new_vec4(obj_ret_val(sym), name, type, expr);
 }
 
 
@@ -461,18 +438,17 @@ static Obj parse_expr_sub(Parser* p) {
     case '<':   return parse_expa(p);
     case '[':   return parse_vec(p);
     case '{':   return parse_chain(p);
-    case '^':   return parse_raw(p);
     case '`':   return parse_qua(p);
     case '\'':  return parse_data(p, '\'');
     case '"':   return parse_data(p, '"');
     case '#':   return parse_comment(p);
-    case '&':   return parse_variad(p);
+    case '&':   return parse_par(p, VARIAD, "variad");
     case '+':
       if (isdigit(PC1)) return parse_int(p, 1);
       break;
     case '-':
       if (isdigit(PC1)) return parse_int(p, -1);
-      return parse_label(p);
+      return parse_par(p, LABEL, "label");
 
   }
   if (isdigit(c)) {
@@ -512,7 +488,7 @@ static Obj parse_src(SS path, SS src, BM* e) {
     o = ILLEGAL;
   }
   else {
-    o = new_vec_EM(obj_ret_val(DO), m); // TODO: remove implicit top-level DO.
+    o = new_vec_M(m);
   }
   mem_dealloc(m);
   *e = cast(BM, p.e);

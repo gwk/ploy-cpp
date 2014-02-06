@@ -26,11 +26,12 @@ static void parse_and_eval(Obj env, Obj path, Obj src, Array* sources, Bool out_
     obj_errL(code);
 #endif
     array_append_move(sources, new_vec2(path, src));
-    Obj val = eval(env, code); // owns code
+    Obj val = eval_vec(env, code);
     if (out_val && val.u != VOID.u) {
       write_repr(stdout, val);
       out_nl();
     }
+    obj_rel(code);
     obj_rel(val);
   }
 }
@@ -81,7 +82,7 @@ int main(int argc, BC argv[]) {
   for_in(i, path_count) {
     path = new_data_from_BC(paths[i]);
     src = new_data_from_path(paths[i]);
-    parse_and_eval(global_env, path, src, &sources, false);
+    parse_and_eval(global_env, path, src, &sources, true);
   }
   if (expr) {
     path = new_data_from_BC("<cmd>");

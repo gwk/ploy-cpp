@@ -69,16 +69,16 @@ static Obj env_frame_bind_args(Obj env, Obj func, Int len_pars, Obj* pars, Int l
     Obj* par_els = vec_els(par);
     Obj par_kind = par_els[0]; // LABEL or VARIAD
     Obj par_sym = par_els[1];
-    Obj par_type = par_els[2];
+    //Obj par_type = par_els[2];
     Obj par_expr = par_els[3];
-    check_obj(obj_is_sym(par_sym), "native function is malformed (parameter is not a sym)", par_sym);
+    check_obj(obj_is_sym(par_sym), "function is malformed (parameter is not a sym)", par_sym);
     Obj arg;
     if (par_kind.u == LABEL.u) {
       if (i_args < len_args) {
         arg = args[i_args];
         i_args++;
       }
-      else if (par_expr.u != NIL.u) {
+      else if (par_expr.u != NIL.u) { // TODO: what about default value of nil? is quote sufficient?
         arg = par_expr;
       }
       else {
@@ -87,10 +87,10 @@ static Obj env_frame_bind_args(Obj env, Obj func, Int len_pars, Obj* pars, Int l
       Obj val = (is_expand ? obj_ret(arg) : run(env, arg));
       frame = env_frame_bind(frame, obj_ret_val(par_sym), val);
     }
-    else if (par_type.u == VARIAD.u) {
+    else if (par_kind.u == VARIAD.u) {
       error_obj("Variad parameters not yet supported", func);
     }
-    else error_obj("native function is malformed (parameter is not a Label or Variad)", par);
+    else error_obj("function is malformed (parameter is not a Label or Variad)", par);
   }
   return frame;
 }

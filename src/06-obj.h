@@ -201,6 +201,14 @@ static Bool obj_is_sym(Obj o) {
 }
 
 
+static Bool sym_is_symbol(Obj o);
+
+// TODO: improve this naming subtlety.
+static Bool obj_is_symbol(Obj o) {
+  return obj_is_sym(o) && sym_is_symbol(o);
+}
+
+
 static const Obj TRUE, FALSE;
 
 static bool obj_is_bool(Obj s) {

@@ -40,13 +40,29 @@ static void write_repr_data(File f, Obj d) {
 static void write_repr_obj(File f, Obj o, Set* s);
 
 
+#if 0 // TODO: incomplete mess.
+static void write_repr_vec_quoted(File f, Obj v, Set* s) {
+  assert(ref_is_vec(v));
+  Int len = vec_len(v);
+  Obj* els = vec_els(v);
+  assert(len >= 2);
+  fputs("`(", f);
+  for_imn(i, 1, len) {
+    if (i > 1) fputc(' ', f);
+    write_repr_obj(f, els[i], s); // TODO: this is incorrect; doubly quotes symbols.
+  }
+  fputs(")", f);
+}
+#endif
+
+
 static void write_repr_vec_vec(File f, Obj v, Set* s) {
   assert(ref_is_vec(v));
   Int len = vec_len(v);
   Obj* els = vec_els(v);
   fputs("[", f);
   for_in(i, len) {
-    if (i) fputs(" ", f);
+    if (i) fputc(' ', f);
     write_repr_obj(f, els[i], s);
   }
   fputs("]", f);
@@ -59,7 +75,7 @@ static void write_repr_chain(File f, Obj c, Set* s) {
   Bool first = true;
   loop {
     if (first) first = false;
-    else fputs(" ", f);
+    else fputc(' ', f);
     write_repr_obj(f, chain_hd(c), s);
     Obj tl = chain_tl(c);
     if (tl.u == END.u) break;
@@ -78,7 +94,7 @@ static void write_repr_chain_blocks(File f, Obj c, Set* s) {
     Int len = vec_len(c);
     fputs("|", f);
     for_imn(i, 1, len) { // note: unlike lisp, tl is in position 0.
-      if (i > 1) fputs(" ", f);
+      if (i > 1) fputc(' ', f);
       write_repr_obj(f, els[i], s);
     }
     Obj tl = els[0];
@@ -90,12 +106,41 @@ static void write_repr_chain_blocks(File f, Obj c, Set* s) {
 }
 
 
+static void write_repr_par(File f, Obj p, Set* s, Char c) {
+  fputc(c, f);
+  assert(vec_len(p) == 4);
+  Obj* els = vec_els(p);
+  Obj name = els[1];
+  Obj type = els[2];
+  Obj expr = els[3];
+  assert(obj_is_symbol(name));
+  Obj d = sym_data(name);
+  write_data(f, d);
+  if (type.u != NIL.u) {
+    fputc(':', f);
+    write_repr_obj(f, type, s); // TODO: quote this?
+  }
+  if (expr.u != NIL.u) {
+    fputc('=', f);
+    write_repr_obj(f, expr, s); // TODO: quote this?
+  }
+}
+
+
 static void write_repr_vec(File f, Obj v, Set* s) {
   assert(ref_is_vec(v));
+  #if 0 // TODO: incomplete mess.
+  if (false) {
+    write_repr_vec_quoted(f, v, s);
+    return;
+  }
+  #endif
   switch (vec_shape(v)) {
     case vs_vec:          write_repr_vec_vec(f, v, s);      return;
     case vs_chain:        write_repr_chain(f, v, s);        return;
     case vs_chain_blocks: write_repr_chain_blocks(f, v, s); return;
+    case vs_label:        write_repr_par(f, v, s, '-');     return;
+    case vs_variad:       write_repr_par(f, v, s, '&');     return;
   }
   assert(0);
 }

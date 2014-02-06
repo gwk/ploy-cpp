@@ -106,7 +106,7 @@ static Obj run_call_native(Obj env, Obj func, Int len, Obj* args, Bool is_expand
   //  body:Expr
   //  env:Env (currently implemented as a nested Vec structure, likely to change)
   Int func_len = vec_len(func);
-  check_obj(func_len == 5, "function/macro is malformed (length is not 4)", func);
+  check_obj(func_len == 5, "function is malformed (length is not 5)", func);
   Obj* f_els = vec_els(func);
   Obj name      = f_els[0];
   Obj is_macro  = f_els[1];
@@ -119,9 +119,9 @@ static Obj run_call_native(Obj env, Obj func, Int len, Obj* args, Bool is_expand
   else {
     check_obj(!bool_is_true(is_macro), "cannot call macro", func);
   }
-  check_obj(obj_is_sym(name),   "function/macro is malformed (name symbol is not a Sym)", name);
-  check_obj(obj_is_vec(pars),   "function/macro is malformed (parameters is not a Vec)", pars);
-  check_obj(obj_is_vec(f_env),  "function/macro is malformed (env is not a Vec)", f_env);
+  check_obj(obj_is_sym(name),   "function is malformed (name symbol is not a Sym)", name);
+  check_obj(obj_is_vec(pars),   "function is malformed (parameters is not a Vec)", pars);
+  check_obj(obj_is_vec(f_env),  "function is malformed (env is not a Vec)", f_env);
   Obj frame = env_frame_bind_args(env, func, vec_len(pars), vec_els(pars), len, args, is_expand);
   Obj env1 = env_push(f_env, frame);
   Obj ret = run(env1, body);
@@ -148,18 +148,14 @@ static Obj run_call_host(Obj env, Obj func, Int len, Obj* args) {
 }
 
 
-static Obj run_CALL(Obj env, Int len, Obj* args) {
-  check(len > 0, "CALL requires at least one argument");
-  Obj callee_expr = args[0];
-  Obj func = run(env, callee_expr);
+static Obj run_call(Obj env, Obj callee, Int len, Obj* args) {
+  Obj func = run(env, callee);
   Tag ot = obj_tag(func);
   check_obj(ot == ot_ref, "object is not callable", func);
   Tag st = ref_struct_tag(func);
-  Int l = len - 1;
-  Obj* a = args + 1;
   switch (st) {
-    case st_Vec:        return run_call_native(env, func, l, a, false);
-    case st_Func_host:  return run_call_host(env, func, l, a);
+    case st_Vec:        return run_call_native(env, func, len, args, false);
+    case st_Func_host:  return run_call_host(env, func, len, args);
     default: error_obj("object is not callable", func);
   }
 }
@@ -183,11 +179,10 @@ static Obj run_Vec(Obj env, Obj code) {
       EVAL_FORM(LET);
       EVAL_FORM(IF);
       EVAL_FORM(FN);
-      EVAL_FORM(CALL);
     }
 #undef EVAL_FORM
   }
-  error_obj("cannot call Vec object", code);
+  return run_call(env, form, len_args, args);
 }
 
 
