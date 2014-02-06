@@ -11,7 +11,6 @@ static void write_data(File f, Obj d) {
 }
 
 
-
 static void write_repr_data(File f, Obj d) {
   assert(ref_is_data(d));
   BC p = data_ptr(d).c;
@@ -38,22 +37,6 @@ static void write_repr_data(File f, Obj d) {
 
 
 static void write_repr_obj(File f, Obj o, Set* s);
-
-
-#if 0 // TODO: incomplete mess.
-static void write_repr_vec_quoted(File f, Obj v, Set* s) {
-  assert(ref_is_vec(v));
-  Int len = vec_len(v);
-  Obj* els = vec_els(v);
-  assert(len >= 2);
-  fputs("`(", f);
-  for_imn(i, 1, len) {
-    if (i > 1) fputc(' ', f);
-    write_repr_obj(f, els[i], s); // TODO: this is incorrect; doubly quotes symbols.
-  }
-  fputs(")", f);
-}
-#endif
 
 
 static void write_repr_vec_vec(File f, Obj v, Set* s) {
@@ -107,6 +90,7 @@ static void write_repr_chain_blocks(File f, Obj c, Set* s) {
 
 
 static void write_repr_par(File f, Obj p, Set* s, Char c) {
+  fputc('`', f);
   fputc(c, f);
   assert(vec_len(p) == 4);
   Obj* els = vec_els(p);
@@ -204,6 +188,7 @@ static void write_repr_obj(File f, Obj o, Set* s) {
         case st_Reserved_E:
         case st_Reserved_F: fputs("(ReservedX)", f); break;
       }
+      set_remove(s, o);
     }
   }
   err_flush(); // TODO: for debugging only?
