@@ -27,19 +27,25 @@ typedef struct {
 static const Set set0 = {.len=0, .len_buckets=0, .buckets=NULL};
 
 
-static Bool hash_bucket_is_valid(Hash_bucket* b) {
-  return b && ((b->len == 0 && b->cap == 0 && b->els == NULL) || (b->len >= 0 && b->len < b->cap && b->els));
+static void assert_hash_bucket_is_valid(Hash_bucket* b) {
+  assert(b);
+  if (b->els) {
+    assert(b->len >= 0 && b->len <= b->cap);
+  }
+  else {
+    assert(b->len == 0 && b->cap == 0);
+  }
 }
 
 
 static void hash_bucket_dealloc(Hash_bucket* b) {
-  assert(hash_bucket_is_valid(b));
+  assert_hash_bucket_is_valid(b);
   raw_dealloc(b->els, ci_Hash_bucket);
 }
 
 
 static bool hash_bucket_contains(Hash_bucket* b, Obj r) {
-  assert(hash_bucket_is_valid(b));
+  assert_hash_bucket_is_valid(b);
   for_in(i, b->len) {
     if (b->els[i].p == r.p) {
       return true;
@@ -68,6 +74,7 @@ static void hash_bucket_append(Hash_bucket* b, Obj r) {
 
 
 static void hash_bucket_remove(Hash_bucket* b, Obj r) {
+  assert_hash_bucket_is_valid(b);
   for_in(i, b->len) {
     if (b->els[i].p == r.p) {
       b->els[i] = b->els[b->len - 1]; // replace r with the last element.
