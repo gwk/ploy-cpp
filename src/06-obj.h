@@ -269,6 +269,8 @@ static Bool obj_is_par(Obj o) {
 }
 
 
+static Struct_tag ref_struct_tag(Obj r);
+
 static Counter_index obj_counter_index(Obj o) {
   Obj_tag ot = obj_tag(o);
   if (ot & ot_flt_bit) return ci_Flt;
@@ -278,7 +280,7 @@ static Counter_index obj_counter_index(Obj o) {
     case ot_data: return ci_Data_word;
     case ot_ref: break;
   }
-  Struct_tag st = o.rc->st;
+  Struct_tag st = ref_struct_tag(o);
   return ci_Data + (st * 2);
 }
 
@@ -361,6 +363,25 @@ static void obj_release_weak(Obj o) {
   check_obj(o.rc->wc > 0, "over-released weak ref", o);
   // can only decrement if the count is not pinned.
   if (o.rc->wc < pinned_wc) o.rc->wc--;
+}
+
+
+static Bool obj_is_quotable(Obj o) {
+  // indicates whether an object can be correctly represented inside of a quoted vec.
+  // objects whose representation must be evaluated return false.
+  // does this make sense?
+  if (obj_tag(o)) return true; // all value types are quotable.
+  Struct_tag st = ref_struct_tag(o);
+  if (st == st_Data) return true; // quotable.
+  if (st == st_Vec) {
+    Int len = vec_len(o);
+    Obj* els = vec_els(o);
+    for_in(i, len) {
+      if (!obj_is_quotable(els[i])) return false;
+    }
+    return true;
+  }
+  return false;
 }
 
 
