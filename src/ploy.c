@@ -71,8 +71,7 @@ int main(int argc, BC argv[]) {
   
   Obj host_frame = host_init();
   Obj host_env = env_push(obj_ret_val(CHAIN0), host_frame);
-  Obj core_frame = env_frame_bind(obj_ret_val(CHAIN0), new_sym_from_BC("host-env"), obj_ret(host_env));
-  Obj core_env = env_push(host_env, core_frame);
+  Obj core_env = env_push(host_env, obj_ret_val(CHAIN0));
   
   Array sources = array0;
 #if 1
