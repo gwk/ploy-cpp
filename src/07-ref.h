@@ -17,6 +17,7 @@ static void assert_ref_is_valid(Obj r) {
 
 
 static Struct_tag ref_struct_tag(Obj r) {
+  assert(obj_is_ref(r));
   return r.rc->st;
 }
 
