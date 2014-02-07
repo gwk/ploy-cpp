@@ -3,7 +3,8 @@
 
 #include "09-array.h"
 
-// data structure for a simple append-only set of ref pointers.
+
+// hash set data structure.
 
 static const Int min_set_len_buckets = 16;
 
@@ -66,7 +67,7 @@ static void hash_bucket_append(Hash_bucket* b, Obj r) {
     }
     b->els = raw_realloc(b->els, b->cap * size_Obj, ci_Hash_bucket);
 #if OPT_CLEAR_ELS
-    memset(b->els + b->len, 0, (b->cap - b->len) * size_Obj);
+    ptr_zero(b->els + b->len, (b->cap - b->len) * size_Obj);
 #endif
   }
   b->els[b->len++] = r;
@@ -77,7 +78,7 @@ static void hash_bucket_remove(Hash_bucket* b, Obj r) {
   assert_hash_bucket_is_valid(b);
   for_in(i, b->len) {
     if (b->els[i].p == r.p) {
-      b->els[i] = b->els[b->len - 1]; // replace r with the last element.
+      b->els[i] = b->els[b->len - 1]; // replace r with the last element. no-op if len == 1.
       b->len--;
       return;
     }
@@ -124,23 +125,27 @@ static void set_insert(Set* s, Obj r) {
   if (s->len == 0) {
     s->len = 1;
     s->len_buckets = min_set_len_buckets;
-    s->buckets = raw_alloc(s->len_buckets * size_Hash_bucket, ci_Set);
+    Int size = s->len_buckets * size_Hash_bucket;
+    s->buckets = raw_alloc(size, ci_Set);
+    ptr_zero(s->buckets, size);
   }
   else if (s->len + 1 == s->len_buckets) { // load factor == 1.0.
     // TODO: assess resize criteria.
     Int len_buckets = s->len_buckets * 2;
+    Int size = len_buckets * size_Hash_bucket;
     Set t = {
       .len = s->len + 1,
       .len_buckets = len_buckets,
-      .buckets = raw_alloc(len_buckets * size_Hash_bucket, ci_Set),
+      .buckets = raw_alloc(size, ci_Set),
     };
+    ptr_zero(t.buckets, size);
     // copy existing elements.
     for_in(i, s->len_buckets) {
-      Hash_bucket b_old = s->buckets[i];
-      for_in(j, b_old.len) {
-        Obj el = b_old.els[j];
-        Hash_bucket* b = set_bucket(&t, el);
-        hash_bucket_append(b, el);
+      Hash_bucket src = s->buckets[i];
+      for_in(j, src.len) {
+        Obj el = src.els[j];
+        Hash_bucket* dst = set_bucket(&t, el);
+        hash_bucket_append(dst, el);
       }
     }
     // replace set.
@@ -149,7 +154,9 @@ static void set_insert(Set* s, Obj r) {
     set_dealloc(s);
     *s = t;
   }
-  else assert(s->len < s->len_buckets);
+  else {
+    assert(s->len < s->len_buckets);
+  }
   Hash_bucket* b = set_bucket(s, r);
   hash_bucket_append(b, r);
 }

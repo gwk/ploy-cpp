@@ -4,6 +4,11 @@
 #include "07-ref.h"
 
 
+static void ptr_zero(Ptr p, Int size) {
+  memset(p, 0, size);
+}
+
+
 typedef struct {
   Int len;
   Obj* els;
@@ -106,7 +111,7 @@ static void mem_realloc(Mem* m, Int len) {
   m->els = raw_realloc(m->els, len * size_Obj, ci_Mem);
   // clear any new elements.
   if (OPT_CLEAR_ELS && old_len < len) {
-    memset(m->els + old_len, 0, (len - old_len) * size_Obj);
+    ptr_zero(m->els + old_len, (len - old_len) * size_Obj);
   }
 }
 
