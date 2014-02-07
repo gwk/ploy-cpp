@@ -113,3 +113,33 @@ static Obj env_frame_bind_args(Obj env, Obj func, Int len_pars, Obj* pars, Int l
 }
 
 
+static void dbg_env(Obj env) {
+  assert(ref_is_vec(env));
+  err("env ");
+  rc_err(env.rc);
+  errL(":");
+  while (env.u != END.u) {
+    Bool first = true;
+    assert(vec_len(env) == 2);
+    Obj frame = chain_hd(env);
+    if (frame.u != CHAIN0.u) {
+      while (frame.u != END.u) {
+        err(first ? "| " : "  ");
+        first = false;
+        assert(vec_len(frame) == 3);
+        Obj key = vec_a(frame);
+        Obj val = vec_b(frame);
+        obj_err(key);
+        err(" : ");
+        obj_errL(val);
+        frame = chain_tl(frame);
+      }
+    }
+    else {
+      errL("|");
+    }
+    env = chain_tl(env);
+  }
+}
+
+
