@@ -86,6 +86,7 @@ static Obj run_FN(Obj env, Int len, Obj* args) {
   check_obj(obj_is_sym(name),  "FN: name is not a Sym", name);
   check_obj(obj_is_bool(is_macro), "FN: is-macro is not a Bool", is_macro);
   check_obj(obj_is_vec(pars), "FN: parameters is not a Vec", pars);
+  // TODO: check all pars.
   Obj f = new_vec_raw(5);
   Obj* els = vec_els(f);
   els[0] = obj_ret_val(name);
@@ -148,14 +149,16 @@ static Obj run_call_host(Obj env, Obj func, Int len, Obj* args) {
 }
 
 
-static Obj run_call(Obj env, Obj callee, Int len, Obj* args) {
+static Obj run_CALL(Obj env, Int len, Obj* args) {
+  check(len > 0, "call is empty");
+  Obj callee = args[0];
   Obj func = run(env, callee);
   Tag ot = obj_tag(func);
   check_obj(ot == ot_ref, "object is not callable", func);
   Tag st = ref_struct_tag(func);
   switch (st) {
-    case st_Vec:        return run_call_native(env, func, len, args, false);
-    case st_Func_host:  return run_call_host(env, func, len, args);
+    case st_Vec:        return run_call_native(env, func, len - 1, args + 1, false);
+    case st_Func_host:  return run_call_host(env, func, len - 1, args + 1);
     default: error_obj("object is not callable", func);
   }
 }
@@ -179,10 +182,11 @@ static Obj run_Vec(Obj env, Obj code) {
       EVAL_FORM(LET);
       EVAL_FORM(IF);
       EVAL_FORM(FN);
+      EVAL_FORM(CALL);
     }
 #undef EVAL_FORM
   }
-  return run_call(env, form, len_args, args);
+  error_obj("cannot call Vec object", code);
 }
 
 

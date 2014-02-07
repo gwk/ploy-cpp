@@ -301,11 +301,21 @@ if (p->e || !parse_terminator(p, t)) { \
 }
 
 
+static Obj parse_struct(Parser* p) {
+  P_ADV1;
+  Mem m = parse_seq(p, 0);
+  P_ADV_TERM('}');
+  Obj v = new_vec_M(m);
+  mem_dealloc(m);
+  return v;
+}
+
+
 static Obj parse_call(Parser* p) {
   P_ADV1;
   Mem m = parse_seq(p, 0);
   P_ADV_TERM(')');
-  Obj v = new_vec_M(m);
+  Obj v = new_vec_EM(obj_ret_val(CALL), m);
   mem_dealloc(m);
   return v;
 }
@@ -328,7 +338,7 @@ static Obj parse_vec(Parser* p) {
   if (!m.len) {
     return obj_ret_val(VEC0);
   }
-  Obj v = new_vec_EM(obj_ret_val(Vec), m);
+  Obj v = new_vec_EEM(obj_ret_val(CALL), obj_ret_val(Vec), m);
   mem_dealloc(m);
   return v;
 }
@@ -436,10 +446,10 @@ static Obj parse_par(Parser* p, Obj sym, BC par_desc) {
 static Obj parse_expr_sub(Parser* p) {
   Char c = PC;
   switch (c) {
+    case '{':   return parse_struct(p);
     case '(':   return parse_call(p);
     case '<':   return parse_expa(p);
     case '[':   return parse_vec(p);
-    case '{':   return parse_chain(p);
     case '`':   return parse_qua(p);
     case '\'':  return parse_data(p, '\'');
     case '"':   return parse_data(p, '"');

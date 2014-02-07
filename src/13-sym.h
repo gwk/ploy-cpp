@@ -64,7 +64,7 @@ static Obj new_sym_from_BC(BC b) {
 // ILLEGAL is a special value for returning during error conditions; completely prohibited in ploy code.
 // syms with index lower than VOID are self-evaluating; syms after VOID are looked up.
 // VOID cannot be evaluated, but is a legal return value (which must be ignored).
-// the special forms are COMMENT...FN.
+// the special forms are COMMENT...CALL.
 // the following "X Macro" is expanded with various temporary definitions of SYM.
 #define SYM_LIST \
 SYM(ILLEGAL) \
@@ -86,6 +86,7 @@ SYM(SCOPE) \
 SYM(LET) \
 SYM(IF) \
 SYM(FN) \
+SYM(CALL) \
 SYM(VOID) \
 SYM(Vec) \
 
