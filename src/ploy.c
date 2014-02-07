@@ -99,7 +99,9 @@ int main(int argc, BC argv[]) {
   obj_rel(env);
   mem_release_dealloc(global_sym_names.mem);
   mem_release_dealloc(sources.mem);
-  counter_stats(vol_err);
+  if (vol_err) {
+    counter_stats(vol_err);
+  }
 #endif
   
   return 0;

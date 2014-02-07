@@ -35,7 +35,7 @@ static Obj expr_quasiquote(Obj o) {
       Obj e = src[i];
       if (obj_is_vec(e) && vec_el(e, 0).u == UNQ.u) { // unquote form
         check_obj(vec_len(e) == 2, "malformed UNQ form", e);
-        dst[2 + i] = obj_ret(vec_el(e, 1));
+        dst[2 + i] = obj_ret(vec_el(e, 1)); // TODO: expand?
       }
       else {
         dst[2 + i] = expr_quasiquote(obj_ret(e));
@@ -50,7 +50,7 @@ static Obj expr_quasiquote(Obj o) {
 }
 
 
-static Obj run_call_native(Obj env, Obj func, Int len, Obj* args, Bool is_expand);
+static Obj run_call_native(Obj env, Obj func, Int len, Obj* args, Bool is_expand); // owns func.
 
 static Obj expand_macro(Obj env, Int len, Obj* args) {
   check(len > 0, "empty macro expand");
@@ -60,7 +60,7 @@ static Obj expand_macro(Obj env, Int len, Obj* args) {
   if (macro.u == ILLEGAL.u) { // lookup failed.
     error_obj("macro lookup error", macro_sym);
   }
-  return run_call_native(env, macro, len - 1, args + 1, true);
+  return run_call_native(env, obj_ret(macro), len - 1, args + 1, true);
 }
 
 

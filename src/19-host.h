@@ -119,6 +119,24 @@ static Obj host_slice(Int len_pars, Obj* args) {
 }
 
 
+static Obj host_prepend(Int len_pars, Obj* args) {
+  // owns elements of args.
+  assert(len_pars == 2);
+  Obj vec = args[0];
+  Obj el = args[1];
+  check_obj(obj_is_vec(vec), "prepend expected arg 1 Vec; found", vec);
+  Int len = vec_len(vec);
+  Obj res = new_vec_raw(len + 1);
+  Obj* els = vec_els(res);
+  for_in(i, len) {
+    els[i] = obj_ret(vec_el(vec, i));
+  }
+  els[len] = el;
+  obj_rel(vec);
+  return res;
+}
+
+
 static Obj host_neg(Int len_pars, Obj* args) {
   // owns elements of args.
   assert(len_pars == 1);
@@ -250,6 +268,7 @@ frame = env_frame_bind(frame, sym, val);
   DEF_FH(1, len)
   DEF_FH(2, el)
   DEF_FH(3, slice)
+  DEF_FH(2, prepend)
   DEF_FH(1, neg)
   DEF_FH(1, abs)
   DEF_FH(2, add)

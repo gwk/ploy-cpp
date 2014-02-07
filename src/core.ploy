@@ -2,20 +2,46 @@
 # Permission to use this file is granted in ploy/license.txt.
 
 
-# define the 'macro' macro.
-# this definition uses the raw vec syntax ^[...] to build syntax vectors directly.
-# the definition is equivalent to:
+# temporary
+{LET errRL
+  {FN
+    errRL
+    FALSE
+    {-obj}
+    {DO
+      (raw_write_repr (el std-err 1) obj)
+      (raw_write (el std-err 1) '\n')}}}
 
-##<macro macro (-sym -pars &body)
-  (sym TRUE pars body {})>
 
-(LET macro
-  (QUO 
-    ( macro
+# define the 'macro' macro, using the struct syntax {...} to construct special form code vectors directly.
+# if 'macro' were already available, we would define it using itself like so:
+##<macro macro {-sym -pars &body}
+  [LET sym
+    [ FN
+      sym
       TRUE
-      (-sym -pars &body)
-      (sym TRUE pars body CHAIN0)
-      CHAIN0)))
+      pars
+      <if (eq (len body) 1)
+        (el body 0)
+        (prepend DO body)>]]>
 
-<macro quo (expr) [QUO expr]>
+{LET macro
+  {FN
+    macro
+    TRUE
+    {-sym -pars &body}
+    [LET sym
+      [FN
+        sym
+        TRUE
+        pars
+        {IF (eq (len body) 1)
+          (el body 0)
+          (prepend DO body)}]]}}
 
+
+# define macros to wrap the special forms.
+
+<macro quo {-expr} [QUO expr]>
+<macro qua {-expr} [QUA expr]> # equivalent to `expr syntax
+<macro unq {-expr} [UNQ expr]> # equivalent to ,expr syntax

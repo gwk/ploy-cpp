@@ -414,6 +414,15 @@ static Obj parse_qua(Parser* p) {
 }
 
 
+static Obj parse_unq(Parser* p) {
+  assert(PC == ',');
+  P_ADV1;
+  Obj o = parse_expr(p);
+  return new_vec2(obj_ret_val(UNQ), o);
+}
+
+
+
 static Obj parse_par(Parser* p, Obj sym, BC par_desc) {
   P_ADV1;
   Src_pos sp_open = p->sp; // for error reporting.
@@ -451,6 +460,7 @@ static Obj parse_expr_sub(Parser* p) {
     case '<':   return parse_expa(p);
     case '[':   return parse_vec(p);
     case '`':   return parse_qua(p);
+    case ',':   return parse_unq(p);
     case '\'':  return parse_data(p, '\'');
     case '"':   return parse_data(p, '"');
     case '#':   return parse_comment(p);
