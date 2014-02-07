@@ -366,10 +366,16 @@ static void obj_release_weak(Obj o) {
 }
 
 
+static Int vec_len(Obj v);
+static Obj* vec_els(Obj v);
+
 static Bool obj_is_quotable(Obj o) {
   // indicates whether an object can be correctly represented inside of a quoted vec.
-  // objects whose representation must be evaluated return false.
-  // does this make sense?
+  // objects whose representation would require explicit quoting to be correct return false,
+  // e.g. (File "~/todo.txt")
+  // note: the File example feels somewhat contrived, because evaluating that call is questionable
+  // (creating new file handle is not desirable, does not recreate the original due to process state).
+  // TODO: perhaps non-transparent objects should have an intentionally non-parseable repr?
   if (obj_tag(o)) return true; // all value types are quotable.
   Struct_tag st = ref_struct_tag(o);
   if (st == st_Data) return true; // quotable.
