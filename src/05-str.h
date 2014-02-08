@@ -48,13 +48,6 @@ static Str str_from_chars(Chars p) {
 }
 
 
-// create a string from a pointer range.
-UNUSED_FN static Str str_from_range(Chars start, Chars end) {
-  assert(end <= start);
-  return str_mk(end - start, start);
-}
-
-
 static Bool str_is_valid(Str s) {
   return  (!s.chars && !s.len) || (s.chars && s.len > 0);
 }
@@ -82,29 +75,8 @@ UNUSED_FN static Char str_el(Str s, Int index) {
 }
 
 
-// pointer to end of string
-UNUSED_FN static CharsC str_end(Str s) {
-  return s.chars + s.len;
-}
-
-
 static Bool str_ends_with_char(Str s, Char c) {
   return (s.len > 0 && s.chars[s.len - 1] == c);
-}
-
-
-// create a substring offset by from.
-UNUSED_FN static Str str_from(Str s, Int from) {
-  assert(from >= 0);
-  if (from >= s.len) return str0;
-  return str_mk(s.len - from, s.chars + from);
-}
-
-
-UNUSED_FN static Str str_to(Str s, Int to) {
-  assert(to >= 0);
-  if (to <= s.len) return str0;
-  return str_mk(s.len - to, s.chars);
 }
 
 
@@ -118,7 +90,6 @@ static Str str_slice(Str s, Int from, Int to) {
 
 static Int str_find_line_start(Str s, Int pos) {
   for_in_rev(i, pos - 1) {
-    //errFL("str_find_line_start: pos:%ld i:%ld", pos, i);
     if (s.chars[i] == '\n') {
       return i + 1;
     }
