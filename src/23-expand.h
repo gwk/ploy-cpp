@@ -57,7 +57,7 @@ static Obj expand_macro(Obj env, Int len, Obj* args) {
   Obj macro_sym = args[0];
   check_obj(obj_is_sym(macro_sym), "expand argument 0 must be a Sym; found", macro_sym);
   Obj macro = env_get(env, macro_sym);
-  if (macro.u == ILLEGAL.u) { // lookup failed.
+  if (macro.u == obj0.u) { // lookup failed.
     error_obj("macro lookup error", macro_sym);
   }
   return run_call_native(env, obj_ret(macro), len - 1, args + 1, true);

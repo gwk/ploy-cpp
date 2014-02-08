@@ -14,7 +14,7 @@ static void parse_and_eval(Obj env, Obj path, Obj src, Array* sources, Bool out_
     raw_dealloc(e, ci_Chars);
     obj_rel(path);
     obj_rel(src);
-    obj_rel(code);
+    assert(code.u == obj0.u);
     exit(1);
   }
   else {
@@ -73,12 +73,13 @@ int main(int argc, CharsC argv[]) {
   Obj core_env = env_push(host_env, obj_ret_val(CHAIN0));
   
   Array sources = array0;
+  Obj path, src;
 #if 1
   // run embedded core file.
-  Obj path = new_data_from_BC("<core>");
-  Obj src = new_data_from_BC(core_src);
+  path = new_data_from_BC("<core>");
+  src = new_data_from_BC(core_src);
   parse_and_eval(core_env, path, src, &sources, false);
-  
+#endif
   Obj env = env_push(core_env, obj_ret_val(CHAIN0));
 
   // handle arguments.
@@ -92,7 +93,6 @@ int main(int argc, CharsC argv[]) {
     src = new_data_from_BC(expr);
     parse_and_eval(env, path, src, &sources, out_val);
   }
-#endif
 
 #if OPT_ALLOC_COUNT
   obj_rel(env);

@@ -58,7 +58,7 @@ static Obj parse_error(Parser* p, CharsC fmt, ...) {
   // parser owner must call raw_dealloc on e.
   p->e = ss_src_loc_str(p->src, p->path, p->sp.pos, 0, p->sp.line, p->sp.col, msg);
   free(msg); // matches vasprintf.
-  return ILLEGAL;
+  return obj0;
 }
 
 
@@ -152,7 +152,7 @@ static Obj parse_comment(Parser* p) {
   if (PP1 && PC1 == '#') { // double-hash comments out the following expression.
     P_ADV(2);
     Obj expr = parse_expr(p);
-    if (p->e) return ILLEGAL;
+    if (p->e) return obj0;
     // the QUO prevents macro expansion of the commented code,
     // and also differentiates it from line comments.
     return new_vec2(obj_ret_val(COMMENT), new_vec2(obj_ret_val(QUO), expr));
@@ -285,10 +285,14 @@ static Mem parse_seq(Parser* p, Char term) {
     if (term && PC == term) break;
     Obj o = parse_expr(p);
     if (p->e) {
-      mem_release_dealloc(a.mem);
-      return mem0;
+      assert(o.u == obj0.u);
+      break;
     }
     array_append_move(&a, o);
+  }
+  if (p->e) {
+    mem_release_dealloc(a.mem);
+    return mem0;
   }
   return a.mem;
 }
@@ -297,7 +301,7 @@ static Mem parse_seq(Parser* p, Char term) {
 #define P_ADV_TERM(t) \
 if (p->e || !parse_terminator(p, t)) { \
   mem_release_dealloc(m); \
-  return ILLEGAL; \
+  return obj0; \
 }
 
 
@@ -370,7 +374,7 @@ static Obj parse_chain_blocks(Parser* p) {
     Mem m = parse_seq(p, '|');
     if (p->e) {
       mem_release_dealloc(a.mem);
-      return ILLEGAL;
+      return obj0;
     }
     // NIL will gets replaced by tl below.
     Obj o = new_vec_EEM(obj_ret_val(Vec), obj_ret_val(NIL), m);
@@ -427,7 +431,7 @@ static Obj parse_par(Parser* p, Obj sym, CharsC par_desc) {
   P_ADV1;
   Src_pos sp_open = p->sp; // for error reporting.
   Obj name = parse_expr(p);
-  if (p->e) return ILLEGAL;
+  if (p->e) return obj0;
   if (!obj_is_symbol(name)) {
     obj_rel(name);
     p->sp = sp_open;
@@ -503,16 +507,17 @@ static Obj parse_src(SS path, SS src, CharsM* e) {
   Mem m = parse_seq(&p, 0);
   Obj o;
   if (p.e) {
-    o = ILLEGAL;
+    assert(m.len == 0 && m.els == NULL);
+    o = obj0;
   }
   else if (p.sp.pos != p.src.len) {
-    parse_error(&p, "parsing terminated early");
-    o = ILLEGAL;
+    o = parse_error(&p, "parsing terminated early");
+    mem_release_dealloc(m);
   }
   else {
     o = new_vec_M(m);
+    mem_dealloc(m);
   }
-  mem_dealloc(m);
   *e = cast(CharsM, p.e);
   return o;
 }

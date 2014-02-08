@@ -26,7 +26,7 @@ static Obj env_get(Obj env, Obj sym) {
     }
     env = chain_tl(env);
   }
-  return ILLEGAL; // lookup failed.
+  return obj0; // lookup failed.
 }
 
 

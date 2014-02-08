@@ -10,7 +10,7 @@ static Obj run_sym(Obj env, Obj code) {
   if (code.u < VOID.u) return obj_ret_val(code); // constants are self-evaluating.
   if (code.u == VOID.u) error("cannot run VOID");
   Obj val = env_get(env, code);
-  if (val.u == ILLEGAL.u) { // lookup failed.
+  if (val.u == obj0.u) { // lookup failed.
     error_obj("lookup error", code);
   }
   return obj_ret(val);

@@ -61,7 +61,8 @@ static Obj new_sym_from_BC(CharsC b) {
 #define FMT_SYM(sym) cast(I32, data_len(sym_data(sym))), data_ptr(sym_data(sym))
 
 // notes:
-// ILLEGAL is a special value for returning during error conditions; completely prohibited in ploy code.
+// ILLEGAL is a special value for errors inside of well-formed data structures;
+// in contrast, obj0 is never present inside of valid data structures.
 // syms with index lower than VOID are self-evaluating; syms after VOID are looked up.
 // VOID cannot be evaluated, but is a legal return value (which must be ignored).
 // the special forms are COMMENT...CALL.
@@ -121,7 +122,10 @@ UNUSED_FN static Bool sym_is_form(Obj s) {
 
 
 static Bool sym_is_symbol(Obj s) {
-  // this behavior matches that of run_sym.
+  // returns true if s is a normal symbol; when evaluated, it is looked up in the current env.
+  // otherwise it is either a predefined constant that is self-evaluating,
+  // VOID, which does not evaluate, or ILLEGAL, which should never be present.
+  // see run_sym for details.
   return sym_index(s) > si_VOID;
 }
 

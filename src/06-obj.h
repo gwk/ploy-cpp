@@ -152,6 +152,7 @@ typedef union {
 
 static Int size_Obj = sizeof(Obj);
 
+static const Obj obj0 = (Obj){.p=NULL}; // invalid object.
 
 static void obj_errL(Obj o);
 

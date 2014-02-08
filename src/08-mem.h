@@ -50,52 +50,34 @@ UNUSED_FN static Obj* mem_end(Mem m) {
 
 
 static Obj mem_el_borrowed(Mem m, Int i) {
+  // return element i in m with no ownership changes.
   check_mem_index(m, i);
   return m.els[i];
 }
 
 
 UNUSED_FN static Obj mem_el_ret(Mem m, Int i) {
+  // retain and return element i in m.
   return obj_ret(mem_el_borrowed(m, i));
 }
 
 
-static const Obj ILLEGAL;
-
 static Obj mem_el_move(Mem m, Int i) {
+  // move element at i out of m.
   Obj e = mem_el_borrowed(m, i);
-#if DEBUG
-  m.els[i] = ILLEGAL;
+#if OPT_ALLOC_SCRIBBLE
+  m.els[i] = obj0;
 #endif
   return e;
 }
 
 
 static Int mem_append_move(Mem* m, Obj o) {
+  // move object o into m.
+  // owns o.
   Int i = m->len++;
   m->els[i] = o;
   return i;
-}
-
-
-static void mem_release_els(Mem m) {
-  for_in(i, m.len) {
-    obj_rel(m.els[i]);
-  }
-}
-
-
-static void mem_dealloc(Mem m) {
-#if OPT_ALLOC_SCRIBBLE
-  memset(m.els, 0x55, m.len * size_Obj); // same value as OSX MallocScribble.
-#endif
-  raw_dealloc(m.els, ci_Mem);
-}
-
-
-static void mem_release_dealloc(Mem m) {
-  mem_release_els(m);
-  mem_dealloc(m);
 }
 
 
@@ -116,9 +98,29 @@ static void mem_realloc(Mem* m, Int len) {
 }
 
 
-UNUSED_FN static void mem_resize(Mem* m, Int len) {
-  // realloc and set size.
-  mem_realloc(m, len);
-  m->len = len;
+static void mem_dealloc(Mem m) {
+  // dealloc m but do not release the elements, which must have been previously moved.
+#if OPT_ALLOC_SCRIBBLE
+  for_in(i, m.len) {
+    Obj el = mem_el_borrowed(m, i);
+    assert(el.u == obj0.u);
+  }
+  memset(m.els, 0x55, m.len * size_Obj); // same value as OSX MallocScribble.
+#endif
+  raw_dealloc(m.els, ci_Mem);
 }
+
+
+static void mem_release_dealloc(Mem m) {
+  // release all elements and dealloc m.
+  for_in(i, m.len) {
+    obj_rel(m.els[i]);
+#if OPT_ALLOC_SCRIBBLE
+    m.els[i] = obj0;
+#endif
+  }
+  mem_dealloc(m);
+}
+
+
 
