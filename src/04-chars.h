@@ -24,13 +24,13 @@ typedef union {
 } Chars;
 
 
-static Bool bc_eq(CharsC a, CharsC b) {
+static Bool charsC_eq(CharsC a, CharsC b) {
   return strcmp(a, b) == 0;
 }
 
 
 // get the base name of the path argument.
-static CharsC path_base(CharsC path) {
+static CharsC charsC_path_pase(CharsC path) {
   Int offset = 0;
   Int i = 0;
   loop {
@@ -47,11 +47,11 @@ static CharsC process_name;
 
 // call in main to set process_name.
 static void set_process_name(CharsC arg0) {
-  process_name = path_base(arg0);
+  process_name = charsC_path_pase(arg0);
 }
 
 
-// stdio utilities.
+// stderr utilities.
 
 static void err(CharsC s) { fputs(s, stderr); }
 static void err_nl() { err("\n"); }

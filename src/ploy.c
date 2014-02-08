@@ -51,15 +51,15 @@ int main(int argc, CharsC argv[]) {
   Bool out_val = false;
   for_imn(i, 1, argc) {
     CharsC arg = argv[i];
-    if (bc_eq(arg, "-v")) {
+    if (charsC_eq(arg, "-v")) {
       vol_err = 1;
     }
-    else if (bc_eq(arg, "-e") || bc_eq(arg, "-E")) {
+    else if (charsC_eq(arg, "-e") || charsC_eq(arg, "-E")) {
       check(!expr, "multiple expression arguments");
       i++;
       check(i < argc, "missing expression argument");
       expr = argv[i];
-      out_val = bc_eq(arg, "-e");
+      out_val = charsC_eq(arg, "-e");
     }
     else {
       check(path_count < len_buffer, "exceeded max paths: %d", len_buffer);
