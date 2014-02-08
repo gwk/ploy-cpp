@@ -55,9 +55,9 @@ static Obj parse_error(Parser* p, CharsC fmt, ...) {
   Int msg_len = vasprintf(&msg, fmt, args);
   va_end(args);
   check(msg_len >= 0, "parse_error allocation failed: %s", fmt);
-  // e must be freed by parser owner.
+  // parser owner must call raw_dealloc on e.
   p->e = ss_src_loc_str(p->src, p->path, p->sp.pos, 0, p->sp.line, p->sp.col, msg);
-  free(msg);
+  free(msg); // matches vasprintf.
   return ILLEGAL;
 }
 
@@ -183,7 +183,7 @@ static Obj parse_comment(Parser* p) {
 static Obj parse_data(Parser* p, Char q) {
   assert(PC == q);
   Src_pos sp_open = p->sp; // for error reporting.
-  SS s = ss_alloc(16); // could declare as static to reduce reallocs.
+  SS s = ss_alloc(16);
   Int i = 0;
 
 #define APPEND(c) { \
@@ -279,7 +279,7 @@ static Bool parser_has_next_expr(Parser* p) {
 
 
 static Mem parse_seq(Parser* p, Char term) {
-  // caller must free return Mem.
+  // caller must call mem_release_dealloc or mem_dealloc on returned Mem.
   Array a = array0;
   while (parser_has_next_expr(p)) {
     if (term && PC == term) break;

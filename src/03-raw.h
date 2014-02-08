@@ -2,8 +2,8 @@
 // Permission to use this file is granted in ploy/license.txt.
 
 // heap allocation functions.
-// no other code should call calloc/malloc/realloc/free,
-// for the sake of accurate counting.
+// for the sake of accurate counting, no other code should call calloc/malloc/realloc;
+// the only legitimate uses of free are to match local asprintf and vasprintf.
 
 #include "02-counters.h"
 

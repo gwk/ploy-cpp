@@ -13,10 +13,12 @@ typedef struct {
   Func_host_ptr ptr;
 } ALIGNED_TO_WORD Func_host;
 
+static const Int size_Func_host = sizeof(Func_host);
+
 
 static Obj new_func_host(Obj sym, Int len_pars, Func_host_ptr ptr) {
   assert(obj_is_sym(sym));
-  Obj o = ref_alloc(st_Func_host, size_RC + sizeof(Func_host));
+  Obj o = ref_alloc(st_Func_host, size_RC + size_Func_host);
   Func_host* f = ref_body(o);
   f->sym = sym;
   f->len_pars = len_pars;

@@ -56,20 +56,20 @@ static Chars ref_data_ptr(Obj d) {
 }
 
 
-static Obj ref_alloc(Struct_tag st, Int width) {
-  assert(width > 0);
-  Obj r = (Obj){.p=malloc(cast(Uns, width))};
-  assert(!obj_tag(r)); // check that malloc is really aligned to the width of the tag.
+static Obj ref_alloc(Struct_tag st, Int size) {
+  assert(size >= size_Word * 2);
+#if OPT_ALLOC_COUNT
+  Counter_index ci = st_counter_index(st);
+  Counter_index ci_alloc = ci + 1; // this math relies on the layout of COUNTER_LIST.
+  counter_inc(ci); // ret/rel counter.
+#endif
+  Obj r = (Obj){.p=raw_alloc(size, ci_alloc)}; // alloc counter also incremented.
+  assert(!obj_tag(r)); // check that alloc is really aligned to allow tagging.
   r.rc->st = st;
   r.rc->wc = 0;
   r.rc->mt = 0;
   r.rc->sc = 1;
   rc_errMLV("alloc     ", r.rc);
-#if OPT_ALLOC_COUNT
-  Counter_index ci = obj_counter_index(r);
-  counter_inc(ci); // ret counter.
-  counter_inc(ci + 1); // alloc counter.
-#endif
   return r;
 }
 
@@ -95,12 +95,13 @@ static void ref_dealloc(Obj r) {
   assert(r.rc->sc == 1);
   r.rc->sc = 0;
 #endif
+  // ret/rel counter has already been decremented by obj_rel.
 #if !OPT_DEALLOC_PRESERVE
-  free(r.p);
-#endif
-#if OPT_ALLOC_COUNT
-  Counter_index ci = obj_counter_index(r);
-  counter_dec(ci + 1); // alloc counter.
+  Counter_index ci_alloc = st_counter_index(st) + 1; // math relies on layout of COUNTER_LIST.
+  raw_dealloc(r.p, ci_alloc);
+#elif OPT_ALLOC_COUNT
+  Counter_index ci_alloc = st_counter_index(st) + 1; // math relies on layout of COUNTER_LIST.
+  counter_dec(ci_alloc);
 #endif
 }
 

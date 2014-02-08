@@ -86,11 +86,10 @@ static void mem_release_els(Mem m) {
 
 
 static void mem_dealloc(Mem m) {
-  if (m.els) counter_dec(ci_Mem);
 #if OPT_ALLOC_SCRIBBLE
   memset(m.els, 0x55, m.len * size_Obj); // same value as OSX MallocScribble.
 #endif
-  free(m.els);
+  raw_dealloc(m.els, ci_Mem);
 }
 
 

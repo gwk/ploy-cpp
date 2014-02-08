@@ -118,7 +118,7 @@ typedef struct {
 typedef struct {
   RC rc;
   Int len;
-} RCL;
+} RCL; // Ref-counts, length.
 
 static const Int size_RC  = sizeof(RC);
 static const Int size_RCL = sizeof(RCL);
@@ -270,6 +270,12 @@ static Bool obj_is_par(Obj o) {
 }
 
 
+static Counter_index st_counter_index(Struct_tag st) {
+  // note: this math relies on the layout of both COUNTER_LIST and Struct_tag.
+  return ci_Data + (st * 2);
+}
+
+
 static Struct_tag ref_struct_tag(Obj r);
 
 static Counter_index obj_counter_index(Obj o) {
@@ -281,8 +287,7 @@ static Counter_index obj_counter_index(Obj o) {
     case ot_data: return ci_Data_word;
     case ot_ref: break;
   }
-  Struct_tag st = ref_struct_tag(o);
-  return ci_Data + (st * 2);
+  return st_counter_index(ref_struct_tag(o));
 }
 
 

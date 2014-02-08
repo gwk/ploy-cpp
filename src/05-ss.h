@@ -44,13 +44,13 @@ static SS ss_alloc(Int len) {
 
 
 static void ss_realloc(SS* s, Int len) {
-  s->chars.m = realloc(s->chars.m, cast(Uns, len));
+  s->chars.m = raw_realloc(s->chars.m, len, ci_Str);
   s->len = len;
 }
 
 
-// return B must be freed.
 static Chars ss_copy_to_B(SS ss) {
+  // caller is responsible for raw_dealloc of return value.
   Chars b = (Chars){.m=raw_alloc(ss.len + 1, ci_Chars)};
   b.m[ss.len] = 0;
   memcpy(b.m, ss.chars.c, ss.len);
@@ -164,10 +164,10 @@ static SS ss_line_at_pos(SS s, Int pos) {
 }
 
 
-// return BC must be freed.
 static CharsM ss_src_loc_str(SS src, SS path, Int pos, Int len, Int line_num, Int col,
                              CharsC msg) {
   // get source line.
+  // caller is responsible for raw_dealloc of return CharsM.
   SS line = ss_line_at_pos(src, pos);
   CharsC nl = ss_ends_with_char(line, '\n') ? "" : "\n";
   // create underline.
@@ -182,11 +182,12 @@ static CharsM ss_src_loc_str(SS src, SS path, Int pos, Int len, Int line_num, In
     }
   }
   // create result.
-  Chars l = ss_copy_to_B(line); // must be freed.
+  Chars l = ss_copy_to_B(line);
   CharsM s;
   Int s_len = asprintf(&s,
     "%s:%ld:%ld: %s\n%s%s%s\n",
     path.chars.c, line_num + 1, col + 1, msg, l.c, nl, under);
+  counter_inc(ci_Chars); // matches asprinf.
   raw_dealloc(l.m, ci_Chars);
   check(s_len > 0, "ss_src_loc_str allocation failed: %s", msg);
   return s;

@@ -11,7 +11,7 @@ static void parse_and_eval(Obj env, Obj path, Obj src, Array* sources, Bool out_
   if (e) {
     err("parse error: ");
     errL(e);
-    free(e);
+    raw_dealloc(e, ci_Chars);
     obj_rel(path);
     obj_rel(src);
     obj_rel(code);
