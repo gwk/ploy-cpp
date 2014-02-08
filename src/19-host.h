@@ -19,7 +19,7 @@ static Obj host_raw_write(Int len_pars, Obj* args) {
   check_obj(ref_is_file(f), "write expected arg 1 File; found", f);
   check_obj(ref_is_data(d), "write expected arg 2 Data; found", d);
   CFile file = file_file(f);
-  Int i = cast(Int, fwrite(data_ptr(d).c, size_Char, cast(Uns, data_len(d)), file));
+  Int i = cast(Int, fwrite(data_ptr(d), size_Char, cast(Uns, data_len(d)), file));
   obj_rel(f);
   obj_rel(d);
   return new_int(i);
@@ -257,7 +257,7 @@ static Obj host_init() {
   Obj sym, val;
 
 #define DEF_FH(len_pars, n) \
-sym = new_sym_from_BC(#n); \
+sym = new_sym_from_chars(cast(Chars, #n)); \
 val = new_func_host(sym, len_pars, host_##n); \
 frame = env_frame_bind(frame, sym, val);
 
@@ -291,8 +291,9 @@ frame = env_frame_bind(frame, sym, val);
 #undef DEF_FH
 
 #define DEF_FILE(f, string, is_readable, is_writable) \
-sym = new_sym_from_BC(string); \
-val = new_vec2(new_data_from_BC("<" string ">"), new_file(f, is_readable, is_writable)); \
+sym = new_sym_from_chars(cast(Chars, string)); \
+val = new_vec2(new_data_from_chars(cast(Chars, "<" string ">")), \
+new_file(f, is_readable, is_writable)); \
 frame = env_frame_bind(frame, sym, val);
   
   DEF_FILE(stdin, "std-in", true, false)

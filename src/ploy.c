@@ -6,8 +6,8 @@
 
 static void parse_and_eval(Obj env, Obj path, Obj src, Array* sources, Bool out_val) {
   // owns path, src.
-  CharsM e = NULL;
-  Obj code = parse_src(data_Str(path), data_Str(src), &e);
+  Chars e = NULL;
+  Obj code = parse_src(data_str(path), data_str(src), &e);
   if (e) {
     err("parse error: ");
     errL(e);
@@ -51,15 +51,15 @@ int main(int argc, CharsC argv[]) {
   Bool out_val = false;
   for_imn(i, 1, argc) {
     CharsC arg = argv[i];
-    if (charsC_eq(arg, "-v")) {
+    if (chars_eq(arg, "-v")) {
       vol_err = 1;
     }
-    else if (charsC_eq(arg, "-e") || charsC_eq(arg, "-E")) {
+    else if (chars_eq(arg, "-e") || chars_eq(arg, "-E")) {
       check(!expr, "multiple expression arguments");
       i++;
       check(i < argc, "missing expression argument");
       expr = argv[i];
-      out_val = charsC_eq(arg, "-e");
+      out_val = chars_eq(arg, "-e");
     }
     else {
       check(path_count < len_buffer, "exceeded max paths: %d", len_buffer);
@@ -75,21 +75,21 @@ int main(int argc, CharsC argv[]) {
   Obj path, src;
 #if 1
   // run embedded core file.
-  path = new_data_from_BC("<core>");
-  src = new_data_from_BC(core_src);
+  path = new_data_from_chars(cast(Chars, "<core>"));
+  src = new_data_from_chars(cast(Chars, core_src)); // breaks const correctness?
   parse_and_eval(core_env, path, src, &sources, false);
 #endif
   Obj env = env_push(core_env, obj_ret_val(CHAIN0));
 
   // handle arguments.
   for_in(i, path_count) {
-    path = new_data_from_BC(paths[i]);
+    path = new_data_from_chars(cast(Chars, paths[i])); // breaks const correctness?
     src = new_data_from_path(paths[i]);
     parse_and_eval(env, path, src, &sources, false);
   }
   if (expr) {
-    path = new_data_from_BC("<cmd>");
-    src = new_data_from_BC(expr);
+    path = new_data_from_chars(cast(Chars, "<cmd>"));
+    src = new_data_from_chars(cast(Chars, expr)); // breaks const correctness?
     parse_and_eval(env, path, src, &sources, out_val);
   }
 

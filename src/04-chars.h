@@ -1,30 +1,23 @@
 // Copyright 2013 George King.
 // Permission to use this file is granted in ploy/license.txt.
 
-// null-terminated c string types; CFile type.
+// null-terminated c string and file types.
+// in general we ignore const correctness, casting const strings to Chars immediately.
 
 #include "03-raw.h"
 
 
-typedef Char* CharsM; // Chars-mutable.
+typedef Char* Chars;
 typedef const Char* CharsC; // Chars-constant.
 
 // currently unused.
-typedef wchar_t* Utf32M;
+typedef wchar_t* Utf32;
 typedef const wchar_t* Utf32C;
 
 typedef FILE* CFile; // 'File' refers to the ploy type.
 
 
-// rather than cast between const and mutable bytes, use this union type.
-// this reduces the risk of casts that violate the c strict aliasing semantics.
-typedef union {
-  CharsC c;
-  CharsM m;
-} Chars;
-
-
-static Bool charsC_eq(CharsC a, CharsC b) {
+static Bool chars_eq(CharsC a, CharsC b) {
   return strcmp(a, b) == 0;
 }
 

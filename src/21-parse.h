@@ -15,7 +15,7 @@ typedef struct {
   Str  src;  // input string.
   Str  path; // input path for error reporting.
   Src_pos sp;
-  CharsM e; // error message.
+  Chars e; // error message.
 } Parser;
 
 
@@ -51,7 +51,7 @@ static Obj parse_error(Parser* p, CharsC fmt, ...) {
   assert(!p->e);
   va_list args;
   va_start(args, fmt);
-  CharsM msg;
+  Chars msg;
   Int msg_len = vasprintf(&msg, fmt, args);
   va_end(args);
   check(msg_len >= 0, "parse_error allocation failed: %s", fmt);
@@ -68,11 +68,9 @@ if (!(condition)) return parse_error(p, fmt, ##__VA_ARGS__)
 
 #define PP  (p->sp.pos < p->src.len)
 #define PP1 (p->sp.pos < p->src.len - 1)
-//#define PP2 (p->sp.pos < p->src.len - 2)
 
-#define PC  p->src.chars.c[p->sp.pos]
-#define PC1 p->src.chars.c[p->sp.pos + 1]
-//#define PC2 p->src.chars.c[p->sp.pos + 2]
+#define PC  p->src.chars[p->sp.pos]
+#define PC1 p->src.chars[p->sp.pos + 1]
 
 #define P_ADV(n) { p->sp.pos += n; p->sp.col += n; }
 #define P_ADV1 P_ADV(1)
@@ -97,8 +95,8 @@ static U64 parse_U64(Parser* p) {
       base = 10;
     }
   }
-  CharsC start = p->src.chars.c + p->sp.pos;
-  CharsM end;
+  Chars start = p->src.chars + p->sp.pos;
+  Chars end;
   U64 u = strtoull(start, &end, base);
   int en = errno;
   if (en) {
@@ -175,7 +173,7 @@ static Obj parse_comment(Parser* p) {
     }
   }  while (PC != '\n');
   Str s = str_slice(p->src, pos_start, p->sp.pos);
-  Obj d = new_data_from_Str(s);
+  Obj d = new_data_from_str(s);
   return new_vec2(obj_ret_val(COMMENT), d);
 }
 
@@ -189,7 +187,7 @@ static Obj parse_data(Parser* p, Char q) {
 #define APPEND(c) { \
   if (i == s.len) str_realloc(&s, round_up_to_power_2(s.len + (size_min_alloc - 1))); \
   assert(i < s.len); \
-  s.chars.m[i++] = c; \
+  s.chars[i++] = c; \
 }
 
   Bool escape = false;
@@ -230,7 +228,7 @@ static Obj parse_data(Parser* p, Char q) {
   }
   #undef APPEND
   P_ADV1; // past closing quote.
-  Obj d = new_data_from_Str(str_mk(i, s.chars));
+  Obj d = new_data_from_str(str_mk(i, s.chars));
   str_dealloc(s);
   return d;
 }
@@ -496,7 +494,7 @@ static Obj parse_expr(Parser* p) {
 }
 
 
-static Obj parse_src(Str path, Str src, CharsM* e) {
+static Obj parse_src(Str path, Str src, Chars* e) {
   // caller must free e.
   Parser p = (Parser) {
     .path=path,

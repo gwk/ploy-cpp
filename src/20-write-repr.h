@@ -6,14 +6,14 @@
 
 static void write_data(CFile f, Obj d) {
   assert(ref_is_data(d));
-  CharsC p = data_ptr(d).c;
+  Chars p = data_ptr(d);
   fwrite(p, 1, cast(Uns, data_len(d)), f);
 }
 
 
 static void write_repr_data(CFile f, Obj d) {
   assert(ref_is_data(d));
-  CharsC p = data_ptr(d).c;
+  Chars p = data_ptr(d);
   fputc('\'', f);
   for_in(i, data_len(d)) {
     Char c = p[i];

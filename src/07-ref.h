@@ -52,7 +52,7 @@ UNUSED_FN static Int ref_data_len(Obj r) {
 
 static Chars ref_data_ptr(Obj d) {
   assert(ref_is_data(d));
-  return (Chars){.m = cast(CharsM, d.rcl + 1)}; // address past rcl.
+  return cast(Chars, d.rcl + 1); // address past rcl.
 }
 
 

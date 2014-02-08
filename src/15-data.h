@@ -26,12 +26,12 @@ static Int data_len(Obj d) {
 
 
 static Chars data_ptr(Obj d) {
-  if (d.u == blank.u) return (Chars){.c=NULL}; // TODO: supoprt all data-word values.
+  if (d.u == blank.u) return NULL; // TODO: support all data-word values.
   return ref_data_ptr(d);
 }
 
 
-static Str data_Str(Obj d) {
+static Str data_str(Obj d) {
   return str_mk(data_len(d), data_ptr(d));
 }
 
@@ -43,16 +43,16 @@ static Obj data_empty(Int len) {
 }
 
 
-static Obj new_data_from_Str(Str s) {
+static Obj new_data_from_str(Str s) {
   if (!s.len) return obj_ret_val(blank);
   Obj d = data_empty(s.len);
-  memcpy(data_ptr(d).m, s.chars.c, s.len);
+  memcpy(data_ptr(d), s.chars, s.len);
   return d;
 }
 
 
-static Obj new_data_from_BC(CharsC bc) {
-  return new_data_from_Str(str_from_BC(bc));
+static Obj new_data_from_chars(Chars c) {
+  return new_data_from_str(str_from_chars(c));
 }
 
 
@@ -64,8 +64,9 @@ static Obj new_data_from_path(CharsC path) {
   if (!len) return obj_ret_val(blank);
   Obj d = data_empty(len);
   fseek(f, 0, SEEK_SET);
-  Uns items_read = fread(data_ptr(d).m, size_Char, cast(Uns, len), f);
-  check(cast(Int, items_read) == len, "read failed; expected len: %ld; actual bytes: %lu", len, items_read);
+  Uns items_read = fread(data_ptr(d), size_Char, cast(Uns, len), f);
+  check(cast(Int, items_read) == len,
+        "read failed; expected len: %ld; actual bytes: %lu", len, items_read);
   fclose(f);
   return d;
 }
