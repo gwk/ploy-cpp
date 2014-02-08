@@ -46,7 +46,7 @@ static const Uns data_word_bit = (1 << width_obj_tag);
 UNUSED_VAR(data_word_bit)
 
 // to facilitate direct lookup we duplicate Flt across all possible bit patterns.
-static BC obj_tag_names[] = {
+static CharsC obj_tag_names[] = {
   "Ref",
   "Flt",
   "Int",
@@ -84,7 +84,7 @@ typedef enum {
   st_Reserved_F,
 } Struct_tag;
 
-static BC struct_tag_names[] = {
+static CharsC struct_tag_names[] = {
   "Data",
   "Vec",
   "I32",
@@ -128,7 +128,8 @@ static void rc_err(RC* rc) {
        rc, struct_tag_names[rc->st], rc->wc, rc->mt, rc->sc);
 }
 
-static void rc_errML(BC msg, RC* rc) {
+// TODO: remove?
+UNUSED_FN static void rc_errML(CharsC msg, RC* rc) {
   errF("%s %p {st:%s w:%lx mt:%x s:%lx}\n",
        msg, rc, struct_tag_names[rc->st], rc->wc, rc->mt, rc->sc);
 }
@@ -154,7 +155,7 @@ static Int size_Obj = sizeof(Obj);
 
 static void obj_errL(Obj o);
 
-static NORETURN error_obj(BC msg, Obj o) {
+static NORETURN error_obj(CharsC msg, Obj o) {
   errF("%s error: %s: ", (process_name ? process_name : __FILE__), msg);
   obj_errL(o);
   exit(1);
@@ -191,7 +192,7 @@ static Bool obj_is_int(Obj o) {
 }
 
 
-static Bool obj_is_num(Obj o) {
+UNUSED_FN static Bool obj_is_num(Obj o) {
   return obj_is_flt(o) || obj_is_int(o);
 }
 
@@ -232,7 +233,7 @@ static Bool obj_is_data_ref(Obj o) {
 }
 
 
-static Bool obj_is_data(Obj o) {
+UNUSED_FN static Bool obj_is_data(Obj o) {
   return obj_is_data_word(o) || obj_is_data_ref(o);
 }
 
@@ -250,7 +251,7 @@ static Bool obj_is_vec(Obj o) {
 }
 
 
-static Bool obj_is_file(Obj o) {
+UNUSED_FN static Bool obj_is_file(Obj o) {
   return obj_is_ref(o) && ref_is_file(o);
 }
 
@@ -339,7 +340,7 @@ static Obj obj_rel_val(Obj o) {
 }
 
 
-static Obj obj_retain_weak(Obj o) {
+UNUSED_FN static Obj obj_retain_weak(Obj o) {
   if (obj_tag(o)) return o;
   assert_ref_is_valid(o);
   rc_errMLV("ret weak ", o.rc);
@@ -356,7 +357,7 @@ static Obj obj_retain_weak(Obj o) {
 }
 
 
-static void obj_release_weak(Obj o) {
+UNUSED_FN static void obj_release_weak(Obj o) {
   if (obj_tag(o)) return;
   assert_ref_is_valid(o);
   rc_errMLV("rel weak ", o.rc);
@@ -369,7 +370,7 @@ static void obj_release_weak(Obj o) {
 static Int vec_len(Obj v);
 static Obj* vec_els(Obj v);
 
-static Bool obj_is_quotable(Obj o) {
+UNUSED_FN static Bool obj_is_quotable(Obj o) {
   // indicates whether an object can be correctly represented inside of a quoted vec.
   // objects whose representation would require explicit quoting to be correct return false,
   // e.g. (File "~/todo.txt")
@@ -391,7 +392,7 @@ static Bool obj_is_quotable(Obj o) {
 }
 
 
-static void write_repr(File f, Obj o);
+static void write_repr(CFile f, Obj o);
 
 static void obj_err(Obj o) {
   write_repr(stderr, o);
@@ -404,7 +405,7 @@ static void obj_errL(Obj o) {
 
 
 static void obj_err_tag(Obj o) {
-  BC otn = obj_tag_names[obj_tag(o)];
+  CharsC otn = obj_tag_names[obj_tag(o)];
   err(otn);
 }
 

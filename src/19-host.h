@@ -18,7 +18,7 @@ static Obj host_raw_write(Int len_pars, Obj* args) {
   Obj d = args[1];
   check_obj(ref_is_file(f), "write expected arg 1 File; found", f);
   check_obj(ref_is_data(d), "write expected arg 2 Data; found", d);
-  File file = file_file(f);
+  CFile file = file_file(f);
   Int i = cast(Int, fwrite(data_ptr(d).c, size_Char, cast(Uns, data_len(d)), file));
   obj_rel(f);
   obj_rel(d);
@@ -26,7 +26,7 @@ static Obj host_raw_write(Int len_pars, Obj* args) {
 }
 
 
-static void write_repr(File f, Obj o);
+static void write_repr(CFile f, Obj o);
 
 static Obj host_raw_write_repr(Int len_pars, Obj* args) {
   // owns elements of args.
@@ -34,7 +34,7 @@ static Obj host_raw_write_repr(Int len_pars, Obj* args) {
   Obj f = args[0];
   Obj o = args[1];
   check_obj(ref_is_file(f), "write expected arg 1 File; found", f);
-  File file = file_file(f);
+  CFile file = file_file(f);
   write_repr(file, o);
   obj_rel(f);
   obj_rel(o);
@@ -47,7 +47,7 @@ static Obj host_raw_flush(Int len_pars, Obj* args) {
   assert(len_pars == 1);
   Obj f = args[0];
   check_obj(ref_is_file(f), "write expected arg 1 File; found", f);
-  File file = file_file(f);
+  CFile file = file_file(f);
   fflush(file);
   obj_rel(f);
   return obj_ret_val(VOID);

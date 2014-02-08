@@ -15,7 +15,7 @@ typedef struct {
   SS  src;  // input string.
   SS  path; // input path for error reporting.
   Src_pos sp;
-  BC e; // error message.
+  CharsC e; // error message.
 } Parser;
 
 
@@ -40,18 +40,18 @@ static void parse_err(Parser* p) {
 }
 
 
-static void parse_errL(Parser* p) {
+UNUSED_FN static void parse_errL(Parser* p) {
   parse_err(p);
   err_nl();
 }
 
 
  __attribute__((format (printf, 2, 3)))
-static Obj parse_error(Parser* p, BC fmt, ...) {
+static Obj parse_error(Parser* p, CharsC fmt, ...) {
   assert(!p->e);
   va_list args;
   va_start(args, fmt);
-  BM msg;
+  CharsM msg;
   Int msg_len = vasprintf(&msg, fmt, args);
   va_end(args);
   check(msg_len >= 0, "parse_error allocation failed: %s", fmt);
@@ -68,11 +68,11 @@ if (!(condition)) return parse_error(p, fmt, ##__VA_ARGS__)
 
 #define PP  (p->sp.pos < p->src.len)
 #define PP1 (p->sp.pos < p->src.len - 1)
-#define PP2 (p->sp.pos < p->src.len - 2)
+//#define PP2 (p->sp.pos < p->src.len - 2)
 
-#define PC  p->src.b.c[p->sp.pos]
-#define PC1 p->src.b.c[p->sp.pos + 1]
-#define PC2 p->src.b.c[p->sp.pos + 2]
+#define PC  p->src.chars.c[p->sp.pos]
+#define PC1 p->src.chars.c[p->sp.pos + 1]
+//#define PC2 p->src.chars.c[p->sp.pos + 2]
 
 #define P_ADV(n) { p->sp.pos += n; p->sp.col += n; }
 #define P_ADV1 P_ADV(1)
@@ -97,8 +97,8 @@ static U64 parse_U64(Parser* p) {
       base = 10;
     }
   }
-  BC start = p->src.b.c + p->sp.pos;
-  BM end;
+  CharsC start = p->src.chars.c + p->sp.pos;
+  CharsM end;
   U64 u = strtoull(start, &end, base);
   int en = errno;
   if (en) {
@@ -187,9 +187,9 @@ static Obj parse_data(Parser* p, Char q) {
   Int i = 0;
 
 #define APPEND(c) { \
-  if (i == s.len) ss_realloc(&s, round_up_to_power_2(s.len + (size_min_malloc - 1))); \
+  if (i == s.len) ss_realloc(&s, round_up_to_power_2(s.len + (size_min_alloc - 1))); \
   assert(i < s.len); \
-  s.b.m[i++] = c; \
+  s.chars.m[i++] = c; \
 }
 
   Bool escape = false;
@@ -230,7 +230,7 @@ static Obj parse_data(Parser* p, Char q) {
   }
   #undef APPEND
   P_ADV1; // past closing quote.
-  Obj d = new_data_from_SS(ss_mk(i, s.b));
+  Obj d = new_data_from_SS(ss_mk(i, s.chars));
   ss_dealloc(s);
   return d;
 }
@@ -394,7 +394,7 @@ static Obj parse_chain_blocks(Parser* p) {
 }
 
 
-static Obj parse_chain(Parser* p) {
+UNUSED_FN static Obj parse_chain(Parser* p) {
   P_ADV1;
   parse_space(p);
   if (PC == '|') {
@@ -423,7 +423,7 @@ static Obj parse_unq(Parser* p) {
 
 
 
-static Obj parse_par(Parser* p, Obj sym, BC par_desc) {
+static Obj parse_par(Parser* p, Obj sym, CharsC par_desc) {
   P_ADV1;
   Src_pos sp_open = p->sp; // for error reporting.
   Obj name = parse_expr(p);
@@ -492,7 +492,7 @@ static Obj parse_expr(Parser* p) {
 }
 
 
-static Obj parse_src(SS path, SS src, BM* e) {
+static Obj parse_src(SS path, SS src, CharsM* e) {
   // caller must free e.
   Parser p = (Parser) {
     .path=path,
@@ -513,7 +513,7 @@ static Obj parse_src(SS path, SS src, BM* e) {
     o = new_vec_M(m);
   }
   mem_dealloc(m);
-  *e = cast(BM, p.e);
+  *e = cast(CharsM, p.e);
   return o;
 }
 

@@ -4,8 +4,8 @@
 #include "22-env.h"
 
 
-static const BC trace_expand_prefix = "◇ ";       // white diamond
-static const BC trace_post_expand_prefix = "▫ ";  // white small square
+static const CharsC trace_expand_prefix = "◇ ";       // white diamond
+static const CharsC trace_post_expand_prefix = "▫ ";  // white small square
 
 
 static Bool expr_contains_unquote(Obj o) {

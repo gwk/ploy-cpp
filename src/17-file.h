@@ -10,29 +10,29 @@ typedef enum {
 } File_tag;
 
 
-static Obj new_file(File file, Bool is_readable, Bool is_writable) {
-  Obj f = ref_alloc(st_File, size_RC + sizeof(File));
-  File* p = ref_body(f);
+static Obj new_file(CFile file, Bool is_readable, Bool is_writable) {
+  Obj f = ref_alloc(st_File, size_RC + sizeof(CFile));
+  CFile* p = ref_body(f);
   f.rc->mt = ((is_readable && ft_readable) | (is_writable && ft_writable));
   *p = file;
   return f;
 }
 
 
-static File file_file(Obj f) {
+static CFile file_file(Obj f) {
   assert(ref_is_file(f));
-  File* p = ref_body(f);
+  CFile* p = ref_body(f);
   return *p;
 }
 
 
-static Obj file_is_readable(Obj f) {
+UNUSED_FN static Obj file_is_readable(Obj f) {
   assert(ref_is_file(f));
   return new_bool(f.rc->mt & ft_readable);
 }
 
 
-static Obj file_is_writable(Obj f) {
+UNUSED_FN static Obj file_is_writable(Obj f) {
   assert(ref_is_file(f));
   return new_bool(f.rc->mt & ft_writable);
 }

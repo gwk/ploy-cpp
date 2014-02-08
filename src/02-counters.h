@@ -1,10 +1,16 @@
 // Copyright 2013 George King.
 // Permission to use this file is granted in ploy/license.txt.
 
-#include "02-bytes.h"
+// memory allocation counters.
 
+#include "01-word.h"
+
+
+// counters enum names, structured as an x macro list.
+// the C macro is temporarily defined to generate various lists of expressions.
+// note: starting with 'Data', the order must match that of Struct_tag.
 #define COUNTER_LIST \
-C(Bytes) \
+C(Chars) \
 C(Str) \
 C(Mem) \
 C(Hash_bucket) \
@@ -38,7 +44,7 @@ C(Func_host_2_allocs) \
 C(Func_host_3) \
 C(Func_host_3_allocs)
 
-
+// index enum for the counters.
 typedef enum {
 #define C(c) ci_##c,
 COUNTER_LIST
@@ -49,8 +55,10 @@ COUNTER_LIST
 
 
 #if OPT_ALLOC_COUNT
+// the global array of inc/dec counter pairs.
 static Int counters[ci_end][2] = {};
 #endif
+
 
 static void counter_inc(Counter_index ci) {
   assert(ci >= 0 && ci < ci_end);
@@ -68,14 +76,15 @@ static void counter_dec(Counter_index ci) {
 
 
 #if OPT_ALLOC_COUNT
-static void counter_stats(Bool verbose) {
-
+static void counter_stats(Bool log_all) {
+  // log counter stats.
 #define C(c) { \
   Int inc = counters[ci_##c][0]; \
   Int dec = counters[ci_##c][1]; \
-  BC name = #c; \
-  if (verbose || inc != dec) { \
-    errFL("==== PLOY MEMORY STATS: %s: %ld - %ld = %ld", name, inc, dec, inc - dec); \
+  const Char* name = #c; \
+  if (log_all || inc != dec) { \
+    fprintf(stderr, "==== PLOY MEMORY STATS: %s: %ld - %ld = %ld\n", \
+      name, inc, dec, inc - dec); \
   } \
 }
 COUNTER_LIST

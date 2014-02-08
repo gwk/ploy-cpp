@@ -25,8 +25,8 @@ static Int data_len(Obj d) {
 }
 
 
-static B data_ptr(Obj d) {
-  if (d.u == blank.u) return (B){.c=NULL}; // TODO: supoprt all data-word values.
+static Chars data_ptr(Obj d) {
+  if (d.u == blank.u) return (Chars){.c=NULL}; // TODO: supoprt all data-word values.
   return ref_data_ptr(d);
 }
 
@@ -46,18 +46,18 @@ static Obj data_empty(Int len) {
 static Obj new_data_from_SS(SS s) {
   if (!s.len) return obj_ret_val(blank);
   Obj d = data_empty(s.len);
-  memcpy(data_ptr(d).m, s.b.c, s.len);
+  memcpy(data_ptr(d).m, s.chars.c, s.len);
   return d;
 }
 
 
-static Obj new_data_from_BC(BC bc) {
+static Obj new_data_from_BC(CharsC bc) {
   return new_data_from_SS(ss_from_BC(bc));
 }
 
 
-static Obj new_data_from_path(BC path) {
-  File f = fopen(path, "r");
+static Obj new_data_from_path(CharsC path) {
+  CFile f = fopen(path, "r");
   check(f, "could not open file: %s", path);
   fseek(f, 0, SEEK_END);
   Int len = ftell(f);

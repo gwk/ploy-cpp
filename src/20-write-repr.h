@@ -4,16 +4,16 @@
 #include "19-host.h"
 
 
-static void write_data(File f, Obj d) {
+static void write_data(CFile f, Obj d) {
   assert(ref_is_data(d));
-  BC p = data_ptr(d).c;
+  CharsC p = data_ptr(d).c;
   fwrite(p, 1, cast(Uns, data_len(d)), f);
 }
 
 
-static void write_repr_data(File f, Obj d) {
+static void write_repr_data(CFile f, Obj d) {
   assert(ref_is_data(d));
-  BC p = data_ptr(d).c;
+  CharsC p = data_ptr(d).c;
   fputc('\'', f);
   for_in(i, data_len(d)) {
     Char c = p[i];
@@ -36,10 +36,10 @@ static void write_repr_data(File f, Obj d) {
 }
 
 
-static void write_repr_obj(File f, Obj o, Set* s);
+static void write_repr_obj(CFile f, Obj o, Set* s);
 
 
-static void write_repr_vec_vec(File f, Obj v, Set* s) {
+static void write_repr_vec_vec(CFile f, Obj v, Set* s) {
   assert(ref_is_vec(v));
   Int len = vec_len(v);
   Obj* els = vec_els(v);
@@ -52,7 +52,7 @@ static void write_repr_vec_vec(File f, Obj v, Set* s) {
 }
 
 
-static void write_repr_chain(File f, Obj c, Set* s) {
+static void write_repr_chain(CFile f, Obj c, Set* s) {
   assert(ref_is_vec(c));
   fputs("{", f);
   Bool first = true;
@@ -69,7 +69,7 @@ static void write_repr_chain(File f, Obj c, Set* s) {
 }
 
 
-static void write_repr_chain_blocks(File f, Obj c, Set* s) {  
+static void write_repr_chain_blocks(CFile f, Obj c, Set* s) {  
   assert(ref_is_vec(c));
   fputs("{", f);
   loop {
@@ -89,7 +89,7 @@ static void write_repr_chain_blocks(File f, Obj c, Set* s) {
 }
 
 
-static void write_repr_par(File f, Obj p, Set* s, Char c) {
+static void write_repr_par(CFile f, Obj p, Set* s, Char c) {
   fputc('`', f);
   fputc(c, f);
   assert(vec_len(p) == 4);
@@ -111,7 +111,7 @@ static void write_repr_par(File f, Obj p, Set* s, Char c) {
 }
 
 
-static void write_repr_vec(File f, Obj v, Set* s) {
+static void write_repr_vec(CFile f, Obj v, Set* s) {
   assert(ref_is_vec(v));
   #if 0 // TODO: incomplete mess.
   if (false) {
@@ -130,7 +130,7 @@ static void write_repr_vec(File f, Obj v, Set* s) {
 }
 
 
-static void write_repr_Func_host(File f, Obj func) {
+static void write_repr_Func_host(CFile f, Obj func) {
   fputs("(Func-host ", f);
   Func_host* fh = ref_body(func);
   Obj d = sym_data(fh->sym);
@@ -139,7 +139,7 @@ static void write_repr_Func_host(File f, Obj func) {
 }
 
 
-static void write_repr_obj(File f, Obj o, Set* s) {
+static void write_repr_obj(CFile f, Obj o, Set* s) {
   Obj_tag ot = obj_tag(o);
   if (ot & ot_flt_bit) {
     fprintf(f, "(Flt %f)", flt_val(o));
@@ -195,7 +195,7 @@ static void write_repr_obj(File f, Obj o, Set* s) {
 }
 
 
-static void write_repr(File f, Obj o) {
+static void write_repr(CFile f, Obj o) {
   Set s = set0;
   write_repr_obj(f, o, &s);
   set_dealloc(&s);

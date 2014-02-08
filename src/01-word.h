@@ -1,6 +1,9 @@
 // Copyright 2013 George King.
 // Permission to use this file is granted in ploy/license.txt.
 
+// basic types, macros, and functions.
+
+
 #if !DEBUG
 #define NDEBUG 1 // omit assertions.
 #endif
@@ -39,6 +42,8 @@
 #endif
 
 // zero heap arrays.
+// this can help detect errors in allocation code,
+// because we immediately attempt to write to the end range of the allocation.
 #ifndef OPT_CLEAR_ELS
 #define OPT_CLEAR_ELS DEBUG
 #endif
@@ -60,20 +65,16 @@ typedef long Int;
 typedef unsigned long Uns;
 typedef bool Bool;
 
-typedef int8_t I8;
-typedef uint8_t U8;
-
-typedef int16_t I16;
-typedef uint16_t U16;
-
-typedef int32_t I32;
-typedef uint32_t U32;
-
-typedef int64_t I64;
-typedef uint64_t U64;
-
-typedef float F32;
-typedef double F64;
+typedef int8_t    I8;
+typedef uint8_t   U8;
+typedef int16_t   I16;
+typedef uint16_t  U16;
+typedef int32_t   I32;
+typedef uint32_t  U32;
+typedef int64_t   I64;
+typedef uint64_t  U64;
+typedef float     F32;
+typedef double    F64;
 
 typedef void* Ptr;
 
@@ -150,8 +151,8 @@ static const Int size_Word  = sizeof(Word);
 // which guarantees 16-byte-aligned malloc.
 // TODO: values for other platforms.
 // terminology: width_ prefix should always refer to a number of bits.
-static const Uns width_min_malloc = 4; // bits
-static const Int size_min_malloc = 1 << width_min_malloc;
+static const Uns width_min_alloc = 4; // bits
+static const Int size_min_alloc = 1 << width_min_alloc;
 
 
 static void assert_host_basic() {
@@ -232,10 +233,10 @@ for (Int i = (n) - 1, _##i##_end = (m), _##i##_step = (s); i >= _##i##_end; i -=
 #define OVERLOAD __attribute__((overloadable))
 
 
-static Word word_with_Int(Int i) { return (Word){.i=i}; }
-static Word word_with_Uns(Uns u) { return (Word){.u=u}; }
-static Word word_with_Flt(Flt f) { return (Word){.f=f}; }
-static Word word_with_Ptr(Ptr p) { return (Word){.p=p}; }
+UNUSED_FN static Word word_with_Int(Int i) { return (Word){.i=i}; }
+UNUSED_FN static Word word_with_Uns(Uns u) { return (Word){.u=u}; }
+UNUSED_FN static Word word_with_Flt(Flt f) { return (Word){.f=f}; }
+UNUSED_FN static Word word_with_Ptr(Ptr p) { return (Word){.p=p}; }
 
 
 static Int int_min(Int a, Int b) {

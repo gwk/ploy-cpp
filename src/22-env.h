@@ -113,7 +113,7 @@ static Obj env_frame_bind_args(Obj env, Obj func, Int len_pars, Obj* pars, Int l
 }
 
 
-static void dbg_env(Obj env) {
+UNUSED_FN static void dbg_env(Obj env) {
   assert(ref_is_vec(env));
   err("env ");
   rc_err(env.rc);

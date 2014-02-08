@@ -12,12 +12,12 @@ typedef struct {
 #define array0 (Array){.mem=mem0, .cap=0}
 
 
-static Bool array_is_valid(Array a) {
+UNUSED_FN static Bool array_is_valid(Array a) {
   return mem_is_valid(a.mem) && a.cap >= 0 && a.mem.len <= a.cap;
 }
 
 
-static Array array_with_len(Int len) {
+UNUSED_FN static Array array_with_len(Int len) {
   Array a = array0;
   a.cap = round_up_to_power_2(len);
   mem_realloc(&a.mem, a.cap);

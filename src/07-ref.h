@@ -6,7 +6,7 @@
 
 static Uns ref_hash(Obj r) {
   assert(obj_is_ref(r));
-  return r.u >> width_min_malloc;
+  return r.u >> width_min_alloc;
 }
 
 
@@ -43,16 +43,16 @@ static Ptr ref_body(Obj r) {
 }
 
 
-static Int ref_data_len(Obj r) {
+UNUSED_FN static Int ref_data_len(Obj r) {
   assert(ref_is_data(r));
   assert(r.rcl->len > 0);
   return r.rcl->len;
 }
 
 
-static B ref_data_ptr(Obj d) {
+static Chars ref_data_ptr(Obj d) {
   assert(ref_is_data(d));
-  return (B){.m = cast(BM, d.rcl + 1)}; // address past rcl.
+  return (Chars){.m = cast(CharsM, d.rcl + 1)}; // address past rcl.
 }
 
 

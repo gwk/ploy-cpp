@@ -1,33 +1,36 @@
 // Copyright 2013 George King.
 // Permission to use this file is granted in ploy/license.txt.
 
-#include "01-word.h"
+// null-terminated c string types; CFile type.
+
+#include "03-raw.h"
 
 
-typedef Char* BM; // Bytes-mutable.
-typedef const Char* BC; // Bytes-constant.
+typedef Char* CharsM; // Chars-mutable.
+typedef const Char* CharsC; // Chars-constant.
 
 // currently unused.
 typedef wchar_t* Utf32M;
 typedef const wchar_t* Utf32C;
 
-typedef FILE* File;
+typedef FILE* CFile; // 'File' refers to the ploy type.
 
 
-// rather than cast between const and mutable bytes, use this union.
+// rather than cast between const and mutable bytes, use this union type.
+// this reduces the risk of casts that violate the c strict aliasing semantics.
 typedef union {
-  BC c;
-  BM m;
-} B; // Bytes
+  CharsC c;
+  CharsM m;
+} Chars;
 
 
-static Bool bc_eq(BC a, BC b) {
+static Bool bc_eq(CharsC a, CharsC b) {
   return strcmp(a, b) == 0;
 }
 
 
 // get the base name of the path argument.
-static BC path_base(BC path) {
+static CharsC path_base(CharsC path) {
   Int offset = 0;
   Int i = 0;
   loop {
@@ -40,27 +43,27 @@ static BC path_base(BC path) {
 
 
 // the name of the current process.
-static BC process_name;
+static CharsC process_name;
 
 // call in main to set process_name.
-static void set_process_name(BC arg0) {
+static void set_process_name(CharsC arg0) {
   process_name = path_base(arg0);
 }
 
 
 // stdio utilities.
 
-static void out(BC s) { fputs(s, stdout); }
-static void err(BC s) { fputs(s, stderr); }
+static void out(CharsC s) { fputs(s, stdout); }
+static void err(CharsC s) { fputs(s, stderr); }
 
 static void out_nl() { out("\n"); }
 static void err_nl() { err("\n"); }
 
-static void out_flush() { fflush(stdout); }
+UNUSED_FN static void out_flush() { fflush(stdout); }
 static void err_flush() { fflush(stderr); }
 
-static void outL(BC s) { out(s); out_nl(); }
-static void errL(BC s) { err(s); err_nl(); }
+UNUSED_FN static void outL(CharsC s) { out(s); out_nl(); }
+static void errL(CharsC s) { err(s); err_nl(); }
 
 #define outF(fmt, ...) fprintf(stdout, fmt, ## __VA_ARGS__)
 #define errF(fmt, ...) fprintf(stderr, fmt, ## __VA_ARGS__)

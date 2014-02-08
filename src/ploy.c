@@ -6,7 +6,7 @@
 
 static void parse_and_eval(Obj env, Obj path, Obj src, Array* sources, Bool out_val) {
   // owns path, src.
-  BM e = NULL;
+  CharsM e = NULL;
   Obj code = parse_src(data_SS(path), data_SS(src), &e);
   if (e) {
     err("parse error: ");
@@ -36,7 +36,7 @@ static void parse_and_eval(Obj env, Obj path, Obj src, Array* sources, Bool out_
 }
 
 
-int main(int argc, BC argv[]) {
+int main(int argc, CharsC argv[]) {
   
   assert_host_basic();
   assert(size_Obj == size_Word);
@@ -45,12 +45,12 @@ int main(int argc, BC argv[]) {
   vol_err = VERBOSE;
   
   // parse arguments.
-  BC paths[len_buffer];
+  CharsC paths[len_buffer];
   Int path_count = 0;
-  BC expr = NULL;
+  CharsC expr = NULL;
   Bool out_val = false;
   for_imn(i, 1, argc) {
-    BC arg = argv[i];
+    CharsC arg = argv[i];
     errFLD("   %s", arg);
     if (bc_eq(arg, "-v")) {
       vol_err = 1;

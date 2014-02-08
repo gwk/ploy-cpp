@@ -52,7 +52,7 @@ static Obj new_sym(SS s) {
 }
 
 
-static Obj new_sym_from_BC(BC b) {
+static Obj new_sym_from_BC(CharsC b) {
   return new_sym(ss_from_BC(b));
 }
 
@@ -114,7 +114,7 @@ SYM_LIST
 }
 
 
-static Bool sym_is_form(Obj s) {
+UNUSED_FN static Bool sym_is_form(Obj s) {
   Int si = sym_index(s);
   return si >= si_COMMENT && si <= si_FN;
 }

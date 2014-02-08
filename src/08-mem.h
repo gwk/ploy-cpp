@@ -23,7 +23,7 @@ static Mem mem_mk(Int len, Obj* els) {
 }
 
 
-static Bool mem_eq(Mem a, Mem b) {
+UNUSED_FN static Bool mem_eq(Mem a, Mem b) {
   return a.len == b.len && memcmp(a.els, b.els, cast(Uns, a.len * size_Obj)) == 0;
 }
 
@@ -44,7 +44,7 @@ static void check_mem_index(Mem m, Int i) {
 }
 
 
-static Obj* mem_end(Mem m) {
+UNUSED_FN static Obj* mem_end(Mem m) {
   return m.els + m.len;
 }
 
@@ -55,7 +55,7 @@ static Obj mem_el_borrowed(Mem m, Int i) {
 }
 
 
-static Obj mem_el_ret(Mem m, Int i) {
+UNUSED_FN static Obj mem_el_ret(Mem m, Int i) {
   return obj_ret(mem_el_borrowed(m, i));
 }
 
@@ -117,7 +117,7 @@ static void mem_realloc(Mem* m, Int len) {
 }
 
 
-static void mem_resize(Mem* m, Int len) {
+UNUSED_FN static void mem_resize(Mem* m, Int len) {
   // realloc and set size.
   mem_realloc(m, len);
   m->len = len;

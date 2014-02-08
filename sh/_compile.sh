@@ -27,8 +27,6 @@ clang \
 -std=c11 \
 -Werror \
 -Weverything \
--Wno-unused-macros \
--Wno-unused-function \
 -Wno-unused-parameter \
 -Wno-gnu \
 -Wno-vla \
