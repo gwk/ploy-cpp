@@ -53,38 +53,13 @@ static void set_process_name(CharsC arg0) {
 
 // stdio utilities.
 
-static void out(CharsC s) { fputs(s, stdout); }
 static void err(CharsC s) { fputs(s, stderr); }
-
-static void out_nl() { out("\n"); }
 static void err_nl() { err("\n"); }
-
-UNUSED_FN static void out_flush() { fflush(stdout); }
 static void err_flush() { fflush(stderr); }
-
-UNUSED_FN static void outL(CharsC s) { out(s); out_nl(); }
 static void errL(CharsC s) { err(s); err_nl(); }
 
-#define outF(fmt, ...) fprintf(stdout, fmt, ## __VA_ARGS__)
 #define errF(fmt, ...) fprintf(stderr, fmt, ## __VA_ARGS__)
-
-#define outFL(fmt, ...) outF(fmt "\n", ## __VA_ARGS__)
 #define errFL(fmt, ...) errF(fmt "\n", ## __VA_ARGS__)
-
-// errD prints if vol_err > 0.
-static Int vol_err;
-
-#ifdef NDEBUG
-#define errD(...);
-#define errLD(...);
-#define errFD(...);
-#define errFLD(...);
-#else
-#define errD(...)   { if (vol_err) err(__VA_ARGS__);  }
-#define errLD(...)  { if (vol_err) errL(__VA_ARGS__); }
-#define errFD(...)  { if (vol_err) errF(__VA_ARGS__); }
-#define errFLD(...) { if (vol_err) errFL(__VA_ARGS__); }
-#endif
 
 // error macros
 

@@ -28,7 +28,7 @@ static void parse_and_eval(Obj env, Obj path, Obj src, Array* sources, Bool out_
     Obj val = eval_vec(env, code);
     if (out_val && val.u != VOID.u) {
       write_repr(stdout, val);
-      out_nl();
+      fputc('\n', stdout);
     }
     obj_rel(code);
     obj_rel(val);
@@ -42,7 +42,7 @@ int main(int argc, CharsC argv[]) {
   assert(size_Obj == size_Word);
   set_process_name(argv[0]);
   sym_init();
-  vol_err = VERBOSE;
+  Int vol_err = VERBOSE;
   
   // parse arguments.
   CharsC paths[len_buffer];
@@ -51,7 +51,6 @@ int main(int argc, CharsC argv[]) {
   Bool out_val = false;
   for_imn(i, 1, argc) {
     CharsC arg = argv[i];
-    errFLD("   %s", arg);
     if (bc_eq(arg, "-v")) {
       vol_err = 1;
     }
