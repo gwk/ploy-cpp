@@ -9,9 +9,19 @@ cd $(dirname "$0")/..
 
 if [[ "$1" == "-release" ]]; then
   shift
-  defs="-DDEBUG=0 -Ofast"
+  opts="\
+-DDEBUG=0 \
+-Ofast \
+"
 else
-  defs="-DDEBUG=1"
+  opts="\
+-DDEBUG=1 \
+-fstack-protector \
+-fsanitize=local-bounds \
+-fsanitize=undefined-trap \
+-fsanitize-undefined-trap-on-error \
+-fno-limit-debug-info \
+"
 fi
 
 if [[ "$#" == 0 ]]; then
@@ -31,26 +41,19 @@ clang \
 -Wno-gnu \
 -Wno-vla \
 -fstrict-aliasing \
--fstack-protector \
--fsanitize=undefined-trap \
--fsanitize-undefined-trap-on-error \
+-ftrapv \
 -g \
 -ferror-limit=4 \
-"$defs" \
+$opts \
 -I build \
 src/ploy.c \
 "$@"
 
 
-# -fbounds-checking         Enable run-time bounds checks
-#-fno-limit-debug-info      Do not limit debug information produced to reduce size of debug binary
-#-fsanitize-memory-track-origins  Enable origins tracking in MemorySanitizer
-#-fsanatize=adress,undefined
-#-ftrapv-handler=func-name  Specify the function to be called on overflow
 #-ftrapv                    Trap on integer overflow
-#-fwrapv                    Treat signed integer overflow as two's complement
+#-ftrapv-handler=func-name  Specify the function to be called on overflow
 
-#-mms-bitfields             Set the default structure layout to be compatible with the Microsoft compiler standard
+#-fsanitize-memory-track-origins  Enable origins tracking in MemorySanitizer
 
 #-fstrict-enums             Enable optimizations based on the strict definition of an enum's value range
 #-fvectorize                Enable the loop vectorization passes
@@ -61,5 +64,4 @@ src/ploy.c \
 #-foptimize-sibling-calls   tail call elimination
 #-mllvm -tailcallelim       tail calls?
 
-# -fpcc-struct-return       Override the default ABI to return all structs on the stack
-# -freg-struct-return       Override the default ABI to return small structs in registers
+#-freg-struct-return        Override the default ABI to return small structs in registers
