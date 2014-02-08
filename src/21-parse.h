@@ -187,7 +187,7 @@ static Obj parse_data(Parser* p, Char q) {
   Int i = 0;
 
 #define APPEND(c) { \
-  if (i == s.len) ss_realloc(&s, round_up_to_power_2(s.len + 3)); \
+  if (i == s.len) ss_realloc(&s, round_up_to_power_2(s.len + (size_min_malloc - 1))); \
   assert(i < s.len); \
   s.b.m[i++] = c; \
 }
