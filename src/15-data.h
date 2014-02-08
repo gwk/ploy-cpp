@@ -31,8 +31,8 @@ static Chars data_ptr(Obj d) {
 }
 
 
-static SS data_SS(Obj d) {
-  return ss_mk(data_len(d), data_ptr(d));
+static Str data_Str(Obj d) {
+  return str_mk(data_len(d), data_ptr(d));
 }
 
 
@@ -43,7 +43,7 @@ static Obj data_empty(Int len) {
 }
 
 
-static Obj new_data_from_SS(SS s) {
+static Obj new_data_from_Str(Str s) {
   if (!s.len) return obj_ret_val(blank);
   Obj d = data_empty(s.len);
   memcpy(data_ptr(d).m, s.chars.c, s.len);
@@ -52,7 +52,7 @@ static Obj new_data_from_SS(SS s) {
 
 
 static Obj new_data_from_BC(CharsC bc) {
-  return new_data_from_SS(ss_from_BC(bc));
+  return new_data_from_Str(str_from_BC(bc));
 }
 
 

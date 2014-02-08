@@ -34,17 +34,17 @@ static Obj sym_data(Obj s) {
 }
 
 
-static SS data_SS(Obj d);
-static Obj new_data_from_SS(SS s);
+static Str data_Str(Obj d);
+static Obj new_data_from_Str(Str s);
 
-static Obj new_sym(SS s) {
+static Obj new_sym(Str s) {
   for_in(i, global_sym_names.mem.len) {
     Obj d = mem_el_borrowed(global_sym_names.mem, i);
-    if (ss_eq(s, data_SS(d))) {
+    if (str_eq(s, data_Str(d))) {
       return obj_ret_val(sym_with_index(i));
     }
   }
-  Obj d = new_data_from_SS(s);
+  Obj d = new_data_from_Str(s);
   Int i = array_append_move(&global_sym_names, d);
   Obj sym = sym_with_index(i);
   //errF("NEW SYM: %ld: ", i); obj_errL(sym);
@@ -53,7 +53,7 @@ static Obj new_sym(SS s) {
 
 
 static Obj new_sym_from_BC(CharsC b) {
-  return new_sym(ss_from_BC(b));
+  return new_sym(str_from_BC(b));
 }
 
 
@@ -109,7 +109,7 @@ static void sym_init() {
   assert(global_sym_names.mem.len == 0);
   Obj sym;
 
-#define SYM(s) sym = new_sym(ss_from_BC(#s)); assert(sym_index(sym) == si_##s); obj_rel_val(sym);
+#define SYM(s) sym = new_sym(str_from_BC(#s)); assert(sym_index(sym) == si_##s); obj_rel_val(sym);
 SYM_LIST
 #undef SYM
 }

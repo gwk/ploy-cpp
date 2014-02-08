@@ -7,7 +7,7 @@
 static void parse_and_eval(Obj env, Obj path, Obj src, Array* sources, Bool out_val) {
   // owns path, src.
   CharsM e = NULL;
-  Obj code = parse_src(data_SS(path), data_SS(src), &e);
+  Obj code = parse_src(data_Str(path), data_Str(src), &e);
   if (e) {
     err("parse error: ");
     errL(e);

@@ -12,8 +12,8 @@ typedef struct {
 
 // main parser object holds the input string, parse state, and source location info.
 typedef struct {
-  SS  src;  // input string.
-  SS  path; // input path for error reporting.
+  Str  src;  // input string.
+  Str  path; // input path for error reporting.
   Src_pos sp;
   CharsM e; // error message.
 } Parser;
@@ -35,7 +35,7 @@ static Bool char_is_atom_term(Char c) {
 
 
 static void parse_err(Parser* p) {
-  errF("%*s:%ld:%ld (%ld): ", FMT_SS(p->path), p->sp.line + 1, p->sp.col + 1, p->sp.pos);
+  errF("%*s:%ld:%ld (%ld): ", FMT_STR(p->path), p->sp.line + 1, p->sp.col + 1, p->sp.pos);
   if (p->e) errF("\nerror: %s\nobj:  ", p->e);
 }
 
@@ -56,7 +56,7 @@ static Obj parse_error(Parser* p, CharsC fmt, ...) {
   va_end(args);
   check(msg_len >= 0, "parse_error allocation failed: %s", fmt);
   // parser owner must call raw_dealloc on e.
-  p->e = ss_src_loc_str(p->src, p->path, p->sp.pos, 0, p->sp.line, p->sp.col, msg);
+  p->e = str_src_loc_str(p->src, p->path, p->sp.pos, 0, p->sp.line, p->sp.col, msg);
   free(msg); // matches vasprintf.
   return obj0;
 }
@@ -139,7 +139,7 @@ static Obj parse_sym(Parser* p) {
     Char c = PC;
     if (!(c == '-' || c == '_' || isalnum(c))) break;
   }
-  SS s = ss_slice(p->src, pos, p->sp.pos);
+  Str s = str_slice(p->src, pos, p->sp.pos);
   return new_sym(s);
 }
 
@@ -174,8 +174,8 @@ static Obj parse_comment(Parser* p) {
       return parse_error(p, "unterminated comment (add newline)");
     }
   }  while (PC != '\n');
-  SS s = ss_slice(p->src, pos_start, p->sp.pos);
-  Obj d = new_data_from_SS(s);
+  Str s = str_slice(p->src, pos_start, p->sp.pos);
+  Obj d = new_data_from_Str(s);
   return new_vec2(obj_ret_val(COMMENT), d);
 }
 
@@ -183,11 +183,11 @@ static Obj parse_comment(Parser* p) {
 static Obj parse_data(Parser* p, Char q) {
   assert(PC == q);
   Src_pos sp_open = p->sp; // for error reporting.
-  SS s = ss_alloc(16);
+  Str s = str_alloc(16);
   Int i = 0;
 
 #define APPEND(c) { \
-  if (i == s.len) ss_realloc(&s, round_up_to_power_2(s.len + (size_min_alloc - 1))); \
+  if (i == s.len) str_realloc(&s, round_up_to_power_2(s.len + (size_min_alloc - 1))); \
   assert(i < s.len); \
   s.chars.m[i++] = c; \
 }
@@ -230,8 +230,8 @@ static Obj parse_data(Parser* p, Char q) {
   }
   #undef APPEND
   P_ADV1; // past closing quote.
-  Obj d = new_data_from_SS(ss_mk(i, s.chars));
-  ss_dealloc(s);
+  Obj d = new_data_from_Str(str_mk(i, s.chars));
+  str_dealloc(s);
   return d;
 }
 
@@ -496,7 +496,7 @@ static Obj parse_expr(Parser* p) {
 }
 
 
-static Obj parse_src(SS path, SS src, CharsM* e) {
+static Obj parse_src(Str path, Str src, CharsM* e) {
   // caller must free e.
   Parser p = (Parser) {
     .path=path,
