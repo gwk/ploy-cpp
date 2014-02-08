@@ -8,7 +8,8 @@
 #define NDEBUG 1 // omit assertions.
 #endif
 
-// exclude the standard libraries when preprocessing the source for inspection (see preprocess.sh).
+// exclude the standard libraries when preprocessing the source for inspection;
+// see sh/preprocess.sh.
 #ifndef SKIP_LIB_INCLUDES
 #include <assert.h>
 #include <ctype.h>
@@ -41,11 +42,14 @@
 #define OPT_ALLOC_COUNT DEBUG
 #endif
 
-// zero heap arrays.
-// this can help detect errors in allocation code,
-// because we immediately attempt to write to the end range of the allocation.
-#ifndef OPT_CLEAR_ELS
-#define OPT_CLEAR_ELS DEBUG
+// write unlikely values into unused portions of heap allocations.
+// this helps detect illegal reads from uninitialized and dead regions,
+// and also helps detect errors in allocation code,
+// because we immediately attempt to write to the entire allocation.
+// for this reason it is not totally redundant with the MallocScribble and MallocPreScribble
+// environment variables on OSX.
+#ifndef OPT_ALLOC_SCRIBBLE
+#define OPT_ALLOC_SCRIBBLE DEBUG
 #endif
 
 // verbose logging to aid in various debugging scenarios.
@@ -54,7 +58,8 @@
 #define VERBOSE_PARSE VERBOSE || 0
 #define VERBOSE_EVAL  VERBOSE || 0
 
-// reference count increment functions check for overflow, and keep the object's count pinned at the max value.
+// reference count increment functions check for overflow,
+// and keep the object's count pinned at the max value.
 // this constant controls whether this event gets logged.
 static const bool report_pinned_counts = true;
 

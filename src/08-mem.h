@@ -87,8 +87,8 @@ static void mem_release_els(Mem m) {
 
 static void mem_dealloc(Mem m) {
   if (m.els) counter_dec(ci_Mem);
-#if OPT_CLEAR_ELS
-  memset(m.els, 0, m.len * size_Obj);
+#if OPT_ALLOC_SCRIBBLE
+  memset(m.els, 0x55, m.len * size_Obj); // same value as OSX MallocScribble.
 #endif
   free(m.els);
 }
@@ -111,8 +111,8 @@ static void mem_realloc(Mem* m, Int len) {
   }
   m->els = raw_realloc(m->els, len * size_Obj, ci_Mem);
   // clear any new elements.
-  if (OPT_CLEAR_ELS && old_len < len) {
-    ptr_zero(m->els + old_len, (len - old_len) * size_Obj);
+  if (OPT_ALLOC_SCRIBBLE && old_len < len) {
+    memset(m->els + old_len, 0xAA, (len - old_len) * size_Obj); // same value as OSX MallocPreScribble.
   }
 }
 

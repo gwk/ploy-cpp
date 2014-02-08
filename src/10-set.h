@@ -66,8 +66,8 @@ static void hash_bucket_append(Hash_bucket* b, Obj r) {
       b->cap = 2;
     }
     b->els = raw_realloc(b->els, b->cap * size_Obj, ci_Hash_bucket);
-#if OPT_CLEAR_ELS
-    ptr_zero(b->els + b->len, (b->cap - b->len) * size_Obj);
+#if OPT_ALLOC_SCRIBBLE
+    memset(b->els + b->len, 0xAA, (b->cap - b->len) * size_Obj); // same value as OSX MallocPreScribble.
 #endif
   }
   b->els[b->len++] = r;
