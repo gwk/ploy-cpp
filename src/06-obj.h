@@ -1,6 +1,12 @@
 // Copyright 2013 George King.
 // Permission to use this file is granted in ploy/license.txt.
 
+// dynamic object type.
+// every object word has a 3-bit tag in the low-order bits indicating its type.
+// all objects are either value words with a tag in the low bits,
+// or else references to allocated memory.
+// ref types have a tag of 0, so they can be dereferenced directly.
+
 #include "05-str.h"
 
 
@@ -17,31 +23,26 @@ static const Uns obj_body_mask = ~obj_tag_mask;
 static const Uns flt_body_mask = max_Uns - 1;
 static const Int max_Int_tagged  = (1L  << width_tagged_word) - 1;
 static const Uns max_Uns_tagged  = max_Int_tagged;
-static const Int shift_factor_Int = 1L << width_obj_tag; // cannot shift signed values in C so use multiplication instead.
-
-
-/*
-all ploy objects are tagged pointer/value words.
-the 3-bit obj tag is guaranteed to be available by 8-byte or greater aligned malloc.
-OSX guarantees 16-byte aligned malloc.
-
-Sym values are indices into the global symbol table.
-
-Ref types have a tag of 000 so that they can be dereferenced directly.
-*/
+// we cannot shift signed values in C so we use multiplication by powers of 2 instead.
+static const Int shift_factor_Int = 1L << width_obj_tag;
 
 // the low tag bit indicates 32/64 bit IEEE 754 float with low bit rounded to even.
+// it remains to be seen just how bad an idea this is for 32-bit applications...
+// it also remains to be seen if we do the rounding correctly!
 static const Tag ot_flt_bit = 1; // only flt words have low bit set.
 
 typedef enum {
-  ot_ref  = 0,      // pointer to managed object
-  ot_int  = 1 << 1, // val; 28/60 bit signed int; 28 bits is +/-134M.
-  ot_sym  = 2 << 1, // Sym index
-  ot_data = 3 << 1, // word-sized Data
+  ot_ref  = 0,      // pointer to managed object.
+  ot_int  = 1 << 1, // val; 29/61 bit signed int; 29 bits gives a range of  +/-268M.
+  ot_sym  = 2 << 1, // Sym values are indices into global_sym_table.
+  ot_data = 3 << 1, // small Data object that fits into a word.
 } Obj_tag;
 
 // note: previously there was a scheme to interleave Sym indices with word-sized Data values.
-// this is still possible, but only desirable if we need the last ot enum slot for something else.
+// this would work by making the next-lowest bit a flag to differentiate between Sym and Data.
+// Data-words would use the next 3 bits (the highest 3 bits of the lowest byte)
+// to represent the length, which is wide enough to cover up to 128-bit words.
+// this is only desirable if we need the last Obj_tag index slot for something else.
 static const Uns data_word_bit = (1 << width_obj_tag);
 UNUSED_VAR(data_word_bit)
 
@@ -57,26 +58,29 @@ static CharsC obj_tag_names[] = {
   "Flt",
 };
 
-
+// all ref types (objects that are dynamically allocated) follow a similar convention;
+// the lowest 4 bits of the allocated memory indicate its type.
 #define width_struct_tag 4
 #define struct_tag_end (1L << width_struct_tag)
 
 static const Uns struct_tag_mask = struct_tag_end - 1;
 
+// a second tag is used by some types to store additional metadata flags.
 #define width_meta_tag 4
 
+// all the ref types.
 typedef enum {
-  st_Data = 0, // obj_counter_index assumes that this is the first index.
-  st_Vec,
-  st_I32,
+  st_Data = 0,    // binary data; obj_counter_index assumes that this is the first index.
+  st_Vec,         // a fixed length vector of objects.
+  st_I32,         // full-width numeric types that do not fit into the tagged words.
   st_I64,
   st_U32,
   st_U64,
   st_F32,
   st_F64,
   st_File,
-  st_Func_host,
-  st_Reserved_A,
+  st_Func_host,   // an opaque function built into the host interpreter.
+  st_Reserved_A,  // currently unused.
   st_Reserved_B,
   st_Reserved_C,
   st_Reserved_D,
@@ -103,18 +107,23 @@ static CharsC struct_tag_names[] = {
   "Reserved-F",
 };
 
+// ref objects are currently reference-counted.
+// there are separate counts for strong and weak references;
+// currently only strong counts are accessible from within the language,
+// and weak ref semantics remain to be determined.
 static const Int width_sc  = width_word - width_struct_tag;
 static const Int width_wc  = width_word - width_meta_tag;
 static const Uns pinned_sc = (1L << width_sc) - 1;
 static const Uns pinned_wc = (1L << width_wc) - 1;
 
 typedef struct {
-  Tag st : width_struct_tag;
-  Uns wc : width_wc;
-  Tag mt : width_meta_tag;
-  Uns sc : width_sc;
+  Tag st : width_struct_tag;  // struct tag.
+  Uns wc : width_wc;          // weak count.
+  Tag mt : width_meta_tag;    // meta tag.
+  Uns sc : width_sc;          // strong count.
 } RC; // Ref-counts. 
 
+// the Vec and Data ref types are layed out as RC, length word, and then the elements.
 typedef struct {
   RC rc;
   Int len;
@@ -123,19 +132,19 @@ typedef struct {
 static const Int size_RC  = sizeof(RC);
 static const Int size_RCL = sizeof(RCL);
 
+
 static void rc_err(RC* rc) {
+  // debug helper.
   errF("%p {st:%s w:%lx mt:%x s:%lx}",
        rc, struct_tag_names[rc->st], rc->wc, rc->mt, rc->sc);
 }
 
-// TODO: remove?
-UNUSED_FN static void rc_errML(CharsC msg, RC* rc) {
-  errF("%s %p {st:%s w:%lx mt:%x s:%lx}\n",
-       msg, rc, struct_tag_names[rc->st], rc->wc, rc->mt, rc->sc);
-}
 
+// at some point this should get removed, as the utility of logging ret/rel calls diminishes.
 #if VERBOSE_MM
-#define rc_errMLV(...) rc_errML(__VA_ARGS__)
+#define rc_errMLV(msg, ...) \
+errF("%s %p {st:%s w:%lx mt:%x s:%lx}\n", \
+msg, rc, struct_tag_names[rc->st], rc->wc, rc->mt, rc->sc);
 #else
 #define rc_errMLV(...)
 #endif
@@ -152,9 +161,47 @@ typedef union {
 
 static Int size_Obj = sizeof(Obj);
 
-static const Obj obj0 = (Obj){.p=NULL}; // invalid object.
+// invalid object; essentially the NULL pointer.
+// used as a return value for error conditions and a marker for cleared or invalid memory.
+static const Obj obj0 = (Obj){.p=NULL};
 
-static void obj_errL(Obj o);
+
+static Obj_tag obj_tag(Obj o) {
+  return o.u & obj_tag_mask;
+}
+
+
+static void write_repr(CFile f, Obj o);
+
+static void obj_err(Obj o) {
+  write_repr(stderr, o);
+}
+
+static void obj_errL(Obj o) {
+  write_repr(stderr, o);
+  err_nl();
+}
+
+
+static void obj_err_tag(Obj o) {
+  CharsC otn = obj_tag_names[obj_tag(o)];
+  err(otn);
+}
+
+
+void dbg(Obj o); // not declared static so that it is always available in debugger.
+void dbg(Obj o) {
+  if (obj_tag(o)) {
+    obj_err_tag(o);
+  }
+  else { // ref
+    rc_err(o.rc);
+  }
+  err(" : ");
+  obj_errL(o);
+  err_flush();
+}
+
 
 static NORETURN error_obj(CharsC msg, Obj o) {
   errF("%s error: %s: ", (process_name ? process_name : __FILE__), msg);
@@ -163,14 +210,6 @@ static NORETURN error_obj(CharsC msg, Obj o) {
 }
 
 #define check_obj(condition, msg, o) { if (!(condition)) error_obj(msg, o); }
-
-
-static void obj_errL(Obj o); // declared for occasional debugging.
-
-
-static Obj_tag obj_tag(Obj o) {
-  return o.u & obj_tag_mask;
-}
 
 
 static Bool obj_is_val(Obj o) {
@@ -206,11 +245,17 @@ static Bool obj_is_sym(Obj o) {
 static Bool sym_is_symbol(Obj o);
 
 // TODO: improve this naming subtlety.
+// there are semantic differences between the special predefined Sym values
+// and regular syms which, when evaluated, get looked up in the environment.
 static Bool obj_is_symbol(Obj o) {
   return obj_is_sym(o) && sym_is_symbol(o);
 }
 
 
+// TODO: fix bool value naming confusion.
+// if 'true' and 'false' are the names of the bools in the language,
+// then we should use them here as well, and use TRUE and FALSE for c 1 and 0.
+// this would prevent us from using stdbool.h, but that doesn't really matter.
 static const Obj TRUE, FALSE;
 
 static Bool obj_is_bool(Obj s) {
@@ -239,7 +284,6 @@ UNUSED_FN static Bool obj_is_data(Obj o) {
 }
 
 
-
 static Bool obj_is_vec_ref(Obj o) {
   return obj_is_ref(o) && ref_is_vec(o);
 }
@@ -248,6 +292,9 @@ static Bool obj_is_vec_ref(Obj o) {
 static const Obj VEC0, CHAIN0;
 
 static Bool obj_is_vec(Obj o) {
+  // ploy makes finer distinctions between the zero vector, the empty list
+  // and the list terminator to reduce ambiguity (e.g. when printing data structures).
+  // TODO: define excatly when special sym constants are considered members of a type.
   return o.u == VEC0.u || o.u == CHAIN0.u || obj_is_vec_ref(o);
 }
 
@@ -262,6 +309,8 @@ static Obj vec_el(Obj v, Int i);
 static const Obj LABEL, VARIAD;
 
 static Bool obj_is_par(Obj o) {
+  // a parameter is a vector with first element of LABEL or VARIAD,
+  // representing those two syntactic constructs respectively.
   if (!obj_is_vec(o)) return false;
   Int len = vec_len(o);
   if (len != 4) return false;
@@ -295,6 +344,7 @@ static Counter_index obj_counter_index(Obj o) {
 static void assert_ref_is_valid(Obj o);
 
 static Obj obj_ret(Obj o) {
+  // increase the object's retain count by one.
   counter_inc(obj_counter_index(o));
   if (obj_tag(o)) return o;
   assert_ref_is_valid(o);
@@ -315,6 +365,7 @@ static Obj obj_ret(Obj o) {
 static void ref_dealloc(Obj o);
 
 static void obj_rel(Obj o) {
+  // decrease the object's retain count by one, or deallocate it.
   counter_dec(obj_counter_index(o));
   if (obj_tag(o)) return;
   assert_ref_is_valid(o);
@@ -380,8 +431,9 @@ UNUSED_FN static Bool obj_is_quotable(Obj o) {
   // indicates whether an object can be correctly represented inside of a quoted vec.
   // objects whose representation would require explicit quoting to be correct return false,
   // e.g. (File "~/todo.txt")
-  // note: the File example feels somewhat contrived, because evaluating that call is questionable
-  // (creating new file handle is not desirable, does not recreate the original due to process state).
+  // note: the File example feels somewhat contrived, because evaluating that call is
+  // questionable; creating a new file handle is not desirable, and does not recreate the
+  // original object faithfully due to process state.
   // TODO: perhaps non-transparent objects should have an intentionally non-parseable repr?
   if (obj_tag(o)) return true; // all value types are quotable.
   Struct_tag st = ref_struct_tag(o);
@@ -396,37 +448,4 @@ UNUSED_FN static Bool obj_is_quotable(Obj o) {
   }
   return false;
 }
-
-
-static void write_repr(CFile f, Obj o);
-
-static void obj_err(Obj o) {
-  write_repr(stderr, o);
-}
-
-static void obj_errL(Obj o) {
-  write_repr(stderr, o);
-  err_nl();
-}
-
-
-static void obj_err_tag(Obj o) {
-  CharsC otn = obj_tag_names[obj_tag(o)];
-  err(otn);
-}
-
-
-void dbg(Obj o);
-void dbg(Obj o) {
-  if (obj_tag(o)) {
-    obj_err_tag(o);
-  }
-  else { // ref
-    rc_err(o.rc);
-  }
-  err(" : ");
-  obj_errL(o);
-  err_flush();
-}
-
 
