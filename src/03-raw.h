@@ -17,6 +17,9 @@ static Ptr raw_alloc(Int size, Counter_index ci) {
     fprintf(stderr, "raw_alloc failed; size: %ld", size);
     exit(1);
   }
+#if OPT_ALLOC_SCRIBBLE
+  memset(p, 0xAA, size); // same value as OSX MallocPreScribble.
+#endif
   return p;
 }
 
@@ -24,8 +27,8 @@ static Ptr raw_alloc(Int size, Counter_index ci) {
 static void raw_dealloc(Ptr p, Counter_index ci) {
   if (p) { // do not count NULL.
     counter_dec(ci);
+    free(p);
   }
-  free(p);
 }
 
 

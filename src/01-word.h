@@ -42,12 +42,12 @@
 #define OPT_ALLOC_COUNT DEBUG
 #endif
 
-// write unlikely values into unused portions of heap allocations.
+// write invalid or unlikely values into unused portions of heap allocations.
 // this helps detect illegal reads from uninitialized and dead regions,
 // and also helps detect errors in allocation code,
 // because we immediately attempt to write to the entire allocation.
 // for this reason it is not totally redundant with the MallocScribble and MallocPreScribble
-// environment variables on OSX.
+// environment variables on OSX, but it is completely compatible.
 #ifndef OPT_ALLOC_SCRIBBLE
 #define OPT_ALLOC_SCRIBBLE DEBUG
 #endif

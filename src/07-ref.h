@@ -1,10 +1,13 @@
 // Copyright 2013 George King.
 // Permission to use this file is granted in ploy/license.txt.
 
+// reference object functions.
+
 #include "06-obj.h"
 
 
 static Uns ref_hash(Obj r) {
+  // pointer hash simply shifts of the bits that are guaranteed to be zero.
   assert(obj_is_ref(r));
   return r.u >> width_min_alloc;
 }
