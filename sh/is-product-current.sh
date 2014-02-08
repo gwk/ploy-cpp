@@ -10,6 +10,6 @@ error() {
 
 
 for dependency in "$@"; do
-  [[ -r "$dependency" ]] || error "is-product-current: error: dependency does not exist: $dependency"
+  [[ -r "$dependency" ]] || error "is-product-current: dependency does not exist: $dependency"
   [[ "$product" -nt "$dependency" ]] || exit 1
 done

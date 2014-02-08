@@ -165,7 +165,8 @@ static SS ss_line_at_pos(SS s, Int pos) {
 
 
 // return BC must be freed.
-static CharsM ss_src_loc_str(SS src, SS path, Int pos, Int len, Int line_num, Int col, CharsC msg) {
+static CharsM ss_src_loc_str(SS src, SS path, Int pos, Int len, Int line_num, Int col,
+                             CharsC msg) {
   // get source line.
   SS line = ss_line_at_pos(src, pos);
   CharsC nl = ss_ends_with_char(line, '\n') ? "" : "\n";
