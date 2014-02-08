@@ -15,7 +15,7 @@ typedef struct {
   SS  src;  // input string.
   SS  path; // input path for error reporting.
   Src_pos sp;
-  CharsC e; // error message.
+  CharsM e; // error message.
 } Parser;
 
 
@@ -518,7 +518,7 @@ static Obj parse_src(SS path, SS src, CharsM* e) {
     o = new_vec_M(m);
     mem_dealloc(m);
   }
-  *e = cast(CharsM, p.e);
+  *e = p.e;
   return o;
 }
 
