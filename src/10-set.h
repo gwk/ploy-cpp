@@ -45,7 +45,7 @@ static void hash_bucket_dealloc(Hash_bucket* b) {
 }
 
 
-static bool hash_bucket_contains(Hash_bucket* b, Obj r) {
+static Bool hash_bucket_contains(Hash_bucket* b, Obj r) {
   assert_hash_bucket_is_valid(b);
   for_in(i, b->len) {
     if (b->els[i].p == r.p) {
@@ -112,7 +112,7 @@ static Hash_bucket* set_bucket(Set* s, Obj r) {
 }
 
 
-static bool set_contains(Set* s, Obj r) {
+static Bool set_contains(Set* s, Obj r) {
   assert(set_is_valid(s));
   if (!s->len) return false;
   Hash_bucket* b = set_bucket(s, r);

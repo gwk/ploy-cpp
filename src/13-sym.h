@@ -114,13 +114,13 @@ SYM_LIST
 }
 
 
-static bool sym_is_form(Obj s) {
+static Bool sym_is_form(Obj s) {
   Int si = sym_index(s);
   return si >= si_COMMENT && si <= si_FN;
 }
 
 
-static bool sym_is_symbol(Obj s) {
+static Bool sym_is_symbol(Obj s) {
   // this behavior matches that of run_sym.
   return sym_index(s) > si_VOID;
 }

@@ -7,6 +7,7 @@
 typedef Char* BM; // Bytes-mutable.
 typedef const Char* BC; // Bytes-constant.
 
+// currently unused.
 typedef wchar_t* Utf32M;
 typedef const wchar_t* Utf32C;
 

@@ -23,17 +23,17 @@ static Mem mem_mk(Int len, Obj* els) {
 }
 
 
-static bool mem_eq(Mem a, Mem b) {
+static Bool mem_eq(Mem a, Mem b) {
   return a.len == b.len && memcmp(a.els, b.els, cast(Uns, a.len * size_Obj)) == 0;
 }
 
 
-static bool mem_is_valid(Mem m) {
+static Bool mem_is_valid(Mem m) {
   return (m.len == 0) || (m.len > 0 && m.els);
 }
 
 
-static bool mem_index_is_valid(Mem m, Int i) {
+static Bool mem_index_is_valid(Mem m, Int i) {
   return i >= 0 && i < m.len;
 }
 
@@ -102,7 +102,8 @@ static void mem_release_dealloc(Mem m) {
 
 static void mem_realloc(Mem* m, Int len) {
   // release any truncated elements, realloc memory, and zero any new elements.
-  // does not set m.len; use mem_resize or array_grow_cap.
+  // note that this does not set m.len, because len reflects the number of elements used, not allocation size.
+  // use mem_resize or array_grow_cap.
   Int old_len = m->len;
   // release any old elements.
   for_imn(i, len, old_len) {

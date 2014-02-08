@@ -2,7 +2,6 @@
 // Permission to use this file is granted in ploy/license.txt.
 
 #include "25-eval.h"
-#include "ploy-core.h"
 
 
 static void parse_and_eval(Obj env, Obj path, Obj src, Array* sources, Bool out_val) {

@@ -5,7 +5,7 @@
 #define NDEBUG 1 // omit assertions.
 #endif
 
-// exclude the standard libraries when preprocessing the source for review (see preprocess.sh).
+// exclude the standard libraries when preprocessing the source for inspection (see preprocess.sh).
 #ifndef SKIP_LIB_INCLUDES
 #include <assert.h>
 #include <ctype.h>
@@ -19,18 +19,21 @@
 #include <stdlib.h>
 #endif
 
+// include the generated source here, before 'char' becomes an illegal type.
+#include "ploy-core.h"
 
-// on ref object dealloc, changed Struct_tag to st_DEALLOC.
+
+// on ref object dealloc, set the reference count to zero to aid in debugging overelease bugs.
 #ifndef OPT_DEALLOC_MARK
 #define OPT_DEALLOC_MARK DEBUG
 #endif
 
-// on ref object dealloct, do not actually call free.
+// on ref object dealloct, do not actually call free to aid in debugging overelease bugs.
 #ifndef OPT_DEALLOC_PRESERVE
 #define OPT_DEALLOC_PRESERVE DEBUG
 #endif
 
-// count allocations and deallocations by Obj_tag and Struct_tag.
+// count all heap allocations and deallocations.
 #ifndef OPT_ALLOC_COUNT
 #define OPT_ALLOC_COUNT DEBUG
 #endif
@@ -40,15 +43,17 @@
 #define OPT_CLEAR_ELS DEBUG
 #endif
 
+// verbose logging to aid in various debugging scenarios.
 #define VERBOSE 0
 #define VERBOSE_MM    VERBOSE || 0
 #define VERBOSE_PARSE VERBOSE || 0
 #define VERBOSE_EVAL  VERBOSE || 0
 
-
+// reference count increment functions check for overflow, and keep the object's count pinned at the max value.
+// this constant controls whether this event gets logged.
 static const bool report_pinned_counts = true;
 
-
+// all types are upper case by convention.
 typedef char Char;
 typedef unsigned char Byte;
 typedef long Int;
@@ -76,20 +81,13 @@ typedef union {
   I32 i;
   U32 u;
   F32 f;
-} W32;
+} W32; // 32 bit generic word.
 
 typedef union {
   I64 i;
   U64 u;
   F64 f;
-} W64;
-
-
-// this alignment value is based on the OSX malloc man page,
-// which guarantees 16-byte-aligned malloc.
-// TODO: values for other platforms.
-static const Uns width_min_malloc = 4;
-static const Int size_min_malloc = 1 << width_min_malloc;
+} W64; // 64 bit generic word.
 
 
 #if __SIZEOF_POINTER__ == 4
@@ -110,13 +108,28 @@ typedef double Flt;
 #error "unknown architecture"
 #endif
 
-// generic word.
 typedef union {
   Int i;
   Uns u;
   Flt f;
   Ptr p;
-} Word;
+} Word; // generic word.
+
+// enforce usage of custom types with macros for all standard types to disallow their use.
+#undef bool
+#define char      / / /
+#define long      / / /
+#define unsigned  / / /
+#define int8_t    / / /
+#define uint8_t   / / /
+#define int16_t   / / /
+#define uint16_t  / / /
+#define int32_t   / / /
+#define uint32_t  / / /
+#define int64_t   / / /
+#define uint64_t  / / /
+#define float     / / /
+#define double    / / /
 
 // integer range constants.
 static const Int min_Int = LONG_MIN;
@@ -124,6 +137,7 @@ static const Int max_Int = LONG_MAX;
 static const Uns max_Uns = ULONG_MAX;
 
 // byte size constants.
+// terminology: size_ prefix should always refer to size in bytes.
 static const Int size_Char  = sizeof(Char);
 static const Int size_Bool  = sizeof(Bool);
 static const Int size_Int   = sizeof(Int);
@@ -132,8 +146,16 @@ static const Int size_Flt   = sizeof(Flt);
 static const Int size_Ptr   = sizeof(Ptr);
 static const Int size_Word  = sizeof(Word);
 
+// this alignment value is based on the OSX malloc man page,
+// which guarantees 16-byte-aligned malloc.
+// TODO: values for other platforms.
+// terminology: width_ prefix should always refer to a number of bits.
+static const Uns width_min_malloc = 4; // bits
+static const Int size_min_malloc = 1 << width_min_malloc;
+
 
 static void assert_host_basic() {
+  // a few sanity checks; called by main.
   assert(size_Word == size_Int);
   assert(size_Word == size_Uns);
   assert(size_Word == size_Flt);
@@ -142,22 +164,30 @@ static void assert_host_basic() {
 }
 
 
-#define len_buffer 256 // for various temporary arrays on the stack.
+#define len_buffer 256 // standard buffer size for various Char arrays on the stack.
 
-#define loop while (1)
+
+// looping macros
+
+#define loop while (1) // infinite loop
+
+// for Int 'i' from 'm' to 'n' in increments of 's'.
 #define for_imns(i, m, n, s) \
 for (Int i = (m), _##i##_end = (n), _##i##_step = (s); i < _##i##_end; i += _##i##_step)
 
+// produces the same values for i as above, but in reverse order.
 #define for_imns_rev(i, m, n, s) \
 for (Int i = (n) - 1, _##i##_end = (m), _##i##_step = (s); i >= _##i##_end; i -= _##i##_step)
 
+// same as for_imns(i, m, n, 0).
 #define for_imn(i, m, n)      for_imns(i, (m), (n), 1)
 #define for_imn_rev(i, m, n)  for_imns_rev(i, (m), (n), 1)
 
+// same as for_imn(i, 0, n).
 #define for_in(i, n)      for_imns(i, 0, (n), 1)
 #define for_in_rev(i, n)  for_imns_rev(i, 0, (n), 1)
 
-
+// returns -1, 0, or 1 based on sign of input.
 #define sign(x) ({__typeof__(x) __x = (x); __x > 0 ? 1 : (__x < 0 ? -1 : 0); })
 
 // use the cast macro to make all casts easily searchable for audits.
@@ -166,8 +196,6 @@ for (Int i = (n) - 1, _##i##_end = (m), _##i##_step = (s); i >= _##i##_end; i -=
 // used to create switch statements that return strings for enum names.
 #define CASE_RET_TOK(t) case t: return #t
 #define CASE_RET_TOK_SPLIT(prefix, t) case prefix##t: return #t
-
-// iteration macros
 
 // boolean logic
 #define bit(x) (!!(x))
@@ -187,6 +215,12 @@ for (Int i = (n) - 1, _##i##_end = (m), _##i##_step = (s); i >= _##i##_end; i -=
 #define ALIGNED_TO_4 __attribute__((__aligned__(4)))
 #define ALIGNED_TO_8 __attribute__((__aligned__(8)))
 
+#if   ARCH_32_WORD
+#define ALIGNED_TO_WORD ALIGNED_TO_4
+#elif ARCH_64_WORD
+#define ALIGNED_TO_WORD ALIGNED_TO_8
+#endif
+
 // mark a function as having no side effects.
 #define PURE __attribute__((pure))
 
@@ -196,12 +230,6 @@ for (Int i = (n) - 1, _##i##_end = (m), _##i##_step = (s); i >= _##i##_end; i -=
 
 // clang c function overloading extension.
 #define OVERLOAD __attribute__((overloadable))
-
-#if   ARCH_32_WORD
-#define ALIGNED_TO_WORD ALIGNED_TO_4
-#elif ARCH_64_WORD
-#define ALIGNED_TO_WORD ALIGNED_TO_8
-#endif
 
 
 static Word word_with_Int(Int i) { return (Word){.i=i}; }

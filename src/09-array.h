@@ -12,7 +12,7 @@ typedef struct {
 #define array0 (Array){.mem=mem0, .cap=0}
 
 
-static bool array_is_valid(Array a) {
+static Bool array_is_valid(Array a) {
   return mem_is_valid(a.mem) && a.cap >= 0 && a.mem.len <= a.cap;
 }
 

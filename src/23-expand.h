@@ -8,7 +8,7 @@ static const BC trace_expand_prefix = "◇ ";       // white diamond
 static const BC trace_post_expand_prefix = "▫ ";  // white small square
 
 
-static bool expr_contains_unquote(Obj o) {
+static Bool expr_contains_unquote(Obj o) {
   if (!obj_is_vec(o)) return false;
   Int len = vec_len(o);
   Obj* els = vec_els(o);

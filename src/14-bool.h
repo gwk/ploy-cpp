@@ -9,7 +9,7 @@ static Obj new_bool(Int i) {
 }
 
 
-static bool bool_is_true(Obj b) {
+static Bool bool_is_true(Obj b) {
   if (b.u == TRUE.u) return true;
   if (b.u == FALSE.u) return false;
   error_obj("obj is not a Bool", b);

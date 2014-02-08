@@ -93,7 +93,7 @@ static Bool ss_eq(SS a, SS b) {
 }
 
 
-static char ss_el(SS s, Int index) {
+static Char ss_el(SS s, Int index) {
   check_ss_index(s, index);
   return s.b.c[index];
 }

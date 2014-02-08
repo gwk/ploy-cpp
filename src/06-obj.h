@@ -4,7 +4,7 @@
 #include "05-ss.h"
 
 
-typedef unsigned Tag;
+typedef Uns Tag;
 typedef Uns Sym; // index into global_sym_table.
 
 #define width_obj_tag 3
@@ -211,7 +211,7 @@ static Bool obj_is_symbol(Obj o) {
 
 static const Obj TRUE, FALSE;
 
-static bool obj_is_bool(Obj s) {
+static Bool obj_is_bool(Obj s) {
   return s.u == TRUE.u || s.u == FALSE.u;
 }
 
