@@ -81,7 +81,7 @@ static Obj expand(Obj env, Obj code) {
     obj_rel(code);
     return expr_quasiquote(expr);
   }
-  if (hd.u == EXPA.u) {
+  if (hd.u == EXPAND.u) {
 #if VERBOSE_EVAL
     err(trace_expand_prefix); dbg(code);
 #endif

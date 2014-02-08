@@ -321,11 +321,11 @@ static Obj parse_call(Parser* p) {
 }
 
 
-static Obj parse_expa(Parser* p) {
+static Obj parse_expand(Parser* p) {
   P_ADV1;
   Mem m = parse_seq(p, 0);
   P_ADV_TERM('>');
-  Obj v = new_vec_EM(obj_ret_val(EXPA), m);
+  Obj v = new_vec_EM(obj_ret_val(EXPAND), m);
   mem_dealloc(m);
   return v;
 }
@@ -457,7 +457,7 @@ static Obj parse_expr_sub(Parser* p) {
   switch (c) {
     case '{':   return parse_struct(p);
     case '(':   return parse_call(p);
-    case '<':   return parse_expa(p);
+    case '<':   return parse_expand(p);
     case '[':   return parse_vec(p);
     case '`':   return parse_qua(p);
     case ',':   return parse_unq(p);
