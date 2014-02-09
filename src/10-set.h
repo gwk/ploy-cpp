@@ -1,10 +1,10 @@
 // Copyright 2013 George King.
 // Permission to use this file is granted in ploy/license.txt.
 
+// hash set data structure.
+
 #include "09-array.h"
 
-
-// hash set data structure.
 
 static const Int min_set_len_buckets = 16;
 

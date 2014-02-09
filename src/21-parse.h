@@ -28,6 +28,7 @@ static Bool char_is_seq_term(Char c) {
   c == '>';
 }
 
+
 // character terminates an atom.
 static Bool char_is_atom_term(Char c) {
   return c == '|' || isspace(c) || char_is_seq_term(c);

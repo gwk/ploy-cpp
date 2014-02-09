@@ -1,11 +1,10 @@
 // Copyright 2013 George King.
 // Permission to use this file is granted in ploy/license.txt.
 
-#include "21-parse.h"
-
-
 // env is implemented as a chain of frames.
 // a frame is a fat chain, where each link is {tl, sym, val}.
+
+#include "21-parse.h"
 
 
 static Obj env_get(Obj env, Obj sym) {
