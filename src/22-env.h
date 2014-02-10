@@ -36,7 +36,7 @@ static Obj env_push(Obj env, Obj frame) {
   }
   else assert(vec_len(env) == 2);
   assert(frame.u == CHAIN0.u || vec_len(frame) == 3);
-  return new_vec2(env, frame); // note: unlike lisp, tl is in position 0.
+  return new_vec2(frame, env);
 }
 
 
@@ -50,7 +50,7 @@ static Obj env_frame_bind(Obj frame, Obj sym, Obj val) {
   else {
     assert(vec_len(frame) == 3);
   }
-  return new_vec3(frame, sym, val); // note: unlike lisp, tl is in position 0.
+  return new_vec3(sym, val, frame);
 }
 
 
@@ -58,7 +58,7 @@ static void env_bind(Obj env, Obj sym, Obj val) {
   // owns sym, val.
   Obj frame = obj_ret(chain_hd(env));
   Obj frame1 = env_frame_bind(frame, sym, val);
-  vec_put(env, 1, frame1); // note: unlike lisp, hd is in position 1.
+  vec_put(env, 0, frame1);
 }
 
 

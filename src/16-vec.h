@@ -112,28 +112,34 @@ static void vec_put(Obj v, Int i, Obj el) {
   assert(ref_is_vec(v));
   assert(i < vec_len(v));
   Obj* els = vec_els(v);
-  obj_rel(els[i]); // safe to release els[i] first, el is owned by this function so even if it is the same as els[i] it is safe.
+  // safe to release els[i] first, because even if el is els[i],
+  // it is owned by this function so the release could never cause deallocation.
+  obj_rel(els[i]);
   els[i] = el;
 }
 
 
 static Obj chain_hd(Obj v) {
-  return vec_el(v, 1); // note: unlike lisp, hd is in position 1.
+  return vec_el(v, 0);
 }
 
 
 static Obj chain_tl(Obj v) {
-  return vec_el(v, 0); // note: unlike lisp, tl is in position 0.
+  // tl is defined to be the last element of a vec.
+  // this allows us to create fat chains with more than one element per link.
+  return vec_el(v, vec_len(v) - 1);
 }
 
 
 static Obj vec_a(Obj v) {
-return vec_el(v, 1);
+  // idiomatic accessor for fat chains.
+  return vec_el(v, 0);
 }
 
 
 static Obj vec_b(Obj v) {
-  return vec_el(v, 2);
+  // idiomatic accessor for fat chains.
+  return vec_el(v, 1);
 }
 
 

@@ -356,7 +356,7 @@ static Obj parse_chain_simple(Parser* p) {
   Obj c = obj_ret_val(END);
   for_in_rev(i, m.len) {
     Obj el = mem_el_move(m, i);
-    c = new_vec3(obj_ret_val(Vec), c, el); // note: unlike lisp, the tail is in position 0.
+    c = new_vec3(c, el, obj_ret_val(Vec));
   }
   mem_dealloc(m);
   return c;
@@ -375,10 +375,15 @@ static Obj parse_chain_blocks(Parser* p) {
       mem_release_dealloc(a.mem);
       return obj0;
     }
-    // NIL will gets replaced by tl below.
-    Obj o = new_vec_EEM(obj_ret_val(Vec), obj_ret_val(NIL), m);
+    Obj v = new_vec_raw(m.len + 2);
+    Obj* els = vec_els(v);
+    els[0] = obj_ret_val(Vec);
+    for_in(i, m.len) {
+      els[i + 1] = mem_el_move(m, i);
+    }
+    els[m.len + 1] = obj0; // filled in with tl below.
     mem_dealloc(m);
-    array_append_move(&a, o);
+    array_append_move(&a, v);
   }
   Mem m = a.mem;
   P_ADV_TERM('}');
@@ -388,9 +393,9 @@ static Obj parse_chain_blocks(Parser* p) {
   }
   Obj c = obj_ret_val(END);
   for_in_rev(i, m.len) {
-    Obj el = mem_el_move(m, i);
-    vec_put(el, 1, c);
-    c = el;
+    Obj v = mem_el_move(m, i);
+    vec_put(v, vec_len(v) - 1, c);
+    c = v;
   }
   mem_dealloc(m);
   return c;

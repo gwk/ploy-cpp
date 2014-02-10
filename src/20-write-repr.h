@@ -69,18 +69,18 @@ static void write_repr_chain(CFile f, Obj c, Set* s) {
 }
 
 
-static void write_repr_chain_blocks(CFile f, Obj c, Set* s) {  
+static void write_repr_fat_chain(CFile f, Obj c, Set* s) {
   assert(ref_is_vec(c));
   fputs("{", f);
   loop {
     Obj* els = vec_els(c);
     Int len = vec_len(c);
     fputs("|", f);
-    for_imn(i, 1, len) { // note: unlike lisp, tl is in position 0.
-      if (i > 1) fputc(' ', f);
+    for_in(i, len - 1) {
+      if (i) fputc(' ', f);
       write_repr_obj(f, els[i], s);
     }
-    Obj tl = els[0];
+    Obj tl = els[len - 1];
     if (tl.u == END.u) break;
     assert(obj_is_vec_ref(tl));
     c = tl;
@@ -120,11 +120,11 @@ static void write_repr_vec(CFile f, Obj v, Set* s) {
   }
   #endif
   switch (vec_shape(v)) {
-    case vs_vec:          write_repr_vec_vec(f, v, s);      return;
-    case vs_chain:        write_repr_chain(f, v, s);        return;
-    case vs_chain_blocks: write_repr_chain_blocks(f, v, s); return;
-    case vs_label:        write_repr_par(f, v, s, '-');     return;
-    case vs_variad:       write_repr_par(f, v, s, '&');     return;
+    case vs_vec:          write_repr_vec_vec(f, v, s);    return;
+    case vs_chain:        write_repr_chain(f, v, s);      return;
+    case vs_chain_blocks: write_repr_fat_chain(f, v, s);  return;
+    case vs_label:        write_repr_par(f, v, s, '-');   return;
+    case vs_variad:       write_repr_par(f, v, s, '&');   return;
   }
   assert(0);
 }
