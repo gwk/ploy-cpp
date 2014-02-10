@@ -37,20 +37,6 @@ static Obj new_vec_EM(Obj el, Mem m) {
 }
 
 
-static Obj new_vec_EEM(Obj e0, Obj e1, Mem m) {
-  // owns e0, e1, elements of m.
-  Int len = m.len + 2;
-  Obj v = new_vec_raw(len);
-  Obj* els = vec_els(v);
-  els[0] = e0;
-  els[1] = e1;
-  for_in(i, m.len) {
-    els[i + 2] = mem_el_move(m, i);
-  }
-  return v;
-}
-
-
 static Obj new_vec2(Obj a, Obj b) {
   // owns all arguments.
   Obj v = new_vec_raw(2);

@@ -27,18 +27,17 @@ static Obj expr_quasiquote(Obj o) {
   if (expr_contains_unquote(o)) { // implies obj_is_vec
     Int len = vec_len(o);
     Obj* src = vec_els(o);
-    Obj v = new_vec_raw(len + 2);
+    Obj v = new_vec_raw(len + 1);
     Obj* dst = vec_els(v);
-    dst[0] = obj_ret_val(CALL);
-    dst[1] = obj_ret_val(Vec);
+    dst[0] = obj_ret_val(SEQ);
     for_in(i, len) {
       Obj e = src[i];
       if (obj_is_vec(e) && vec_el(e, 0).u == UNQ.u) { // unquote form
         check_obj(vec_len(e) == 2, "malformed UNQ form", e);
-        dst[2 + i] = obj_ret(vec_el(e, 1)); // TODO: expand?
+        dst[1 + i] = obj_ret(vec_el(e, 1)); // TODO: expand?
       }
       else {
-        dst[2 + i] = expr_quasiquote(obj_ret(e));
+        dst[1 + i] = expr_quasiquote(obj_ret(e));
       }
     }
     obj_rel(o);

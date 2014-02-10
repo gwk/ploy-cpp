@@ -79,6 +79,8 @@ static Obj host_el(Int len_pars, Obj* args) {
   check_obj(obj_is_vec(v), "el expected arg 1 Vec; found", v);
   check_obj(obj_is_int(i), "el expected arg 2 Int; found", i);
   Int j = int_val(i);
+  check(v.u != VEC0.u,    "el index out of range; index: %ld; vec: []", j);
+  check(v.u != CHAIN0.u,  "el index out of range; index: %ld; vec: [:]", j);
   Int l = vec_len(v);
   check(j >= 0 && j < l, "el index out of range; index: %ld; len: %ld", j, l);
   Obj el = vec_el(v, j);

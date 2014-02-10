@@ -98,6 +98,16 @@ static Obj run_FN(Obj env, Int len, Obj* args) {
 }
 
 
+static Obj run_SEQ(Obj env, Int len, Obj* args) {
+  Obj v = new_vec_raw(len);
+  Obj* els = vec_els(v);
+  for_in(i, len) {
+    els[i] = run(env, args[i]);
+  }
+  return v;
+}
+
+
 static Obj run_call_native(Obj env, Obj func, Int len, Obj* args, Bool is_expand) {
   // owns func.
   // a native function/macro is a vec consisting of:
@@ -182,6 +192,7 @@ static Obj run_Vec(Obj env, Obj code) {
       EVAL_FORM(LET);
       EVAL_FORM(IF);
       EVAL_FORM(FN);
+      EVAL_FORM(SEQ);
       EVAL_FORM(CALL);
     }
 #undef EVAL_FORM

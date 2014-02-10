@@ -277,7 +277,7 @@ static Bool parser_has_next_expr(Parser* p) {
 }
 
 
-static Mem parse_seq(Parser* p, Char term) {
+static Mem parse_exprs(Parser* p, Char term) {
   // caller must call mem_release_dealloc or mem_dealloc on returned Mem.
   Array a = array0;
   while (parser_has_next_expr(p)) {
@@ -306,7 +306,7 @@ if (p->e || !parse_terminator(p, t)) { \
 
 static Obj parse_struct(Parser* p) {
   P_ADV1;
-  Mem m = parse_seq(p, 0);
+  Mem m = parse_exprs(p, 0);
   P_ADV_TERM('}');
   Obj v = new_vec_M(m);
   mem_dealloc(m);
@@ -316,7 +316,7 @@ static Obj parse_struct(Parser* p) {
 
 static Obj parse_call(Parser* p) {
   P_ADV1;
-  Mem m = parse_seq(p, 0);
+  Mem m = parse_exprs(p, 0);
   P_ADV_TERM(')');
   Obj v = new_vec_EM(obj_ret_val(CALL), m);
   mem_dealloc(m);
@@ -326,7 +326,7 @@ static Obj parse_call(Parser* p) {
 
 static Obj parse_expand(Parser* p) {
   P_ADV1;
-  Mem m = parse_seq(p, 0);
+  Mem m = parse_exprs(p, 0);
   P_ADV_TERM('>');
   Obj v = new_vec_EM(obj_ret_val(EXPAND), m);
   mem_dealloc(m);
@@ -334,29 +334,29 @@ static Obj parse_expand(Parser* p) {
 }
 
 
-static Obj parse_vec(Parser* p) {
-  P_ADV1;
-  Mem m = parse_seq(p, 0);
+static Obj parse_seq_simple(Parser* p) {
+  Mem m = parse_exprs(p, 0);
   P_ADV_TERM(']');
   if (!m.len) {
     return obj_ret_val(VEC0);
   }
-  Obj v = new_vec_EEM(obj_ret_val(CALL), obj_ret_val(Vec), m);
+  Obj v = new_vec_EM(obj_ret_val(SEQ), m);
   mem_dealloc(m);
   return v;
 }
 
 
 static Obj parse_chain_simple(Parser* p) {
-  Mem m = parse_seq(p, 0);
-  P_ADV_TERM('}');
+  P_ADV1;
+  Mem m = parse_exprs(p, 0);
+  P_ADV_TERM(']');
   if (!m.len) {
     return obj_ret_val(CHAIN0);
   }
   Obj c = obj_ret_val(END);
   for_in_rev(i, m.len) {
     Obj el = mem_el_move(m, i);
-    c = new_vec3(c, el, obj_ret_val(Vec));
+    c = new_vec3(obj_ret_val(SEQ), el, c);
   }
   mem_dealloc(m);
   return c;
@@ -370,24 +370,26 @@ static Obj parse_chain_blocks(Parser* p) {
       parse_error(p, "expected '|'");
     }
     P_ADV1;
-    Mem m = parse_seq(p, '|');
+    Mem m = parse_exprs(p, '|');
     if (p->e) {
       mem_release_dealloc(a.mem);
       return obj0;
     }
     Obj v = new_vec_raw(m.len + 2);
     Obj* els = vec_els(v);
-    els[0] = obj_ret_val(Vec);
+    els[0] = obj_ret_val(SEQ);
     for_in(i, m.len) {
       els[i + 1] = mem_el_move(m, i);
     }
-    els[m.len + 1] = obj0; // filled in with tl below.
+    // temporarily fill tl with ILLEGAL; replaced by vec_put below.
+    // since vec_put releases, we must retain here.
+    els[m.len + 1] = obj_ret_val(ILLEGAL);
     mem_dealloc(m);
     array_append_move(&a, v);
   }
   Mem m = a.mem;
-  P_ADV_TERM('}');
-  // assemble the chain
+  P_ADV_TERM(']');
+  // assemble the chain.
   if (!m.len) {
     return obj_ret_val(CHAIN0);
   }
@@ -402,14 +404,17 @@ static Obj parse_chain_blocks(Parser* p) {
 }
 
 
-UNUSED_FN static Obj parse_chain(Parser* p) {
+static Obj parse_seq(Parser* p) {
   P_ADV1;
   parse_space(p);
+  if (PC == ':') {
+    return parse_chain_simple(p);
+  }
   if (PC == '|') {
     return parse_chain_blocks(p);
   }
   else {
-    return parse_chain_simple(p);
+    return parse_seq_simple(p);
   }
 }
 
@@ -466,7 +471,7 @@ static Obj parse_expr_sub(Parser* p) {
     case '{':   return parse_struct(p);
     case '(':   return parse_call(p);
     case '<':   return parse_expand(p);
-    case '[':   return parse_vec(p);
+    case '[':   return parse_seq(p);
     case '`':   return parse_qua(p);
     case ',':   return parse_unq(p);
     case '\'':  return parse_data(p, '\'');
@@ -508,7 +513,7 @@ static Obj parse_src(Str path, Str src, Chars* e) {
     .sp=(Src_pos){.pos=0, .line=0, .col=0,},
     .e=NULL,
   };
-  Mem m = parse_seq(&p, 0);
+  Mem m = parse_exprs(&p, 0);
   Obj o;
   if (p.e) {
     assert(m.len == 0 && m.els == NULL);

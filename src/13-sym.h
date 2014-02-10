@@ -87,9 +87,9 @@ SYM(SCOPE) \
 SYM(LET) \
 SYM(IF) \
 SYM(FN) \
+SYM(SEQ) \
 SYM(CALL) \
 SYM(VOID) \
-SYM(Vec) \
 
 
 // sym indices.
