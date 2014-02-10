@@ -33,8 +33,8 @@ static Obj run_DO(Obj env, Mem args) {
     return obj_ret_val(VOID);
   }
   Int last = args.len - 1;
-  for_in(i, last) {
-    Obj o = run(env, args.els[i]);
+  it_mem_to(it, args, last) {
+    Obj o = run(env, *it);
     obj_rel(o); // value ignored.
   };
   return run(env, args.els[last]); // put last run() in tail position for TCO.

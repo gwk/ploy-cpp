@@ -13,9 +13,8 @@ static Bool expr_contains_unquote(Obj o) {
   Mem m = vec_mem(o);
   assert(m.len > 0);
   if (m.els[0].u == UNQ.u) return true; // vec is an unquote form.
-  for_imn(i, 1, m.len) {
-    Obj el = m.els[i];
-    if (expr_contains_unquote(el)) return true;
+  it_mem_from(it, m, 1) {
+    if (expr_contains_unquote(*it)) return true;
   }
   return false;
 }
@@ -24,13 +23,12 @@ static Bool expr_contains_unquote(Obj o) {
 static Obj expr_quasiquote(Obj o) {
   // owns o.
   if (expr_contains_unquote(o)) { // implies obj_is_vec
-    Int len = vec_len(o);
-    Obj* src = vec_els(o);
-    Obj v = new_vec_raw(len + 1);
+    Mem m = vec_mem(o);
+    Obj v = new_vec_raw(m.len + 1);
     Obj* dst = vec_els(v);
     dst[0] = obj_ret_val(SEQ);
-    for_in(i, len) {
-      Obj e = src[i];
+    for_in(i, m.len) {
+      Obj e = m.els[i];
       if (obj_is_vec(e) && vec_el(e, 0).u == UNQ.u) { // unquote form
         check_obj(vec_len(e) == 2, "malformed UNQ form", e);
         dst[1 + i] = obj_ret(vec_el(e, 1)); // TODO: expand?

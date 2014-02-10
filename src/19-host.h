@@ -127,13 +127,13 @@ static Obj host_prepend(Int len_pars, Obj* args) {
   Obj vec = args[0];
   Obj el = args[1];
   check_obj(obj_is_vec(vec), "prepend expected arg 1 Vec; found", vec);
-  Int len = vec_len(vec);
-  Obj res = new_vec_raw(len + 1);
+  Mem  m = vec_mem(vec);
+  Obj res = new_vec_raw(m.len + 1);
   Obj* els = vec_els(res);
-  for_in(i, len) {
-    els[i] = obj_ret(vec_el(vec, i));
+  for_in(i, m.len) {
+    els[i] = obj_ret(m.els[i]);
   }
-  els[len] = el;
+  els[m.len] = el;
   obj_rel(vec);
   return res;
 }

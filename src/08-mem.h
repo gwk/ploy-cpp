@@ -15,6 +15,22 @@ typedef struct {
 #define mem0 (Mem){.len=0, .els=NULL}
 
 
+// iterate over mem using pointer Obj pointer e, start index m, end index n.
+// note: c syntax requires that all declarations in the for initializer have the same type,
+// or pointer of that type.
+// this prevents us from declaring a tempory variable to hold the value of mem,
+// and so we cannot help but evaluate mem multiple times.
+#define it_mem_from_to(it, mem, from, to) \
+for (Obj *it = (mem).els + (from), \
+*_##it##_end = (mem).els + (to); \
+it < _##it##_end; \
+it++)
+
+#define it_mem_to(it, mem, to) it_mem_from_to(it, mem, 0, to)
+#define it_mem_from(it, mem, from) it_mem_from_to(it, mem, from, (mem).len)
+#define it_mem(it, mem) it_mem_from(it, mem, 0)
+
+
 static Mem mem_mk(Int len, Obj* els) {
   return (Mem){.len=len, .els=els};
 }
@@ -89,8 +105,8 @@ static void mem_realloc(Mem* m, Int len) {
   // release any truncated elements, realloc memory, and zero any new elements.
   // note that this function does not set m->len,
   // because that reflects the number of elements used, not allocation size.
-  for_imn(i, len, m->len) { // release any old elements.
-    obj_rel(m->els[i]);
+  it_mem_from(it, *m, len) { // release any old elements.
+    obj_rel(*it);
   }
   m->els = raw_realloc(m->els, len * size_Obj, ci_Mem);
 #if OPT_ALLOC_SCRIBBLE
@@ -105,9 +121,8 @@ static void mem_realloc(Mem* m, Int len) {
 static void mem_dealloc(Mem m) {
   // dealloc m but do not release the elements, which must have been previously moved.
 #if OPT_ALLOC_SCRIBBLE
-  for_in(i, m.len) {
-    Obj el = mem_el(m, i);
-    assert(el.u == obj0.u);
+  it_mem(it, m) {
+    assert(it->u == obj0.u);
   }
 #endif
   raw_dealloc(m.els, ci_Mem);
@@ -116,10 +131,10 @@ static void mem_dealloc(Mem m) {
 
 static void mem_release_dealloc(Mem m) {
   // release all elements and dealloc m.
-  for_in(i, m.len) {
-    obj_rel(m.els[i]);
+  it_mem(it, m) {
+    obj_rel(*it);
 #if OPT_ALLOC_SCRIBBLE
-    m.els[i] = obj0;
+    *it = obj0;
 #endif
   }
   mem_dealloc(m);
