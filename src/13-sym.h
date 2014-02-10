@@ -30,7 +30,7 @@ static Int sym_index(Obj s) {
 
 static Obj sym_data(Obj s) {
   assert(obj_is_sym(s));
-  return mem_el_borrowed(global_sym_names.mem, sym_index(s));
+  return mem_el(global_sym_names.mem, sym_index(s));
 }
 
 
@@ -39,7 +39,7 @@ static Obj new_data_from_str(Str s);
 
 static Obj new_sym(Str s) {
   for_in(i, global_sym_names.mem.len) {
-    Obj d = mem_el_borrowed(global_sym_names.mem, i);
+    Obj d = mem_el(global_sym_names.mem, i);
     if (str_eq(s, data_str(d))) {
       return obj_ret_val(sym_with_index(i));
     }

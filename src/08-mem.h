@@ -46,7 +46,7 @@ UNUSED_FN static Obj* mem_end(Mem m) {
 }
 
 
-static Obj mem_el_borrowed(Mem m, Int i) {
+static Obj mem_el(Mem m, Int i) {
   // return element i in m with no ownership changes.
   check_mem_index(m, i);
   return m.els[i];
@@ -55,13 +55,13 @@ static Obj mem_el_borrowed(Mem m, Int i) {
 
 UNUSED_FN static Obj mem_el_ret(Mem m, Int i) {
   // retain and return element i in m.
-  return obj_ret(mem_el_borrowed(m, i));
+  return obj_ret(mem_el(m, i));
 }
 
 
 static Obj mem_el_move(Mem m, Int i) {
   // move element at i out of m.
-  Obj e = mem_el_borrowed(m, i);
+  Obj e = mem_el(m, i);
 #if OPT_ALLOC_SCRIBBLE
   m.els[i] = obj0;
 #endif
@@ -99,7 +99,7 @@ static void mem_dealloc(Mem m) {
   // dealloc m but do not release the elements, which must have been previously moved.
 #if OPT_ALLOC_SCRIBBLE
   for_in(i, m.len) {
-    Obj el = mem_el_borrowed(m, i);
+    Obj el = mem_el(m, i);
     assert(el.u == obj0.u);
   }
 #endif
