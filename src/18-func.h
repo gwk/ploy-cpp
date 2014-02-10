@@ -4,7 +4,7 @@
 #include "17-file.h"
 
 
-typedef Obj(*Func_host_ptr)(Int, Obj*);
+typedef Obj(*Func_host_ptr)(Mem);
 
 
 typedef struct {

@@ -4,18 +4,18 @@
 #include "18-func.h"
 
 
-static Obj host_identity(Int len_pars, Obj* args) {
+static Obj host_identity(Mem args) {
   // owns element of args.
-  assert(len_pars == 1);
-  return args[0];
+  assert(args.len == 1);
+  return args.els[0];
 }
 
 
-static Obj host_raw_write(Int len_pars, Obj* args) {
+static Obj host_raw_write(Mem args) {
   // owns elements of args.
-  assert(len_pars == 2);
-  Obj f = args[0];
-  Obj d = args[1];
+  assert(args.len == 2);
+  Obj f = args.els[0];
+  Obj d = args.els[1];
   check_obj(ref_is_file(f), "write expected arg 1 File; found", f);
   check_obj(ref_is_data(d), "write expected arg 2 Data; found", d);
   CFile file = file_file(f);
@@ -28,11 +28,11 @@ static Obj host_raw_write(Int len_pars, Obj* args) {
 
 static void write_repr(CFile f, Obj o);
 
-static Obj host_raw_write_repr(Int len_pars, Obj* args) {
+static Obj host_raw_write_repr(Mem args) {
   // owns elements of args.
-  assert(len_pars == 2);
-  Obj f = args[0];
-  Obj o = args[1];
+  assert(args.len == 2);
+  Obj f = args.els[0];
+  Obj o = args.els[1];
   check_obj(ref_is_file(f), "write expected arg 1 File; found", f);
   CFile file = file_file(f);
   write_repr(file, o);
@@ -42,10 +42,10 @@ static Obj host_raw_write_repr(Int len_pars, Obj* args) {
 }
 
 
-static Obj host_raw_flush(Int len_pars, Obj* args) {
+static Obj host_raw_flush(Mem args) {
   // owns elements of args.
-  assert(len_pars == 1);
-  Obj f = args[0];
+  assert(args.len == 1);
+  Obj f = args.els[0];
   check_obj(ref_is_file(f), "write expected arg 1 File; found", f);
   CFile file = file_file(f);
   fflush(file);
@@ -54,10 +54,10 @@ static Obj host_raw_flush(Int len_pars, Obj* args) {
 }
 
 
-static Obj host_len(Int len_pars, Obj* args) {
+static Obj host_len(Mem args) {
   // owns elements of args.
-  assert(len_pars == 1);
-  Obj o = args[0];
+  assert(args.len == 1);
+  Obj o = args.els[0];
   Int l;
   if (o.u == VEC0.u || o.u == blank.u) {
     l = 0;
@@ -71,11 +71,11 @@ static Obj host_len(Int len_pars, Obj* args) {
 }
 
 
-static Obj host_el(Int len_pars, Obj* args) {
+static Obj host_el(Mem args) {
   // owns elements of args.
-  assert(len_pars == 2);
-  Obj v = args[0];
-  Obj i = args[1];
+  assert(args.len == 2);
+  Obj v = args.els[0];
+  Obj i = args.els[1];
   check_obj(obj_is_vec(v), "el expected arg 1 Vec; found", v);
   check_obj(obj_is_int(i), "el expected arg 2 Int; found", i);
   Int j = int_val(i);
@@ -90,12 +90,12 @@ static Obj host_el(Int len_pars, Obj* args) {
 }
 
 
-static Obj host_slice(Int len_pars, Obj* args) {
+static Obj host_slice(Mem args) {
   // owns elements of args.
-  assert(len_pars == 3);
-  Obj v = args[0];
-  Obj i0 = args[1];
-  Obj i1 = args[2];
+  assert(args.len == 3);
+  Obj v = args.els[0];
+  Obj i0 = args.els[1];
+  Obj i1 = args.els[2];
   check_obj(obj_is_vec(v), "el expected arg 1 Vec; found", v);
   check_obj(obj_is_int(i0), "el expected arg 2 Int; found", i0);
   check_obj(obj_is_int(i1), "el expected arg 3 Int; found", i1);
@@ -121,11 +121,11 @@ static Obj host_slice(Int len_pars, Obj* args) {
 }
 
 
-static Obj host_prepend(Int len_pars, Obj* args) {
+static Obj host_prepend(Mem args) {
   // owns elements of args.
-  assert(len_pars == 2);
-  Obj vec = args[0];
-  Obj el = args[1];
+  assert(args.len == 2);
+  Obj vec = args.els[0];
+  Obj el = args.els[1];
   check_obj(obj_is_vec(vec), "prepend expected arg 1 Vec; found", vec);
   Mem  m = vec_mem(vec);
   Obj res = new_vec_raw(m.len + 1);
@@ -139,10 +139,10 @@ static Obj host_prepend(Int len_pars, Obj* args) {
 }
 
 
-static Obj host_neg(Int len_pars, Obj* args) {
+static Obj host_neg(Mem args) {
   // owns elements of args.
-  assert(len_pars == 1);
-  Obj n = args[0];
+  assert(args.len == 1);
+  Obj n = args.els[0];
   check_obj(obj_is_int(n), "add expected Int; found", n);
   Int i = int_val(n);
   obj_rel_val(n);
@@ -150,10 +150,10 @@ static Obj host_neg(Int len_pars, Obj* args) {
 }
 
 
-static Obj host_abs(Int len_pars, Obj* args) {
+static Obj host_abs(Mem args) {
   // owns elements of args.
-  assert(len_pars == 1);
-  Obj n = args[0];
+  assert(args.len == 1);
+  Obj n = args.els[0];
   check_obj(obj_is_int(n), "add expected Int; found", n);
   Int i = int_val(n);
   obj_rel_val(n);
@@ -165,10 +165,10 @@ static Obj host_abs(Int len_pars, Obj* args) {
 // TODO: check for overflow.
 // owns elements of args.
 #define HOST_BIN_OP(name) \
-static Obj host_##name(Int len_pars, Obj* args) { \
-  assert(len_pars == 2); \
-  Obj n0 = args[0]; \
-  Obj n1 = args[1]; \
+static Obj host_##name(Mem args) { \
+  assert(args.len == 2); \
+  Obj n0 = args.els[0]; \
+  Obj n1 = args.els[1]; \
   check_obj(obj_is_int(n0), "add expected arg 1 Int; found", n0); \
   check_obj(obj_is_int(n1), "add expected arg 2 Int; found", n1); \
   Int i = int_##name(int_val(n0), int_val(n1)); \
@@ -206,10 +206,10 @@ HOST_BIN_OP(le)
 HOST_BIN_OP(ge)
 
 
-static Obj host_not(Int len_pars, Obj* args) {
+static Obj host_not(Mem args) {
   // owns elements of args.
-  assert(len_pars == 1);
-  Obj b = args[0];
+  assert(args.len == 1);
+  Obj b = args.els[0];
   Obj r = FALSE;
   if (b.u == FALSE.u) r = TRUE;
   else if (b.u != TRUE.u) {
@@ -220,31 +220,31 @@ static Obj host_not(Int len_pars, Obj* args) {
 }
 
 
-static Obj host_exit(Int len_pars, Obj* args) {
+static Obj host_exit(Mem args) {
   // owns elements of args.
-  assert(len_pars == 1);
-  Obj n = args[0];
+  assert(args.len == 1);
+  Obj n = args.els[0];
   exit(cast(I32, int_val(n)));
   // TODO: throw exception to unwind, cleanup, and report counts?
 }
 
 
-static Obj host_Vec(Int len_pars, Obj* args) {
+static Obj host_Vec(Mem args) {
   // owns elements of args.
-  return new_vec_M(mem_mk(len_pars, args));
+  return new_vec_M(args);
 }
 
 
-//static Obj host_chain(Int len_pars, Obj* args) {}
+//static Obj host_chain(Mem args) {}
 
 
 static Obj run(Obj env, Obj code);
 
-static Obj host_run(Int len_pars, Obj* args) {
+static Obj host_run(Mem args) {
   // owns elements of args.
-  assert(len_pars == 2);
-  Obj env = args[0];
-  Obj code = args[1];
+  assert(args.len == 2);
+  Obj env = args.els[0];
+  Obj code = args.els[1];
   Obj val = run(env, code);
   obj_rel(env);
   obj_rel(code);

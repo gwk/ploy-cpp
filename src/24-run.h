@@ -155,7 +155,7 @@ static Obj run_call_host(Obj env, Obj func, Mem args) {
   for_in(i, args.len) {
     arg_vals[i] = run(env, args.els[i]);
   }
-  return f(args.len, arg_vals);
+  return f(mem_mk(args.len, arg_vals));
 }
 
 
