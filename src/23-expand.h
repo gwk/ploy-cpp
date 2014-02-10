@@ -10,12 +10,11 @@ static const CharsC trace_post_expand_prefix = "▫ ";  // white small square
 
 static Bool expr_contains_unquote(Obj o) {
   if (!obj_is_vec(o)) return false;
-  Int len = vec_len(o);
-  Obj* els = vec_els(o);
-  assert(len > 0);
-  if (els[0].u == UNQ.u) return true; // vec is an unquote form.
-  for_imn(i, 1, len) {
-    Obj el = els[i];
+  Mem m = vec_mem(o);
+  assert(m.len > 0);
+  if (m.els[0].u == UNQ.u) return true; // vec is an unquote form.
+  for_imn(i, 1, m.len) {
+    Obj el = m.els[i];
     if (expr_contains_unquote(el)) return true;
   }
   return false;
@@ -49,17 +48,17 @@ static Obj expr_quasiquote(Obj o) {
 }
 
 
-static Obj run_call_native(Obj env, Obj func, Int len, Obj* args, Bool is_expand); // owns func.
+static Obj run_call_native(Obj env, Obj func, Mem args, Bool is_expand); // owns func.
 
-static Obj expand_macro(Obj env, Int len, Obj* args) {
-  check(len > 0, "empty macro expand");
-  Obj macro_sym = args[0];
+static Obj expand_macro(Obj env, Mem args) {
+  check(args.len > 0, "empty macro expand");
+  Obj macro_sym = mem_el(args, 0);
   check_obj(obj_is_sym(macro_sym), "expand argument 0 must be a Sym; found", macro_sym);
   Obj macro = env_get(env, macro_sym);
   if (macro.u == obj0.u) { // lookup failed.
     error_obj("macro lookup error", macro_sym);
   }
-  return run_call_native(env, obj_ret(macro), len - 1, args + 1, true);
+  return run_call_native(env, obj_ret(macro), mem_next(args), true);
 }
 
 
@@ -68,15 +67,14 @@ static Obj expand(Obj env, Obj code) {
   if (!obj_is_vec_ref(code)) {
     return code;
   }
-  Int len = vec_len(code);
-  Obj* els = vec_els(code);
-  Obj hd = els[0];
+  Mem m = vec_mem(code);
+  Obj hd = m.els[0];
   if (hd.u == QUO.u) {
     return code;
   }
   if (hd.u == QUA.u) {
-    check_obj(len == 2, "malformed QUA form", code);
-    Obj expr = obj_ret(els[1]);
+    check_obj(m.len == 2, "malformed QUA form", code);
+    Obj expr = obj_ret(m.els[1]);
     obj_rel(code);
     return expr_quasiquote(expr);
   }
@@ -84,7 +82,7 @@ static Obj expand(Obj env, Obj code) {
 #if VERBOSE_EVAL
     err(trace_expand_prefix); dbg(code);
 #endif
-      Obj expanded = expand_macro(env, len - 1, els + 1);
+      Obj expanded = expand_macro(env, mem_next(m));
       obj_rel(code);
 #if VERBOSE_EVAL
     err(trace_post_expand_prefix); dbg(code);
@@ -93,10 +91,10 @@ static Obj expand(Obj env, Obj code) {
   }
   else {
     // recursively expand vec.
-    Obj expanded = new_vec_raw(len);
+    Obj expanded = new_vec_raw(m.len);
     Obj* expanded_els = vec_els(expanded);
-    for_in(i, len) {
-      expanded_els[i] = expand(env, obj_ret(els[i]));
+    for_in(i, m.len) {
+      expanded_els[i] = expand(env, obj_ret(m.els[i]));
     }
     obj_rel(code);
     return expanded;

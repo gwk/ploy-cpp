@@ -37,7 +37,14 @@ static Bool mem_index_is_valid(Mem m, Int i) {
 
 static void check_mem_index(Mem m, Int i) {
   assert(mem_is_valid(m));
-  check(mem_index_is_valid(m, i), "invalid Mem index: %ld", i);
+  check(mem_index_is_valid(m, i), "invalid Mem index: %ld", i); // TODO: change to assert?
+}
+
+
+static Mem mem_next(Mem m) {
+  // note: this may produce an invalid mem representing the end of the region.
+  assert(m.len > 0 && m.els);
+  return mem_mk(m.len - 1, m.els + 1);
 }
 
 

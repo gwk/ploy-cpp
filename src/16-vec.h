@@ -83,6 +83,11 @@ static Obj* vec_els(Obj v) {
 }
 
 
+static Mem vec_mem(Obj v) {
+  return mem_mk(vec_len(v), vec_els(v));
+}
+
+
 static Obj vec_el(Obj v, Int i) {
   // assumes the caller knows the size of the vector.
   assert(ref_is_vec(v));

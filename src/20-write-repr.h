@@ -41,12 +41,11 @@ static void write_repr_obj(CFile f, Obj o, Set* s);
 
 static void write_repr_vec_vec(CFile f, Obj v, Set* s) {
   assert(ref_is_vec(v));
-  Int len = vec_len(v);
-  Obj* els = vec_els(v);
+  Mem m = vec_mem(v);
   fputs("[", f);
-  for_in(i, len) {
+  for_in(i, m.len) {
     if (i) fputc(' ', f);
-    write_repr_obj(f, els[i], s);
+    write_repr_obj(f, m.els[i], s);
   }
   fputs("]", f);
 }
@@ -73,14 +72,13 @@ static void write_repr_fat_chain(CFile f, Obj c, Set* s) {
   assert(ref_is_vec(c));
   fputs("[", f);
   loop {
-    Obj* els = vec_els(c);
-    Int len = vec_len(c);
+    Mem m = vec_mem(c);
     fputs("|", f);
-    for_in(i, len - 1) {
+    for_in(i, m.len - 1) {
       if (i) fputc(' ', f);
-      write_repr_obj(f, els[i], s);
+      write_repr_obj(f, m.els[i], s);
     }
-    Obj tl = els[len - 1];
+    Obj tl = m.els[m.len - 1];
     if (tl.u == END.u) break;
     assert(obj_is_vec_ref(tl));
     c = tl;

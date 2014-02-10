@@ -75,9 +75,6 @@ static Obj ref_alloc(Struct_tag st, Int size) {
 }
 
 
-static Int vec_len(Obj v);
-static Obj* vec_els(Obj v);
-
 static void ref_dealloc(Obj r) {
   assert_ref_is_valid(r);
   rc_errMLV("dealloc   ", r.rc);
