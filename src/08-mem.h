@@ -41,24 +41,18 @@ UNUSED_FN static Bool mem_eq(Mem a, Mem b) {
 }
 
 
-static Bool mem_is_valid(Mem m) {
-  return (m.len == 0) || (m.len > 0 && m.els);
+static void assert_mem_is_valid(Mem m) {
+  assert(m.len == 0 || (m.len > 0 && m.els));
 }
 
 
-static Bool mem_index_is_valid(Mem m, Int i) {
-  return i >= 0 && i < m.len;
-}
-
-
-static void check_mem_index(Mem m, Int i) {
-  assert(mem_is_valid(m));
-  check(mem_index_is_valid(m, i), "invalid Mem index: %ld", i); // TODO: change to assert?
+static void assert_mem_index_is_valid(Mem m, Int i) {
+  assert_mem_is_valid(m);
+  assert(i >= 0 && i < m.len);
 }
 
 
 static Mem mem_next(Mem m) {
-  // note: this may produce an invalid mem representing the end of the region.
   assert(m.len > 0 && m.els);
   return mem_mk(m.len - 1, m.els + 1);
 }
@@ -71,7 +65,7 @@ UNUSED_FN static Obj* mem_end(Mem m) {
 
 static Obj mem_el(Mem m, Int i) {
   // return element i in m with no ownership changes.
-  check_mem_index(m, i);
+  assert_mem_index_is_valid(m, i);
   return m.els[i];
 }
 

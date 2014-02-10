@@ -15,7 +15,8 @@ typedef struct {
 
 
 static void assert_array_is_valid(Array* a) {
-  assert(mem_is_valid(a->mem) && a->cap >= 0 && a->mem.len <= a->cap);
+  assert_mem_is_valid(a->mem);
+  assert(a->cap >= 0 && a->mem.len <= a->cap);
 }
 
 

@@ -48,8 +48,8 @@ static Str str_from_chars(Chars p) {
 }
 
 
-static Bool str_is_valid(Str s) {
-  return  (!s.chars && !s.len) || (s.chars && s.len > 0);
+static void assert_str_is_valid(Str s) {
+  assert((!s.chars && !s.len) || (s.chars && s.len > 0));
 }
 
 
@@ -59,7 +59,7 @@ static Bool str_index_is_valid(Str s, Int i) {
 
 
 static void check_str_index(Str s, Int i) {
-  assert(str_is_valid(s));
+  assert_str_is_valid(s);
   check(str_index_is_valid(s, i), "invalid Str index: %ld", i);
 }
 

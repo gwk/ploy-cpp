@@ -88,15 +88,19 @@ static void hash_bucket_remove(Hash_bucket* b, Obj r) {
 }
 
 
-static Bool set_is_valid(Set* s) {
-  return s
-  && ((s->len == 0 && s->len_buckets == 0 && s->buckets == NULL)
-      || (s->len >= 0 && s->len < s->len_buckets && s->buckets));
+static void assert_set_is_valid(Set* s) {
+  assert(s);
+  if (s->buckets) {
+    assert(s->len >= 0 && s->len < s->len_buckets);
+  }
+  else {
+    assert(s->len == 0 && s->len_buckets == 0);
+  }
 }
 
 
 static void set_dealloc(Set* s) {
-  assert(set_is_valid(s));
+  assert_set_is_valid(s);
   for_in(i, s->len_buckets) {
     hash_bucket_dealloc(s->buckets + i);
   }
@@ -105,7 +109,7 @@ static void set_dealloc(Set* s) {
 
 
 static Hash_bucket* set_bucket(Set* s, Obj r) {
-  assert(set_is_valid(s));
+  assert_set_is_valid(s);
   assert(s->len > 0);
   Uns h = ref_hash(r);
   Uns i = h % cast(Uns, s->len_buckets);
@@ -114,7 +118,7 @@ static Hash_bucket* set_bucket(Set* s, Obj r) {
 
 
 static Bool set_contains(Set* s, Obj r) {
-  assert(set_is_valid(s));
+  assert_set_is_valid(s);
   if (!s->len) return false;
   Hash_bucket* b = set_bucket(s, r);
   return hash_bucket_contains(b, r);
@@ -122,7 +126,7 @@ static Bool set_contains(Set* s, Obj r) {
 
 
 static void set_insert(Set* s, Obj r) {
-  assert(set_is_valid(s));
+  assert_set_is_valid(s);
   if (s->len == 0) {
     s->len = 1;
     s->len_buckets = min_set_len_buckets;

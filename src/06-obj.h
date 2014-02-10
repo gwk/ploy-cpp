@@ -327,6 +327,8 @@ static Counter_index st_counter_index(Struct_tag st) {
 
 static Struct_tag ref_struct_tag(Obj r);
 
+
+#if OPT_ALLOC_COUNT
 static Counter_index obj_counter_index(Obj o) {
   Obj_tag ot = obj_tag(o);
   if (ot & ot_flt_bit) return ci_Flt;
@@ -338,6 +340,7 @@ static Counter_index obj_counter_index(Obj o) {
   }
   return st_counter_index(ref_struct_tag(o));
 }
+#endif
 
 
 static void assert_ref_is_valid(Obj o);
