@@ -11,6 +11,7 @@ if [[ "$1" == "-release" ]]; then
   shift
   opts="\
 -DDEBUG=0 \
+-Wno-unused-function \
 -Ofast \
 "
 else

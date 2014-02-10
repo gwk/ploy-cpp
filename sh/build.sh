@@ -3,4 +3,4 @@
 
 cd $(dirname "$0")/..
 
-sh/_compile.sh -o build/ploy "$@"
+sh/_compile.sh "$@" -o build/ploy

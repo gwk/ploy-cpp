@@ -3,4 +3,4 @@
 
 cd $(dirname "$0")/..
 
-sh/_compile.sh -E -D=SKIP_LIB_INCLUDES "$@"
+sh/_compile.sh "$@" -E -D=SKIP_LIB_INCLUDES

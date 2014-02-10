@@ -86,10 +86,12 @@ static void mem_realloc(Mem* m, Int len) {
     obj_rel(m->els[i]);
   }
   m->els = raw_realloc(m->els, len * size_Obj, ci_Mem);
-  if (OPT_ALLOC_SCRIBBLE && m->len < len) {
+#if OPT_ALLOC_SCRIBBLE
+  if (m->len < len) {
     // zero all new, uninitialized els to catch illegal derefernces.
     memset(m->els + m->len, 0, (len - m->len) * size_Obj);
   }
+#endif
 }
 
 

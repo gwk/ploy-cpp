@@ -53,29 +53,23 @@ COUNTER_LIST
 } Counter_index;
 
 
-
 #if OPT_ALLOC_COUNT
+
 // the global array of inc/dec counter pairs.
 static Int counters[ci_end][2] = {};
-#endif
 
 
 static void counter_inc(Counter_index ci) {
   assert(ci >= 0 && ci < ci_end);
-#if OPT_ALLOC_COUNT
   counters[ci][0]++;
-#endif
 }
 
 
 static void counter_dec(Counter_index ci) {
-#if OPT_ALLOC_COUNT
   counters[ci][1]++;
-#endif
 }
 
 
-#if OPT_ALLOC_COUNT
 static void counter_stats(Bool log_all) {
   // log counter stats.
 #define C(c) { \
@@ -90,5 +84,12 @@ static void counter_stats(Bool log_all) {
 COUNTER_LIST
 #undef C
 }
+
+#else // !OPT_ALLOC_COUNT
+
+#define counter_inc(ci) ((void)0)
+#define counter_dec(ci) ((void)0)
+#define counter_stats(ci) ((void)0)
+
 #endif // OPT_ALLOC_COUNT
 

@@ -3,4 +3,4 @@
 
 cd $(dirname "$0")/..
 
-sh/_compile.sh -fsyntax-only
+sh/_compile.sh "$@" -fsyntax-only
