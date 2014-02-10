@@ -297,7 +297,7 @@ static Mem parse_exprs(Parser* p, Char term) {
 }
 
 
-#define P_ADV_TERM(t) \
+#define P_CONSUME_TERMINATOR(t) \
 if (p->e || !parse_terminator(p, t)) { \
   mem_release_dealloc(m); \
   return obj0; \
@@ -307,7 +307,7 @@ if (p->e || !parse_terminator(p, t)) { \
 static Obj parse_struct(Parser* p) {
   P_ADV1;
   Mem m = parse_exprs(p, 0);
-  P_ADV_TERM('}');
+  P_CONSUME_TERMINATOR('}');
   Obj v = new_vec_M(m);
   mem_dealloc(m);
   return v;
@@ -317,7 +317,7 @@ static Obj parse_struct(Parser* p) {
 static Obj parse_call(Parser* p) {
   P_ADV1;
   Mem m = parse_exprs(p, 0);
-  P_ADV_TERM(')');
+  P_CONSUME_TERMINATOR(')');
   Obj v = new_vec_EM(obj_ret_val(CALL), m);
   mem_dealloc(m);
   return v;
@@ -327,7 +327,7 @@ static Obj parse_call(Parser* p) {
 static Obj parse_expand(Parser* p) {
   P_ADV1;
   Mem m = parse_exprs(p, 0);
-  P_ADV_TERM('>');
+  P_CONSUME_TERMINATOR('>');
   Obj v = new_vec_EM(obj_ret_val(EXPAND), m);
   mem_dealloc(m);
   return v;
@@ -336,7 +336,7 @@ static Obj parse_expand(Parser* p) {
 
 static Obj parse_seq_simple(Parser* p) {
   Mem m = parse_exprs(p, 0);
-  P_ADV_TERM(']');
+  P_CONSUME_TERMINATOR(']');
   if (!m.len) {
     return obj_ret_val(VEC0);
   }
@@ -349,7 +349,7 @@ static Obj parse_seq_simple(Parser* p) {
 static Obj parse_chain_simple(Parser* p) {
   P_ADV1;
   Mem m = parse_exprs(p, 0);
-  P_ADV_TERM(']');
+  P_CONSUME_TERMINATOR(']');
   if (!m.len) {
     return obj_ret_val(CHAIN0);
   }
@@ -388,7 +388,7 @@ static Obj parse_chain_blocks(Parser* p) {
     array_append_move(&a, v);
   }
   Mem m = a.mem;
-  P_ADV_TERM(']');
+  P_CONSUME_TERMINATOR(']');
   // assemble the chain.
   if (!m.len) {
     return obj_ret_val(CHAIN0);
