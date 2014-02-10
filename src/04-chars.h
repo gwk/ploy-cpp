@@ -15,6 +15,7 @@ typedef wchar_t* Utf32;
 typedef const wchar_t* Utf32C;
 
 typedef FILE* CFile; // 'File' refers to the ploy type.
+DEF_SIZE(CFile);
 
 
 static Bool chars_eq(CharsC a, CharsC b) {

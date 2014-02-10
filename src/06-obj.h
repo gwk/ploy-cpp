@@ -122,15 +122,14 @@ typedef struct {
   Tag mt : width_meta_tag;    // meta tag.
   Uns sc : width_sc;          // strong count.
 } RC; // Ref-counts. 
+DEF_SIZE(RC);
 
 // the Vec and Data ref types are layed out as RC, length word, and then the elements.
 typedef struct {
   RC rc;
   Int len;
 } RCL; // Ref-counts, length.
-
-static const Int size_RC  = sizeof(RC);
-static const Int size_RCL = sizeof(RCL);
+DEF_SIZE(RCL);
 
 
 static void rc_err(RC* rc) {
@@ -158,8 +157,8 @@ typedef union {
   RC* rc;
   RCL* rcl;
 } Obj;
+DEF_SIZE(Obj);
 
-static Int size_Obj = sizeof(Obj);
 
 // invalid object; essentially the NULL pointer.
 // used as a return value for error conditions and a marker for cleared or invalid memory.

@@ -14,8 +14,8 @@ typedef struct {
   Int cap;
   Obj* els; // TODO: union with Obj el to optimize the len == 1 case?
 } Hash_bucket;
+DEF_SIZE(Hash_bucket);
 
-static const Int size_Hash_bucket = sizeof(Hash_bucket);
 static const Hash_bucket hash_bucket0 = {.len=0, .cap=0, .els=NULL};
 
 
@@ -24,6 +24,7 @@ typedef struct {
   Int len_buckets;
   Hash_bucket* buckets;
 } Set;
+DEF_SIZE(Set);
 
 static const Set set0 = {.len=0, .len_buckets=0, .buckets=NULL};
 

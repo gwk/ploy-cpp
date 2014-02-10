@@ -12,8 +12,7 @@ typedef struct {
   Int len_pars;
   Func_host_ptr ptr;
 } ALIGNED_TO_WORD Func_host;
-
-static const Int size_Func_host = sizeof(Func_host);
+DEF_SIZE(Func_host);
 
 
 static Obj new_func_host(Obj sym, Int len_pars, Func_host_ptr ptr) {

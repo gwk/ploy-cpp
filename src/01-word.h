@@ -144,13 +144,18 @@ static const Uns max_Uns = ULONG_MAX;
 
 // byte size constants.
 // terminology: size_ prefix should always refer to size in bytes.
-static const Int size_Char  = sizeof(Char);
-static const Int size_Bool  = sizeof(Bool);
-static const Int size_Int   = sizeof(Int);
-static const Int size_Uns   = sizeof(Uns);
-static const Int size_Flt   = sizeof(Flt);
-static const Int size_Ptr   = sizeof(Ptr);
-static const Int size_Word  = sizeof(Word);
+
+// define signed Int constants to use instead of sizeof.
+// this lets us use signed Int with fewer casts, reducing the risk of overflows mistakes.
+#define DEF_SIZE(type) static const Int size_##type = sizeof(type)
+
+DEF_SIZE(Char);
+DEF_SIZE(Bool);
+DEF_SIZE(Int);
+DEF_SIZE(Uns);
+DEF_SIZE(Flt);
+DEF_SIZE(Ptr);
+DEF_SIZE(Word);
 
 // this alignment value is based on the OSX malloc man page,
 // which guarantees 16-byte-aligned malloc.
