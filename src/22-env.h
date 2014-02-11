@@ -68,7 +68,7 @@ static Obj env_frame_bind_args(Obj env, Obj func, Mem pars, Mem args, Bool is_ex
   Bool has_variad = false;
   for_in(i_pars, pars.len) {
     Obj par = pars.els[i_pars];
-    check_obj(obj_is_par(par), "function parameter is malformed", func);
+    check_obj(obj_is_par(par), "function parameter is malformed", vec_el(func, 0));
     Obj* par_els = vec_els(par);
     Obj par_kind = par_els[0]; // LABEL or VARIAD
     Obj par_sym = par_els[1];
@@ -84,14 +84,14 @@ static Obj env_frame_bind_args(Obj env, Obj func, Mem pars, Mem args, Bool is_ex
         arg = par_expr;
       }
       else {
-        error_obj("not enough arguments provided to function", func);
+        error_obj("function received too few arguments", vec_el(func, 0));
       }
       Obj val = (is_expand ? obj_ret(arg) : run(env, arg));
       frame = env_frame_bind(frame, obj_ret_val(par_sym), val);
     }
     else {
       assert(par_kind.u == VARIAD.u);
-      check_obj(!has_variad, "function has multiple variad parameters", func);
+      check_obj(!has_variad, "function has multiple variad parameters", vec_el(func, 0));
       has_variad = true;
       Int variad_count = 0;
       for_imn(i, i_args, args.len) {
@@ -108,6 +108,7 @@ static Obj env_frame_bind_args(Obj env, Obj func, Mem pars, Mem args, Bool is_ex
       frame = env_frame_bind(frame, obj_ret_val(par_sym), variad_val);
     }
   }
+  check_obj(i_args == args.len, "function received too many arguments", vec_el(func, 0));
   return frame;
 }
 
