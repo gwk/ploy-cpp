@@ -4,8 +4,10 @@
 #include "25-run.h"
 
 static Obj eval(Obj env, Obj code) {
-  Obj expanded = expand(env, obj_ret(code)); // owns code.
-  Obj val = run(env, expanded); // does not own expanded.
+  Obj preprocessed = preprocess(code); // borrows code.
+  if (preprocessed.u == obj0.u) return obj_ret_val(VOID);
+  Obj expanded = expand(env, preprocessed); // owns preprocessed.
+  Obj val = run(env, expanded); // borrows expanded.
   obj_rel(expanded);
   return val;
 }
