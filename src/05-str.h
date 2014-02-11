@@ -67,7 +67,7 @@ static Int str_append(Str* s, Int i, Char c) {
   assert(i <= s->len);
   if (i == s->len) str_grow(s);
   s->chars[i] = c;
-  return i++;
+  return i + 1;
 }
 
 

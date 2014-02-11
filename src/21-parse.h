@@ -185,7 +185,7 @@ static Obj parse_data(Parser* p, Char q) {
   Str s = str_alloc(size_min_alloc);
   Int i = 0;
 
-#define APPEND(c) i = str_append(&s, i, c)
+#define APPEND(c) { i = str_append(&s, i, c); }
 
   Bool escape = false;
   loop {
