@@ -278,7 +278,7 @@ static Bool obj_is_data_ref(Obj o) {
 }
 
 
-UNUSED_FN static Bool obj_is_data(Obj o) {
+static Bool obj_is_data(Obj o) {
   return obj_is_data_word(o) || obj_is_data_ref(o);
 }
 
@@ -298,7 +298,7 @@ static Bool obj_is_vec(Obj o) {
 }
 
 
-UNUSED_FN static Bool obj_is_file(Obj o) {
+static Bool obj_is_file(Obj o) {
   return obj_is_ref(o) && ref_is_file(o);
 }
 

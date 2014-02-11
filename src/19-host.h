@@ -16,8 +16,8 @@ static Obj host_raw_write(Mem args) {
   assert(args.len == 2);
   Obj f = args.els[0];
   Obj d = args.els[1];
-  check_obj(ref_is_file(f), "write requires arg 1 to be a File; found", f);
-  check_obj(ref_is_data(d), "write requires arg 2 to be a Data; found", d);
+  check_obj(obj_is_file(f), "write requires arg 1 to be a File; found", f);
+  check_obj(obj_is_data(d), "write requires arg 2 to be a Data; found", d);
   CFile file = file_file(f);
   Int i = cast(Int, fwrite(data_ptr(d), size_Char, cast(Uns, data_len(d)), file));
   obj_rel(f);
@@ -33,7 +33,7 @@ static Obj host_raw_write_repr(Mem args) {
   assert(args.len == 2);
   Obj f = args.els[0];
   Obj o = args.els[1];
-  check_obj(ref_is_file(f), "write requires arg 1 to be a File; found", f);
+  check_obj(obj_is_file(f), "write requires arg 1 to be a File; found", f);
   CFile file = file_file(f);
   write_repr(file, o);
   obj_rel(f);
@@ -46,7 +46,7 @@ static Obj host_raw_flush(Mem args) {
   // owns elements of args.
   assert(args.len == 1);
   Obj f = args.els[0];
-  check_obj(ref_is_file(f), "write requires arg 1 to be a File; found", f);
+  check_obj(obj_is_file(f), "write requires arg 1 to be a File; found", f);
   CFile file = file_file(f);
   fflush(file);
   obj_rel(f);
@@ -63,7 +63,7 @@ static Obj host_len(Mem args) {
     l = 0;
   }
   else {
-    check_obj(ref_is_data(o) || ref_is_vec(o), "len requires Data or Vec; found", o);
+    check_obj(obj_is_data(o) || obj_is_vec(o), "len requires Data or Vec; found", o);
     l = o.rcl->len;
   }
   obj_rel(o);
