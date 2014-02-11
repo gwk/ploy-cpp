@@ -10,7 +10,6 @@ static const Int shift_sym = width_obj_tag + 1; // 1 bit reserved for Data-word 
 static const Int sym_index_end = 1L << (size_Int * 8 - shift_sym);
 
 // each Sym object is an index into this array of strings.
-struct Array;
 static Array global_sym_names = array0;
 
 
