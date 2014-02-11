@@ -16,8 +16,8 @@ static Obj host_raw_write(Mem args) {
   assert(args.len == 2);
   Obj f = args.els[0];
   Obj d = args.els[1];
-  check_obj(ref_is_file(f), "write expected arg 1 File; found", f);
-  check_obj(ref_is_data(d), "write expected arg 2 Data; found", d);
+  check_obj(ref_is_file(f), "write requires arg 1 to be a File; found", f);
+  check_obj(ref_is_data(d), "write requires arg 2 to be a Data; found", d);
   CFile file = file_file(f);
   Int i = cast(Int, fwrite(data_ptr(d), size_Char, cast(Uns, data_len(d)), file));
   obj_rel(f);
@@ -33,7 +33,7 @@ static Obj host_raw_write_repr(Mem args) {
   assert(args.len == 2);
   Obj f = args.els[0];
   Obj o = args.els[1];
-  check_obj(ref_is_file(f), "write expected arg 1 File; found", f);
+  check_obj(ref_is_file(f), "write requires arg 1 to be a File; found", f);
   CFile file = file_file(f);
   write_repr(file, o);
   obj_rel(f);
@@ -46,7 +46,7 @@ static Obj host_raw_flush(Mem args) {
   // owns elements of args.
   assert(args.len == 1);
   Obj f = args.els[0];
-  check_obj(ref_is_file(f), "write expected arg 1 File; found", f);
+  check_obj(ref_is_file(f), "write requires arg 1 to be a File; found", f);
   CFile file = file_file(f);
   fflush(file);
   obj_rel(f);
@@ -63,7 +63,7 @@ static Obj host_len(Mem args) {
     l = 0;
   }
   else {
-    check_obj(ref_is_data(o) || ref_is_vec(o), "len expected Data or Vec; found", o);
+    check_obj(ref_is_data(o) || ref_is_vec(o), "len requires Data or Vec; found", o);
     l = o.rcl->len;
   }
   obj_rel(o);
@@ -76,8 +76,8 @@ static Obj host_el(Mem args) {
   assert(args.len == 2);
   Obj v = args.els[0];
   Obj i = args.els[1];
-  check_obj(obj_is_vec(v), "el expected arg 1 Vec; found", v);
-  check_obj(obj_is_int(i), "el expected arg 2 Int; found", i);
+  check_obj(obj_is_vec(v), "el requires arg 1 to be a Vec; found", v);
+  check_obj(obj_is_int(i), "el requires arg 2 to be a Int; found", i);
   Int j = int_val(i);
   check(v.u != VEC0.u,    "el index out of range; index: %ld; vec: []", j);
   check(v.u != CHAIN0.u,  "el index out of range; index: %ld; vec: [:]", j);
@@ -96,9 +96,9 @@ static Obj host_slice(Mem args) {
   Obj v = args.els[0];
   Obj i0 = args.els[1];
   Obj i1 = args.els[2];
-  check_obj(obj_is_vec(v), "el expected arg 1 Vec; found", v);
-  check_obj(obj_is_int(i0), "el expected arg 2 Int; found", i0);
-  check_obj(obj_is_int(i1), "el expected arg 3 Int; found", i1);
+  check_obj(obj_is_vec(v), "el requires arg 1 to be a Vec; found", v);
+  check_obj(obj_is_int(i0), "el requires arg 2 to be a Int; found", i0);
+  check_obj(obj_is_int(i1), "el requires arg 3 to be a Int; found", i1);
   Int j0 = int_val(i0);
   Int j1 = int_val(i1);
   Int l = vec_len(v);
@@ -124,9 +124,9 @@ static Obj host_slice(Mem args) {
 static Obj host_prepend(Mem args) {
   // owns elements of args.
   assert(args.len == 2);
-  Obj vec = args.els[0];
-  Obj el = args.els[1];
-  check_obj(obj_is_vec(vec), "prepend expected arg 1 Vec; found", vec);
+  Obj el = args.els[0];
+  Obj vec = args.els[1];
+  check_obj(obj_is_vec(vec), "prepend requires arg 2 to be a Vec; found", vec);
   Mem  m = vec_mem(vec);
   Obj res = new_vec_raw(m.len + 1);
   Obj* els = vec_els(res);
@@ -143,7 +143,7 @@ static Obj host_neg(Mem args) {
   // owns elements of args.
   assert(args.len == 1);
   Obj n = args.els[0];
-  check_obj(obj_is_int(n), "add expected Int; found", n);
+  check_obj(obj_is_int(n), "neg requires Int; found", n);
   Int i = int_val(n);
   obj_rel_val(n);
   return new_int(-i);
@@ -154,7 +154,7 @@ static Obj host_abs(Mem args) {
   // owns elements of args.
   assert(args.len == 1);
   Obj n = args.els[0];
-  check_obj(obj_is_int(n), "add expected Int; found", n);
+  check_obj(obj_is_int(n), "abs requires Int; found", n);
   Int i = int_val(n);
   obj_rel_val(n);
   return new_int(i < 0 ? -i : i);
@@ -169,8 +169,8 @@ static Obj host_##name(Mem args) { \
   assert(args.len == 2); \
   Obj n0 = args.els[0]; \
   Obj n1 = args.els[1]; \
-  check_obj(obj_is_int(n0), "add expected arg 1 Int; found", n0); \
-  check_obj(obj_is_int(n1), "add expected arg 2 Int; found", n1); \
+  check_obj(obj_is_int(n0), #name " requires arg 1 to be a Int; found", n0); \
+  check_obj(obj_is_int(n1), #name " requires arg 2 to be a Int; found", n1); \
   Int i = int_##name(int_val(n0), int_val(n1)); \
   obj_rel_val(n0); \
   obj_rel_val(n1); \
