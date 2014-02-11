@@ -37,6 +37,7 @@ clang \
 -std=c11 \
 -Werror \
 -Weverything \
+-Wno-overlength-strings \
 -Wno-unused-parameter \
 -Wno-gnu \
 -Wno-vla \
