@@ -24,7 +24,7 @@ static void parse_and_eval(Obj env, Obj path, Obj src, Array* sources, Bool out_
     err_nl();
     obj_errL(code);
 #endif
-    array_append_move(sources, new_vec2(path, src));
+    array_append(sources, new_vec2(path, src));
     Obj val = eval_vec(env, code);
     if (out_val && val.u != VOID.u) {
       write_repr(stdout, val);

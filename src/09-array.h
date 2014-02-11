@@ -22,16 +22,33 @@ static void assert_array_is_valid(Array* a) {
 
 static void array_grow_cap(Array* a) {
   assert_array_is_valid(a);
-  a->cap = round_up_to_power_2(a->cap + 3); // minimum capacity of 4 elements.
+  if (a->cap == 0) {
+    a->cap = 2; // minimum capacity.
+  }
+  else {
+    a->cap *= 2;
+  }
   mem_realloc(&a->mem, a->cap);
 }
 
 
-static Int array_append_move(Array* a, Obj o) {
+static Int array_append(Array* a, Obj o) {
   assert_array_is_valid(a);
   if (a->mem.len == a->cap) {
     array_grow_cap(a);
   }
-  return mem_append_move(&a->mem, o);
+  return mem_append(&a->mem, o);
 }
+
+
+static Bool array_contains(Array* a, Obj r) {
+  assert_array_is_valid(a);
+  it_mem(it, a->mem) {
+    if (it->u == r.u) {
+      return true;
+    }
+  }
+  return false;
+}
+
 

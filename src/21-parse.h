@@ -287,7 +287,7 @@ static Mem parse_exprs(Parser* p, Char term) {
       assert(o.u == obj0.u);
       break;
     }
-    array_append_move(&a, o);
+    array_append(&a, o);
   }
   if (p->e) {
     mem_release_dealloc(a.mem);
@@ -385,7 +385,7 @@ static Obj parse_chain_blocks(Parser* p) {
     // since vec_put releases, we must retain here.
     els[m.len + 1] = obj_ret_val(ILLEGAL);
     mem_dealloc(m);
-    array_append_move(&a, v);
+    array_append(&a, v);
   }
   Mem m = a.mem;
   P_CONSUME_TERMINATOR(']');

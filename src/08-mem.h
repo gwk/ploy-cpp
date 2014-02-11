@@ -8,7 +8,7 @@
 
 typedef struct {
   Int len;
-  Obj* els;
+  Obj* els; // TODO: union with Obj el to optimize the len == 1 case?
 } Mem;
 
 
@@ -42,7 +42,7 @@ UNUSED_FN static Bool mem_eq(Mem a, Mem b) {
 
 
 static void assert_mem_is_valid(Mem m) {
-  assert(m.len == 0 || (m.len > 0 && m.els));
+  assert(m.len == 0 && !m.els || (m.len > 0 && m.els));
 }
 
 
@@ -53,6 +53,9 @@ static void assert_mem_index_is_valid(Mem m, Int i) {
 
 
 static Mem mem_next(Mem m) {
+  // note: this may produce an invalid mem representing the end of the region;
+  // as a minor optimization, we do not set m.els to NULL if len == 0,
+  // but we could if it matters.
   assert(m.len > 0 && m.els);
   return mem_mk(m.len - 1, m.els + 1);
 }
@@ -86,9 +89,8 @@ static Obj mem_el_move(Mem m, Int i) {
 }
 
 
-static Int mem_append_move(Mem* m, Obj o) {
-  // move object o into m.
-  // owns o.
+static Int mem_append(Mem* m, Obj o) {
+  // semantics can be move (owns o) or borrow (must be cleared prior to dealloc).
   Int i = m->len++;
   m->els[i] = o;
   return i;
