@@ -121,8 +121,9 @@ typedef union {
   Ptr p;
 } Word; // generic word.
 
-// enforce usage of custom types with macros for all standard types to disallow their use.
+// enforce usage of custom types defined above.
 #undef bool
+// macros for all the standard types that will expand into parse errors.
 #define char      / / /
 #define long      / / /
 #define unsigned  / / /
@@ -144,7 +145,6 @@ static const Uns max_Uns = ULONG_MAX;
 
 // byte size constants.
 // terminology: size_ prefix should always refer to size in bytes.
-
 // define signed Int constants to use instead of sizeof.
 // this lets us use signed Int with fewer casts, reducing the risk of overflows mistakes.
 #define DEF_SIZE(type) static const Int size_##type = sizeof(type)
