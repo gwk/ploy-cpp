@@ -57,8 +57,8 @@ static Obj new_sym_from_chars(Chars b) {
 }
 
 
-// for use with "%*s" formatter.
-#define FMT_SYM(sym) cast(I32, data_len(sym_data(sym))), data_ptr(sym_data(sym))
+// for use with "%.*s" formatter.
+#define FMT_SYM(sym) FMT_STR(data_str(sym_data(sym)))
 
 // notes:
 // ILLEGAL is a special value for errors inside of well-formed data structures;

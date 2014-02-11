@@ -13,31 +13,12 @@ typedef struct {
 
 #define str0 (Str){.len=0, .chars=NULL}
 
-// for use with "%*s" formatter.
+// for use with "%.*s" formatter.
 #define FMT_STR(str) cast(I32, (str).len), (str).chars
 
 
 static Str str_mk(Int len, Chars chars) {
   return (Str){.len=len, .chars=chars};
-}
-
-
-static void str_dealloc(Str s) {
-  raw_dealloc(s.chars, ci_Str);
-}
-
-
-static Str str_alloc(Int len) {
-  // add null terminator for easier debugging.
-  Chars c = raw_alloc(len + 1, ci_Str);
-  c[len] = 0;
-  return str_mk(len, c);
-}
-
-
-static void str_realloc(Str* s, Int len) {
-  s->chars = raw_realloc(s->chars, len, ci_Str);
-  s->len = len;
 }
 
 
@@ -53,43 +34,53 @@ static void assert_str_is_valid(Str s) {
 }
 
 
-static Bool str_index_is_valid(Str s, Int i) {
-  return i >= 0 && i < s.len;
+static void str_dealloc(Str s) {
+  assert_str_is_valid(s);
+  raw_dealloc(s.chars, ci_Str);
 }
 
 
-static void check_str_index(Str s, Int i) {
-  assert_str_is_valid(s);
-  check(str_index_is_valid(s, i), "invalid Str index: %ld", i);
+static Str str_alloc(Int len) {
+  // add null terminator for easier debugging.
+  Chars c = raw_alloc(len + 1, ci_Str);
+  c[len] = 0;
+  return str_mk(len, c);
+}
+
+
+static void str_realloc(Str* s, Int len) {
+  assert_str_is_valid(*s);
+  s->chars = raw_realloc(s->chars, len, ci_Str);
+  s->len = len;
 }
 
 
 static Bool str_eq(Str a, Str b) {
+  assert_str_is_valid(a);
+  assert_str_is_valid(b);
   return a.len == b.len && memcmp(a.chars, b.chars, cast(Uns, a.len)) == 0;
 }
 
 
-UNUSED_FN static Char str_el(Str s, Int index) {
-  check_str_index(s, index);
-  return s.chars[index];
-}
-
-
 static Bool str_ends_with_char(Str s, Char c) {
+  assert_str_is_valid(s);
   return (s.len > 0 && s.chars[s.len - 1] == c);
 }
 
 
 static Str str_slice(Str s, Int from, Int to) {
+  assert_str_is_valid(s);
   assert(from >= 0);
   assert(to >= 0);
-  if (from >= s.len || from >= to) return str0;
+  if (from > s.len) from = s.len;
+  if (from >= to) return str0;
   return str_mk(to - from, s.chars + from);
 }
 
 
 static Int str_find_line_start(Str s, Int pos) {
-  for_in_rev(i, pos - 1) {
+  assert_str_is_valid(s);
+  for_in_rev(i, pos) {
     if (s.chars[i] == '\n') {
       return i + 1;
     }
@@ -99,6 +90,7 @@ static Int str_find_line_start(Str s, Int pos) {
 
 
 static Int str_find_line_end(Str s, Int pos) {
+  assert_str_is_valid(s);
   for_imn(i, pos, s.len) {
     if (s.chars[i] == '\n') {
       return i;
@@ -111,8 +103,6 @@ static Int str_find_line_end(Str s, Int pos) {
 static Str str_line_at_pos(Str s, Int pos) {
   Int from = str_find_line_start(s, pos);
   Int to = str_find_line_end(s, pos);
-  assert(from >= 0);
-  if (to < 0) to = s.len;
   //errFL("str_line_at_pos: len:%ld pos:%ld from:%ld to:%ld", s.len, pos, from, to);
   return str_slice(s, from, to);
 }
@@ -137,7 +127,7 @@ static Chars str_src_loc_str(Str src, Str path, Int pos, Int len, Int line_num, 
   }
   // create result.
   Chars s;
-  Int s_len = asprintf(&s, "%s:%ld:%ld: %s\n%*s%s%s\n",
+  Int s_len = asprintf(&s, "%s:%ld:%ld: %s\n%.*s%s%s\n",
                        path.chars, line_num + 1, col + 1, msg, FMT_STR(line), nl, under);
   counter_inc(ci_Chars); // matches asprinf.
   check(s_len > 0, "str_src_loc_str allocation failed: %s", msg);

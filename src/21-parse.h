@@ -36,7 +36,7 @@ static Bool char_is_atom_term(Char c) {
 
 
 static void parse_err(Parser* p) {
-  errF("%*s:%ld:%ld (%ld): ", FMT_STR(p->path), p->sp.line + 1, p->sp.col + 1, p->sp.pos);
+  errF("%.*s:%ld:%ld (%ld): ", FMT_STR(p->path), p->sp.line + 1, p->sp.col + 1, p->sp.pos);
   if (p->e) errF("\nerror: %s\nobj:  ", p->e);
 }
 
