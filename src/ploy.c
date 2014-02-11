@@ -71,6 +71,7 @@ int main(int argc, CharsC argv[]) {
   Obj host_env = env_push(obj_ret_val(CHAIN0), host_frame);
   Obj core_env = env_push(host_env, obj_ret_val(CHAIN0));
   
+  // global array of (path, source) objects for error reporting.
   Array sources = array0;
   Obj path, src;
 #if 1
