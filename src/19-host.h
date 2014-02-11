@@ -130,6 +130,24 @@ static Obj host_prepend(Mem args) {
   Mem  m = vec_mem(vec);
   Obj res = new_vec_raw(m.len + 1);
   Obj* els = vec_els(res);
+  els[0] = el;
+  for_in(i, m.len) {
+    els[1 + i] = obj_ret(m.els[i]);
+  }
+  obj_rel(vec);
+  return res;
+}
+
+
+static Obj host_append(Mem args) {
+  // owns elements of args.
+  assert(args.len == 2);
+  Obj vec = args.els[0];
+  Obj el = args.els[1];
+  check_obj(obj_is_vec(vec), "append requires arg 1 to be a Vec; found", vec);
+  Mem  m = vec_mem(vec);
+  Obj res = new_vec_raw(m.len + 1);
+  Obj* els = vec_els(res);
   for_in(i, m.len) {
     els[i] = obj_ret(m.els[i]);
   }
@@ -271,6 +289,7 @@ frame = env_frame_bind(frame, sym, val);
   DEF_FH(2, el)
   DEF_FH(3, slice)
   DEF_FH(2, prepend)
+  DEF_FH(2, append)
   DEF_FH(1, neg)
   DEF_FH(1, abs)
   DEF_FH(2, add)
