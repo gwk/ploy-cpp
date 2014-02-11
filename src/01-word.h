@@ -261,20 +261,3 @@ static Int int_clamp(Int x, Int a, Int b) {
   return int_max(int_min(x, b), a);
 }
 
-
-// inspired by http://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
-static Int round_up_to_power_2(Int x) {
-  assert(size_Int >= 4);
-  Int r = x - 1;
-  r |= r >> 1;
-  r |= r >> 2;
-  r |= r >> 4;
-  r |= r >> 8;
-  r |= x >> 16;
-  if (size_Int == 8) {
-    r |= x >> 32;
-  }
-  return r + 1;
-}
-
-

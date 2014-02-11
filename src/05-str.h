@@ -55,6 +55,22 @@ static void str_realloc(Str* s, Int len) {
 }
 
 
+static void str_grow(Str* s) {
+  assert(s->len > 0);
+  str_realloc(s, s->len * 2);
+}
+
+
+static Int str_append(Str* s, Int i, Char c) {
+  // returns updated index.
+  // unlike Mem, the string capacity is stored in s.len, and the current position in i.
+  assert(i <= s->len);
+  if (i == s->len) str_grow(s);
+  s->chars[i] = c;
+  return i++;
+}
+
+
 static Bool str_eq(Str a, Str b) {
   assert_str_is_valid(a);
   assert_str_is_valid(b);

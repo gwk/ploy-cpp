@@ -182,14 +182,10 @@ static Obj parse_comment(Parser* p) {
 static Obj parse_data(Parser* p, Char q) {
   assert(PC == q);
   Src_pos sp_open = p->sp; // for error reporting.
-  Str s = str_alloc(16);
+  Str s = str_alloc(size_min_alloc);
   Int i = 0;
 
-#define APPEND(c) { \
-  if (i == s.len) str_realloc(&s, round_up_to_power_2(s.len + (size_min_alloc - 1))); \
-  assert(i < s.len); \
-  s.chars[i++] = c; \
-}
+#define APPEND(c) i = str_append(&s, i, c)
 
   Bool escape = false;
   loop {
