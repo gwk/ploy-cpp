@@ -33,6 +33,7 @@ static void array_grow_cap(Array* a) {
 
 
 static Int array_append(Array* a, Obj o) {
+  // semantics can be move (owns o) or borrow (must be cleared prior to dealloc).
   assert_array_is_valid(a);
   if (a->mem.len == a->cap) {
     array_grow_cap(a);
