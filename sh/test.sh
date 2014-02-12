@@ -24,5 +24,5 @@ test_args="$@"
 build/ploy 'test/0-basic/empty.ploy'
 
 set -x
-~/work/gloss/bin/sys-test.py -interpreters '.ploy' "build/ploy $ploy_flags" - \
+test/test.py -interpreters '.ploy' "build/ploy $ploy_flags" - \
 $test_args
