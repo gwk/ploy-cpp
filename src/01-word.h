@@ -210,7 +210,7 @@ for (Int i = (n) - 1, _##i##_end = (m), _##i##_step = (s); i >= _##i##_end; i -=
 
 // boolean logic
 #define bit(x) (!!(x))
-#define xor(a, b) (bit(a) ^ bit(b))
+#define XOR(a, b) (bit(a) ^ bit(b))
 
 // mark function as never returning. ex: NORETURN f() {...}
 #define NORETURN __attribute__((noreturn)) void
