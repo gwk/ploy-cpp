@@ -5,4 +5,4 @@ cd $(dirname "$0")/..
 
 sh/_compile.sh --analyze -o /dev/null
 
-# build/ploy-analysis.plist # plist not currently useful.
+# _build/ploy-analysis.plist # plist not currently useful.

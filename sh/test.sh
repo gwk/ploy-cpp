@@ -7,7 +7,7 @@ set -e
 cd $(dirname "$0")/..
 
 
-if ! sh/is-product-current.sh build/ploy src/* sh/*; then
+if ! sh/is-product-current.sh _build/ploy src/* sh/*; then
   echo "building..."
   sh/build.sh
   echo "testing..."
@@ -21,8 +21,8 @@ test_args="$@"
 [[ -z "$test_args" ]] && test_args='test'
 
 # make sure that ploy can parse an empty file.
-build/ploy 'test/0-basic/empty.ploy'
+_build/ploy 'test/0-basic/empty.ploy'
 
 set -x
-test/test.py -interpreters '.ploy' "build/ploy $ploy_flags" - \
+test/test.py -interpreters '.ploy' "_build/ploy $ploy_flags" - \
 $test_args

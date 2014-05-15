@@ -46,7 +46,7 @@ clang \
 -g \
 -ferror-limit=4 \
 $opts \
--I build \
+-I _build \
 src/ploy.c \
 "$@"
 

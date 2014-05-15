@@ -50,7 +50,7 @@ conf, root_dir = _gloss_conf.parse_conf('.', all=True)
 errSLD('conf:', root_dir, conf)
 project_name = conf.get('project')
 checkS(root_dir and project_name, Error, 'no configuration file found, searched from:', _fs.current_dir())
-results_dir = _path.join(root_dir, 'build', 'test-results')
+results_dir = _path.join(root_dir, '_build', 'test-results')
 
 errSLI('project name:', project_name)
 errSLI('test results dir:', results_dir)

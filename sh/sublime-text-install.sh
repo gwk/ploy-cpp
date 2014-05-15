@@ -4,7 +4,7 @@
 set -e
 cd $(dirname "$0")/..
 
-src=build/sublime-text-Ploy
+src=_build/sublime-text-Ploy
 dst=~/"Library/Application Support/Sublime Text 3/Packages/Ploy"
 
 rm -rf "$src" "$dst"
