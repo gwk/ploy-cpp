@@ -10,9 +10,6 @@
 typedef Char* Chars;
 typedef const Char* CharsC; // Chars-constant.
 
-// currently unused.
-typedef wchar_t* Utf32;
-typedef const wchar_t* Utf32C;
 
 typedef FILE* CFile; // 'File' refers to the ploy type.
 DEF_SIZE(CFile);
