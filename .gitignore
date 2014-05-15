@@ -1,10 +1,9 @@
-build/
-misc/
-repro.ploy
+_build/
+_misc/
+_repro.ploy
 
 # Xcode
 xcuserdata
-profile
 project.xcworkspace
 
 # finder
