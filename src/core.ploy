@@ -117,9 +117,6 @@
   <fn f {-exprs}
     <let l (len exprs)>
     <let h (hd exprs)>
-    (errRL l)
-    (errRL h)
-    (errRL exprs)
     <if-then-else (eq l 1)
       h # a lone expr is the final else statement
       <do
@@ -131,5 +128,5 @@
 
 <macro when {-pred &exprs}
   # if 'pred', do 'exprs'. else none.
-  [IF pred [DO exprs] `VOID]>
+  [IF pred (prepend DO exprs) ``VOID]>
 
