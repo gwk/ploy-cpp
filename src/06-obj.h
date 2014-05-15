@@ -59,7 +59,7 @@ static CharsC obj_tag_names[] = {
 };
 
 // all ref types (objects that are dynamically allocated) follow a similar convention;
-// the lowest 4 bits of the allocated memory indicate its type.
+// the lowest 4 bits of the first allocated word indicate its type.
 #define width_struct_tag 4
 #define struct_tag_end (1L << width_struct_tag)
 
