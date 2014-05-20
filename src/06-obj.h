@@ -291,9 +291,9 @@ static Bool obj_is_vec_ref(Obj o) {
 static const Obj VEC0, CHAIN0;
 
 static Bool obj_is_vec(Obj o) {
-  // ploy makes finer distinctions between the zero vector, the empty list
+  // ploy makes distinctions between the zero vector, the empty list
   // and the list terminator to reduce ambiguity (e.g. when printing data structures).
-  // TODO: define excatly when special sym constants are considered members of a type.
+  // TODO: define exactly when special sym constants are considered members of a type.
   return o.u == VEC0.u || o.u == CHAIN0.u || obj_is_vec_ref(o);
 }
 
