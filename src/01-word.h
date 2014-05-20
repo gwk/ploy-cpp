@@ -184,11 +184,11 @@ static void assert_host_basic() {
 
 // for Int 'i' from 'm' to 'n' in increments of 's'.
 #define for_imns(i, m, n, s) \
-for (Int i = (m), _##i##_end = (n), _##i##_step = (s); i < _##i##_end; i += _##i##_step)
+for (Int i = (m), _end_##i = (n), _step_##i = (s); i < _end_##i; i += _step_##i)
 
 // produces the same values for i as above, but in reverse order.
 #define for_imns_rev(i, m, n, s) \
-for (Int i = (n) - 1, _##i##_end = (m), _##i##_step = (s); i >= _##i##_end; i -= _##i##_step)
+for (Int i = (n) - 1, _end_##i = (m), _step_##i = (s); i >= _end_##i; i -= _step_##i)
 
 // same as for_imns(i, m, n, 0).
 #define for_imn(i, m, n)      for_imns(i, (m), (n), 1)
