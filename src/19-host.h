@@ -94,29 +94,30 @@ static Obj host_slice(Mem args) {
   // owns elements of args.
   assert(args.len == 3);
   Obj v = args.els[0];
-  Obj i0 = args.els[1];
-  Obj i1 = args.els[2];
+  Obj from = args.els[1];
+  Obj to = args.els[2];
   check_obj(obj_is_vec(v), "el requires arg 1 to be a Vec; found", v);
-  check_obj(obj_is_int(i0), "el requires arg 2 to be a Int; found", i0);
-  check_obj(obj_is_int(i1), "el requires arg 3 to be a Int; found", i1);
-  Int j0 = int_val(i0);
-  Int j1 = int_val(i1);
+  check_obj(obj_is_int(from), "el requires arg 2 to be a Int; found", from);
+  check_obj(obj_is_int(to), "el requires arg 3 to be a Int; found", to);
+  if (v.u == VEC0.u) return obj_ret_val(VEC0);
   Int l = vec_len(v);
-  if (j0 < 0) j0 += l;
-  if (j1 < 0) j1 += l;
-  j0 = int_clamp(j0, 0, l - 1);
-  j1 = int_clamp(j1, 0, l - 1);
-  Int ls = j1 - j0;
+  Int f = int_val(from);
+  Int t = int_val(to);
+  if (f < 0) f += l;
+  if (t < 0) t += l;
+  f = int_clamp(f, 0, l);
+  t = int_clamp(t, 0, l);
+  Int ls = t - f; // length of slice.
   if (ls < 1) return obj_ret_val(VEC0);
   Obj s = new_vec_raw(ls);
   Obj* src = vec_els(v);
   Obj* dst = vec_els(s);
   for_in(i, ls) {
-    dst[i] = obj_ret(src[i]);
+    dst[i] = obj_ret(src[i + f]);
   }
   obj_rel(v);
-  obj_rel_val(i0);
-  obj_rel_val(i1);
+  obj_rel_val(from);
+  obj_rel_val(to);
   return s;
 }
 

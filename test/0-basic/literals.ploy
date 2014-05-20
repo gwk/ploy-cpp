@@ -1,28 +1,31 @@
-(outLL
-  NIL
-  VEC0
-  CHAIN0
-  END
-  false
-  true
-  COMMENT
-  VEC
-  UNQ
-  QUA
-  QUO
-  DO
-  SCOPE
-  LET
-  IF
-  FN
-  EXPA
-  LABEL
-  VARIAD
-  0
-  1
-  -0
-  +0
-  -1
-  +1
-  'abc'
-  "omg")
+(outRLL
+NIL
+VEC0
+CHAIN0
+END
+FALSE
+TRUE
+LABEL
+VARIAD
+UNQ
+QUA
+EXPAND
+COMMENT
+QUO
+DO
+SCOPE
+LET
+IF
+FN
+SEQ
+CALL
+`VOID
+0
+1
+-0
++0
+-1
++1
+'abc'
+"omg"
+)

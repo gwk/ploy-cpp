@@ -310,7 +310,7 @@ static const Obj LABEL, VARIAD;
 static Bool obj_is_par(Obj o) {
   // a parameter is a vector with first element of LABEL or VARIAD,
   // representing those two syntactic constructs respectively.
-  if (!obj_is_vec(o)) return false;
+  if (!obj_is_vec_ref(o)) return false;
   Int len = vec_len(o);
   if (len != 4) return false;
   if (!obj_is_symbol(vec_el(o, 1))) return false; // name must be a symbol.

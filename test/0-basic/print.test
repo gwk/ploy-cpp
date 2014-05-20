@@ -4,7 +4,7 @@ out12
 S 1 2 
 L12
 
-Str 1 2 
+SS 1 2 
  SL 1 2 
 
 LL
@@ -19,7 +19,7 @@ err12
 S 1 2 
 L12
 
-Str 1 2 
+SS 1 2 
  SL 1 2 
 
 LL
