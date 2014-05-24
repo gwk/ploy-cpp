@@ -46,19 +46,6 @@ static Ptr ref_body(Obj r) {
 }
 
 
-UNUSED_FN static Int ref_data_len(Obj r) {
-  assert(ref_is_data(r));
-  assert(r.rcl->len > 0);
-  return r.rcl->len;
-}
-
-
-static Chars ref_data_ptr(Obj d) {
-  assert(ref_is_data(d));
-  return cast(Chars, d.rcl + 1); // address past rcl.
-}
-
-
 static Obj ref_alloc(Struct_tag st, Int size) {
   assert(size >= size_Word * 2);
   Counter_index ci = st_counter_index(st);

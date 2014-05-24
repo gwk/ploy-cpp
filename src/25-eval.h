@@ -15,7 +15,7 @@ static Obj eval(Obj env, Obj code) {
 
 static Obj eval_vec(Obj env, Obj v) {
   if (v.u == VEC0.u) return obj_ret_val(VOID);
-  Mem m = vec_mem(v);
+  Mem m = vec_ref_mem(v);
   Int last = m.len - 1;
   it_mem_to(it, m, last) {
     Obj val = eval(env, *it);

@@ -41,7 +41,7 @@ static void write_repr_obj(CFile f, Obj o, Set* s);
 
 static void write_repr_vec_vec(CFile f, Obj v, Set* s) {
   assert(ref_is_vec(v));
-  Mem m = vec_mem(v);
+  Mem m = vec_ref_mem(v);
   fputs("[", f);
   for_in(i, m.len) {
     if (i) fputc(' ', f);
@@ -72,7 +72,7 @@ static void write_repr_fat_chain(CFile f, Obj c, Set* s) {
   assert(ref_is_vec(c));
   fputs("[", f);
   loop {
-    Mem m = vec_mem(c);
+    Mem m = vec_ref_mem(c);
     fputs("|", f);
     for_in(i, m.len - 1) {
       if (i) fputc(' ', f);
@@ -90,8 +90,8 @@ static void write_repr_fat_chain(CFile f, Obj c, Set* s) {
 static void write_repr_par(CFile f, Obj p, Set* s, Char c) {
   fputc('`', f);
   fputc(c, f);
-  assert(vec_len(p) == 4);
-  Obj* els = vec_els(p);
+  assert(vec_ref_len(p) == 4);
+  Obj* els = vec_ref_els(p);
   Obj name = els[1];
   Obj type = els[2];
   Obj expr = els[3];
@@ -117,7 +117,7 @@ static void write_repr_vec(CFile f, Obj v, Set* s) {
     return;
   }
   #endif
-  switch (vec_shape(v)) {
+  switch (vec_ref_shape(v)) {
     case vs_vec:          write_repr_vec_vec(f, v, s);    return;
     case vs_chain:        write_repr_chain(f, v, s);      return;
     case vs_chain_blocks: write_repr_fat_chain(f, v, s);  return;

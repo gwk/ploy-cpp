@@ -372,7 +372,7 @@ static Obj parse_chain_blocks(Parser* p) {
       return obj0;
     }
     Obj v = new_vec_raw(m.len + 2);
-    Obj* els = vec_els(v);
+    Obj* els = vec_ref_els(v);
     els[0] = obj_ret_val(SEQ);
     for_in(i, m.len) {
       els[i + 1] = mem_el_move(m, i);
@@ -392,7 +392,7 @@ static Obj parse_chain_blocks(Parser* p) {
   Obj c = obj_ret_val(END);
   for_in_rev(i, m.len) {
     Obj v = mem_el_move(m, i);
-    vec_put(v, vec_len(v) - 1, c);
+    vec_ref_put(v, vec_len(v) - 1, c);
     c = v;
   }
   mem_dealloc(m);

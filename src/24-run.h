@@ -88,7 +88,7 @@ static Obj run_FN(Obj env, Mem args) {
   check_obj(obj_is_vec(pars), "FN: parameters is not a Vec", pars);
   // TODO: check all pars.
   Obj f = new_vec_raw(5);
-  Obj* els = vec_els(f);
+  Obj* els = vec_ref_els(f);
   els[0] = obj_ret_val(name);
   els[1] = obj_ret_val(is_macro);
   els[2] = obj_ret(pars);

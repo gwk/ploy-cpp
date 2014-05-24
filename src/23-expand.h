@@ -9,8 +9,8 @@ static const CharsC trace_post_expand_prefix = "▫ ";  // white small square
 
 
 static Bool expr_contains_unquote(Obj o) {
-  if (!obj_is_vec(o)) return false;
-  Mem m = vec_mem(o);
+  if (!obj_is_vec_ref(o)) return false;
+  Mem m = vec_ref_mem(o);
   assert(m.len > 0);
   if (m.els[0].u == UNQ.u) return true; // vec is an unquote form.
   it_mem_from(it, m, 1) {
@@ -22,16 +22,16 @@ static Bool expr_contains_unquote(Obj o) {
 
 static Obj expr_quasiquote(Obj o) {
   // owns o.
-  if (expr_contains_unquote(o)) { // implies obj_is_vec
-    Mem m = vec_mem(o);
+  if (expr_contains_unquote(o)) { // implies obj_is_vec_ref.
+    Mem m = vec_ref_mem(o);
     Obj v = new_vec_raw(m.len + 1);
-    Obj* dst = vec_els(v);
+    Obj* dst = vec_ref_els(v);
     dst[0] = obj_ret_val(SEQ);
     for_in(i, m.len) {
       Obj e = m.els[i];
-      if (obj_is_vec(e) && vec_el(e, 0).u == UNQ.u) { // unquote form
-        check_obj(vec_len(e) == 2, "malformed UNQ form", e);
-        dst[1 + i] = obj_ret(vec_el(e, 1)); // TODO: expand?
+      if (obj_is_vec_ref(e) && vec_ref_el(e, 0).u == UNQ.u) { // unquote form
+        check_obj(vec_ref_len(e) == 2, "malformed UNQ form", e);
+        dst[1 + i] = obj_ret(vec_ref_el(e, 1)); // TODO: expand?
       }
       else {
         dst[1 + i] = expr_quasiquote(obj_ret(e));
@@ -65,7 +65,7 @@ static Obj expand(Obj env, Obj code) {
   if (!obj_is_vec_ref(code)) {
     return code;
   }
-  Mem m = vec_mem(code);
+  Mem m = vec_ref_mem(code);
   Obj hd = m.els[0];
   if (hd.u == QUO.u) {
     return code;

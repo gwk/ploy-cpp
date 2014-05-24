@@ -25,9 +25,15 @@ static Int data_len(Obj d) {
 }
 
 
+static Chars data_ref_ptr(Obj d) {
+  assert(ref_is_data(d));
+  return cast(Chars, d.rcl + 1); // address past rcl.
+}
+
+
 static Chars data_ptr(Obj d) {
   if (d.u == blank.u) return NULL; // TODO: support all data-word values.
-  return ref_data_ptr(d);
+  return data_ref_ptr(d);
 }
 
 

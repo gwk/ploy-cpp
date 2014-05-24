@@ -81,9 +81,9 @@ static Obj host_el(Mem args) {
   Int j = int_val(i);
   check(v.u != VEC0.u,    "el index out of range; index: %ld; vec: []", j);
   check(v.u != CHAIN0.u,  "el index out of range; index: %ld; vec: [:]", j);
-  Int l = vec_len(v);
+  Int l = vec_ref_len(v);
   check(j >= 0 && j < l, "el index out of range; index: %ld; len: %ld", j, l);
-  Obj el = vec_el(v, j);
+  Obj el = vec_ref_el(v, j);
   obj_rel(v);
   obj_rel_val(i);
   return obj_ret(el);
@@ -110,8 +110,8 @@ static Obj host_slice(Mem args) {
   Int ls = t - f; // length of slice.
   if (ls < 1) return obj_ret_val(VEC0);
   Obj s = new_vec_raw(ls);
-  Obj* src = vec_els(v);
-  Obj* dst = vec_els(s);
+  Obj* src = vec_ref_els(v);
+  Obj* dst = vec_ref_els(s);
   for_in(i, ls) {
     dst[i] = obj_ret(src[i + f]);
   }
@@ -130,7 +130,7 @@ static Obj host_prepend(Mem args) {
   check_obj(obj_is_vec(vec), "prepend requires arg 2 to be a Vec; found", vec);
   Mem  m = vec_mem(vec);
   Obj res = new_vec_raw(m.len + 1);
-  Obj* els = vec_els(res);
+  Obj* els = vec_ref_els(res);
   els[0] = el;
   for_in(i, m.len) {
     els[1 + i] = obj_ret(m.els[i]);
@@ -148,7 +148,7 @@ static Obj host_append(Mem args) {
   check_obj(obj_is_vec(vec), "append requires arg 1 to be a Vec; found", vec);
   Mem  m = vec_mem(vec);
   Obj res = new_vec_raw(m.len + 1);
-  Obj* els = vec_els(res);
+  Obj* els = vec_ref_els(res);
   for_in(i, m.len) {
     els[i] = obj_ret(m.els[i]);
   }

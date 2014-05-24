@@ -11,14 +11,14 @@ static Obj env_get(Obj env, Obj sym) {
   assert(ref_is_vec(env));
   assert(sym_is_symbol(sym));
   while (env.u != END.u) {
-    assert(vec_len(env) == 2);
+    assert(vec_ref_len(env) == 2);
     Obj frame = chain_hd(env);
     if (frame.u != CHAIN0.u) {
       while (frame.u != END.u) {
-        assert(vec_len(frame) == 3);
-        Obj key = vec_a(frame);
+        assert(vec_ref_len(frame) == 3);
+        Obj key = vec_ref_a(frame);
         if (key.u == sym.u) {
-          return vec_b(frame);
+          return vec_ref_b(frame);
         }
         frame = chain_tl(frame);
       }
@@ -58,7 +58,7 @@ static void env_bind(Obj env, Obj sym, Obj val) {
   // owns sym, val.
   Obj frame = obj_ret(chain_hd(env));
   Obj frame1 = env_frame_bind(frame, sym, val);
-  vec_put(env, 0, frame1);
+  vec_ref_put(env, 0, frame1);
 }
 
 
@@ -68,8 +68,8 @@ static Obj env_frame_bind_args(Obj env, Obj func, Mem pars, Mem args, Bool is_ex
   Bool has_variad = false;
   for_in(i_pars, pars.len) {
     Obj par = pars.els[i_pars];
-    check_obj(obj_is_par(par), "function parameter is malformed", vec_el(func, 0));
-    Obj* par_els = vec_els(par);
+    check_obj(obj_is_par(par), "function parameter is malformed", vec_ref_el(func, 0));
+    Obj* par_els = vec_ref_els(par);
     Obj par_kind = par_els[0]; // LABEL or VARIAD
     Obj par_sym = par_els[1];
     //Obj par_type = par_els[2];
@@ -84,14 +84,14 @@ static Obj env_frame_bind_args(Obj env, Obj func, Mem pars, Mem args, Bool is_ex
         arg = par_expr;
       }
       else {
-        error_obj("function received too few arguments", vec_el(func, 0));
+        error_obj("function received too few arguments", vec_ref_el(func, 0));
       }
       Obj val = (is_expand ? obj_ret(arg) : run(env, arg));
       frame = env_frame_bind(frame, obj_ret_val(par_sym), val);
     }
     else {
       assert(par_kind.u == VARIAD.u);
-      check_obj(!has_variad, "function has multiple variad parameters", vec_el(func, 0));
+      check_obj(!has_variad, "function has multiple variad parameters", vec_ref_el(func, 0));
       has_variad = true;
       Int variad_count = 0;
       for_imn(i, i_args, args.len) {
@@ -101,7 +101,7 @@ static Obj env_frame_bind_args(Obj env, Obj func, Mem pars, Mem args, Bool is_ex
       }
       Obj variad_val = new_vec_raw(variad_count);
       if (variad_count) {
-        Obj* els = vec_els(variad_val);
+        Obj* els = vec_ref_els(variad_val);
         for_in(i, variad_count) {
           Obj arg = args.els[i_args++];
           els[i] = (is_expand ? obj_ret(arg) : run(env, arg));
@@ -110,7 +110,7 @@ static Obj env_frame_bind_args(Obj env, Obj func, Mem pars, Mem args, Bool is_ex
       frame = env_frame_bind(frame, obj_ret_val(par_sym), variad_val);
     }
   }
-  check_obj(i_args == args.len, "function received too many arguments", vec_el(func, 0));
+  check_obj(i_args == args.len, "function received too many arguments", vec_ref_el(func, 0));
   return frame;
 }
 
@@ -122,15 +122,15 @@ UNUSED_FN static void dbg_env(Obj env) {
   errL(":");
   while (env.u != END.u) {
     Bool first = true;
-    assert(vec_len(env) == 2);
+    assert(vec_ref_len(env) == 2);
     Obj frame = chain_hd(env);
     if (frame.u != CHAIN0.u) {
       while (frame.u != END.u) {
         err(first ? "| " : "  ");
         first = false;
-        assert(vec_len(frame) == 3);
-        Obj key = vec_a(frame);
-        Obj val = vec_b(frame);
+        assert(vec_ref_len(frame) == 3);
+        Obj key = vec_ref_a(frame);
+        Obj val = vec_ref_b(frame);
         obj_err(key);
         err(" : ");
         obj_errL(val);

@@ -280,10 +280,10 @@ static Bool obj_is_vec_ref(Obj o) {
 static const Obj VEC0, CHAIN0;
 
 static Bool obj_is_vec(Obj o) {
-  // ploy makes distinctions between the zero vector, the empty list
-  // and the list terminator to reduce ambiguity (e.g. when printing data structures).
-  // TODO: define exactly when special sym constants are considered members of a type.
-  return o.u == VEC0.u || o.u == CHAIN0.u || obj_is_vec_ref(o);
+  // ploy makes distinctions between the zero vector VEC0, the empty list CHAIN0,
+  // and the list terminator END to reduce ambiguity (e.g. when printing data structures).
+  // only VEC0 and nonzero ref_vec objects are considered true vectors.
+  return o.u == VEC0.u || obj_is_vec_ref(o);
 }
 
 
@@ -291,19 +291,22 @@ static Bool obj_is_file(Obj o) {
   return obj_is_ref(o) && ref_is_file(o);
 }
 
-
+static Int vec_ref_len(Obj v);
 static Int vec_len(Obj v);
-static Obj vec_el(Obj v, Int i);
+static Obj vec_ref_el(Obj v, Int i);
+static Obj* vec_ref_els(Obj v);
+static Obj* vec_els(Obj v);
 static const Obj LABEL, VARIAD;
+
 
 static Bool obj_is_par(Obj o) {
   // a parameter is a vector with first element of LABEL or VARIAD,
   // representing those two syntactic constructs respectively.
   if (!obj_is_vec_ref(o)) return false;
-  Int len = vec_len(o);
+  Int len = vec_ref_len(o);
   if (len != 4) return false;
-  if (!obj_is_symbol(vec_el(o, 1))) return false; // name must be a symbol.
-  Obj e0 = vec_el(o, 0);
+  if (!obj_is_symbol(vec_ref_el(o, 1))) return false; // name must be a symbol.
+  Obj e0 = vec_ref_el(o, 0);
   return (e0.u == LABEL.u || e0.u == VARIAD.u);
 }
 
@@ -413,9 +416,6 @@ UNUSED_FN static void obj_release_weak(Obj o) {
   if (o.rc->wc < pinned_wc) o.rc->wc--;
 }
 
-
-static Int vec_len(Obj v);
-static Obj* vec_els(Obj v);
 
 UNUSED_FN static Bool obj_is_quotable(Obj o) {
   // indicates whether an object can be correctly represented inside of a quoted vec.
