@@ -22,8 +22,8 @@ typedef struct {
 // and so we cannot help but evaluate mem multiple times.
 #define it_mem_from_to(it, mem, from, to) \
 for (Obj *it = (mem).els + (from), \
-*_##it##_end = (mem).els + (to); \
-it < _##it##_end; \
+*_end_##it = (mem).els + (to); \
+it < _end_##it; \
 it++)
 
 #define it_mem_to(it, mem, to) it_mem_from_to(it, mem, 0, to)
