@@ -48,7 +48,7 @@ int main(int argc, CharsC argv[]) {
   CharsC paths[len_buffer];
   Int path_count = 0;
   CharsC expr = NULL;
-  Bool out_val = false;
+  Bool should_output_val = false;
   for_imn(i, 1, argc) {
     CharsC arg = argv[i];
     if (chars_eq(arg, "-v")) {
@@ -59,7 +59,7 @@ int main(int argc, CharsC argv[]) {
       i++;
       check(i < argc, "missing expression argument");
       expr = argv[i];
-      out_val = chars_eq(arg, "-e");
+      should_output_val = chars_eq(arg, "-e");
     }
     else {
       check(path_count < len_buffer, "exceeded max paths: %d", len_buffer);
@@ -91,7 +91,7 @@ int main(int argc, CharsC argv[]) {
   if (expr) {
     path = new_data_from_chars(cast(Chars, "<cmd>"));
     src = new_data_from_chars(cast(Chars, expr)); // breaks const correctness?
-    parse_and_eval(env, path, src, &sources, out_val);
+    parse_and_eval(env, path, src, &sources, should_output_val);
   }
 
 #if OPT_ALLOC_COUNT
