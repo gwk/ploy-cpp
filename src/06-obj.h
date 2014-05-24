@@ -299,6 +299,17 @@ static Obj* vec_els(Obj v);
 static const Obj LABEL, VARIAD;
 
 
+// iterate over a vec_ref vr.
+#define it_vec_ref(it, vr) \
+for (Obj *it = vec_ref_els(vr), *_end_##it = it + vec_ref_len(vr); \
+it < _end_##it; \
+it++)
+
+// iterate over a vec v by first checking that it is not VEC0.
+#define it_vec(it, v) \
+if (v.u != VEC0.u) it_vec_ref(it, v)
+
+
 static Bool obj_is_par(Obj o) {
   // a parameter is a vector with first element of LABEL or VARIAD,
   // representing those two syntactic constructs respectively.
@@ -429,10 +440,8 @@ UNUSED_FN static Bool obj_is_quotable(Obj o) {
   Struct_tag st = ref_struct_tag(o);
   if (st == st_Data) return true; // quotable.
   if (st == st_Vec) {
-    Int len = vec_len(o);
-    Obj* els = vec_els(o);
-    for_in(i, len) {
-      if (!obj_is_quotable(els[i])) return false;
+    it_vec_ref(it, o) {
+      if (!obj_is_quotable(*it)) return false;
     }
     return true;
   }

@@ -100,12 +100,9 @@ static Obj env_frame_bind_args(Obj env, Obj func, Mem pars, Mem args, Bool is_ex
         variad_count++;
       }
       Obj variad_val = new_vec_raw(variad_count);
-      if (variad_count) {
-        Obj* els = vec_ref_els(variad_val);
-        for_in(i, variad_count) {
-          Obj arg = args.els[i_args++];
-          els[i] = (is_expand ? obj_ret(arg) : run(env, arg));
-        }
+      it_vec(it, variad_val) {
+        Obj arg = args.els[i_args++];
+        *it = (is_expand ? obj_ret(arg) : run(env, arg));
       }
       frame = env_frame_bind(frame, obj_ret_val(par_sym), variad_val);
     }

@@ -69,11 +69,9 @@ static void ref_dealloc(Obj r) {
   check(r.rc->wc == 0, "attempt to deallocate object with non-zero weak count: %p", r.p);
   Struct_tag st = ref_struct_tag(r);
   if (st == st_Vec) {
-    Obj* els = vec_els(r);
-    for_in(i, vec_len(r)) {
-      //err("  el rel: "); dbg(els[i]);
+    it_vec_ref(it, r) {
       // TODO: make this tail recursive for deallocating long chains?
-      obj_rel(els[i]);
+      obj_rel(*it);
     }
   }
 #if OPT_DEALLOC_MARK
