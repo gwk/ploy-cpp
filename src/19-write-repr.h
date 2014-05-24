@@ -147,7 +147,7 @@ static void write_repr_obj(CFile f, Obj o, Set* s) {
       fputs("[]", f);
     }
     else if (o.u == CHAIN0.u) {
-      fputs("[:]", f);
+      fputs("[|]", f);
     }
     else {
       fputc('`', f);

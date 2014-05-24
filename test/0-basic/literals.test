@@ -2,7 +2,7 @@
   'out' : '''\
 `NIL
 []
-[:]
+[|]
 `END
 `FALSE
 `TRUE

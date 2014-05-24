@@ -80,7 +80,7 @@ static Obj host_el(Mem args) {
   check_obj(obj_is_int(i), "el requires arg 2 to be a Int; found", i);
   Int j = int_val(i);
   check(v.u != VEC0.u,    "el index out of range; index: %ld; vec: []", j);
-  check(v.u != CHAIN0.u,  "el index out of range; index: %ld; vec: [:]", j);
+  check(v.u != CHAIN0.u,  "el index out of range; index: %ld; vec: [|]", j);
   Int l = vec_ref_len(v);
   check(j >= 0 && j < l, "el index out of range; index: %ld; len: %ld", j, l);
   Obj el = vec_ref_el(v, j);
