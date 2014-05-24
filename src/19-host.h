@@ -158,6 +158,9 @@ static Obj host_append(Mem args) {
 }
 
 
+// TODO: host_cat
+
+
 static Obj host_neg(Mem args) {
   // owns elements of args.
   assert(args.len == 1);

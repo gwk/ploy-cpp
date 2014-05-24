@@ -32,7 +32,7 @@
 #define OPT_DEALLOC_MARK DEBUG
 #endif
 
-// on ref object dealloct, do not actually call free to aid in debugging overelease bugs.
+// on ref object dealloc, do not actually call free to aid in debugging overelease bugs.
 #ifndef OPT_DEALLOC_PRESERVE
 #define OPT_DEALLOC_PRESERVE DEBUG
 #endif
@@ -46,7 +46,7 @@
 // this helps detect illegal reads from uninitialized and dead regions,
 // and also helps detect errors in allocation code,
 // because we immediately attempt to write to the entire allocation.
-// for this reason it is not totally redundant with the MallocScribble and MallocPreScribble
+// it is not totally redundant with the MallocScribble and MallocPreScribble
 // environment variables on OSX, but it is completely compatible.
 #ifndef OPT_ALLOC_SCRIBBLE
 #define OPT_ALLOC_SCRIBBLE DEBUG
