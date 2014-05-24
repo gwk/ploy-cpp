@@ -13,30 +13,35 @@
 typedef Uns Tag;
 typedef Uns Sym; // index into global_sym_table.
 
-#define width_obj_tag 3
+#define width_obj_tag 2
 #define obj_tag_end (1L << width_obj_tag)
 
 static const Int width_tagged_word = width_word - width_obj_tag;
 
 static const Uns obj_tag_mask = obj_tag_end - 1;
 static const Uns obj_body_mask = ~obj_tag_mask;
-static const Uns flt_body_mask = max_Uns - 1;
 static const Int max_Int_tagged  = (1L  << width_tagged_word) - 1;
 static const Uns max_Uns_tagged  = max_Int_tagged;
 // we cannot shift signed values in C so we use multiplication by powers of 2 instead.
 static const Int shift_factor_Int = 1L << width_obj_tag;
 
-// the low tag bit indicates 32/64 bit IEEE 754 float with low bit rounded to even.
-// it remains to be seen just how bad an idea this is for 32-bit applications...
-// it also remains to be seen if we do the rounding correctly!
-static const Tag ot_flt_bit = 1; // only flt words have low bit set.
-
 typedef enum {
-  ot_ref  = 0,      // pointer to managed object.
-  ot_int  = 1 << 1, // val; 29/61 bit signed int; 29 bits gives a range of  +/-268M.
-  ot_sym  = 2 << 1, // Sym values are indices into global_sym_table.
-  ot_data = 3 << 1, // small Data object that fits into a word.
+  ot_ref  = 0,  // pointer to managed object.
+  ot_int  = 1,  // val; 30/62 bit signed int; 30 bits gives a range of  +/-536M.
+  ot_sym  = 2,  // Sym values are indices into global_sym_table.
+  ot_data = 3,  // small Data object that fits into a word.
 } Obj_tag;
+
+// note: previously there was a scheme to have a 31/63 bit float type;
+// the low tag bit indicated 32/64 bit IEEE 754 float with low bit rounded to even.
+// the remaining Obj_tag bits were each shifted left by one,
+// and the width of Int and Sym were reduced by one bit.
+// it remains to be seen just how bad an idea this is for 32-bit applications...
+// it also remains to be seen if/how to do the rounding correctly!
+static const Tag ot_flt_bit = 1; // only flt words have low bit set.
+UNUSED_VAR(ot_flt_bit)
+static const Uns flt_body_mask = max_Uns - 1;
+UNUSED_VAR(flt_body_mask)
 
 // note: previously there was a scheme to interleave Sym indices with word-sized Data values.
 // this would work by making the next-lowest bit a flag to differentiate between Sym and Data.
@@ -46,16 +51,11 @@ typedef enum {
 static const Uns data_word_bit = (1 << width_obj_tag);
 UNUSED_VAR(data_word_bit)
 
-// to facilitate direct lookup we duplicate Flt across all possible bit patterns.
 static CharsC obj_tag_names[] = {
   "Ref",
-  "Flt",
   "Int",
-  "Flt",
   "Sym",
-  "Flt",
   "Data-word",
-  "Flt",
 };
 
 // all ref types (objects that are dynamically allocated) follow a similar convention;
@@ -152,7 +152,6 @@ msg, rc, struct_tag_names[rc->st], rc->wc, rc->mt, rc->sc);
 typedef union {
   Int i;
   Uns u;
-  Flt f;
   Ptr p;
   RC* rc;
   RCL* rcl;
@@ -221,18 +220,8 @@ static Bool obj_is_ref(Obj o) {
 }
 
 
-static Bool obj_is_flt(Obj o) {
-  return (o.u & ot_flt_bit);
-}
-
-
 static Bool obj_is_int(Obj o) {
   return obj_tag(o) == ot_int;
-}
-
-
-UNUSED_FN static Bool obj_is_num(Obj o) {
-  return obj_is_flt(o) || obj_is_int(o);
 }
 
 
@@ -331,7 +320,6 @@ static Struct_tag ref_struct_tag(Obj r);
 #if OPT_ALLOC_COUNT
 static Counter_index obj_counter_index(Obj o) {
   Obj_tag ot = obj_tag(o);
-  if (ot & ot_flt_bit) return ci_Flt;
   switch (ot) {
     case ot_int: return ci_Int;
     case ot_sym: return ci_Sym;

@@ -15,7 +15,6 @@ C(Str) \
 C(Mem) \
 C(Hash_bucket) \
 C(Set) \
-C(Flt) \
 C(Int) \
 C(Sym) \
 C(Data_word) \

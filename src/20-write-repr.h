@@ -139,10 +139,7 @@ static void write_repr_Func_host(CFile f, Obj func) {
 
 static void write_repr_obj(CFile f, Obj o, Set* s) {
   Obj_tag ot = obj_tag(o);
-  if (ot & ot_flt_bit) {
-    fprintf(f, "(Flt %f)", flt_val(o));
-  }
-  else if (ot == ot_int) {
+  if (ot == ot_int) {
     fprintf(f, "%ld", int_val(o));
   }
   else if (ot == ot_sym) {

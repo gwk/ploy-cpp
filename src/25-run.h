@@ -209,7 +209,7 @@ static Obj run(Obj env, Obj code) {
     err(trace_run_prefix); dbg(code); // TODO: improve this?
 #endif
   Obj_tag ot = obj_tag(code);
-  if (ot & ot_flt_bit || ot == ot_int || ot == ot_data) {
+  if (ot == ot_int || ot == ot_data) {
     return obj_ret_val(code); // self-evaluating.
   }
   if (ot == ot_sym) {
