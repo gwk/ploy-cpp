@@ -4,7 +4,7 @@
 // preprocessing stage.
 // eliminates comment expressions from a code tree.
 
-#include "22-env.h"
+#include "21-env.h"
 
 
 static Obj preprocess(Obj code) {

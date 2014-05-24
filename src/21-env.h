@@ -4,7 +4,7 @@
 // env is implemented as a chain of frames.
 // a frame is a fat chain, where each link is {tl, sym, val}.
 
-#include "21-parse.h"
+#include "20-parse.h"
 
 
 static Obj env_get(Obj env, Obj sym) {

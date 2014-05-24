@@ -1,7 +1,7 @@
 // Copyright 2014 George King.
 // Permission to use this file is granted in ploy/license.txt.
 
-#include "23-pre.h"
+#include "22-pre.h"
 
 
 static const CharsC trace_expand_prefix = "◇ ";       // white diamond

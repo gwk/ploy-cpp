@@ -1,7 +1,7 @@
 // Copyright 2013 George King.
 // Permission to use this file is granted in ploy/license.txt.
 
-#include "18-func.h"
+#include "17-func.h"
 
 
 static Obj host_identity(Mem args) {
