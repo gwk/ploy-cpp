@@ -16,9 +16,9 @@ static Obj env_get(Obj env, Obj sym) {
     if (frame.u != CHAIN0.u) {
       while (frame.u != END.u) {
         assert(vec_ref_len(frame) == 3);
-        Obj key = vec_ref_a(frame);
+        Obj key = chain_a(frame);
         if (key.u == sym.u) {
-          return vec_ref_b(frame);
+          return chain_b(frame);
         }
         frame = chain_tl(frame);
       }
@@ -126,8 +126,8 @@ UNUSED_FN static void dbg_env(Obj env) {
         err(first ? "| " : "  ");
         first = false;
         assert(vec_ref_len(frame) == 3);
-        Obj key = vec_ref_a(frame);
-        Obj val = vec_ref_b(frame);
+        Obj key = chain_a(frame);
+        Obj val = chain_b(frame);
         obj_err(key);
         err(" : ");
         obj_errL(val);
