@@ -140,7 +140,7 @@ static void rc_err(RC* rc) {
 
 
 // at some point this should get removed, as the utility of logging ret/rel calls diminishes.
-#if VERBOSE_MM
+#if VERBOSE_RET_REL
 #define rc_errMLV(msg, ...) \
 errF("%s %p {st:%s w:%lx mt:%x s:%lx}\n", \
 msg, rc, struct_tag_names[rc->st], rc->wc, rc->mt, rc->sc);
