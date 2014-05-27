@@ -11,6 +11,7 @@ static Obj run_sym(Obj env, Obj code) {
   if (code.u == VOID.u) error("cannot run VOID");
   Obj val = env_get(env, code);
   if (val.u == obj0.u) { // lookup failed.
+    env_trace(env);
     error_obj("lookup error", code);
   }
   return obj_ret(val);
@@ -133,7 +134,7 @@ static Obj run_call_native(Obj env, Obj func, Mem args, Bool is_expand) {
   check_obj(obj_is_vec(pars),   "function is malformed (parameters is not a Vec)", pars);
   check_obj(obj_is_vec(f_env),  "function is malformed (env is not a Vec)", f_env);
   Obj frame = env_frame_bind_args(env, func, vec_mem(pars), args, is_expand);
-  Obj env1 = env_push(obj_ret(f_env), frame);
+  Obj env1 = env_push(obj_ret(f_env), obj_ret_val(name), frame); // TODO: change src from name to whole func?
   Obj ret = run(env1, body);
   obj_rel(func);
   obj_rel(env1);

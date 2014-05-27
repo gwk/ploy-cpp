@@ -1,0 +1,7 @@
+<fn f {-n}
+  <if (gt n 0)
+    (f (sub n 1))
+    missing-sym>>
+
+(errL "hi")
+(f 5)

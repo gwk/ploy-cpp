@@ -1,8 +1,9 @@
 // Copyright 2013 George King.
 // Permission to use this file is granted in ploy/license.txt.
 
-// env is implemented as a chain of frames.
-// a frame is a fat chain, where each link is {tl, sym, val}.
+// env is implemented as a fat chain of frames, where each link is [src, frame, tl].
+// src is the object that is lexically responsible for the frame.
+// each frame is a fat chain, where each link is [sym, val, tl].
 
 #include "20-parse.h"
 
@@ -11,8 +12,8 @@ static Obj env_get(Obj env, Obj sym) {
   assert(ref_is_vec(env));
   assert(sym_is_symbol(sym));
   while (env.u != END.u) {
-    assert(vec_ref_len(env) == 2);
-    Obj frame = chain_hd(env);
+    assert(vec_ref_len(env) == 3);
+    Obj frame = chain_b(env);
     if (frame.u != CHAIN0.u) {
       while (frame.u != END.u) {
         assert(vec_ref_len(frame) == 3);
@@ -29,14 +30,11 @@ static Obj env_get(Obj env, Obj sym) {
 }
 
 
-static Obj env_push(Obj env, Obj frame) {
-  // owns env, frame.
-  if (env.u == CHAIN0.u) {
-    env = END;
-  }
-  else assert(vec_len(env) == 2);
+static Obj env_push(Obj env, Obj src, Obj frame) {
+  // owns env, src, frame.
+  assert(env.u == END.u || vec_ref_len(env) == 3);
   assert(frame.u == CHAIN0.u || vec_len(frame) == 3);
-  return new_vec2(frame, env);
+  return new_vec3(src, frame, env);
 }
 
 
@@ -48,7 +46,7 @@ static Obj env_frame_bind(Obj frame, Obj sym, Obj val) {
     frame = obj_ret_val(END);
   }
   else {
-    assert(vec_len(frame) == 3);
+    assert(vec_ref_len(frame) == 3);
   }
   return new_vec3(sym, val, frame);
 }
@@ -56,9 +54,9 @@ static Obj env_frame_bind(Obj frame, Obj sym, Obj val) {
 
 static void env_bind(Obj env, Obj sym, Obj val) {
   // owns sym, val.
-  Obj frame = obj_ret(chain_hd(env));
+  Obj frame = obj_ret(chain_b(env));
   Obj frame1 = env_frame_bind(frame, sym, val);
-  vec_ref_put(env, 0, frame1);
+  vec_ref_put(env, 1, frame1);
 }
 
 
@@ -112,6 +110,20 @@ static Obj env_frame_bind_args(Obj env, Obj func, Mem pars, Mem args, Bool is_ex
 }
 
 
+static void env_trace(Obj env) {
+  assert(ref_is_vec(env));
+  errL("trace:");
+  while (env.u != END.u) {
+    assert(vec_ref_len(env) == 3);
+    Obj src = chain_a(env);
+    err("  ");
+    write_repr(stderr, src);
+    err_nl();
+    env = chain_tl(env);
+  }
+}
+
+
 UNUSED_FN static void dbg_env(Obj env) {
   assert(ref_is_vec(env));
   err("env ");
@@ -140,5 +152,6 @@ UNUSED_FN static void dbg_env(Obj env) {
     env = chain_tl(env);
   }
 }
+
 
 

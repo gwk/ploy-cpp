@@ -309,6 +309,3 @@
     (write1 std-err '\n')
     (writeRSE std-err '\n' '\n' (hd objs) (vec-next objs))>>
 
-
-#(write1 std-err '<<core.ploy completed>>\n')
-

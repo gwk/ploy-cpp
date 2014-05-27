@@ -68,29 +68,32 @@ int main(int argc, CharsC argv[]) {
   }
   
   Obj host_frame = host_init();
-  Obj host_env = env_push(obj_ret_val(CHAIN0), host_frame);
-  Obj core_env = env_push(host_env, obj_ret_val(CHAIN0));
+  Obj host_name = new_data_from_chars(cast(Chars, "<host>"));
+  Obj host_env = env_push(obj_ret_val(END), host_name, host_frame);
   
   // global array of (path, source) objects for error reporting.
   Array sources = array0;
   Obj path, src;
-#if 1
+
   // run embedded core file.
   path = new_data_from_chars(cast(Chars, "<core>"));
-  src = new_data_from_chars(cast(Chars, core_src)); // breaks const correctness?
+  Obj core_env = env_push(host_env, obj_ret(path), obj_ret_val(CHAIN0));
+  src = new_data_from_chars(cast(Chars, core_src)); // TODO: breaks const correctness?
   parse_and_eval(core_env, path, src, &sources, false);
-#endif
-  Obj env = env_push(core_env, obj_ret_val(CHAIN0));
 
   // handle arguments.
+  Obj env = core_env;
+
   for_in(i, path_count) {
-    path = new_data_from_chars(cast(Chars, paths[i])); // breaks const correctness?
+    path = new_data_from_chars(cast(Chars, paths[i])); // TODO: breaks const correctness?
+    env = env_push(env, obj_ret(path), obj_ret_val(CHAIN0));
     src = new_data_from_path(paths[i]);
     parse_and_eval(env, path, src, &sources, false);
   }
   if (expr) {
-    path = new_data_from_chars(cast(Chars, "<cmd>"));
-    src = new_data_from_chars(cast(Chars, expr)); // breaks const correctness?
+    path = new_data_from_chars(cast(Chars, "<expr>"));
+    env = env_push(env, obj_ret(path), obj_ret_val(CHAIN0));
+    src = new_data_from_chars(cast(Chars, expr)); // TODO: breaks const correctness?
     parse_and_eval(env, path, src, &sources, should_output_val);
   }
 

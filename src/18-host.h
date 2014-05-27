@@ -242,6 +242,10 @@ static Obj host_not(Mem args) {
 }
 
 
+// TODO: static Obj host_error(Mem args);
+// variable args?
+
+
 static Obj host_exit(Mem args) {
   // owns elements of args.
   assert(args.len == 1);
