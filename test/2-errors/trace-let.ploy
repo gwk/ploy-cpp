@@ -3,5 +3,4 @@
     (f (sub n 1))
     missing-sym>>
 
-(errL "hi")
 (f 5)

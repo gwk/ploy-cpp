@@ -1,0 +1,11 @@
+{
+  'code' : 1,
+  'err' : '''\
+trace:
+  `f
+  'trace-let.ploy'
+  '<core>'
+  '<host>'
+ploy error: lookup error: `missing-sym
+'''
+}

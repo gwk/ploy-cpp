@@ -86,7 +86,8 @@ int main(int argc, CharsC argv[]) {
 
   for_in(i, path_count) {
     path = new_data_from_chars(cast(Chars, paths[i])); // TODO: breaks const correctness?
-    env = env_push(env, obj_ret(path), obj_ret_val(CHAIN0));
+    Obj name = new_data_from_chars(cast(Chars, charsC_path_base(paths[i]))); // TODO: breaks const correctness?
+    env = env_push(env, name, obj_ret_val(CHAIN0));
     src = new_data_from_path(paths[i]);
     parse_and_eval(env, path, src, &sources, false);
   }
