@@ -21,7 +21,7 @@ static Bool chars_eq(CharsC a, CharsC b) {
 
 
 // get the base name of the path argument.
-static CharsC charsC_path_pase(CharsC path) {
+static CharsC charsC_path_base(CharsC path) {
   Int offset = 0;
   Int i = 0;
   loop {
@@ -38,7 +38,7 @@ static CharsC process_name;
 
 // call in main to set process_name.
 static void set_process_name(CharsC arg0) {
-  process_name = charsC_path_pase(arg0);
+  process_name = charsC_path_base(arg0);
 }
 
 
