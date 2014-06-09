@@ -109,7 +109,7 @@ typedef float Flt;
 typedef double Flt;
 
 #else
-// could also define ARCH_32_WIDE, which would use long long values.
+// could also define ARCH_32_WIDE, which would use 64 bit values.
 // this would require additional checks.
 #error "unknown architecture"
 #endif
