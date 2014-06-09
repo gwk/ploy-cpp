@@ -17,11 +17,12 @@ else
   opts="\
 -DDEBUG=1 \
 -fstack-protector \
--fsanitize=local-bounds \
 -fsanitize=undefined-trap \
 -fsanitize-undefined-trap-on-error \
 -fno-limit-debug-info \
 "
+#-fsanitize=local-bounds
+
 fi
 
 if [[ "$#" == 0 ]]; then
@@ -30,6 +31,8 @@ if [[ "$#" == 0 ]]; then
 fi
 
 set -e
+
+mkdir -p _build
 
 sh/gen-ploy-core.sh
 
