@@ -1,0 +1,54 @@
+{ "scopeName": "ploy",
+  "fileTypes": [
+    "ploy"
+  ],
+  "name": "Ploy",
+  "patterns": [
+
+    { "name": "keyword.control.ploy",
+      "match": "\\b(ILLEGAL|NIL|VEC0|CHAIN0|END|FALSE|TRUE|LABEL|VARIAD|UNQ|QUA|EXPAND)\\b" },
+
+    { "name": "keyword.control.ploy",
+      "match": "\\b(COMMENT|QUO|DO|SCOPE|LET|IF|FN|SEQ|CALL|VOID)\\b" },
+
+    { "name": "keyword.operator.ploy",
+      "match": "[()<>{}]|\\[|\\]" },
+
+    { "name": "constant.numeric.ploy",
+      "match": "\\[-+]?([.0-9]+|0b[.0-1]+|0q[.0-3]+|0o[.0-7]+||0d[.0-9]+|0x[.0-9a-fA-F]+)(?!\\w)\\b" },
+
+    { "name": "constant.language.ploy",
+      "match": "\\b(true|false|none)\\b" },
+
+    { "name": "string.single.ploy",
+      "begin": "'",
+      "end": "'" },
+
+    { "name": "string.double.ploy",
+      "begin": "\"",
+      "end": "\"" },
+
+    { "name": "string.double.ploy",
+      "begin": "'''",
+      "end": "'''" },
+
+    { "name": "string.double.ploy",
+      "begin": "\"\"\"",
+      "end": "\"\"\"" },
+
+    { "name": "variable.symbol.ploy",
+      "match": "\\b[_a-zA-Z](\\w|[-$])*\\b" },
+
+      { "name": "comment.line.ploy",
+        "begin": "#(?!#)",
+        "end": "\\n" },
+
+      { "name": "comment.expr.ploy",
+        "match": "##" },
+
+      { "name": "comment.block.ploy",
+        "begin": "#\\*",
+        "end": "\\*#" }
+  ],
+  "uuid": "e4ce9550-8ec5-11e3-a345-14109fcfac55"
+}

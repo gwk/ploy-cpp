@@ -11,3 +11,7 @@ project.xcworkspace
 
 # python
 __pycache__
+
+# node
+npm-debug.log
+node_modules

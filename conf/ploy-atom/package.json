@@ -1,0 +1,14 @@
+{
+  "name": "ploy-atom",
+  "main": "./lib/ploy-atom",
+  "version": "0.0.0",
+  "description": "Atom package for Ploy",
+  "activationEvents": [],
+  "repository": "https://github.com/gwk/ploy",
+  "license": "ISC",
+  "engines": {
+    "atom": ">0.103.0"
+  },
+  "dependencies": {
+  }
+}

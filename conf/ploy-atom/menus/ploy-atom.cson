@@ -1,0 +1,16 @@
+# See https://atom.io/docs/latest/creating-a-package#menus for more details
+'context-menu':
+  '.overlayer':
+      'Enable ploy-atom': 'ploy-atom:dummy'
+
+'menu': [
+  {
+    'label': 'Packages'
+    'submenu': [
+      'label': 'ploy-atom'
+      'submenu': [
+        { 'label': 'dummy', 'command': 'ploy-atom:dummy' }
+      ]
+    ]
+  }
+]
