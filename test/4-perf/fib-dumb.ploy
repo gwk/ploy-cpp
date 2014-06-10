@@ -1,0 +1,7 @@
+<fn fib-dumb {-n}
+  <if
+    (eq n 0) 0
+    (eq n 1) 1
+    (add (fib-dumb (sub n 1)) (fib-dumb (sub n 2)))>>
+
+(outRL (fib-dumb 18))
