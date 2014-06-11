@@ -1,4 +1,10 @@
 {
   'code' : 1,
-  'err' : ('match', 'ploy error: cannot run VOID'),
+  'err' : '''\
+cannot run VOID
+trace:
+  'void.ploy'
+  '<core>'
+  '<host>'
+'''
 }

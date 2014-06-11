@@ -1,7 +1,7 @@
 // Copyright 2014 George King.
 // Permission to use this file is granted in ploy/license.txt.
 
-#include "24-run.h"
+#include "25-run.h"
 
 static Obj eval(Obj env, Obj code) {
   Obj preprocessed = preprocess(code); // borrows code.
@@ -23,4 +23,3 @@ static Obj eval_vec(Obj env, Obj v) {
   }
   return eval(env, m.els[last]);
 }
-

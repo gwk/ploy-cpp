@@ -212,12 +212,6 @@ for (Int i = (n) - 1, _end_##i = (m), _step_##i = (s); i >= _end_##i; i -= _step
 #define bit(x) (!!(x))
 #define XOR(a, b) (bit(a) ^ bit(b))
 
-// mark function as never returning. ex: NORETURN f() {...}
-#define NORETURN __attribute__((noreturn)) void
-
-// suppress compiler warnings. ex: UNUSED_FN f() {...}
-#define UNUSED_FN __attribute__((unused))
-
 // suppress unused var warnings.
 #define STRING_FROM_TOKEN(x) #x
 #define UNUSED_VAR(x) _Pragma(STRING_FROM_TOKEN(unused(x)))
@@ -231,6 +225,12 @@ for (Int i = (n) - 1, _end_##i = (m), _step_##i = (s); i >= _end_##i; i -= _step
 #elif ARCH_64_WORD
 #define ALIGNED_TO_WORD ALIGNED_TO_8
 #endif
+
+// mark function as never returning. ex: NO_RETURN f() {...}
+#define NO_RETURN __attribute__((noreturn)) void
+
+// suppress compiler warnings. ex: UNUSED_FN f() {...}
+#define UNUSED_FN __attribute__((unused))
 
 // mark a function as having no side effects.
 #define PURE __attribute__((pure))
@@ -260,4 +260,3 @@ static Int int_max(Int a, Int b) {
 static Int int_clamp(Int x, Int a, Int b) {
   return int_max(int_min(x, b), a);
 }
-

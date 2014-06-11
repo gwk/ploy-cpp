@@ -1,7 +1,7 @@
 // Copyright 2013 George King.
 // Permission to use this file is granted in ploy/license.txt.
 
-#include "25-eval.h"
+#include "26-eval.h"
 
 
 static void parse_and_eval(Obj env, Obj path, Obj src, Array* sources, Bool out_val) {
@@ -37,13 +37,13 @@ static void parse_and_eval(Obj env, Obj path, Obj src, Array* sources, Bool out_
 
 
 int main(int argc, CharsC argv[]) {
-  
+
   assert_host_basic();
   assert(size_Obj == size_Word);
   set_process_name(argv[0]);
   sym_init();
   Int vol_err = VERBOSE;
-  
+
   // parse arguments.
   CharsC paths[len_buffer];
   Int path_count = 0;
@@ -66,11 +66,11 @@ int main(int argc, CharsC argv[]) {
       paths[path_count++] = arg;
     }
   }
-  
+
   Obj host_frame = host_init();
   Obj host_name = new_data_from_chars(cast(Chars, "<host>"));
   Obj host_env = env_push(obj_ret_val(END), host_name, host_frame);
-  
+
   // global array of (path, source) objects for error reporting.
   Array sources = array0;
   Obj path, src;
@@ -106,7 +106,6 @@ int main(int argc, CharsC argv[]) {
     counter_stats(vol_err);
   }
 #endif
-  
+
   return 0;
 }
-

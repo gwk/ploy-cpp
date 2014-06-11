@@ -121,7 +121,7 @@ typedef struct {
   Uns wc : width_wc;          // weak count.
   Tag mt : width_meta_tag;    // meta tag.
   Uns sc : width_sc;          // strong count.
-} RC; // Ref-counts. 
+} RC; // Ref-counts.
 DEF_SIZE(RC);
 
 // the Vec and Data ref types are layed out as RC, length word, and then the elements.
@@ -153,6 +153,7 @@ typedef union {
   Int i;
   Uns u;
   Ptr p;
+  Chars c;
   RC* rc;
   RCL* rcl;
 } Obj;
@@ -201,7 +202,7 @@ void dbg(Obj o) {
 }
 
 
-static NORETURN error_obj(CharsC msg, Obj o) {
+static NO_RETURN error_obj(CharsC msg, Obj o) {
   errF("%s error: %s: ", (process_name ? process_name : __FILE__), msg);
   obj_errL(o);
   exit(1);
@@ -447,4 +448,3 @@ UNUSED_FN static Bool obj_is_quotable(Obj o) {
   }
   return false;
 }
-

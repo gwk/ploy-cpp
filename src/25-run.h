@@ -1,19 +1,16 @@
 // Copyright 2013 George King.
 // Permission to use this file is granted in ploy/license.txt.
 
-#include "23-expand.h"
+#include "24-expand.h"
 
 
 static Obj run_sym(Obj env, Obj code) {
   assert(obj_is_sym(code));
   assert(code.u != ILLEGAL.u); // anything that returns ILLEGAL should have raised an error.
   if (code.u < VOID.u) return obj_ret_val(code); // constants are self-evaluating.
-  if (code.u == VOID.u) error("cannot run VOID");
+  exc_check(code.u != VOID.u, "cannot run VOID");
   Obj val = env_get(env, code);
-  if (val.u == obj0.u) { // lookup failed.
-    env_trace(env);
-    error_obj("lookup error", code);
-  }
+  exc_check(val.u != obj0.u, "lookup error: %o", code); // lookup failed.
   return obj_ret(val);
 }
 
@@ -24,7 +21,7 @@ static Obj run_COMMENT(Obj env, Mem args) {
 
 
 static Obj run_QUO(Obj env, Mem args) {
-  check(args.len == 1, "QUO requires 1 argument; found %ld", args.len);
+  exc_check(args.len == 1, "QUO requires 1 argument; received %i", args.len);
   return obj_ret(args.els[0]);
 }
 
@@ -43,7 +40,7 @@ static Obj run_DO(Obj env, Mem args) {
 
 
 static Obj run_SCOPE(Obj env, Mem args) {
-  check(args.len == 1, "SCOPE requires 1 argument; found %ld", args.len);
+  exc_check(args.len == 1, "SCOPE requires 1 argument; received %i", args.len);
   Obj body = args.els[0];
   // TODO: create new env frame.
   return run(env, body);
@@ -51,10 +48,11 @@ static Obj run_SCOPE(Obj env, Mem args) {
 
 
 static Obj run_LET(Obj env, Mem args) {
-  check(args.len == 2, "LET requires 2 arguments; found %ld", args.len);
+  exc_check(args.len == 2, "LET requires 2 arguments; received %i", args.len);
   Obj sym = args.els[0];
   Obj expr = args.els[1];
-  check_obj(obj_is_sym(sym) && sym_is_symbol(sym), "LET requires argument 1 to be a sym; found", sym);
+  exc_check(obj_is_sym(sym) && sym_is_symbol(sym),
+    "LET requires argument 1 to be a sym; received: %o", sym);
   Obj val = run(env, expr);
   env_bind(env, obj_ret_val(sym), val); // owns sym, val.
   return obj_ret_val(VOID); // TODO: retain and return val?
@@ -62,7 +60,7 @@ static Obj run_LET(Obj env, Mem args) {
 
 
 static Obj run_IF(Obj env, Mem args) {
-  check(args.len == 3, "IF requires 3 arguments; found %ld", args.len);
+  exc_check(args.len == 3, "IF requires 3 arguments; received %i", args.len);
   Obj p = args.els[0];
   Obj t = args.els[1];
   Obj e = args.els[2];
@@ -79,14 +77,16 @@ static Obj run_IF(Obj env, Mem args) {
 
 
 static Obj run_FN(Obj env, Mem args) {
-  check(args.len == 4, "FN requires 4 arguments: name:Sym is-macro:Bool parameters:Vec body:Obj; received %ld", args.len);
+  exc_check(args.len == 4,
+    "FN requires 4 arguments: name:Sym is-macro:Bool parameters:Vec body:Obj; received %i",
+    args.len);
   Obj name      = args.els[0];
   Obj is_macro  = args.els[1];
   Obj pars      = args.els[2];
   Obj body      = args.els[3];
-  check_obj(obj_is_sym(name),  "FN: name is not a Sym", name);
-  check_obj(obj_is_bool(is_macro), "FN: is-macro is not a Bool", is_macro);
-  check_obj(obj_is_vec(pars), "FN: parameters is not a Vec", pars);
+  exc_check(obj_is_sym(name),  "FN: name is not a Sym: %o", name);
+  exc_check(obj_is_bool(is_macro), "FN: is-macro is not a Bool: %o", is_macro);
+  exc_check(obj_is_vec(pars), "FN: parameters is not a Vec: %o", pars);
   // TODO: check all pars.
   Obj f = new_vec_raw(5);
   Obj* els = vec_ref_els(f);
@@ -118,23 +118,24 @@ static Obj run_call_native(Obj env, Obj func, Mem args, Bool is_expand) {
   //  body:Expr
   //  env:Env (currently implemented as a nested Vec structure, likely to change)
   Mem m = vec_mem(func);
-  check_obj(m.len == 5, "function is malformed (length is not 5)", func);
+  exc_check(m.len == 5, "function is malformed (length is not 5): %o", func);
   Obj name      = m.els[0];
   Obj is_macro  = m.els[1];
   Obj pars      = m.els[2];
   Obj body      = m.els[3];
   Obj f_env     = m.els[4];
   if (is_expand) {
-    check_obj(bool_is_true(is_macro), "cannot expand function", func);
+    exc_check(bool_is_true(is_macro), "cannot expand function: %o", func);
   }
   else {
-    check_obj(!bool_is_true(is_macro), "cannot call macro", func);
+    exc_check(!bool_is_true(is_macro), "cannot call macro: %o", func);
   }
-  check_obj(obj_is_sym(name),   "function is malformed (name symbol is not a Sym)", name);
-  check_obj(obj_is_vec(pars),   "function is malformed (parameters is not a Vec)", pars);
-  check_obj(obj_is_vec(f_env),  "function is malformed (env is not a Vec)", f_env);
+  exc_check(obj_is_sym(name),  "function is malformed (name symbol is not a Sym): %o", name);
+  exc_check(obj_is_vec(pars),  "function is malformed (parameters is not a Vec): %o", pars);
+  exc_check(obj_is_vec(f_env), "function is malformed (env is not a Vec): %o", f_env);
   Obj frame = env_frame_bind_args(env, func, vec_mem(pars), args, is_expand);
-  Obj env1 = env_push(obj_ret(f_env), obj_ret_val(name), frame); // TODO: change src from name to whole func?
+  Obj env1 = env_push(obj_ret(f_env), obj_ret_val(name), frame);
+  // TODO: change env src from name to whole func?
   Obj ret = run(env1, body);
   obj_rel(func);
   obj_rel(env1);
@@ -148,9 +149,9 @@ static Obj run_call_host(Obj env, Obj func, Mem args) {
   Int len_pars = fh->len_pars;
   Func_host_ptr f = fh->ptr;
   // len_pars == -1 indicates a variadic function.
-  check(args.len == len_pars || len_pars == -1,
-        "host function expects %ld argument%s; received %ld",
-        len_pars, (len_pars == 1 ? "" : "s"), args.len);
+  exc_check(args.len == len_pars || len_pars == -1,
+    "host function expects %i argument%s; received %i",
+    len_pars, (len_pars == 1 ? "" : "s"), args.len);
   obj_rel(func);
   Obj arg_vals[args.len]; // requires variable-length-array support from compiler.
   for_in(i, args.len) {
@@ -165,12 +166,12 @@ static Obj run_CALL(Obj env, Mem args) {
   Obj callee = args.els[0];
   Obj func = run(env, callee);
   Tag ot = obj_tag(func);
-  check_obj(ot == ot_ref, "object is not callable", func);
+  exc_check(ot == ot_ref, "object is not callable: %o", func);
   Tag st = ref_struct_tag(func);
   switch (st) {
     case st_Vec:        return run_call_native(env, func, mem_next(args), false);
     case st_Func_host:  return run_call_host(env, func, mem_next(args));
-    default: error_obj("object is not callable", func);
+    default: exc_raise("object is not callable: %o", func);
   }
 }
 
@@ -195,7 +196,7 @@ static Obj run_Vec(Obj env, Obj code) {
     }
 #undef EVAL_FORM
   }
-  error_obj("cannot call Vec object", code);
+  exc_raise("cannot call Vec object: %o", code);
 }
 
 
@@ -235,7 +236,6 @@ static Obj run(Obj env, Obj code) {
     case st_Reserved_C:
     case st_Reserved_D:
     case st_Reserved_E:
-    case st_Reserved_F: error_obj("cannot run object", code);
+    case st_Reserved_F: exc_raise("cannot run object: %o", code);
   }
 }
-

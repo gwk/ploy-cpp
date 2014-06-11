@@ -29,7 +29,7 @@ static CharsC charsC_path_base(CharsC path) {
     if (path[i] == '/') offset = i + 1;
     i += 1;
   }
-  return path + offset; 
+  return path + offset;
 }
 
 
@@ -57,9 +57,8 @@ static void errL(CharsC s) { err(s); err_nl(); }
 #define warn(fmt, ...) errL("warning: " fmt, ## __VA_ARGS__)
 
 #define error(fmt, ...) { \
-  errFL("%s error: " fmt, (process_name ? process_name : __FILE__), ## __VA_ARGS__); \
+  errFL("\n%s error: " fmt, (process_name ? process_name : __FILE__), ## __VA_ARGS__); \
   exit(1); \
 }
 
 #define check(condition, fmt, ...) { if (!(condition)) error(fmt, ## __VA_ARGS__); }
-

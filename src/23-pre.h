@@ -4,7 +4,7 @@
 // preprocessing stage.
 // eliminates comment expressions from a code tree.
 
-#include "21-env.h"
+#include "22-exc.h"
 
 
 static Obj preprocess(Obj code) {
@@ -26,4 +26,3 @@ static Obj preprocess(Obj code) {
   mem_dealloc(dst.mem);
   return v;
 }
-
