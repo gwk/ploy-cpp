@@ -3,7 +3,7 @@
 
 // memory allocation counters.
 
-#include "01-word.h"
+#include "02-word.h"
 
 
 // counters enum names, structured as an x macro list.

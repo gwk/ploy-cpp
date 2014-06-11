@@ -1,7 +1,7 @@
 // Copyright 2013 George King.
 // Permission to use this file is granted in ploy/license.txt.
 
-#include "17-func.h"
+#include "18-func.h"
 
 
 static Obj host_identity(Mem args) {
@@ -25,8 +25,6 @@ static Obj host_raw_write(Mem args) {
   return new_int(i);
 }
 
-
-static void write_repr(CFile f, Obj o);
 
 static Obj host_raw_write_repr(Mem args) {
   // owns elements of args.

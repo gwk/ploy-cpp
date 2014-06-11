@@ -4,15 +4,11 @@
 // null-terminated c string and file types.
 // in general we ignore const correctness, casting const strings to Chars immediately.
 
-#include "03-raw.h"
+#include "04-raw.h"
 
 
 typedef Char* Chars;
 typedef const Char* CharsC; // Chars-constant.
-
-
-typedef FILE* CFile; // 'File' refers to the ploy type.
-DEF_SIZE(CFile);
 
 
 static Bool chars_eq(CharsC a, CharsC b) {

@@ -7,8 +7,13 @@
 // or else references to allocated memory.
 // ref types have a tag of 0, so they can be dereferenced directly.
 
-#include "05-str.h"
+#include "06-str.h"
 
+
+// reference count increment functions check for overflow,
+// and keep the object's count pinned at the max value.
+// this constant controls whether this event gets logged.
+static const Bool report_pinned_counts = true;
 
 typedef Uns Tag;
 typedef Uns Sym; // index into global_sym_table.
@@ -330,7 +335,6 @@ static Counter_index st_counter_index(Struct_tag st) {
 
 
 static Struct_tag ref_struct_tag(Obj r);
-
 
 #if OPT_ALLOC_COUNT
 static Counter_index obj_counter_index(Obj o) {

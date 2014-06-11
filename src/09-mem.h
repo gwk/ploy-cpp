@@ -3,7 +3,7 @@
 
 // fixed-length object array type.
 
-#include "07-ref.h"
+#include "08-ref.h"
 
 
 typedef struct {
