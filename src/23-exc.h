@@ -44,7 +44,3 @@ static NO_RETURN _exc_raise(Obj env, Chars fmt, Chars args_src, ...) {
     i, fmt, arg_count, args_src);
   exit(1);
 }
-
-// these macros expect env:Obj to be defined in the current scope.
-#define exc_raise(fmt, ...) _exc_raise(env, fmt, #__VA_ARGS__, ##__VA_ARGS__)
-#define exc_check(condition, ...) if (!(condition)) exc_raise(__VA_ARGS__)

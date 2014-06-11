@@ -4,20 +4,26 @@
 #include "18-func.h"
 
 
-static Obj host_identity(Mem args) {
+static NO_RETURN _exc_raise(Obj env, Chars fmt, Chars args_src, ...);
+// NOTE: the exc macros expect env:Obj to be defined in the current scope.
+#define exc_raise(fmt, ...) _exc_raise(env, fmt, #__VA_ARGS__, ##__VA_ARGS__)
+#define exc_check(condition, ...) if (!(condition)) exc_raise(__VA_ARGS__)
+
+
+static Obj host_identity(Obj env, Mem args) {
   // owns element of args.
   assert(args.len == 1);
   return args.els[0];
 }
 
 
-static Obj host_raw_write(Mem args) {
+static Obj host_raw_write(Obj env, Mem args) {
   // owns elements of args.
   assert(args.len == 2);
   Obj f = args.els[0];
   Obj d = args.els[1];
-  check_obj(obj_is_file(f), "write requires arg 1 to be a File; found", f);
-  check_obj(obj_is_data(d), "write requires arg 2 to be a Data; found", d);
+  exc_check(obj_is_file(f), "write requires arg 1 to be a File; received: %o", f);
+  exc_check(obj_is_data(d), "write requires arg 2 to be a Data; received: %o", d);
   CFile file = file_file(f);
   Int i = cast(Int, fwrite(data_ptr(d), size_Char, cast(Uns, data_len(d)), file));
   obj_rel(f);
@@ -26,12 +32,12 @@ static Obj host_raw_write(Mem args) {
 }
 
 
-static Obj host_raw_write_repr(Mem args) {
+static Obj host_raw_write_repr(Obj env, Mem args) {
   // owns elements of args.
   assert(args.len == 2);
   Obj f = args.els[0];
   Obj o = args.els[1];
-  check_obj(obj_is_file(f), "write requires arg 1 to be a File; found", f);
+  exc_check(obj_is_file(f), "write requires arg 1 to be a File; received: %o", f);
   CFile file = file_file(f);
   write_repr(file, o);
   obj_rel(f);
@@ -40,11 +46,11 @@ static Obj host_raw_write_repr(Mem args) {
 }
 
 
-static Obj host_raw_flush(Mem args) {
+static Obj host_raw_flush(Obj env, Mem args) {
   // owns elements of args.
   assert(args.len == 1);
   Obj f = args.els[0];
-  check_obj(obj_is_file(f), "write requires arg 1 to be a File; found", f);
+  exc_check(obj_is_file(f), "write requires arg 1 to be a File; received: %o", f);
   CFile file = file_file(f);
   fflush(file);
   obj_rel(f);
@@ -52,7 +58,7 @@ static Obj host_raw_flush(Mem args) {
 }
 
 
-static Obj host_len(Mem args) {
+static Obj host_len(Obj env, Mem args) {
   // owns elements of args.
   assert(args.len == 1);
   Obj o = args.els[0];
@@ -61,7 +67,7 @@ static Obj host_len(Mem args) {
     l = 0;
   }
   else {
-    check_obj(obj_is_data(o) || obj_is_vec(o), "len requires Data or Vec; found", o);
+    exc_check(obj_is_data(o) || obj_is_vec(o), "len requires Data or Vec; received: %o", o);
     l = o.rcl->len;
   }
   obj_rel(o);
@@ -69,18 +75,18 @@ static Obj host_len(Mem args) {
 }
 
 
-static Obj host_el(Mem args) {
+static Obj host_el(Obj env, Mem args) {
   // owns elements of args.
   assert(args.len == 2);
   Obj v = args.els[0];
   Obj i = args.els[1];
-  check_obj(obj_is_vec(v), "el requires arg 1 to be a Vec; found", v);
-  check_obj(obj_is_int(i), "el requires arg 2 to be a Int; found", i);
+  exc_check(obj_is_vec(v), "el requires arg 1 to be a Vec; received: %o", v);
+  exc_check(obj_is_int(i), "el requires arg 2 to be a Int; received: %o", i);
   Int j = int_val(i);
-  check(v.u != VEC0.u,    "el index out of range; index: %ld; vec: []", j);
-  check(v.u != CHAIN0.u,  "el index out of range; index: %ld; vec: [|]", j);
+  exc_check(v.u != VEC0.u && v.u != CHAIN0.u,
+    "el index out of range; index: %i; vec: %o", j, v);
   Int l = vec_ref_len(v);
-  check(j >= 0 && j < l, "el index out of range; index: %ld; len: %ld", j, l);
+  exc_check(j >= 0 && j < l, "el index out of range; index: %i; len: %i", j, l);
   Obj el = vec_ref_el(v, j);
   obj_rel(v);
   obj_rel_val(i);
@@ -88,15 +94,15 @@ static Obj host_el(Mem args) {
 }
 
 
-static Obj host_slice(Mem args) {
+static Obj host_slice(Obj env, Mem args) {
   // owns elements of args.
   assert(args.len == 3);
   Obj v = args.els[0];
   Obj from = args.els[1];
   Obj to = args.els[2];
-  check_obj(obj_is_vec(v), "el requires arg 1 to be a Vec; found", v);
-  check_obj(obj_is_int(from), "el requires arg 2 to be a Int; found", from);
-  check_obj(obj_is_int(to), "el requires arg 3 to be a Int; found", to);
+  exc_check(obj_is_vec(v), "el requires arg 1 to be a Vec; received: %o", v);
+  exc_check(obj_is_int(from), "el requires arg 2 to be a Int; received: %o", from);
+  exc_check(obj_is_int(to), "el requires arg 3 to be a Int; received: %o", to);
   if (v.u == VEC0.u) return obj_ret_val(VEC0);
   Int l = vec_len(v);
   Int f = int_val(from);
@@ -120,12 +126,12 @@ static Obj host_slice(Mem args) {
 }
 
 
-static Obj host_prepend(Mem args) {
+static Obj host_prepend(Obj env, Mem args) {
   // owns elements of args.
   assert(args.len == 2);
   Obj el = args.els[0];
   Obj vec = args.els[1];
-  check_obj(obj_is_vec(vec), "prepend requires arg 2 to be a Vec; found", vec);
+  exc_check(obj_is_vec(vec), "prepend requires arg 2 to be a Vec; received: %o", vec);
   Mem  m = vec_mem(vec);
   Obj res = new_vec_raw(m.len + 1);
   Obj* els = vec_ref_els(res);
@@ -138,12 +144,12 @@ static Obj host_prepend(Mem args) {
 }
 
 
-static Obj host_append(Mem args) {
+static Obj host_append(Obj env, Mem args) {
   // owns elements of args.
   assert(args.len == 2);
   Obj vec = args.els[0];
   Obj el = args.els[1];
-  check_obj(obj_is_vec(vec), "append requires arg 1 to be a Vec; found", vec);
+  exc_check(obj_is_vec(vec), "append requires arg 1 to be a Vec; received: %o", vec);
   Mem  m = vec_mem(vec);
   Obj res = new_vec_raw(m.len + 1);
   Obj* els = vec_ref_els(res);
@@ -159,22 +165,22 @@ static Obj host_append(Mem args) {
 // TODO: host_cat
 
 
-static Obj host_neg(Mem args) {
+static Obj host_neg(Obj env, Mem args) {
   // owns elements of args.
   assert(args.len == 1);
   Obj n = args.els[0];
-  check_obj(obj_is_int(n), "neg requires Int; found", n);
+  exc_check(obj_is_int(n), "neg requires Int; received: %o", n);
   Int i = int_val(n);
   obj_rel_val(n);
   return new_int(-i);
 }
 
 
-static Obj host_abs(Mem args) {
+static Obj host_abs(Obj env, Mem args) {
   // owns elements of args.
   assert(args.len == 1);
   Obj n = args.els[0];
-  check_obj(obj_is_int(n), "abs requires Int; found", n);
+  exc_check(obj_is_int(n), "abs requires Int; received: %o", n);
   Int i = int_val(n);
   obj_rel_val(n);
   return new_int(i < 0 ? -i : i);
@@ -185,12 +191,12 @@ static Obj host_abs(Mem args) {
 // TODO: check for overflow.
 // owns elements of args.
 #define HOST_BIN_OP(name) \
-static Obj host_##name(Mem args) { \
+static Obj host_##name(Obj env, Mem args) { \
   assert(args.len == 2); \
   Obj n0 = args.els[0]; \
   Obj n1 = args.els[1]; \
-  check_obj(obj_is_int(n0), #name " requires arg 1 to be a Int; found", n0); \
-  check_obj(obj_is_int(n1), #name " requires arg 2 to be a Int; found", n1); \
+  exc_check(obj_is_int(n0), #name " requires arg 1 to be a Int; received: %o", n0); \
+  exc_check(obj_is_int(n1), #name " requires arg 2 to be a Int; received: %o", n1); \
   Int i = int_##name(int_val(n0), int_val(n1)); \
   obj_rel_val(n0); \
   obj_rel_val(n1); \
@@ -226,25 +232,25 @@ HOST_BIN_OP(le)
 HOST_BIN_OP(ge)
 
 
-static Obj host_not(Mem args) {
+static Obj host_not(Obj env, Mem args) {
   // owns elements of args.
   assert(args.len == 1);
   Obj b = args.els[0];
   Obj r = FALSE;
   if (b.u == FALSE.u) r = TRUE;
   else if (b.u != TRUE.u) {
-    error_obj("not requires a Bool value; found", b);
+    exc_raise("not requires a Bool value; received: %o", b);
   }
   obj_rel_val(b);
   return r;
 }
 
 
-// TODO: static Obj host_error(Mem args);
+// TODO: static Obj host_error(Obj env, Mem args);
 // variable args?
 
 
-static Obj host_exit(Mem args) {
+static Obj host_exit(Obj env, Mem args) {
   // owns elements of args.
   assert(args.len == 1);
   Obj n = args.els[0];
@@ -253,24 +259,24 @@ static Obj host_exit(Mem args) {
 }
 
 
-static Obj host_Vec(Mem args) {
+static Obj host_Vec(Obj env, Mem args) {
   // owns elements of args.
   return new_vec_M(args);
 }
 
 
-//static Obj host_chain(Mem args) {}
+//static Obj host_chain(Obj env, Mem args) {}
 
 
 static Obj run(Obj env, Obj code);
 
-static Obj host_run(Mem args) {
+static Obj host_run(Obj env, Mem args) {
   // owns elements of args.
   assert(args.len == 2);
-  Obj env = args.els[0];
+  Obj target_env = args.els[0];
   Obj code = args.els[1];
-  Obj val = run(env, code);
-  obj_rel(env);
+  Obj val = run(target_env, code);
+  obj_rel(target_env);
   obj_rel(code);
   return val;
 }
