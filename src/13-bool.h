@@ -28,4 +28,3 @@ static Bool is_true(Obj o) {
 #undef F
   return true;
 }
-

@@ -91,4 +91,3 @@ COUNTER_LIST
 #define counter_stats(ci) ((void)0)
 
 #endif // OPT_ALLOC_COUNT
-

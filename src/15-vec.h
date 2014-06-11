@@ -177,4 +177,3 @@ static Vec_shape vec_ref_shape(Obj v) {
     v = tl;
   }
 }
-

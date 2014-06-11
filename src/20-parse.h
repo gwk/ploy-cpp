@@ -526,4 +526,3 @@ static Obj parse_src(Str path, Str src, Chars* e) {
   *e = p.e;
   return o;
 }
-

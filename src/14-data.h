@@ -76,4 +76,3 @@ static Obj new_data_from_path(CharsC path) {
   fclose(f);
   return d;
 }
-

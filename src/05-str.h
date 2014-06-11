@@ -149,4 +149,3 @@ static Chars str_src_loc_str(Str src, Str path, Int pos, Int len, Int line_num, 
   check(s_len > 0, "str_src_loc_str allocation failed: %s", msg);
   return s;
 }
-

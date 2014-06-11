@@ -51,5 +51,3 @@ static Bool array_contains(Array* a, Obj r) {
   }
   return false;
 }
-
-

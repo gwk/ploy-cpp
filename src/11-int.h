@@ -25,4 +25,3 @@ static Int int_val(Obj o) {
   assert(i == 0 || i <= -shift_factor_Int || i >= shift_factor_Int);
   return i / shift_factor_Int;
 }
-

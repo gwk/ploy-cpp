@@ -195,5 +195,3 @@ static void write_repr(CFile f, Obj o) {
   write_repr_obj(f, o, &s);
   set_dealloc(&s);
 }
-
-

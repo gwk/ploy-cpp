@@ -152,6 +152,3 @@ UNUSED_FN static void dbg_env(Obj env) {
     env = chain_tl(env);
   }
 }
-
-
-

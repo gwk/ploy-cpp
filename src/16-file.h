@@ -36,5 +36,3 @@ UNUSED_FN static Obj file_is_writable(Obj f) {
   assert(ref_is_file(f));
   return new_bool(f.rc->mt & ft_writable);
 }
-
-

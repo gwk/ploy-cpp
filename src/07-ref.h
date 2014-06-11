@@ -85,4 +85,3 @@ static void ref_dealloc(Obj r) {
   counter_dec(st_counter_index(st) + 1); // math relies on layout of COUNTER_LIST.
 #endif
 }
-

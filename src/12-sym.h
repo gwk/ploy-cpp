@@ -114,7 +114,7 @@ assert(sym_index(sym) == si_##s); \
 obj_rel_val(sym);
 
 SYM_LIST
-  
+
 #undef SYM
 }
 
@@ -132,4 +132,3 @@ static Bool sym_is_symbol(Obj s) {
   // see run_sym for details.
   return sym_index(s) > si_VOID;
 }
-

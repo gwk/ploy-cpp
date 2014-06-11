@@ -115,4 +115,3 @@ static void set_remove(Set* s, Obj r) {
   }
   assert(0);
 }
-

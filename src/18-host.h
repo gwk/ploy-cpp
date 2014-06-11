@@ -206,7 +206,7 @@ static Int int_mul(Int a, Int b)  { return a * b; }
 static Int int_divi(Int a, Int b) { return a / b; }
 static Int int_mod(Int a, Int b)  { return a % b; }
 static Int int_pow(Int a, Int b)  { return cast(Int, pow(a, b)); } // TODO: check for overflow.
-  
+
 static Int int_eq(Int a, Int b)   { return a == b; }
 static Int int_ne(Int a, Int b)   { return a != b; }
 static Int int_lt(Int a, Int b)   { return a < b; }
@@ -316,7 +316,7 @@ frame = env_frame_bind(frame, sym, val);
   DEF_FH(1, exit)
   DEF_FH(-1, Vec)
   DEF_FH(2, run)
-  
+
 #undef DEF_FH
 
 #define DEF_FILE(f, string, is_readable, is_writable) \
@@ -324,13 +324,12 @@ sym = new_sym_from_chars(cast(Chars, string)); \
 val = new_vec2(new_data_from_chars(cast(Chars, "<" string ">")), \
 new_file(f, is_readable, is_writable)); \
 frame = env_frame_bind(frame, sym, val);
-  
+
   DEF_FILE(stdin, "std-in", true, false)
   DEF_FILE(stdout, "std-out", false, true)
   DEF_FILE(stderr, "std-err", false, true)
-  
+
 #undef DEF_FILE
 
   return frame;
 }
-
