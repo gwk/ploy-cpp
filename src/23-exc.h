@@ -6,8 +6,8 @@
 #include "22-env.h"
 
 
-static NO_RETURN _exc_raise(Obj env, Chars fmt, Chars args_src, ...) {
-  Chars pa = args_src;
+static NO_RETURN _exc_raise(Obj env, Chars_const fmt, Chars_const args_src, ...) {
+  Chars_const pa = args_src;
   Int arg_count = bit(*pa);
   while (*pa) {
     if (*pa++ == ',') {
@@ -17,7 +17,7 @@ static NO_RETURN _exc_raise(Obj env, Chars fmt, Chars args_src, ...) {
   Int i = 0;
   va_list arg_list;
   va_start(arg_list, args_src);
-  Chars pf = fmt;
+  Chars_const pf = fmt;
   Char c;
   while ((c = *pf++)) {
     if (c == '%') {

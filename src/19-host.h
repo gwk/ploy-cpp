@@ -4,7 +4,7 @@
 #include "18-func.h"
 
 
-static NO_RETURN _exc_raise(Obj env, Chars fmt, Chars args_src, ...);
+static NO_RETURN _exc_raise(Obj env, Chars_const fmt, Chars_const args_src, ...);
 // NOTE: the exc macros expect env:Obj to be defined in the current scope.
 #define exc_raise(fmt, ...) _exc_raise(env, fmt, #__VA_ARGS__, ##__VA_ARGS__)
 #define exc_check(condition, ...) if (!(condition)) exc_raise(__VA_ARGS__)
