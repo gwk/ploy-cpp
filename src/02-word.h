@@ -7,7 +7,7 @@
 
 
 #define len_buffer 256 // standard buffer size for various Char arrays on the stack.
-// TODO: why can't this be a const Int?
+// this cannot be a const Int due to c limitations.
 
 // all types are upper case by convention.
 typedef char Char;
@@ -42,12 +42,10 @@ typedef union {
 } W64; // 64 bit generic word.
 
 
-#if __SIZEOF_POINTER__ == 4
+#if ARCH_32_WORD
 typedef float Flt;
-#elif __SIZEOF_POINTER__ == 8
+#elif ARCH_64_WORD
 typedef double Flt;
-#else
-#error "unknown architecture"
 #endif
 
 typedef union {
@@ -110,7 +108,6 @@ static void assert_host_basic() {
   assert(size_Word == size_Uns);
   assert(size_Word == size_Flt);
   assert(size_Word == size_Ptr);
-  assert(sizeof(wchar_t) == 4);
 }
 
 

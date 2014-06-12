@@ -59,18 +59,20 @@ static Int counters[ci_end][2] = {};
 
 
 static void counter_inc(Counter_index ci) {
+  // increment the specified counter.
   assert(ci >= 0 && ci < ci_end);
   counters[ci][0]++;
 }
 
 
 static void counter_dec(Counter_index ci) {
+  // decrement the specified counter.
   counters[ci][1]++;
 }
 
 
 static void counter_stats(Bool log_all) {
-  // log counter stats.
+  // log counter stats to stderr.
 #define C(c) { \
   Int inc = counters[ci_##c][0]; \
   Int dec = counters[ci_##c][1]; \

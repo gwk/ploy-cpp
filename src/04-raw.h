@@ -10,7 +10,9 @@
 
 static Ptr raw_alloc(Int size, Counter_index ci) {
   assert(size >= 0);
-  if (!size) return NULL; // malloc does not return NULL for zero size; we do for clarity.
+  // malloc does not return NULL for zero size;
+  // we do so that a len/ptr pair with zero len always has a NULL ptr.
+  if (!size) return NULL;
   counter_inc(ci); // do not count NULL.
   Ptr p = malloc(cast(Uns, size));
   if (!p) {
@@ -46,7 +48,7 @@ static Ptr raw_realloc(Ptr p, Int size, Counter_index ci) {
     return r;
   }
   else {
-    raw_dealloc(p, ci); // realloc would return a non-null pointer; we do for clarity.
+    raw_dealloc(p, ci); // realloc does not return NULL for zero size; see note in raw_alloc.
     return NULL;
   }
 }

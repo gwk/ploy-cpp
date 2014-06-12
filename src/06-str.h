@@ -1,7 +1,9 @@
 // Copyright 2013 George King.
 // Permission to use this file is granted in ploy/license.txt.
 
-// Str type.
+// String struct type.
+// By using a struct with an explicit length,
+// we can create substrings without copying the original.
 
 #include "05-chars.h"
 
@@ -41,7 +43,7 @@ static void str_dealloc(Str s) {
 
 
 static Str str_alloc(Int len) {
-  // add null terminator for easier debugging.
+  // add null terminator to the allocation for easier debugging; this does not affect len.
   Chars c = raw_alloc(len + 1, ci_Str);
   c[len] = 0;
   return str_mk(len, c);

@@ -56,6 +56,7 @@
 #define VERBOSE_PARSE   VERBOSE || 0
 #define VERBOSE_EVAL    VERBOSE || 0
 
+// wherever possible, we use types that are the natural word size.
 #if __SIZEOF_POINTER__ == 4
 #define ARCH_32_WORD 1
 #define ARCH_64_WORD 0
@@ -80,11 +81,11 @@ for (Int i = (m), _end_##i = (n), _step_##i = (s); i < _end_##i; i += _step_##i)
 #define for_imns_rev(i, m, n, s) \
 for (Int i = (n) - 1, _end_##i = (m), _step_##i = (s); i >= _end_##i; i -= _step_##i)
 
-// same as for_imns(i, m, n, 0).
+// equivalent to for_imns(i, m, n, 0).
 #define for_imn(i, m, n)      for_imns(i, (m), (n), 1)
 #define for_imn_rev(i, m, n)  for_imns_rev(i, (m), (n), 1)
 
-// same as for_imn(i, 0, n).
+// equivalent to for_imn(i, 0, n).
 #define for_in(i, n)      for_imns(i, 0, (n), 1)
 #define for_in_rev(i, n)  for_imns_rev(i, 0, (n), 1)
 
@@ -99,8 +100,8 @@ for (Int i = (n) - 1, _end_##i = (m), _step_##i = (s); i >= _end_##i; i -= _step
 #define CASE_RET_TOK_SPLIT(prefix, t) case prefix##t: return #t
 
 // boolean logic
-#define bit(x) (!!(x))
-#define XOR(a, b) (bit(a) ^ bit(b))
+#define bit(x) (!!(x)) // 0 for falsy, 1 for truthy.
+#define XOR(a, b) (bit(a) ^ bit(b)) // logical exclusive-or.
 
 // suppress unused var warnings.
 #define STRING_FROM_TOKEN(x) #x

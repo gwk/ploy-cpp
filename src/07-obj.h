@@ -2,10 +2,10 @@
 // Permission to use this file is granted in ploy/license.txt.
 
 // dynamic object type.
-// every object word has a 3-bit tag in the low-order bits indicating its type.
-// all objects are either value words with a tag in the low bits,
-// or else references to allocated memory.
-// ref types have a tag of 0, so they can be dereferenced directly.
+// every object word has a tag in the low-order bits indicating its type.
+// all objects are either value words with a nonzero tag in the low bits,
+// or else references to allocated memory, which have a zero tag
+// (the zero tag is guaranteed due to heap allocation alignment).
 
 #include "06-str.h"
 
@@ -41,7 +41,7 @@ typedef enum {
 // the low tag bit indicated 32/64 bit IEEE 754 float with low bit rounded to even.
 // the remaining Obj_tag bits were each shifted left by one,
 // and the width of Int and Sym were reduced by one bit.
-// it remains to be seen just how bad an idea this is for 32-bit applications...
+// it remains to be seen just how bad an idea this is for 32-bit applications;
 // it also remains to be seen if/how to do the rounding correctly!
 static const Tag ot_flt_bit = 1; // only flt words have low bit set.
 UNUSED_VAR(ot_flt_bit)
@@ -50,8 +50,9 @@ UNUSED_VAR(flt_body_mask)
 
 // note: previously there was a scheme to interleave Sym indices with word-sized Data values.
 // this would work by making the next-lowest bit a flag to differentiate between Sym and Data.
-// Data-words would use the next 3 bits (the highest 3 bits of the lowest byte)
-// to represent the length, which is wide enough to cover up to 128-bit words.
+// Data-words would use the remaining bits in the byte to represent the length.
+// currently that would mean the low byte layout is TTTFLLLL;
+// 4 bits is a wide enouh len field for a maximum of 3/7 data bytes.
 // this is only desirable if we need the last Obj_tag index slot for something else.
 static const Uns data_word_bit = (1 << width_obj_tag);
 UNUSED_VAR(data_word_bit)
@@ -65,6 +66,7 @@ static Chars_const obj_tag_names[] = {
 
 // all ref types (objects that are dynamically allocated) follow a similar convention;
 // the lowest 4 bits of the first allocated word indicate its type.
+// NOTE: the current plan is that eventually this will be replaced by a 'type' pointer.
 #define width_struct_tag 4
 #define struct_tag_end (1L << width_struct_tag)
 
