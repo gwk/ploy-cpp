@@ -56,7 +56,7 @@ UNUSED_VAR(flt_body_mask)
 static const Uns data_word_bit = (1 << width_obj_tag);
 UNUSED_VAR(data_word_bit)
 
-static CharsC obj_tag_names[] = {
+static Chars_const obj_tag_names[] = {
   "Ref",
   "Int",
   "Sym",
@@ -93,7 +93,7 @@ typedef enum {
   st_Reserved_F,
 } Struct_tag;
 
-static CharsC struct_tag_names[] = {
+static Chars_const struct_tag_names[] = {
   "Data",
   "Vec",
   "I32",
@@ -188,7 +188,7 @@ static void obj_errL(Obj o) {
 
 
 static void obj_err_tag(Obj o) {
-  CharsC otn = obj_tag_names[obj_tag(o)];
+  Chars_const otn = obj_tag_names[obj_tag(o)];
   err(otn);
 }
 
@@ -207,7 +207,7 @@ void dbg(Obj o) {
 }
 
 
-static NO_RETURN error_obj(CharsC msg, Obj o) {
+static NO_RETURN error_obj(Chars_const msg, Obj o) {
   errF("%s error: %s: ", (process_name ? process_name : __FILE__), msg);
   obj_errL(o);
   exit(1);

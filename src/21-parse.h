@@ -48,7 +48,7 @@ UNUSED_FN static void parse_errL(Parser* p) {
 
 
  __attribute__((format (printf, 2, 3)))
-static Obj parse_error(Parser* p, CharsC fmt, ...) {
+static Obj parse_error(Parser* p, Chars_const fmt, ...) {
   assert(!p->e);
   va_list args;
   va_start(args, fmt);
@@ -431,7 +431,7 @@ static Obj parse_unq(Parser* p) {
 
 
 
-static Obj parse_par(Parser* p, Obj sym, CharsC par_desc) {
+static Obj parse_par(Parser* p, Obj sym, Chars_const par_desc) {
   P_ADV1;
   Src_pos sp_open = p->sp; // for error reporting.
   Obj name = parse_expr(p);

@@ -4,8 +4,8 @@
 #include "24-pre.h"
 
 
-static const CharsC trace_expand_prefix = "◇ ";       // white diamond
-static const CharsC trace_post_expand_prefix = "▫ ";  // white small square
+static const Chars_const trace_expand_prefix = "◇ ";       // white diamond
+static const Chars_const trace_post_expand_prefix = "▫ ";  // white small square
 
 
 static Bool expr_contains_unquote(Obj o) {

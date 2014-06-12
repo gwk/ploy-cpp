@@ -201,9 +201,9 @@ static Obj run_Vec(Obj env, Obj code) {
 
 
 // TODO: use or remove; fix comments.
-static const CharsC trace_run_prefix    = "▿ "; // during trace, printed before each run; white_down_pointing_small_triangle.
-static const CharsC trace_val_prefix    = "◦ "; // during trace, printed before calling continuation; white_bullet.
-static const CharsC trace_apply_prefix  = "▹ "; // called before each call apply;  white_right_pointing_small_triangle.
+static const Chars_const trace_run_prefix    = "▿ "; // during trace, printed before each run; white_down_pointing_small_triangle.
+static const Chars_const trace_val_prefix    = "◦ "; // during trace, printed before calling continuation; white_bullet.
+static const Chars_const trace_apply_prefix  = "▹ "; // called before each call apply;  white_right_pointing_small_triangle.
 
 
 static Obj run(Obj env, Obj code) {

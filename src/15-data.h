@@ -62,7 +62,7 @@ static Obj new_data_from_chars(Chars c) {
 }
 
 
-static Obj new_data_from_path(CharsC path) {
+static Obj new_data_from_path(Chars_const path) {
   CFile f = fopen(path, "r");
   check(f, "could not open file: %s", path);
   fseek(f, 0, SEEK_END);

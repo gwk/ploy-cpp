@@ -36,7 +36,7 @@ static void parse_and_eval(Obj env, Obj path, Obj src, Array* sources, Bool out_
 }
 
 
-int main(int argc, CharsC argv[]) {
+int main(int argc, Chars_const argv[]) {
 
   assert_host_basic();
   assert(size_Obj == size_Word);
@@ -45,12 +45,12 @@ int main(int argc, CharsC argv[]) {
   Int vol_err = VERBOSE;
 
   // parse arguments.
-  CharsC paths[len_buffer];
+  Chars_const paths[len_buffer];
   Int path_count = 0;
-  CharsC expr = NULL;
+  Chars_const expr = NULL;
   Bool should_output_val = false;
   for_imn(i, 1, argc) {
-    CharsC arg = argv[i];
+    Chars_const arg = argv[i];
     if (chars_eq(arg, "-v")) {
       vol_err = 1;
     }
@@ -86,7 +86,7 @@ int main(int argc, CharsC argv[]) {
 
   for_in(i, path_count) {
     path = new_data_from_chars(cast(Chars, paths[i])); // TODO: breaks const correctness?
-    Obj name = new_data_from_chars(cast(Chars, charsC_path_base(paths[i]))); // TODO: breaks const correctness?
+    Obj name = new_data_from_chars(cast(Chars, chars_path_base(paths[i]))); // TODO: breaks const correctness?
     env = env_push(env, name, obj_ret_val(CHAIN0));
     src = new_data_from_path(paths[i]);
     parse_and_eval(env, path, src, &sources, false);

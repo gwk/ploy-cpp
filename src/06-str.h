@@ -129,7 +129,7 @@ static Chars str_src_loc_str(Str src, Str path, Int pos, Int len, Int line_num, 
   // get source line.
   // caller is responsible for raw_dealloc of return Chars.
   Str line = str_line_at_pos(src, pos);
-  CharsC nl = str_ends_with_char(line, '\n') ? "" : "\n";
+  Chars_const nl = str_ends_with_char(line, '\n') ? "" : "\n";
   // create underline.
   Char under[len_buffer] = {}; // zeroes all elements.
   if (line.len < len_buffer) { // draw underline

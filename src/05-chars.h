@@ -8,16 +8,16 @@
 
 
 typedef Char* Chars;
-typedef const Char* CharsC; // Chars-constant.
+typedef const Char* Chars_const;
 
 
-static Bool chars_eq(CharsC a, CharsC b) {
+static Bool chars_eq(Chars_const a, Chars_const b) {
   return strcmp(a, b) == 0;
 }
 
 
 // get the base name of the path argument.
-static CharsC charsC_path_base(CharsC path) {
+static Chars_const chars_path_base(Chars_const path) {
   Int offset = 0;
   Int i = 0;
   loop {
@@ -30,20 +30,20 @@ static CharsC charsC_path_base(CharsC path) {
 
 
 // the name of the current process.
-static CharsC process_name;
+static Chars_const process_name;
 
 // call in main to set process_name.
-static void set_process_name(CharsC arg0) {
-  process_name = charsC_path_base(arg0);
+static void set_process_name(Chars_const arg0) {
+  process_name = chars_path_base(arg0);
 }
 
 
 // stderr utilities.
 
-static void err(CharsC s) { fputs(s, stderr); }
+static void err(Chars_const s) { fputs(s, stderr); }
 static void err_nl() { err("\n"); }
 static void err_flush() { fflush(stderr); }
-static void errL(CharsC s) { err(s); err_nl(); }
+static void errL(Chars_const s) { err(s); err_nl(); }
 
 #define errF(fmt, ...) fprintf(stderr, fmt, ## __VA_ARGS__)
 #define errFL(fmt, ...) errF(fmt "\n", ## __VA_ARGS__)
