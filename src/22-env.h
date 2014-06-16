@@ -84,7 +84,14 @@ static Obj env_frame_bind_args(Obj env, Obj func, Mem pars, Mem args, Bool is_ex
       else {
         error_obj("function received too few arguments", vec_ref_el(func, 0));
       }
-      Obj val = (is_expand ? obj_ret(arg) : run(env, arg));
+      Obj val;
+      if (is_expand) {
+        val = obj_ret(arg);
+      }
+      else {
+        Step step = run(env, arg);
+        val = step.obj;
+      }
       frame = env_frame_bind(frame, obj_ret_val(par_sym), val);
     }
     else {
@@ -100,7 +107,13 @@ static Obj env_frame_bind_args(Obj env, Obj func, Mem pars, Mem args, Bool is_ex
       Obj variad_val = new_vec_raw(variad_count);
       it_vec(it, variad_val) {
         Obj arg = args.els[i_args++];
-        *it = (is_expand ? obj_ret(arg) : run(env, arg));
+        if (is_expand) {
+          *it = obj_ret(arg);
+        }
+        else {
+          Step step = run(env, arg);
+          *it = step.obj;
+        }
       }
       frame = env_frame_bind(frame, obj_ret_val(par_sym), variad_val);
     }

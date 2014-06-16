@@ -10,6 +10,14 @@ static NO_RETURN _exc_raise(Obj env, Chars_const fmt, Chars_const args_src, ...)
 #define exc_check(condition, ...) if (!(condition)) exc_raise(__VA_ARGS__)
 
 
+typedef struct {
+  Obj env;
+  Obj obj;
+} Step;
+
+#define mk_step(e, o) (Step){.env=(e), .obj=(o)}
+
+
 static Obj host_identity(Obj env, Mem args) {
   // owns element of args.
   assert(args.len == 1);
@@ -268,14 +276,15 @@ static Obj host_Vec(Obj env, Mem args) {
 //static Obj host_chain(Obj env, Mem args) {}
 
 
-static Obj run(Obj env, Obj code);
+static Step run(Obj env, Obj code);
 
 static Obj host_run(Obj env, Mem args) {
   // owns elements of args.
   assert(args.len == 2);
   Obj target_env = args.els[0];
   Obj code = args.els[1];
-  Obj val = run(target_env, code);
+  Step step = run(target_env, code);
+  Obj val = step.obj;
   obj_rel(target_env);
   obj_rel(code);
   return val;

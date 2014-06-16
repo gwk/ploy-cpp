@@ -4,42 +4,42 @@
 #include "26-compile.h"
 
 
-static Obj run_sym(Obj env, Obj code) {
+static Step run_sym(Obj env, Obj code) {
   assert(obj_is_sym(code));
   assert(code.u != ILLEGAL.u); // anything that returns ILLEGAL should have raised an error.
-  if (code.u < VOID.u) return obj_ret_val(code); // constants are self-evaluating.
+  if (code.u < VOID.u) return mk_step(env, obj_ret_val(code)); // constants are self-evaluating.
   exc_check(code.u != VOID.u, "cannot run VOID");
   Obj val = env_get(env, code);
   exc_check(val.u != obj0.u, "lookup error: %o", code); // lookup failed.
-  return obj_ret(val);
+  return mk_step(env, obj_ret(val));
 }
 
 
-static Obj run_COMMENT(Obj env, Mem args) {
-  return obj_ret_val(VOID);
+static Step run_COMMENT(Obj env, Mem args) {
+  return mk_step(env, obj_ret_val(VOID));
 }
 
 
-static Obj run_QUO(Obj env, Mem args) {
+static Step run_QUO(Obj env, Mem args) {
   exc_check(args.len == 1, "QUO requires 1 argument; received %i", args.len);
-  return obj_ret(args.els[0]);
+  return mk_step(env, obj_ret(args.els[0]));
 }
 
 
-static Obj run_DO(Obj env, Mem args) {
+static Step run_DO(Obj env, Mem args) {
   if (!args.len) {
-    return obj_ret_val(VOID);
+    return mk_step(env, obj_ret_val(VOID));
   }
   Int last = args.len - 1;
   it_mem_to(it, args, last) {
-    Obj o = run(env, *it);
-    obj_rel(o); // value ignored.
+    Step step = run(env, *it);
+    obj_rel(step.obj); // value ignored.
   };
   return run(env, args.els[last]); // put last run() in tail position for TCO.
 }
 
 
-static Obj run_SCOPE(Obj env, Mem args) {
+static Step run_SCOPE(Obj env, Mem args) {
   exc_check(args.len == 1, "SCOPE requires 1 argument; received %i", args.len);
   Obj body = args.els[0];
   // TODO: create new env frame.
@@ -47,24 +47,26 @@ static Obj run_SCOPE(Obj env, Mem args) {
 }
 
 
-static Obj run_LET(Obj env, Mem args) {
+static Step run_LET(Obj env, Mem args) {
   exc_check(args.len == 2, "LET requires 2 arguments; received %i", args.len);
   Obj sym = args.els[0];
   Obj expr = args.els[1];
   exc_check(obj_is_sym(sym) && sym_is_symbol(sym),
     "LET requires argument 1 to be a sym; received: %o", sym);
-  Obj val = run(env, expr);
+  Step step = run(env, expr);
+  Obj val = step.obj;
   env_bind(env, obj_ret_val(sym), val); // owns sym, val.
-  return obj_ret(val);
+  return mk_step(env, obj_ret(val));
 }
 
 
-static Obj run_IF(Obj env, Mem args) {
+static Step run_IF(Obj env, Mem args) {
   exc_check(args.len == 3, "IF requires 3 arguments; received %i", args.len);
   Obj p = args.els[0];
   Obj t = args.els[1];
   Obj e = args.els[2];
-  Obj p_val = run(env, p);
+  Step step = run(env, p);
+  Obj p_val = step.obj;
   if (is_true(p_val)) {
     obj_rel(p_val);
     return run(env, t);
@@ -76,7 +78,7 @@ static Obj run_IF(Obj env, Mem args) {
 }
 
 
-static Obj run_FN(Obj env, Mem args) {
+static Step run_FN(Obj env, Mem args) {
   exc_check(args.len == 4,
     "FN requires 4 arguments: name:Sym is-macro:Bool parameters:Vec body:Obj; received %i",
     args.len);
@@ -95,21 +97,22 @@ static Obj run_FN(Obj env, Mem args) {
   els[2] = obj_ret(pars);
   els[3] = obj_ret(body);
   els[4] = obj_ret(env);
-  return f;
+  return mk_step(env, f);
 }
 
 
-static Obj run_SEQ(Obj env, Mem args) {
+static Step run_SEQ(Obj env, Mem args) {
   Obj v = new_vec_raw(args.len);
   Obj* els = vec_els(v);
   for_in(i, args.len) {
-    els[i] = run(env, args.els[i]);
+    Step step = run(env, args.els[i]);
+    els[i] = step.obj;
   }
-  return v;
+  return mk_step(env, v);
 }
 
 
-static Obj run_call_native(Obj env, Obj func, Mem args, Bool is_expand) {
+static Step run_call_native(Obj env, Obj func, Mem args, Bool is_expand) {
   // owns func.
   // a native function/macro is a vec consisting of:
   //  name:Sym
@@ -136,14 +139,15 @@ static Obj run_call_native(Obj env, Obj func, Mem args, Bool is_expand) {
   Obj frame = env_frame_bind_args(env, func, vec_mem(pars), args, is_expand);
   Obj env1 = env_push(obj_ret(f_env), obj_ret_val(name), frame);
   // TODO: change env src from name to whole func?
-  Obj ret = run(env1, body);
+  Step step = run(env1, body);
+  Obj ret = step.obj;
   obj_rel(func);
   obj_rel(env1);
-  return ret;
+  return mk_step(env, ret);
 }
 
 
-static Obj run_call_host(Obj env, Obj func, Mem args) {
+static Step run_call_host(Obj env, Obj func, Mem args) {
   // owns func.
   Func_host* fh = ref_body(func);
   Int len_pars = fh->len_pars;
@@ -155,16 +159,18 @@ static Obj run_call_host(Obj env, Obj func, Mem args) {
   obj_rel(func);
   Obj arg_vals[args.len]; // requires variable-length-array support from compiler.
   for_in(i, args.len) {
-    arg_vals[i] = run(env, args.els[i]);
+    Step step = run(env, args.els[i]);
+    arg_vals[i] = step.obj;
   }
-  return f(env, mem_mk(args.len, arg_vals));
+  return mk_step(env, f(env, mem_mk(args.len, arg_vals)));
 }
 
 
-static Obj run_CALL(Obj env, Mem args) {
+static Step run_CALL(Obj env, Mem args) {
   check(args.len > 0, "call is empty");
   Obj callee = args.els[0];
-  Obj func = run(env, callee);
+  Step step = run(env, callee);
+  Obj func = step.obj;
   Tag ot = obj_tag(func);
   exc_check(ot == ot_ref, "object is not callable: %o", func);
   Tag st = ref_struct_tag(func);
@@ -176,7 +182,7 @@ static Obj run_CALL(Obj env, Mem args) {
 }
 
 
-static Obj run_Vec(Obj env, Obj code) {
+static Step run_Vec(Obj env, Obj code) {
   Mem m = vec_mem(code);
   Obj form = m.els[0];
   Tag ot = obj_tag(form);
@@ -206,13 +212,13 @@ static const Chars_const trace_val_prefix    = "◦ "; // during trace, printed 
 static const Chars_const trace_apply_prefix  = "▹ "; // called before each call apply;  white_right_pointing_small_triangle.
 
 
-static Obj run(Obj env, Obj code) {
+static Step run(Obj env, Obj code) {
 #if VERBOSE_EVAL
     err(trace_run_prefix); dbg(code); // TODO: improve this?
 #endif
   Obj_tag ot = obj_tag(code);
   if (ot == ot_int || ot == ot_data) {
-    return obj_ret_val(code); // self-evaluating.
+    return mk_step(env, obj_ret_val(code)); // self-evaluating.
   }
   if (ot == ot_sym) {
     return run_sym(env, code);
@@ -228,7 +234,7 @@ static Obj run(Obj env, Obj code) {
     case st_U64:
     case st_F32:
     case st_F64:
-      return obj_ret(code); // self-evaluating.
+      return mk_step(env, obj_ret(code)); // self-evaluating.
     case st_File:
     case st_Func_host:
     case st_Reserved_A:

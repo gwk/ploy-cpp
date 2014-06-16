@@ -3,24 +3,30 @@
 
 #include "27-run.h"
 
-static Obj eval(Obj env, Obj code) {
+static Step eval(Obj env, Obj code) {
   Obj preprocessed = preprocess(code); // borrows code.
-  if (preprocessed.u == obj0.u) return obj_ret_val(VOID); // TODO: document why this is necessary.
+  if (preprocessed.u == obj0.u) {
+    return mk_step(env, obj_ret_val(VOID)); // TODO: document why this is necessary.
+  }
   Obj expanded = expand(env, preprocessed); // owns preprocessed.
   Obj compiled = compile(env, expanded); // owns expanded.
-  Obj val = run(env, compiled); // borrows compiled.
+  Step step = run(env, compiled); // borrows compiled.
   obj_rel(compiled);
-  return val;
+  return step;
 }
 
 
 static Obj eval_vec(Obj env, Obj v) {
+  // this is quite different than calling eval on a DO vector;
+  // not only does this vec not have a head DO sym,
+  // it also does the complete eval cycle on each member in turn.
   if (v.u == VEC0.u) return obj_ret_val(VOID);
   Mem m = vec_ref_mem(v);
   Int last = m.len - 1;
   it_mem_to(it, m, last) {
-    Obj val = eval(env, *it);
-    obj_rel(val);
+    Step step = eval(env, *it);
+    obj_rel(step.obj);
   }
-  return eval(env, m.els[last]);
+  Step step = eval(env, m.els[last]);
+  return step.obj;
 }
