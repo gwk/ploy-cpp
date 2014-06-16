@@ -1,7 +1,7 @@
 // Copyright 2013 George King.
 // Permission to use this file is granted in ploy/license.txt.
 
-#include "25-expand.h"
+#include "26-compile.h"
 
 
 static Obj run_sym(Obj env, Obj code) {
