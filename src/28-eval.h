@@ -5,10 +5,11 @@
 
 static Obj eval(Obj env, Obj code) {
   Obj preprocessed = preprocess(code); // borrows code.
-  if (preprocessed.u == obj0.u) return obj_ret_val(VOID);
+  if (preprocessed.u == obj0.u) return obj_ret_val(VOID); // TODO: document why this is necessary.
   Obj expanded = expand(env, preprocessed); // owns preprocessed.
-  Obj val = run(env, expanded); // borrows expanded.
-  obj_rel(expanded);
+  Obj compiled = compile(env, expanded); // owns expanded.
+  Obj val = run(env, compiled); // borrows compiled.
+  obj_rel(compiled);
   return val;
 }
 

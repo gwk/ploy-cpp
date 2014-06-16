@@ -2,3 +2,10 @@
 // Permission to use this file is granted in ploy/license.txt.
 
 #include "25-expand.h"
+
+
+static Obj compile(Obj env, Obj code) {
+  // owns code.
+  return code;
+}
+
