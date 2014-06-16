@@ -34,8 +34,7 @@ static NO_RETURN _exc_raise(Obj env, Chars_const fmt, Chars_const args_src, ...)
         case 's': errF("%s", arg.c); break;
         default: error("exc_raise: invalid placeholder: '%c'; %s", c, fmt);
       }
-    }
-    else {
+    } else {
       fputc(c, stderr);
     }
   }

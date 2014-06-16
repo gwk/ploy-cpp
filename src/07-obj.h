@@ -199,8 +199,7 @@ void dbg(Obj o); // not declared static so that it is always available in debugg
 void dbg(Obj o) {
   if (obj_tag(o)) {
     obj_err_tag(o);
-  }
-  else { // ref
+  } else { // ref.
     rc_err(o.rc);
   }
   err(" : ");
@@ -362,8 +361,7 @@ static Obj obj_ret(Obj o) {
   rc_errMLV("ret strong", o.rc);
   if (o.rc->sc < pinned_sc - 1) {
     o.rc->sc++;
-  }
-  else if (o.rc->sc < pinned_sc) {
+  } else if (o.rc->sc < pinned_sc) {
     o.rc->sc++;
     if (report_pinned_counts) {
       errFL("object strong count pinned: %p", o.p);
@@ -414,8 +412,7 @@ UNUSED_FN static Obj obj_retain_weak(Obj o) {
   rc_errMLV("ret weak ", o.rc);
   if (o.rc->wc < pinned_wc - 1) {
     o.rc->wc++;
-  }
-  else if (o.rc->wc < pinned_wc) {
+  } else if (o.rc->wc < pinned_wc) {
     o.rc->wc++;
     if (report_pinned_counts) {
       errFL("object weak count pinned: %p", o.p);

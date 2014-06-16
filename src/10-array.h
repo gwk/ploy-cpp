@@ -24,8 +24,7 @@ static void array_grow_cap(Array* a) {
   assert_array_is_valid(a);
   if (a->cap == 0) {
     a->cap = 2; // minimum capacity.
-  }
-  else {
+  } else {
     a->cap *= 2;
   }
   mem_realloc(&a->mem, a->cap);

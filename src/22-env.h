@@ -44,8 +44,7 @@ static Obj env_frame_bind(Obj frame, Obj sym, Obj val) {
   if (frame.u == CHAIN0.u) {
     obj_rel_val(frame);
     frame = obj_ret_val(END);
-  }
-  else {
+  } else {
     assert(vec_ref_len(frame) == 3);
   }
   return new_vec3(sym, val, frame);
@@ -77,24 +76,20 @@ static Obj env_frame_bind_args(Obj env, Obj func, Mem pars, Mem args, Bool is_ex
       if (i_args < args.len) {
         arg = args.els[i_args];
         i_args++;
-      }
-      else if (par_expr.u != NIL.u) { // TODO: what about default value of nil? is quote sufficient?
+      } else if (par_expr.u != NIL.u) { // TODO: what about default value of nil? is quote sufficient?
         arg = par_expr;
-      }
-      else {
+      } else {
         error_obj("function received too few arguments", vec_ref_el(func, 0));
       }
       Obj val;
       if (is_expand) {
         val = obj_ret(arg);
-      }
-      else {
+      } else {
         Step step = run(env, arg);
         val = step.obj;
       }
       frame = env_frame_bind(frame, obj_ret_val(par_sym), val);
-    }
-    else {
+    } else {
       assert(par_kind.u == VARIAD.u);
       check_obj(!has_variad, "function has multiple variad parameters", vec_ref_el(func, 0));
       has_variad = true;
@@ -109,8 +104,7 @@ static Obj env_frame_bind_args(Obj env, Obj func, Mem pars, Mem args, Bool is_ex
         Obj arg = args.els[i_args++];
         if (is_expand) {
           *it = obj_ret(arg);
-        }
-        else {
+        } else {
           Step step = run(env, arg);
           *it = step.obj;
         }
@@ -158,8 +152,7 @@ UNUSED_FN static void dbg_env(Obj env) {
         obj_errL(val);
         frame = chain_tl(frame);
       }
-    }
-    else {
+    } else {
       errL("|");
     }
     env = chain_tl(env);

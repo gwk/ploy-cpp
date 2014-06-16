@@ -16,8 +16,7 @@ static void parse_and_eval(Obj env, Obj path, Obj src, Array* sources, Bool out_
     obj_rel(src);
     assert(code.u == obj0.u);
     exit(1);
-  }
-  else {
+  } else {
 #if VERBOSE_PARSE
     errF("parse_and_eval: ");
     obj_err(path);
@@ -53,15 +52,13 @@ int main(int argc, Chars_const argv[]) {
     Chars_const arg = argv[i];
     if (chars_eq(arg, "-v")) {
       vol_err = 1;
-    }
-    else if (chars_eq(arg, "-e") || chars_eq(arg, "-E")) {
+    } else if (chars_eq(arg, "-e") || chars_eq(arg, "-E")) {
       check(!expr, "multiple expression arguments");
       i++;
       check(i < argc, "missing expression argument");
       expr = argv[i];
       should_output_val = chars_eq(arg, "-e");
-    }
-    else {
+    } else {
       check(path_count < len_buffer, "exceeded max paths: %d", len_buffer);
       paths[path_count++] = arg;
     }

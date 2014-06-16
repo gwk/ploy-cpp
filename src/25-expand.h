@@ -32,15 +32,13 @@ static Obj expr_quasiquote(Obj o) {
       if (obj_is_vec_ref(e) && vec_ref_el(e, 0).u == UNQ.u) { // unquote form
         check_obj(vec_ref_len(e) == 2, "malformed UNQ form", e);
         dst[1 + i] = obj_ret(vec_ref_el(e, 1)); // TODO: expand?
-      }
-      else {
+      } else {
         dst[1 + i] = expr_quasiquote(obj_ret(e));
       }
     }
     obj_rel(o);
     return v;
-  }
-  else {
+  } else {
     return new_vec2(obj_ret_val(QUO), o);
   }
 }
@@ -87,8 +85,7 @@ static Obj expand(Obj env, Obj code) {
     err(trace_post_expand_prefix); dbg(code);
 #endif
       return expand(env, expanded); // macro result may contain more expands; recursively expand.
-  }
-  else {
+  } else {
     // recursively expand vec.
     Obj expanded = new_vec_raw(m.len);
     Obj* expanded_els = vec_els(expanded);

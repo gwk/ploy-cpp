@@ -138,8 +138,7 @@ static Chars str_src_loc_str(Str src, Str path, Int pos, Int len, Int line_num, 
     for_in(i, col) under[i] = ' ';
     if (len > 0) {
       for_in(i, len) under[col + i] = '~';
-    }
-    else {
+    } else {
       under[col] = '^';
     }
   }

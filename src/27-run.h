@@ -70,8 +70,7 @@ static Step run_IF(Obj env, Mem args) {
   if (is_true(p_val)) {
     obj_rel(p_val);
     return run(env, t);
-  }
-  else {
+  } else {
     obj_rel(p_val);
     return run(env, e);
   }
@@ -129,8 +128,7 @@ static Step run_call_native(Obj env, Obj func, Mem args, Bool is_expand) {
   Obj f_env     = m.els[4];
   if (is_expand) {
     exc_check(bool_is_true(is_macro), "cannot expand function: %o", func);
-  }
-  else {
+  } else {
     exc_check(!bool_is_true(is_macro), "cannot call macro: %o", func);
   }
   exc_check(obj_is_sym(name),  "function is malformed (name symbol is not a Sym): %o", name);

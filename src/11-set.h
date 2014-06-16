@@ -27,8 +27,7 @@ static void assert_set_is_valid(Set* s) {
   assert(s);
   if (s->buckets) {
     assert(s->len >= 0 && s->len < s->len_buckets);
-  }
-  else {
+  } else {
     assert(s->len == 0 && s->len_buckets == 0);
   }
 }
@@ -68,8 +67,7 @@ static void set_insert(Set* s, Obj r) {
     Int size = s->len_buckets * size_Hash_bucket;
     s->buckets = raw_alloc(size, ci_Set);
     memset(s->buckets, 0, size);
-  }
-  else if (s->len + 1 == s->len_buckets) { // load factor == 1.0.
+  } else if (s->len + 1 == s->len_buckets) { // load factor == 1.0.
     // TODO: assess resize criteria.
     Int len_buckets = s->len_buckets * 2;
     Int size = len_buckets * size_Hash_bucket;
@@ -93,8 +91,7 @@ static void set_insert(Set* s, Obj r) {
     assert(!set_contains(&t, r));
     set_dealloc(s);
     *s = t;
-  }
-  else {
+  } else {
     assert(s->len < s->len_buckets);
   }
   Hash_bucket* b = set_bucket(s, r);

@@ -46,8 +46,7 @@ static Ptr raw_realloc(Ptr p, Int size, Counter_index ci) {
       exit(1);
     }
     return r;
-  }
-  else {
+  } else {
     raw_dealloc(p, ci); // realloc does not return NULL for zero size; see note in raw_alloc.
     return NULL;
   }

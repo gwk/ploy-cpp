@@ -55,8 +55,11 @@ static void write_repr_chain(CFile f, Obj c, Set* s) {
   fputs("[:", f);
   Bool first = true;
   loop {
-    if (first) first = false;
-    else fputc(' ', f);
+    if (first) {
+      first = false;
+    } else {
+      fputc(' ', f);
+    }
     write_repr_obj(f, chain_hd(c), s);
     Obj tl = chain_tl(c);
     if (tl.u == END.u) break;
@@ -140,29 +143,23 @@ static void write_repr_obj(CFile f, Obj o, Set* s) {
   Obj_tag ot = obj_tag(o);
   if (ot == ot_int) {
     fprintf(f, "%ld", int_val(o));
-  }
-  else if (ot == ot_sym) {
+  } else if (ot == ot_sym) {
     if (o.u == VEC0.u) {
       fputs("[]", f);
-    }
-    else if (o.u == CHAIN0.u) {
+    } else if (o.u == CHAIN0.u) {
       fputs("[|]", f);
-    }
-    else {
+    } else {
       fputc('`', f);
       write_data(f, sym_data(o));
     }
-  }
-  else if (ot == ot_data) { // data-word
+  } else if (ot == ot_data) { // data-word
     // TODO: support all word values.
     assert(o.u == blank.u);
     fputs("''", f);
-  }
-  else {
+  } else {
     if (set_contains(s, o)) { // recursed
       fputs("↺", f); // anticlockwise gapped circle arrow
-    }
-    else {
+    } else {
       set_insert(s, o);
       switch (ref_struct_tag(o)) {
         case st_Data: write_repr_data(f, o); break;

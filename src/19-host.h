@@ -73,8 +73,7 @@ static Obj host_len(Obj env, Mem args) {
   Int l;
   if (o.u == VEC0.u || o.u == blank.u) {
     l = 0;
-  }
-  else {
+  } else {
     exc_check(obj_is_data(o) || obj_is_vec(o), "len requires Data or Vec; received: %o", o);
     l = o.rcl->len;
   }
@@ -245,8 +244,9 @@ static Obj host_not(Obj env, Mem args) {
   assert(args.len == 1);
   Obj b = args.els[0];
   Obj r = FALSE;
-  if (b.u == FALSE.u) r = TRUE;
-  else if (b.u != TRUE.u) {
+  if (b.u == FALSE.u) {
+    r = TRUE;
+  } else if (b.u != TRUE.u) {
     exc_raise("not requires a Bool value; received: %o", b);
   }
   obj_rel_val(b);

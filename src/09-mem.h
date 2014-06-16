@@ -44,8 +44,7 @@ UNUSED_FN static Bool mem_eq(Mem a, Mem b) {
 static void assert_mem_is_valid(Mem m) {
   if (m.els) {
     assert(m.len >= 0);
-  }
-  else {
+  } else {
     assert(m.len == 0);
   }
 }

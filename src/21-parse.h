@@ -91,8 +91,7 @@ static U64 parse_U64(Parser* p) {
     }
     if (base) {
       P_ADV(2);
-    }
-    else {
+    } else {
       base = 10;
     }
   }
@@ -215,8 +214,7 @@ static Obj parse_data(Parser* p, Char q) {
         default: APPEND('\\'); // not a valid escape code.
       }
       APPEND(ce);
-    }
-    else {
+    } else {
       if (c == q) break;
       if (c == '\\') escape = true;
       else APPEND(c);
@@ -407,8 +405,7 @@ static Obj parse_seq(Parser* p) {
   }
   if (PC == '|') {
     return parse_chain_blocks(p);
-  }
-  else {
+  } else {
     return parse_seq_simple(p);
   }
 }
@@ -447,14 +444,16 @@ static Obj parse_par(Parser* p, Obj sym, Chars_const par_desc) {
     P_ADV1;
     type = parse_expr(p);
     c = PC;
+  } else {
+    type = obj_ret_val(NIL);
   }
-  else type = obj_ret_val(NIL);
   Obj expr;
   if (PC == '=') {
     P_ADV1;
     expr = parse_expr(p);
+  } else {
+    expr = obj_ret_val(NIL);
   }
-  else expr = obj_ret_val(NIL);
   return new_vec4(obj_ret_val(sym), name, type, expr);
 }
 
@@ -513,12 +512,10 @@ static Obj parse_src(Str path, Str src, Chars* e) {
   if (p.e) {
     assert(m.len == 0 && m.els == NULL);
     o = obj0;
-  }
-  else if (p.sp.pos != p.src.len) {
+  } else if (p.sp.pos != p.src.len) {
     o = parse_error(&p, "parsing terminated early");
     mem_release_dealloc(m);
-  }
-  else {
+  } else {
     o = new_vec_M(m);
     mem_dealloc(m);
   }
