@@ -55,7 +55,7 @@ static Obj run_LET(Obj env, Mem args) {
     "LET requires argument 1 to be a sym; received: %o", sym);
   Obj val = run(env, expr);
   env_bind(env, obj_ret_val(sym), val); // owns sym, val.
-  return obj_ret_val(VOID); // TODO: retain and return val?
+  return obj_ret(val);
 }
 
 

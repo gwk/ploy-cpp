@@ -1,0 +1,6 @@
+<fn f {-a}
+  <fn g {-b}
+    (add a b)>>
+
+<let f3 (f 1)>
+(outRL (f3 2))
