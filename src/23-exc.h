@@ -7,6 +7,8 @@
 
 
 static NO_RETURN _exc_raise(Obj env, Chars_const fmt, Chars_const args_src, ...) {
+  // raise an exception.
+  // NOTE: there is not yet any exception unwind mechanism, so this just calls exit.
   Chars_const pa = args_src;
   Int arg_count = bit(*pa);
   while (*pa) {
