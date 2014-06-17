@@ -108,9 +108,9 @@
 
 # math functions.
 
-<fn iinc {-i} (add i 1)>
+<fn iinc {-i} (iadd i 1)>
 
-<fn idec {-i} (sub i 1)>
+<fn idec {-i} (isub i 1)>
 
 # type functions.
 
