@@ -33,10 +33,11 @@ static Obj host_raw_write(Obj env, Mem args) {
   exc_check(obj_is_file(f), "write requires arg 1 to be a File; received: %o", f);
   exc_check(obj_is_data(d), "write requires arg 2 to be a Data; received: %o", d);
   CFile file = file_file(f);
-  Int i = cast(Int, fwrite(data_ptr(d), size_Char, cast(Uns, data_len(d)), file));
+  // for now, ignore the return value.
+  fwrite(data_ptr(d), size_Char, cast(Uns, data_len(d)), file);
   obj_rel(f);
   obj_rel(d);
-  return new_int(i);
+  return obj_ret_val(VOID);
 }
 
 
