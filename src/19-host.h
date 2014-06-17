@@ -45,7 +45,7 @@ static Obj host_not(Obj env, Mem args) {
 }
 
 
-static Obj host_neg(Obj env, Mem args) {
+static Obj host_ineg(Obj env, Mem args) {
   // owns elements of args.
   assert(args.len == 1);
   Obj n = args.els[0];
@@ -56,7 +56,7 @@ static Obj host_neg(Obj env, Mem args) {
 }
 
 
-static Obj host_abs(Obj env, Mem args) {
+static Obj host_iabs(Obj env, Mem args) {
   // owns elements of args.
   assert(args.len == 1);
   Obj n = args.els[0];
@@ -77,44 +77,44 @@ static Obj host_##name(Obj env, Mem args) { \
   Obj n1 = args.els[1]; \
   exc_check(obj_is_int(n0), #name " requires arg 1 to be a Int; received: %o", n0); \
   exc_check(obj_is_int(n1), #name " requires arg 2 to be a Int; received: %o", n1); \
-  Int i = int_##name(int_val(n0), int_val(n1)); \
+  Int i = name(int_val(n0), int_val(n1)); \
   obj_rel_val(n0); \
   obj_rel_val(n1); \
   return new_int(i); \
 }
 
 
-static Int int_add(Int a, Int b)  { return a + b; }
-static Int int_sub(Int a, Int b)  { return a - b; }
-static Int int_mul(Int a, Int b)  { return a * b; }
-static Int int_divi(Int a, Int b) { return a / b; }
-static Int int_mod(Int a, Int b)  { return a % b; }
-static Int int_pow(Int a, Int b)  { return cast(Int, pow(a, b)); } // TODO: check for overflow.
-static Int int_shl(Int a, Int b)  { return a << b; }
-static Int int_shr(Int a, Int b)  { return a >> b; }
+static Int iadd(Int a, Int b)  { return a + b; }
+static Int isub(Int a, Int b)  { return a - b; }
+static Int imul(Int a, Int b)  { return a * b; }
+static Int idiv(Int a, Int b) { return a / b; }
+static Int imod(Int a, Int b)  { return a % b; }
+static Int ipow(Int a, Int b)  { return cast(Int, pow(a, b)); } // TODO: check for overflow.
+static Int ishl(Int a, Int b)  { return a << b; }
+static Int ishr(Int a, Int b)  { return a >> b; }
 
-static Int int_eq(Int a, Int b)   { return a == b; }
-static Int int_ne(Int a, Int b)   { return a != b; }
-static Int int_lt(Int a, Int b)   { return a < b; }
-static Int int_gt(Int a, Int b)   { return a > b; }
-static Int int_le(Int a, Int b)   { return a <= b; }
-static Int int_ge(Int a, Int b)   { return a >= b; }
+static Int ieq(Int a, Int b)   { return a == b; }
+static Int ine(Int a, Int b)   { return a != b; }
+static Int ilt(Int a, Int b)   { return a < b; }
+static Int igt(Int a, Int b)   { return a > b; }
+static Int ile(Int a, Int b)   { return a <= b; }
+static Int ige(Int a, Int b)   { return a >= b; }
 
-HOST_BIN_OP(add)
-HOST_BIN_OP(sub)
-HOST_BIN_OP(mul)
-HOST_BIN_OP(divi)
-HOST_BIN_OP(mod)
-HOST_BIN_OP(pow)
-HOST_BIN_OP(shl)
-HOST_BIN_OP(shr)
+HOST_BIN_OP(iadd)
+HOST_BIN_OP(isub)
+HOST_BIN_OP(imul)
+HOST_BIN_OP(idiv)
+HOST_BIN_OP(imod)
+HOST_BIN_OP(ipow)
+HOST_BIN_OP(ishl)
+HOST_BIN_OP(ishr)
 
-HOST_BIN_OP(eq)
-HOST_BIN_OP(ne)
-HOST_BIN_OP(lt)
-HOST_BIN_OP(gt)
-HOST_BIN_OP(le)
-HOST_BIN_OP(ge)
+HOST_BIN_OP(ieq)
+HOST_BIN_OP(ine)
+HOST_BIN_OP(ilt)
+HOST_BIN_OP(igt)
+HOST_BIN_OP(ile)
+HOST_BIN_OP(ige)
 
 
 static Obj host_Vec(Obj env, Mem args) {
@@ -363,22 +363,22 @@ env = env_bind(env, sym, val);
   DEF_FH(1, host_identity, "identity")
   DEF_FH(1, host_is_true, "is-true")
   DEF_FH(1, host_not, "not")
-  DEF_FH(1, host_neg, "neg")
-  DEF_FH(1, host_abs, "abs")
-  DEF_FH(2, host_add, "add")
-  DEF_FH(2, host_sub, "sub")
-  DEF_FH(2, host_mul, "mul")
-  DEF_FH(2, host_divi, "divi")
-  DEF_FH(2, host_mod, "mod")
-  DEF_FH(2, host_pow, "pow")
-  DEF_FH(2, host_shl, "shl")
-  DEF_FH(2, host_shr, "shr")
-  DEF_FH(2, host_eq, "eq")
-  DEF_FH(2, host_ne, "ne")
-  DEF_FH(2, host_lt, "lt")
-  DEF_FH(2, host_le, "le")
-  DEF_FH(2, host_gt, "gt")
-  DEF_FH(2, host_ge, "ge")
+  DEF_FH(1, host_ineg, "ineg")
+  DEF_FH(1, host_iabs, "iabs")
+  DEF_FH(2, host_iadd, "iadd")
+  DEF_FH(2, host_isub, "isub")
+  DEF_FH(2, host_imul, "imul")
+  DEF_FH(2, host_idiv, "idiv")
+  DEF_FH(2, host_imod, "imod")
+  DEF_FH(2, host_ipow, "ipow")
+  DEF_FH(2, host_ishl, "ishl")
+  DEF_FH(2, host_ishr, "ishr")
+  DEF_FH(2, host_ieq, "ieq")
+  DEF_FH(2, host_ine, "ine")
+  DEF_FH(2, host_ilt, "ilt")
+  DEF_FH(2, host_ile, "ile")
+  DEF_FH(2, host_igt, "igt")
+  DEF_FH(2, host_ige, "ige")
   DEF_FH(-1, host_Vec, "Vec")
   DEF_FH(1, host_len, "len")
   DEF_FH(2, host_el, "el")

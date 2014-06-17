@@ -1,41 +1,41 @@
-(outRLL 'add:'
-  (add 0 0)
-  (add 1 -1)
-  (add 1 2))
+(outRLL 'iadd:'
+  (iadd 0 0)
+  (iadd 1 -1)
+  (iadd 1 2))
 
-(outRLL 'sub:'
-  (sub 0 0)
-  (sub 1 1)
-  (sub -1 -1)
-  (sub 1 2)
-  (sub 2 1))
+(outRLL 'isub:'
+  (isub 0 0)
+  (isub 1 1)
+  (isub -1 -1)
+  (isub 1 2)
+  (isub 2 1))
 
-(outRLL 'mul:'
-  (mul 0 0)
-  (mul 0 1)
-  (mul 2 -3))
+(outRLL 'imul:'
+  (imul 0 0)
+  (imul 0 1)
+  (imul 2 -3))
 
-(outRLL 'divi:'
-  (divi 0 1)
-  (divi 5 2)
-  (divi -5 -2)
-  (divi -5 2)
-  (divi 5 -2))
+(outRLL 'idiv:'
+  (idiv 0 1)
+  (idiv 5 2)
+  (idiv -5 -2)
+  (idiv -5 2)
+  (idiv 5 -2))
 
-(outRLL 'neg:'
-  (neg 0)
-  (neg -0)
-  (neg 1)
-  (neg -1))
+(outRLL 'ineg:'
+  (ineg 0)
+  (ineg -0)
+  (ineg 1)
+  (ineg -1))
 
-(outRLL 'abs:'
-  (abs 0)
-  (abs -0)
-  (abs 1)
-  (abs -1))
+(outRLL 'iabs:'
+  (iabs 0)
+  (iabs -0)
+  (iabs 1)
+  (iabs -1))
 
-(outRLL 'shl:'
-  (shl 1 4))
+(outRLL 'ishl:'
+  (ishl 1 4))
 
-(outRLL 'shr:'
-  (shr 16 4))
+(outRLL 'ishr:'
+  (ishr 16 4))

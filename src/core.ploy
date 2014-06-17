@@ -32,7 +32,7 @@
           sym # contains its name/symbol,
           true # is a macro,
           pars # has the specified parameter list,
-          <if (eq (len body) 1) # and body...
+          <if (ieq (len body) 1) # and body...
             (el body 0)
             (prepend DO body)>]>> # wrapped in a do form if necessary.
   # instead, we must define it using raw forms.
@@ -51,7 +51,7 @@
         sym
         true
         pars
-        {IF (eq (len body) 1)
+        {IF (ieq (len body) 1)
           (el body 0)
           (prepend DO body)}]]}}
 
@@ -64,7 +64,7 @@
       sym
       false
       pars
-      {IF (eq (len body) 1)
+      {IF (ieq (len body) 1)
         (el body 0)
         (prepend DO body)}]]>
 
@@ -106,18 +106,17 @@
   (raw-write (el std-err 1) '\n')
   (exit 1)>
 
-
 # math functions.
 
-<fn inc {-i} (add i 1)>
+<fn iinc {-i} (add i 1)>
 
-<fn dec {-i} (sub i 1)>
+<fn idec {-i} (sub i 1)>
 
 # vec functions.
 
 <fn hd {-vec} (el vec 0)>
 
-<fn tl {-vec} (el vec (dec (len vec)))>
+<fn tl {-vec} (el vec (idec (len vec)))>
 
 <fn vec-next {-vec}
   # this a poor substitute for a real vec iterator.
@@ -141,7 +140,7 @@
 
 <macro if {&exprs}
   # generic 'if'. inspired by paul graham's arc-lisp.
-  <_if-then (lt (len exprs) 2) (error "degenerate if form")>
+  <_if-then (ilt (len exprs) 2) (error "degenerate if form")>
   <fn f {-pred -then -rest}
     <let l (len rest)>
     #(_errR1L 'f l: ' l)
@@ -150,7 +149,7 @@
     #(_errR1L 'f rest: ' rest)
     <_if-then-else (not l)
       [IF pred then void] # final if-else
-      <_if-then-else (eq l 1)
+      <_if-then-else (ieq l 1)
         [IF pred then (hd rest)] # final clause is an unconditional else.
         [IF pred then (self (hd rest) (el rest 1) (vec-from rest 2))]>>>
   (f (hd exprs) (el exprs 1) (slice exprs 2 (len exprs)))>

@@ -1,7 +1,7 @@
 <fn fib-dumb {-n}
   <if
-    (eq n 0) 0
-    (eq n 1) 1
-    (add (self (sub n 1)) (self (sub n 2)))>>
+    (ieq n 0) 0
+    (ieq n 1) 1
+    (iadd (self (isub n 1)) (self (isub n 2)))>>
 
 (outRL (fib-dumb 18))
