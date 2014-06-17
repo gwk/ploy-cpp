@@ -147,7 +147,7 @@ static void write_repr_obj(CFile f, Obj o, Set* s) {
     if (o.u == s_VEC0.u) {
       fputs("[]", f);
     } else if (o.u == s_CHAIN0.u) {
-      fputs("[|]", f);
+      fputs("[:]", f);
     } else {
       fputc('`', f);
       write_data(f, sym_data(o));

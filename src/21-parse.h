@@ -383,9 +383,7 @@ static Obj parse_chain_fat(Parser* p) {
   Mem m = a.mem;
   P_CONSUME_TERMINATOR(']');
   // assemble the chain.
-  if (!m.len) {
-    return obj_ret_val(s_CHAIN0);
-  }
+  assert(m.len);
   Obj c = obj_ret_val(s_END);
   for_in_rev(i, m.len) {
     Obj v = mem_el_move(m, i);
