@@ -1,9 +1,13 @@
 // Copyright 2013 George King.
 // Permission to use this file is granted in ploy/license.txt.
 
-// env is implemented as a fat chain of frames, where each link is [src, frame, tl].
+// env is implemented as a fat chain of frames and bindings;
+// each frame is a [src, tl] pair,
+// and each binding is a [sym, val, tl] triple.
 // src is the object that is lexically responsible for the frame.
-// each frame is a fat chain, where each link is [sym, val, tl].
+// this design allows env to be an immutable data structure,
+// while still maintaining the notion of frame boundaries.
+// frame boundaries allow us to check for redefinitions and create stack traces.
 
 #include "21-parse.h"
 
@@ -12,16 +16,14 @@ static Obj env_get(Obj env, Obj sym) {
   assert(ref_is_vec(env));
   assert(sym_is_symbol(sym));
   while (env.u != END.u) {
-    assert(vec_ref_len(env) == 3);
-    Obj frame = chain_b(env);
-    if (frame.u != CHAIN0.u) {
-      while (frame.u != END.u) {
-        assert(vec_ref_len(frame) == 3);
-        Obj key = chain_a(frame);
-        if (key.u == sym.u) {
-          return chain_b(frame);
-        }
-        frame = chain_tl(frame);
+    Int len = vec_ref_len(env);
+    if (len == 2) { // frame marker.
+      // for now, just skip the marker.
+    } else { // binding.
+      assert(len == 3);
+      Obj key = chain_a(env);
+      if (key.u == sym.u) {
+        return chain_b(env);
       }
     }
     env = chain_tl(env);
@@ -30,37 +32,28 @@ static Obj env_get(Obj env, Obj sym) {
 }
 
 
-static Obj env_push(Obj env, Obj src, Obj frame) {
-  // owns env, src, frame.
-  assert(env.u == END.u || vec_ref_len(env) == 3);
-  assert(frame.u == CHAIN0.u || vec_len(frame) == 3);
-  return new_vec3(src, frame, env);
+static Obj env_add_frame(Obj env, Obj src) {
+  // owns env, src.
+  return new_vec2(src, env);
 }
 
 
-static Obj env_frame_bind(Obj frame, Obj sym, Obj val) {
-  // owns frame, sym, val.
+static Obj env_bind(Obj env, Obj sym, Obj val) {
+  // env, sym, val.
   assert(sym_is_symbol(sym));
-  if (frame.u == CHAIN0.u) {
-    obj_rel_val(frame);
-    frame = obj_ret_val(END);
-  } else {
-    assert(vec_ref_len(frame) == 3);
-  }
-  return new_vec3(sym, val, frame);
+  assert(obj_is_vec(env) || env.u == END.u);
+  return new_vec3(sym, val, env);
 }
 
 
-static void env_bind(Obj env, Obj sym, Obj val) {
-  // owns sym, val.
-  Obj frame = obj_ret(chain_b(env));
-  Obj frame1 = env_frame_bind(frame, sym, val);
-  vec_ref_put(env, 1, frame1);
-}
+typedef struct {
+  Obj caller_env;
+  Obj callee_env;
+} Call_envs;
 
 
-static Obj env_frame_bind_args(Obj env, Obj func, Mem pars, Mem args, Bool is_expand) {
-  Obj frame = obj_ret_val(CHAIN0);
+static Call_envs env_bind_args(Obj caller_env, Obj callee_env, Obj func, Mem pars, Mem args, Bool is_expand) {
+  // owns caller_env, callee_env.
   Int i_args = 0;
   Bool has_variad = false;
   for_in(i_pars, pars.len) {
@@ -85,10 +78,11 @@ static Obj env_frame_bind_args(Obj env, Obj func, Mem pars, Mem args, Bool is_ex
       if (is_expand) {
         val = obj_ret(arg);
       } else {
-        Step step = run(env, arg);
+        Step step = run(caller_env, arg);
+        caller_env = step.env;
         val = step.obj;
       }
-      frame = env_frame_bind(frame, obj_ret_val(par_sym), val);
+      callee_env = env_bind(callee_env, obj_ret_val(par_sym), val);
     } else {
       assert(par_kind.u == VARIAD.u);
       check_obj(!has_variad, "function has multiple variad parameters", vec_ref_el(func, 0));
@@ -105,55 +99,38 @@ static Obj env_frame_bind_args(Obj env, Obj func, Mem pars, Mem args, Bool is_ex
         if (is_expand) {
           *it = obj_ret(arg);
         } else {
-          Step step = run(env, arg);
+          Step step = run(caller_env, arg);
+          caller_env = step.env;
           *it = step.obj;
         }
       }
-      frame = env_frame_bind(frame, obj_ret_val(par_sym), variad_val);
+      callee_env = env_bind(callee_env, obj_ret_val(par_sym), variad_val);
     }
   }
   check_obj(i_args == args.len, "function received too many arguments", vec_ref_el(func, 0));
-  return frame;
+  return (Call_envs){.caller_env=caller_env, .callee_env=callee_env};
 }
 
 
-static void env_trace(Obj env) {
+static void env_trace(Obj env, Bool show_values) {
   assert(ref_is_vec(env));
   errL("trace:");
   while (env.u != END.u) {
-    assert(vec_ref_len(env) == 3);
-    Obj src = chain_a(env);
-    err("  ");
-    write_repr(stderr, src);
-    err_nl();
-    env = chain_tl(env);
-  }
-}
-
-
-UNUSED_FN static void dbg_env(Obj env) {
-  assert(ref_is_vec(env));
-  err("env ");
-  rc_err(env.rc);
-  errL(":");
-  while (env.u != END.u) {
-    Bool first = true;
-    assert(vec_ref_len(env) == 2);
-    Obj frame = chain_hd(env);
-    if (frame.u != CHAIN0.u) {
-      while (frame.u != END.u) {
-        err(first ? "| " : "  ");
-        first = false;
-        assert(vec_ref_len(frame) == 3);
-        Obj key = chain_a(frame);
-        Obj val = chain_b(frame);
+    Int len = vec_ref_len(env);
+    if (len == 2) { // frame marker.
+      Obj src = chain_a(env);
+      err("  ");
+      write_repr(stderr, src);
+      err_nl();
+    } else { // binding.
+      assert(vec_ref_len(env) == 3);
+      if (show_values) {
+        Obj key = chain_a(env);
+        Obj val = chain_b(env);
         obj_err(key);
         err(" : ");
         obj_errL(val);
-        frame = chain_tl(frame);
       }
-    } else {
-      errL("|");
     }
     env = chain_tl(env);
   }

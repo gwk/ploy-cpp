@@ -2,6 +2,6 @@
   <if
     (eq n 0) 0
     (eq n 1) 1
-    (add (fib-dumb (sub n 1)) (fib-dumb (sub n 2)))>>
+    (add (self (sub n 1)) (self (sub n 2)))>>
 
 (outRL (fib-dumb 18))

@@ -4,7 +4,7 @@
 #include "28-eval.h"
 
 
-static void parse_and_eval(Obj env, Obj path, Obj src, Array* sources, Bool out_val) {
+static Obj parse_and_eval(Obj env, Obj path, Obj src, Array* sources, Bool out_val) {
   // owns path, src.
   Chars e = NULL;
   Obj code = parse_src(data_str(path), data_str(src), &e);
@@ -24,13 +24,14 @@ static void parse_and_eval(Obj env, Obj path, Obj src, Array* sources, Bool out_
     obj_errL(code);
 #endif
     array_append(sources, new_vec2(path, src));
-    Obj val = eval_vec(env, code);
-    if (out_val && val.u != VOID.u) {
-      write_repr(stdout, val);
+    Step step = eval_vec(env, code);
+    if (out_val && step.obj.u != VOID.u) {
+      write_repr(stdout, step.obj);
       fputc('\n', stdout);
     }
     obj_rel(code);
-    obj_rel(val);
+    obj_rel(step.obj);
+    return step.env;
   }
 }
 
@@ -64,9 +65,9 @@ int main(int argc, Chars_const argv[]) {
     }
   }
 
-  Obj host_frame = host_init();
-  Obj host_name = new_data_from_chars(cast(Chars, "<host>"));
-  Obj host_env = env_push(obj_ret_val(END), host_name, host_frame);
+  Obj host_env = obj_ret_val(END);
+  host_env = env_add_frame(host_env, new_data_from_chars(cast(Chars, "<host>")));
+  host_env = host_init(host_env);
 
   // global array of (path, source) objects for error reporting.
   Array sources = array0;
@@ -74,25 +75,23 @@ int main(int argc, Chars_const argv[]) {
 
   // run embedded core file.
   path = new_data_from_chars(cast(Chars, "<core>"));
-  Obj core_env = env_push(host_env, obj_ret(path), obj_ret_val(CHAIN0));
+  Obj core_env = env_add_frame(host_env, obj_ret(path));
   src = new_data_from_chars(cast(Chars, core_src)); // TODO: breaks const correctness?
-  parse_and_eval(core_env, path, src, &sources, false);
+  Obj env = parse_and_eval(core_env, path, src, &sources, false);
 
   // handle arguments.
-  Obj env = core_env;
-
   for_in(i, path_count) {
     path = new_data_from_chars(cast(Chars, paths[i])); // TODO: breaks const correctness?
     Obj name = new_data_from_chars(cast(Chars, chars_path_base(paths[i]))); // TODO: breaks const correctness?
-    env = env_push(env, name, obj_ret_val(CHAIN0));
+    env = env_add_frame(env, name);
     src = new_data_from_path(paths[i]);
-    parse_and_eval(env, path, src, &sources, false);
+    env = parse_and_eval(env, path, src, &sources, false);
   }
   if (expr) {
     path = new_data_from_chars(cast(Chars, "<expr>"));
-    env = env_push(env, obj_ret(path), obj_ret_val(CHAIN0));
+    env = env_add_frame(env, obj_ret(path));
     src = new_data_from_chars(cast(Chars, expr)); // TODO: breaks const correctness?
-    parse_and_eval(env, path, src, &sources, should_output_val);
+    env = parse_and_eval(env, path, src, &sources, should_output_val);
   }
 
 #if OPT_ALLOC_COUNT

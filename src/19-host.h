@@ -254,16 +254,20 @@ static Obj host_not(Obj env, Mem args) {
 }
 
 
-// TODO: static Obj host_error(Obj env, Mem args);
-// variable args?
-
-
 static Obj host_exit(Obj env, Mem args) {
   // owns elements of args.
   assert(args.len == 1);
-  Obj n = args.els[0];
-  exit(cast(I32, int_val(n)));
+  Obj code = args.els[0];
+  exit(cast(I32, int_val(code)));
   // TODO: throw exception to unwind, cleanup, and report counts?
+}
+
+
+static Obj host_error(Obj env, Mem args) {
+  // owns elements of args.
+  assert(args.len == 1);
+  Obj msg = args.els[0];
+  exc_raise("error: %o", msg);
 }
 
 
@@ -283,24 +287,22 @@ static Obj host_run(Obj env, Mem args) {
   assert(args.len == 2);
   Obj target_env = args.els[0];
   Obj code = args.els[1];
-  Step step = run(target_env, code);
-  Obj val = step.obj;
-  obj_rel(target_env);
+  Step step = run(obj_ret(target_env), code);
   obj_rel(code);
-  return val;
+  obj_rel(step.env);
+  return step.obj;
 }
 
 
-static Obj env_frame_bind(Obj frame, Obj sym, Obj func);
+static Obj env_bind(Obj env, Obj sym, Obj func);
 
-static Obj host_init() {
-  Obj frame = obj_ret_val(CHAIN0);
+static Obj host_init(Obj env) {
   Obj sym, val;
 
 #define DEF_FH(len_pars, n) \
 sym = new_sym_from_chars(cast(Chars, #n)); \
 val = new_func_host(sym, len_pars, host_##n); \
-frame = env_frame_bind(frame, sym, val);
+env = env_bind(env, sym, val);
 
   DEF_FH(1, identity)
   DEF_FH(2, raw_write)
@@ -327,6 +329,7 @@ frame = env_frame_bind(frame, sym, val);
   DEF_FH(2, ge)
   DEF_FH(1, not)
   DEF_FH(1, exit)
+  DEF_FH(1, error)
   DEF_FH(-1, Vec)
   DEF_FH(2, run)
 
@@ -336,7 +339,7 @@ frame = env_frame_bind(frame, sym, val);
 sym = new_sym_from_chars(cast(Chars, string)); \
 val = new_vec2(new_data_from_chars(cast(Chars, "<" string ">")), \
 new_file(f, is_readable, is_writable)); \
-frame = env_frame_bind(frame, sym, val);
+env = env_bind(env, sym, val);
 
   DEF_FILE(stdin, "std-in", true, false)
   DEF_FILE(stdout, "std-out", false, true)
@@ -344,5 +347,5 @@ frame = env_frame_bind(frame, sym, val);
 
 #undef DEF_FILE
 
-  return frame;
+  return env;
 }

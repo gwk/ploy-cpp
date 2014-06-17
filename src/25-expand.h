@@ -54,7 +54,8 @@ static Obj expand_macro(Obj env, Mem args) {
   if (macro.u == obj0.u) { // lookup failed.
     error_obj("macro lookup error", macro_sym);
   }
-  Step step = run_call_native(env, obj_ret(macro), mem_next(args), true);
+  Step step = run_call_native(obj_ret(env), obj_ret(macro), mem_next(args), true);
+  obj_rel(step.env);
   return step.obj;
 }
 

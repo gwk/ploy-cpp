@@ -89,7 +89,7 @@ SYM(FN) \
 SYM(SEQ) \
 SYM(CALL) \
 SYM(VOID) \
-
+SYM(self) \
 
 // sym indices.
 #define SYM(s) si_##s,

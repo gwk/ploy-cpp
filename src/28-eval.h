@@ -17,17 +17,20 @@ static Step eval(Obj env, Obj code) {
 }
 
 
-static Obj eval_vec(Obj env, Obj v) {
+static Step eval_vec(Obj env, Obj v) {
   // this is quite different than calling eval on a DO vector;
   // not only does this vec not have a head DO sym,
   // it also does the complete eval cycle on each member in turn.
-  if (v.u == VEC0.u) return obj_ret_val(VOID);
+  if (v.u == VEC0.u) {
+    return mk_step(env, obj_ret_val(VOID));
+  }
   Mem m = vec_ref_mem(v);
   Int last = m.len - 1;
   it_mem_to(it, m, last) {
     Step step = eval(env, *it);
+    env = step.env;
     obj_rel(step.obj);
   }
   Step step = eval(env, m.els[last]);
-  return step.obj;
+  return step;
 }

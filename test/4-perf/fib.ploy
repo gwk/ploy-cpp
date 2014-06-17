@@ -5,7 +5,7 @@
     <do
       <fn f {-n -a -b}
         <if (eq n 1) b
-          (f (sub n 1) b (add a b))>>
+          (self (sub n 1) b (add a b))>>
       (f n 0 1)>>>
 
 (outRL (fib 89)) # past this it looks like the c stack overflows.

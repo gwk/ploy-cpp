@@ -146,7 +146,7 @@
       [IF pred then ``VOID] # final if-else
       <_if-then-else (eq l 1)
         [IF pred then (hd rest)] # final clause is an unconditional else.
-        [IF pred then (f (hd rest) (el rest 1) (vec-from rest 2))]>>>
+        [IF pred then (self (hd rest) (el rest 1) (vec-from rest 2))]>>>
   (f (hd exprs) (el exprs 1) (slice exprs 2 (len exprs)))>
 
 <macro when {-pred &exprs}
@@ -176,7 +176,7 @@
     (write1 file end)
     <do
       (write1 file sep)
-      (writeSE file sep end (hd rest) (vec-next rest))>>>
+      (self file sep end (hd rest) (vec-next rest))>>>
 
 <fn writeRSE {-file -sep -end -first -rest}
   # write reprs with separator and end strings.
@@ -185,7 +185,7 @@
     (write1 file end)
     <do
       (write1 file sep)
-      (writeRSE file sep end (hd rest) (vec-next rest))>>>
+      (self file sep end (hd rest) (vec-next rest))>>>
 
 <fn out {&objs}
   <if (eq (len objs) 0)

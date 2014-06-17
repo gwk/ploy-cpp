@@ -5,6 +5,7 @@
 
 
 static Step run_sym(Obj env, Obj code) {
+  // owns env.
   assert(obj_is_sym(code));
   assert(code.u != ILLEGAL.u); // anything that returns ILLEGAL should have raised an error.
   if (code.u < VOID.u) return mk_step(env, obj_ret_val(code)); // constants are self-evaluating.
@@ -16,23 +17,27 @@ static Step run_sym(Obj env, Obj code) {
 
 
 static Step run_COMMENT(Obj env, Mem args) {
+  // owns env.
   return mk_step(env, obj_ret_val(VOID));
 }
 
 
 static Step run_QUO(Obj env, Mem args) {
+  // owns env.
   exc_check(args.len == 1, "QUO requires 1 argument; received %i", args.len);
   return mk_step(env, obj_ret(args.els[0]));
 }
 
 
 static Step run_DO(Obj env, Mem args) {
+  // owns env.
   if (!args.len) {
     return mk_step(env, obj_ret_val(VOID));
   }
   Int last = args.len - 1;
   it_mem_to(it, args, last) {
     Step step = run(env, *it);
+    env = step.env;
     obj_rel(step.obj); // value ignored.
   };
   return run(env, args.els[last]); // put last run() in tail position for TCO.
@@ -40,6 +45,7 @@ static Step run_DO(Obj env, Mem args) {
 
 
 static Step run_SCOPE(Obj env, Mem args) {
+  // owns env.
   exc_check(args.len == 1, "SCOPE requires 1 argument; received %i", args.len);
   Obj body = args.els[0];
   // TODO: create new env frame.
@@ -48,6 +54,7 @@ static Step run_SCOPE(Obj env, Mem args) {
 
 
 static Step run_LET(Obj env, Mem args) {
+  // owns env.
   exc_check(args.len == 2, "LET requires 2 arguments; received %i", args.len);
   Obj sym = args.els[0];
   Obj expr = args.els[1];
@@ -55,29 +62,32 @@ static Step run_LET(Obj env, Mem args) {
     "LET requires argument 1 to be a sym; received: %o", sym);
   Step step = run(env, expr);
   Obj val = step.obj;
-  env_bind(env, obj_ret_val(sym), val); // owns sym, val.
-  return mk_step(env, obj_ret(val));
+  Obj env1 = env_bind(env, obj_ret_val(sym), val); // owns env, sym, val.
+  return mk_step(env1, obj_ret(val));
 }
 
 
 static Step run_IF(Obj env, Mem args) {
+  // owns env.
   exc_check(args.len == 3, "IF requires 3 arguments; received %i", args.len);
   Obj p = args.els[0];
   Obj t = args.els[1];
   Obj e = args.els[2];
   Step step = run(env, p);
+  Obj p_env = step.env;
   Obj p_val = step.obj;
   if (is_true(p_val)) {
     obj_rel(p_val);
-    return run(env, t);
+    return run(p_env, t);
   } else {
     obj_rel(p_val);
-    return run(env, e);
+    return run(p_env, e);
   }
 }
 
 
 static Step run_FN(Obj env, Mem args) {
+  // owns env.
   exc_check(args.len == 4,
     "FN requires 4 arguments: name:Sym is-macro:Bool parameters:Vec body:Obj; received %i",
     args.len);
@@ -101,10 +111,12 @@ static Step run_FN(Obj env, Mem args) {
 
 
 static Step run_SEQ(Obj env, Mem args) {
+  // owns env.
   Obj v = new_vec_raw(args.len);
   Obj* els = vec_els(v);
   for_in(i, args.len) {
     Step step = run(env, args.els[i]);
+    env = step.env;
     els[i] = step.obj;
   }
   return mk_step(env, v);
@@ -112,7 +124,7 @@ static Step run_SEQ(Obj env, Mem args) {
 
 
 static Step run_call_native(Obj env, Obj func, Mem args, Bool is_expand) {
-  // owns func.
+  // owns env, func.
   // a native function/macro is a vec consisting of:
   //  name:Sym
   //  is-macro:Bool
@@ -125,28 +137,28 @@ static Step run_call_native(Obj env, Obj func, Mem args, Bool is_expand) {
   Obj is_macro  = m.els[1];
   Obj pars      = m.els[2];
   Obj body      = m.els[3];
-  Obj f_env     = m.els[4];
+  Obj lex_env   = m.els[4];
   if (is_expand) {
     exc_check(bool_is_true(is_macro), "cannot expand function: %o", func);
   } else {
     exc_check(!bool_is_true(is_macro), "cannot call macro: %o", func);
   }
-  exc_check(obj_is_sym(name),  "function is malformed (name symbol is not a Sym): %o", name);
-  exc_check(obj_is_vec(pars),  "function is malformed (parameters is not a Vec): %o", pars);
-  exc_check(obj_is_vec(f_env), "function is malformed (env is not a Vec): %o", f_env);
-  Obj frame = env_frame_bind_args(env, func, vec_mem(pars), args, is_expand);
-  Obj env1 = env_push(obj_ret(f_env), obj_ret_val(name), frame);
-  // TODO: change env src from name to whole func?
-  Step step = run(env1, body);
-  Obj ret = step.obj;
+  exc_check(obj_is_sym(name), "function is malformed (name symbol is not a Sym): %o", name);
+  exc_check(obj_is_vec(pars), "function is malformed (parameters is not a Vec): %o", pars);
+  exc_check(obj_is_vec(lex_env), "function is malformed (env is not a Vec): %o", lex_env);
+  Obj callee_env = env_add_frame(obj_ret(lex_env), obj_ret(name));
+  // TODO: change env_add_frame src from name to whole func?
+  callee_env = env_bind(callee_env, obj_ret_val(self), obj_ret(func));
+  Call_envs envs = env_bind_args(env, callee_env, func, vec_mem(pars), args, is_expand);
+  Step step = run(envs.callee_env, body); // owns callee_env.
   obj_rel(func);
-  obj_rel(env1);
-  return mk_step(env, ret);
+  obj_rel(step.env);
+  return mk_step(envs.caller_env, step.obj);
 }
 
 
 static Step run_call_host(Obj env, Obj func, Mem args) {
-  // owns func.
+  // owns env, func.
   Func_host* fh = ref_body(func);
   Int len_pars = fh->len_pars;
   Func_host_ptr f = fh->ptr;
@@ -165,6 +177,7 @@ static Step run_call_host(Obj env, Obj func, Mem args) {
 
 
 static Step run_CALL(Obj env, Mem args) {
+  // owns env.
   check(args.len > 0, "call is empty");
   Obj callee = args.els[0];
   Step step = run(env, callee);
@@ -181,6 +194,7 @@ static Step run_CALL(Obj env, Mem args) {
 
 
 static Step run_Vec(Obj env, Obj code) {
+  // owns env.
   Mem m = vec_mem(code);
   Obj form = m.els[0];
   Tag ot = obj_tag(form);
@@ -211,6 +225,7 @@ static const Chars_const trace_apply_prefix  = "▹ "; // called before each cal
 
 
 static Step run(Obj env, Obj code) {
+  // owns env.
 #if VERBOSE_EVAL
     err(trace_run_prefix); dbg(code); // TODO: improve this?
 #endif

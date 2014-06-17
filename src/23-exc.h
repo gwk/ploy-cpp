@@ -40,7 +40,7 @@ static NO_RETURN _exc_raise(Obj env, Chars_const fmt, Chars_const args_src, ...)
   }
   va_end(arg_list);
   err_nl();
-  env_trace(env);
+  env_trace(env, false);
   check(i == arg_count, "only %li items in exc_raise format: '%s'; %li args: '%s'",
     i, fmt, arg_count, args_src);
   exit(1);
