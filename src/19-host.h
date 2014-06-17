@@ -314,6 +314,42 @@ static Obj host_run(Obj env, Mem args) {
 }
 
 
+static Obj host_type_sym(Obj env, Mem args) {
+  // owns elements of args.
+  assert(args.len == 1);
+  Obj o = args.els[0];
+  Obj s = obj0;
+  switch (obj_tag(o)) {
+    case ot_int: s = s_INT; break;
+    case ot_sym: s = s_SYM; break;
+    case ot_data: s = s_DATA; break;
+    case ot_ref:
+      switch (ref_struct_tag(o)) {
+        case st_Data: s = s_DATA; break;
+        case st_Vec: s = s_VEC; break;
+        case st_I32: s = s_I32; break;
+        case st_I64: s = s_I64; break;
+        case st_U32: s = s_U32; break;
+        case st_U64: s = s_U64; break;
+        case st_F32: s = s_F32; break;
+        case st_F64: s = s_F64; break;
+        case st_File: s = s_FILE; break;
+        case st_Func_host: s = s_FUNC_HOST; break;
+        case st_Reserved_A:
+        case st_Reserved_B:
+        case st_Reserved_C:
+        case st_Reserved_D:
+        case st_Reserved_E:
+        case st_Reserved_F:
+          error_obj("bad ref tag:", o);
+      }
+      break;
+  }
+  obj_rel(o);
+  return obj_ret_val(s);
+}
+
+
 static Obj env_bind(Obj env, Obj sym, Obj func);
 
 static Obj host_init(Obj env) {
@@ -355,6 +391,7 @@ env = env_bind(env, sym, val);
   DEF_FH(1, host_exit, "exit")
   DEF_FH(1, host_error, "error")
   DEF_FH(2, host_run, "run")
+  DEF_FH(1, host_type_sym, "type-sym")
 
 #undef DEF_FH
 
