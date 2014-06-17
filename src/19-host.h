@@ -227,6 +227,8 @@ static Int int_mul(Int a, Int b)  { return a * b; }
 static Int int_divi(Int a, Int b) { return a / b; }
 static Int int_mod(Int a, Int b)  { return a % b; }
 static Int int_pow(Int a, Int b)  { return cast(Int, pow(a, b)); } // TODO: check for overflow.
+static Int int_shl(Int a, Int b)  { return a << b; }
+static Int int_shr(Int a, Int b)  { return a >> b; }
 
 static Int int_eq(Int a, Int b)   { return a == b; }
 static Int int_ne(Int a, Int b)   { return a != b; }
@@ -241,6 +243,9 @@ HOST_BIN_OP(mul)
 HOST_BIN_OP(divi)
 HOST_BIN_OP(mod)
 HOST_BIN_OP(pow)
+HOST_BIN_OP(shl)
+HOST_BIN_OP(shr)
+
 HOST_BIN_OP(eq)
 HOST_BIN_OP(ne)
 HOST_BIN_OP(lt)
@@ -331,6 +336,8 @@ env = env_bind(env, sym, val);
   DEF_FH(2, divi)
   DEF_FH(2, mod)
   DEF_FH(2, pow)
+  DEF_FH(2, shl)
+  DEF_FH(2, shr)
   DEF_FH(2, eq)
   DEF_FH(2, ne)
   DEF_FH(2, lt)

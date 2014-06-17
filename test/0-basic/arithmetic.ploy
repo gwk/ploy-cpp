@@ -34,4 +34,8 @@
   (abs 1)
   (abs -1))
 
+(outRLL 'shl:'
+  (shl 1 4))
 
+(outRLL 'shr:'
+  (shr 16 4))
