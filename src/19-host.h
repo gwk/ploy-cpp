@@ -25,48 +25,6 @@ static Obj host_identity(Obj env, Mem args) {
 }
 
 
-static Obj host_raw_write(Obj env, Mem args) {
-  // owns elements of args.
-  assert(args.len == 2);
-  Obj f = args.els[0];
-  Obj d = args.els[1];
-  exc_check(obj_is_file(f), "write requires arg 1 to be a File; received: %o", f);
-  exc_check(obj_is_data(d), "write requires arg 2 to be a Data; received: %o", d);
-  CFile file = file_file(f);
-  // for now, ignore the return value.
-  fwrite(data_ptr(d), size_Char, cast(Uns, data_len(d)), file);
-  obj_rel(f);
-  obj_rel(d);
-  return obj_ret_val(s_void);
-}
-
-
-static Obj host_raw_write_repr(Obj env, Mem args) {
-  // owns elements of args.
-  assert(args.len == 2);
-  Obj f = args.els[0];
-  Obj o = args.els[1];
-  exc_check(obj_is_file(f), "write requires arg 1 to be a File; received: %o", f);
-  CFile file = file_file(f);
-  write_repr(file, o);
-  obj_rel(f);
-  obj_rel(o);
-  return obj_ret_val(s_void);
-}
-
-
-static Obj host_raw_flush(Obj env, Mem args) {
-  // owns elements of args.
-  assert(args.len == 1);
-  Obj f = args.els[0];
-  exc_check(obj_is_file(f), "write requires arg 1 to be a File; received: %o", f);
-  CFile file = file_file(f);
-  fflush(file);
-  obj_rel(f);
-  return obj_ret_val(s_void);
-}
-
-
 static Obj host_is_true(Obj env, Mem args) {
   // owns elements of args.
   assert(args.len == 1);
@@ -75,6 +33,97 @@ static Obj host_is_true(Obj env, Mem args) {
   obj_rel(o);
   return new_bool(b);
 }
+
+
+static Obj host_not(Obj env, Mem args) {
+  // owns elements of args.
+  assert(args.len == 1);
+  Obj arg = args.els[0];
+  Bool b = is_true(arg);
+  obj_rel(arg);
+  return new_bool(!b);
+}
+
+
+static Obj host_neg(Obj env, Mem args) {
+  // owns elements of args.
+  assert(args.len == 1);
+  Obj n = args.els[0];
+  exc_check(obj_is_int(n), "neg requires Int; received: %o", n);
+  Int i = int_val(n);
+  obj_rel_val(n);
+  return new_int(-i);
+}
+
+
+static Obj host_abs(Obj env, Mem args) {
+  // owns elements of args.
+  assert(args.len == 1);
+  Obj n = args.els[0];
+  exc_check(obj_is_int(n), "abs requires Int; received: %o", n);
+  Int i = int_val(n);
+  obj_rel_val(n);
+  return new_int(i < 0 ? -i : i);
+}
+
+
+// TODO: handle flt.
+// TODO: check for overflow.
+// owns elements of args.
+#define HOST_BIN_OP(name) \
+static Obj host_##name(Obj env, Mem args) { \
+  assert(args.len == 2); \
+  Obj n0 = args.els[0]; \
+  Obj n1 = args.els[1]; \
+  exc_check(obj_is_int(n0), #name " requires arg 1 to be a Int; received: %o", n0); \
+  exc_check(obj_is_int(n1), #name " requires arg 2 to be a Int; received: %o", n1); \
+  Int i = int_##name(int_val(n0), int_val(n1)); \
+  obj_rel_val(n0); \
+  obj_rel_val(n1); \
+  return new_int(i); \
+}
+
+
+static Int int_add(Int a, Int b)  { return a + b; }
+static Int int_sub(Int a, Int b)  { return a - b; }
+static Int int_mul(Int a, Int b)  { return a * b; }
+static Int int_divi(Int a, Int b) { return a / b; }
+static Int int_mod(Int a, Int b)  { return a % b; }
+static Int int_pow(Int a, Int b)  { return cast(Int, pow(a, b)); } // TODO: check for overflow.
+static Int int_shl(Int a, Int b)  { return a << b; }
+static Int int_shr(Int a, Int b)  { return a >> b; }
+
+static Int int_eq(Int a, Int b)   { return a == b; }
+static Int int_ne(Int a, Int b)   { return a != b; }
+static Int int_lt(Int a, Int b)   { return a < b; }
+static Int int_gt(Int a, Int b)   { return a > b; }
+static Int int_le(Int a, Int b)   { return a <= b; }
+static Int int_ge(Int a, Int b)   { return a >= b; }
+
+HOST_BIN_OP(add)
+HOST_BIN_OP(sub)
+HOST_BIN_OP(mul)
+HOST_BIN_OP(divi)
+HOST_BIN_OP(mod)
+HOST_BIN_OP(pow)
+HOST_BIN_OP(shl)
+HOST_BIN_OP(shr)
+
+HOST_BIN_OP(eq)
+HOST_BIN_OP(ne)
+HOST_BIN_OP(lt)
+HOST_BIN_OP(gt)
+HOST_BIN_OP(le)
+HOST_BIN_OP(ge)
+
+
+static Obj host_Vec(Obj env, Mem args) {
+  // owns elements of args.
+  return new_vec_M(args);
+}
+
+
+//static Obj host_chain(Obj env, Mem args) {}
 
 
 static Obj host_len(Obj env, Mem args) {
@@ -192,85 +241,45 @@ static Obj host_append(Obj env, Mem args) {
 // TODO: host_cat
 
 
-static Obj host_neg(Obj env, Mem args) {
+static Obj host_raw_write(Obj env, Mem args) {
   // owns elements of args.
-  assert(args.len == 1);
-  Obj n = args.els[0];
-  exc_check(obj_is_int(n), "neg requires Int; received: %o", n);
-  Int i = int_val(n);
-  obj_rel_val(n);
-  return new_int(-i);
+  assert(args.len == 2);
+  Obj f = args.els[0];
+  Obj d = args.els[1];
+  exc_check(obj_is_file(f), "write requires arg 1 to be a File; received: %o", f);
+  exc_check(obj_is_data(d), "write requires arg 2 to be a Data; received: %o", d);
+  CFile file = file_file(f);
+  // for now, ignore the return value.
+  fwrite(data_ptr(d), size_Char, cast(Uns, data_len(d)), file);
+  obj_rel(f);
+  obj_rel(d);
+  return obj_ret_val(s_void);
 }
 
 
-static Obj host_abs(Obj env, Mem args) {
+static Obj host_raw_write_repr(Obj env, Mem args) {
   // owns elements of args.
-  assert(args.len == 1);
-  Obj n = args.els[0];
-  exc_check(obj_is_int(n), "abs requires Int; received: %o", n);
-  Int i = int_val(n);
-  obj_rel_val(n);
-  return new_int(i < 0 ? -i : i);
+  assert(args.len == 2);
+  Obj f = args.els[0];
+  Obj o = args.els[1];
+  exc_check(obj_is_file(f), "write requires arg 1 to be a File; received: %o", f);
+  CFile file = file_file(f);
+  write_repr(file, o);
+  obj_rel(f);
+  obj_rel(o);
+  return obj_ret_val(s_void);
 }
 
 
-// TODO: handle flt.
-// TODO: check for overflow.
-// owns elements of args.
-#define HOST_BIN_OP(name) \
-static Obj host_##name(Obj env, Mem args) { \
-  assert(args.len == 2); \
-  Obj n0 = args.els[0]; \
-  Obj n1 = args.els[1]; \
-  exc_check(obj_is_int(n0), #name " requires arg 1 to be a Int; received: %o", n0); \
-  exc_check(obj_is_int(n1), #name " requires arg 2 to be a Int; received: %o", n1); \
-  Int i = int_##name(int_val(n0), int_val(n1)); \
-  obj_rel_val(n0); \
-  obj_rel_val(n1); \
-  return new_int(i); \
-}
-
-
-static Int int_add(Int a, Int b)  { return a + b; }
-static Int int_sub(Int a, Int b)  { return a - b; }
-static Int int_mul(Int a, Int b)  { return a * b; }
-static Int int_divi(Int a, Int b) { return a / b; }
-static Int int_mod(Int a, Int b)  { return a % b; }
-static Int int_pow(Int a, Int b)  { return cast(Int, pow(a, b)); } // TODO: check for overflow.
-static Int int_shl(Int a, Int b)  { return a << b; }
-static Int int_shr(Int a, Int b)  { return a >> b; }
-
-static Int int_eq(Int a, Int b)   { return a == b; }
-static Int int_ne(Int a, Int b)   { return a != b; }
-static Int int_lt(Int a, Int b)   { return a < b; }
-static Int int_gt(Int a, Int b)   { return a > b; }
-static Int int_le(Int a, Int b)   { return a <= b; }
-static Int int_ge(Int a, Int b)   { return a >= b; }
-
-HOST_BIN_OP(add)
-HOST_BIN_OP(sub)
-HOST_BIN_OP(mul)
-HOST_BIN_OP(divi)
-HOST_BIN_OP(mod)
-HOST_BIN_OP(pow)
-HOST_BIN_OP(shl)
-HOST_BIN_OP(shr)
-
-HOST_BIN_OP(eq)
-HOST_BIN_OP(ne)
-HOST_BIN_OP(lt)
-HOST_BIN_OP(gt)
-HOST_BIN_OP(le)
-HOST_BIN_OP(ge)
-
-
-static Obj host_not(Obj env, Mem args) {
+static Obj host_raw_flush(Obj env, Mem args) {
   // owns elements of args.
   assert(args.len == 1);
-  Obj arg = args.els[0];
-  Bool b = is_true(arg);
-  obj_rel(arg);
-  return new_bool(!b);
+  Obj f = args.els[0];
+  exc_check(obj_is_file(f), "write requires arg 1 to be a File; received: %o", f);
+  CFile file = file_file(f);
+  fflush(file);
+  obj_rel(f);
+  return obj_ret_val(s_void);
 }
 
 
@@ -289,15 +298,6 @@ static Obj host_error(Obj env, Mem args) {
   Obj msg = args.els[0];
   exc_raise("error: %o", msg);
 }
-
-
-static Obj host_Vec(Obj env, Mem args) {
-  // owns elements of args.
-  return new_vec_M(args);
-}
-
-
-//static Obj host_chain(Obj env, Mem args) {}
 
 
 static Step run(Obj env, Obj code);
@@ -325,15 +325,8 @@ val = new_func_host(sym, len_pars, f); \
 env = env_bind(env, sym, val);
 
   DEF_FH(1, host_identity, "identity")
-  DEF_FH(2, host_raw_write, "raw-write")
-  DEF_FH(2, host_raw_write_repr, "raw-write-repr")
-  DEF_FH(1, host_raw_flush, "raw-flush")
   DEF_FH(1, host_is_true, "is-true")
-  DEF_FH(1, host_len, "len")
-  DEF_FH(2, host_el, "el")
-  DEF_FH(3, host_slice, "slice")
-  DEF_FH(2, host_prepend, "prepend")
-  DEF_FH(2, host_append, "append")
+  DEF_FH(1, host_not, "not")
   DEF_FH(1, host_neg, "neg")
   DEF_FH(1, host_abs, "abs")
   DEF_FH(2, host_add, "add")
@@ -350,10 +343,17 @@ env = env_bind(env, sym, val);
   DEF_FH(2, host_le, "le")
   DEF_FH(2, host_gt, "gt")
   DEF_FH(2, host_ge, "ge")
-  DEF_FH(1, host_not, "not")
+  DEF_FH(-1, host_Vec, "Vec")
+  DEF_FH(1, host_len, "len")
+  DEF_FH(2, host_el, "el")
+  DEF_FH(3, host_slice, "slice")
+  DEF_FH(2, host_prepend, "prepend")
+  DEF_FH(2, host_append, "append")
+  DEF_FH(2, host_raw_write, "raw-write")
+  DEF_FH(2, host_raw_write_repr, "raw-write-repr")
+  DEF_FH(1, host_raw_flush, "raw-flush")
   DEF_FH(1, host_exit, "exit")
   DEF_FH(1, host_error, "error")
-  DEF_FH(-1, host_Vec, "Vec")
   DEF_FH(2, host_run, "run")
 
 #undef DEF_FH
