@@ -49,36 +49,39 @@ int main(int argc, Chars_const argv[]) {
   Int path_count = 0;
   Chars_const expr = NULL;
   Bool should_output_val = false;
+  Bool should_load_core = true;
   for_imn(i, 1, argc) {
     Chars_const arg = argv[i];
-    if (chars_eq(arg, "-v")) {
+    if (chars_eq(arg, "-v")) { // verbose.
       vol_err = 1;
-    } else if (chars_eq(arg, "-e") || chars_eq(arg, "-E")) {
+    } else if (chars_eq(arg, "-e") || chars_eq(arg, "-E")) { // expression.
       check(!expr, "multiple expression arguments");
       i++;
       check(i < argc, "missing expression argument");
       expr = argv[i];
       should_output_val = chars_eq(arg, "-e");
+    } else if (chars_eq(arg, "-b")) { // bare (do not load core.ploy).
+      should_load_core = false;
     } else {
       check(path_count < len_buffer, "exceeded max paths: %d", len_buffer);
       paths[path_count++] = arg;
     }
   }
 
-  Obj host_env = obj_ret_val(s_END);
-  host_env = env_add_frame(host_env, new_data_from_chars(cast(Chars, "<host>")));
-  host_env = host_init(host_env);
+  Obj env = obj_ret_val(s_END);
+  env = env_add_frame(env, new_data_from_chars(cast(Chars, "<host>")));
+  env = host_init(env);
 
   // global array of (path, source) objects for error reporting.
   Array sources = array0;
   Obj path, src;
 
-  // run embedded core file.
-  path = new_data_from_chars(cast(Chars, "<core>"));
-  Obj core_env = env_add_frame(host_env, obj_ret(path));
-  src = new_data_from_chars(cast(Chars, core_src)); // TODO: breaks const correctness?
-  Obj env = parse_and_eval(core_env, path, src, &sources, false);
-
+  if (should_load_core) { // run embedded core.ploy file.
+    path = new_data_from_chars(cast(Chars, "<core>"));
+    env = env_add_frame(env, obj_ret(path));
+    src = new_data_from_chars(cast(Chars, core_src)); // TODO: breaks const correctness?
+    env = parse_and_eval(env, path, src, &sources, false);
+  }
   // handle arguments.
   for_in(i, path_count) {
     path = new_data_from_chars(cast(Chars, paths[i])); // TODO: breaks const correctness?
