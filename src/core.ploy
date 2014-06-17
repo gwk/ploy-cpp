@@ -107,11 +107,17 @@
   (exit 1)>
 
 
+# math functions.
+
+<fn inc {-i} (add i 1)>
+
+<fn dec {-i} (sub i 1)>
+
 # vec functions.
 
 <fn hd {-vec} (el vec 0)>
 
-<fn tl {-vec} (el vec (sub (len vec) 1))>
+<fn tl {-vec} (el vec (dec (len vec)))>
 
 <fn vec-next {-vec}
   # this a poor substitute for a real vec iterator.
