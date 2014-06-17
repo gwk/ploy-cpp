@@ -18,9 +18,9 @@
     {-label -obj} # parameter list.
     {DO # body.
       # standard files are defined as a [name, file] vec.
-      (raw_write (el std-err 1) label)
-      (raw_write_repr (el std-err 1) obj)
-      (raw_write (el std-err 1) '\n')}}}
+      (raw-write (el std-err 1) label)
+      (raw-write_repr (el std-err 1) obj)
+      (raw-write (el std-err 1) '\n')}}}
 
 {LET macro
   # the 'macro' macro defines a new macro in the current environment.
@@ -101,9 +101,9 @@
 
 <fn error {-msg}
   # raise an error. for now we can only print the message and exit.
-  (raw_write (el std-err 1) 'error: ')
-  (raw_write (el std-err 1) msg)
-  (raw_write (el std-err 1) '\n')
+  (raw-write (el std-err 1) 'error: ')
+  (raw-write (el std-err 1) msg)
+  (raw-write (el std-err 1) '\n')
   (exit 1)>
 
 
@@ -164,11 +164,11 @@
 <fn write1 {-file -str}
   # write a single string.
   # TODO: support other types.
-  (raw_write (el file 1) str)>
+  (raw-write (el file 1) str)>
 
 <fn writeR1 {-file -obj}
   # write a single repr.
-  (raw_write_repr (el file 1) obj)>
+  (raw-write-repr (el file 1) obj)>
 
 # TODO: this is a temporary, halfway solution to the desired printing functions.
 # would be better to use a macro to generate each function with no subcalls.

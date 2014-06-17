@@ -67,6 +67,16 @@ static Obj host_raw_flush(Obj env, Mem args) {
 }
 
 
+static Obj host_is_true(Obj env, Mem args) {
+  // owns elements of args.
+  assert(args.len == 1);
+  Obj o = args.els[0];
+  Bool b = is_true(o);
+  obj_rel(o);
+  return new_bool(b);
+}
+
+
 static Obj host_len(Obj env, Mem args) {
   // owns elements of args.
   assert(args.len == 1);
@@ -314,41 +324,42 @@ static Obj env_bind(Obj env, Obj sym, Obj func);
 static Obj host_init(Obj env) {
   Obj sym, val;
 
-#define DEF_FH(len_pars, n) \
-sym = new_sym_from_chars(cast(Chars, #n)); \
-val = new_func_host(sym, len_pars, host_##n); \
+#define DEF_FH(len_pars, f, n) \
+sym = new_sym_from_chars(cast(Chars, n)); \
+val = new_func_host(sym, len_pars, f); \
 env = env_bind(env, sym, val);
 
-  DEF_FH(1, identity)
-  DEF_FH(2, raw_write)
-  DEF_FH(2, raw_write_repr)
-  DEF_FH(1, raw_flush)
-  DEF_FH(1, len)
-  DEF_FH(2, el)
-  DEF_FH(3, slice)
-  DEF_FH(2, prepend)
-  DEF_FH(2, append)
-  DEF_FH(1, neg)
-  DEF_FH(1, abs)
-  DEF_FH(2, add)
-  DEF_FH(2, sub)
-  DEF_FH(2, mul)
-  DEF_FH(2, divi)
-  DEF_FH(2, mod)
-  DEF_FH(2, pow)
-  DEF_FH(2, shl)
-  DEF_FH(2, shr)
-  DEF_FH(2, eq)
-  DEF_FH(2, ne)
-  DEF_FH(2, lt)
-  DEF_FH(2, le)
-  DEF_FH(2, gt)
-  DEF_FH(2, ge)
-  DEF_FH(1, not)
-  DEF_FH(1, exit)
-  DEF_FH(1, error)
-  DEF_FH(-1, Vec)
-  DEF_FH(2, run)
+  DEF_FH(1, host_identity, "identity")
+  DEF_FH(2, host_raw_write, "raw-write")
+  DEF_FH(2, host_raw_write_repr, "raw-write-repr")
+  DEF_FH(1, host_raw_flush, "raw-flush")
+  DEF_FH(1, host_is_true, "is-true")
+  DEF_FH(1, host_len, "len")
+  DEF_FH(2, host_el, "el")
+  DEF_FH(3, host_slice, "slice")
+  DEF_FH(2, host_prepend, "prepend")
+  DEF_FH(2, host_append, "append")
+  DEF_FH(1, host_neg, "neg")
+  DEF_FH(1, host_abs, "abs")
+  DEF_FH(2, host_add, "add")
+  DEF_FH(2, host_sub, "sub")
+  DEF_FH(2, host_mul, "mul")
+  DEF_FH(2, host_divi, "divi")
+  DEF_FH(2, host_mod, "mod")
+  DEF_FH(2, host_pow, "pow")
+  DEF_FH(2, host_shl, "shl")
+  DEF_FH(2, host_shr, "shr")
+  DEF_FH(2, host_eq, "eq")
+  DEF_FH(2, host_ne, "ne")
+  DEF_FH(2, host_lt, "lt")
+  DEF_FH(2, host_le, "le")
+  DEF_FH(2, host_gt, "gt")
+  DEF_FH(2, host_ge, "ge")
+  DEF_FH(1, host_not, "not")
+  DEF_FH(1, host_exit, "exit")
+  DEF_FH(1, host_error, "error")
+  DEF_FH(-1, host_Vec, "Vec")
+  DEF_FH(2, host_run, "run")
 
 #undef DEF_FH
 
