@@ -112,6 +112,22 @@
 
 <fn idec {-i} (sub i 1)>
 
+# type functions.
+
+<fn is-int {-o} (sym-eq (type-sym o) `INT)>
+<fn is-sym {-o} (sym-eq (type-sym o) `SYM)>
+<fn is-data {-o} (sym-eq (type-sym o) `DATA)>
+<fn is-vec {-o} (sym-eq (type-sym o) `VEC)>
+<fn is-I32 {-o} (sym-eq (type-sym o) `I32)>
+<fn is-I64 {-o} (sym-eq (type-sym o) `I64)>
+<fn is-U32 {-o} (sym-eq (type-sym o) `U32)>
+<fn is-U64 {-o} (sym-eq (type-sym o) `U64)>
+<fn is-F32 {-o} (sym-eq (type-sym o) `F32)>
+<fn is-F64 {-o} (sym-eq (type-sym o) `F64)>
+<fn is-file {-o} (sym-eq (type-sym o) `FILE)>
+<fn is-func_host {-o} (sym-eq (type-sym o) `FUNC_HOST)>
+
+
 # vec functions.
 
 <fn hd {-vec} (el vec 0)>

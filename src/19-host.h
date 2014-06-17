@@ -117,6 +117,20 @@ HOST_BIN_OP(ile)
 HOST_BIN_OP(ige)
 
 
+static Obj host_sym_eq(Obj env, Mem args) {
+  // owns elements of args.
+  assert(args.len == 2);
+  Obj a = args.els[0];
+  Obj b = args.els[1];
+  exc_check(obj_is_sym(a), "sym-eq requires argument 1 to be a Sym; received: %o", a);
+  exc_check(obj_is_sym(b), "sym-eq requires argument 2 to be a Sym; received: %o", b);
+  Bool res = (a.u == b.u);
+  obj_rel_val(a);
+  obj_rel_val(b);
+  return new_bool(res);
+}
+
+
 static Obj host_Vec(Obj env, Mem args) {
   // owns elements of args.
   return new_vec_M(args);
@@ -379,6 +393,7 @@ env = env_bind(env, sym, val);
   DEF_FH(2, host_ile, "ile")
   DEF_FH(2, host_igt, "igt")
   DEF_FH(2, host_ige, "ige")
+  DEF_FH(2, host_sym_eq, "sym-eq")
   DEF_FH(-1, host_Vec, "Vec")
   DEF_FH(1, host_len, "len")
   DEF_FH(2, host_el, "el")
