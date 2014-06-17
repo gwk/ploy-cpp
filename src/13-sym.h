@@ -68,57 +68,59 @@ static Obj new_sym_from_chars(Chars b) {
 // the special forms are COMMENT...CALL.
 // the following "X Macro" is expanded with various temporary definitions of SYM.
 #define SYM_LIST \
-SYM(ILLEGAL) \
-SYM(void) \
-SYM(nil) \
-SYM(VEC0) \
-SYM(CHAIN0) \
-SYM(END) \
-SYM(false) \
-SYM(true) \
-SYM(LABEL) \
-SYM(VARIAD) \
-SYM(UNQ) \
-SYM(QUA) \
-SYM(EXPAND) \
-SYM(COMMENT) \
-SYM(QUO) \
-SYM(DO) \
-SYM(SCOPE) \
-SYM(LET) \
-SYM(IF) \
-SYM(FN) \
-SYM(SEQ) \
-SYM(CALL) \
-SYM(END_SPECIAL_SYMS) \
-SYM(self) \
+S(ILLEGAL) \
+S(void) \
+S(nil) \
+S(VEC0) \
+S(CHAIN0) \
+S(END) \
+S(false) \
+S(true) \
+S(LABEL) \
+S(VARIAD) \
+S(UNQ) \
+S(QUA) \
+S(EXPAND) \
+S(COMMENT) \
+S(QUO) \
+S(DO) \
+S(SCOPE) \
+S(LET) \
+S(IF) \
+S(FN) \
+S(SEQ) \
+S(CALL) \
+S(END_SPECIAL_SYMS) \
+S(self) \
 
 // sym indices.
-#define SYM(s) si_##s,
+#define S(s) si_##s,
 typedef enum {
   SYM_LIST
 } Sym_index;
-#undef SYM
+#undef S
 
 // sym Obj constants.
-#define SYM(s) static const Obj s_##s = _sym_with_index(si_##s);
+#define S(s) static const Obj s_##s = _sym_with_index(si_##s);
 SYM_LIST
-#undef SYM
+#undef S
 
 
 static void sym_init() {
   assert(global_sym_names.mem.len == 0);
   Obj sym;
 
-#define SYM(s) \
+#define S(s) \
 sym = new_sym_from_chars(cast(Chars, #s)); \
 assert(sym_index(sym) == si_##s); \
 obj_rel_val(sym);
 
 SYM_LIST
 
-#undef SYM
+#undef S
 }
+
+#undef SYM_LIST
 
 
 UNUSED_FN static Bool sym_is_form(Obj s) {
