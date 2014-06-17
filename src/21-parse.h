@@ -356,7 +356,7 @@ static Obj parse_chain_simple(Parser* p) {
 }
 
 
-static Obj parse_chain_blocks(Parser* p) {
+static Obj parse_chain_fat(Parser* p) {
   Array a = array0;
   while (parser_has_next_expr(p)) {
     if (PC != '|') {
@@ -404,7 +404,7 @@ static Obj parse_seq(Parser* p) {
     return parse_chain_simple(p);
   }
   if (PC == '|') {
-    return parse_chain_blocks(p);
+    return parse_chain_fat(p);
   } else {
     return parse_seq_simple(p);
   }
