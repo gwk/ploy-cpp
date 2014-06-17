@@ -69,13 +69,13 @@ static Obj new_sym_from_chars(Chars b) {
 // the following "X Macro" is expanded with various temporary definitions of SYM.
 #define SYM_LIST \
 SYM(ILLEGAL) \
-SYM(VOID) \
-SYM(NIL) \
+SYM(void) \
+SYM(nil) \
 SYM(VEC0) \
 SYM(CHAIN0) \
 SYM(END) \
-SYM(FALSE) \
-SYM(TRUE) \
+SYM(false) \
+SYM(true) \
 SYM(LABEL) \
 SYM(VARIAD) \
 SYM(UNQ) \
@@ -101,7 +101,7 @@ typedef enum {
 #undef SYM
 
 // sym Obj constants.
-#define SYM(s) static const Obj s = _sym_with_index(si_##s);
+#define SYM(s) static const Obj s_##s = _sym_with_index(si_##s);
 SYM_LIST
 #undef SYM
 

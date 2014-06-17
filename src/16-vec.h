@@ -5,7 +5,7 @@
 
 
 static Obj new_vec_raw(Int len) {
-  if (!len) return obj_ret_val(VEC0);
+  if (!len) return obj_ret_val(s_VEC0);
   Obj v = ref_alloc(st_Vec, size_RCL + (size_Obj * len));
   v.rcl->len = len;
   return v;
@@ -14,7 +14,7 @@ static Obj new_vec_raw(Int len) {
 
 static Obj new_vec_M(Mem m) {
   // owns elements of m.
-  if (!m.len) return obj_ret_val(VEC0);
+  if (!m.len) return obj_ret_val(s_VEC0);
   Obj v = new_vec_raw(m.len);
   Obj* els = vec_ref_els(v);
   for_in(i, m.len) {
@@ -78,7 +78,7 @@ static Int vec_ref_len(Obj v) {
 
 
 static Int vec_len(Obj v) {
-  if (v.u == VEC0.u) return 0;
+  if (v.u == s_VEC0.u) return 0;
   return vec_ref_len(v);
 }
 
@@ -90,7 +90,7 @@ static Obj* vec_ref_els(Obj v) {
 
 
 static Obj* vec_els(Obj v) {
-  if (v.u == VEC0.u) return NULL;
+  if (v.u == s_VEC0.u) return NULL;
   return vec_ref_els(v);
 }
 
@@ -165,14 +165,14 @@ static Vec_shape vec_ref_shape(Obj v) {
   Int len = vec_len(v);
   if (len == 4 && obj_is_symbol(vec_ref_el(v, 1))) {
     Obj e0 = vec_ref_el(v, 0);
-    if (e0.u == LABEL.u) return vs_label;
-    if (e0.u == VARIAD.u) return vs_variad;
+    if (e0.u == s_LABEL.u) return vs_label;
+    if (e0.u == s_VARIAD.u) return vs_variad;
   }
   Vec_shape s = vs_chain;
   loop {
     if (vec_ref_len(v) != 2) s = vs_chain_blocks;
     Obj tl = chain_tl(v);
-    if (tl.u == END.u) return s;
+    if (tl.u == s_END.u) return s;
     if (!obj_is_vec_ref(tl)) return vs_vec;
     v = tl;
   }

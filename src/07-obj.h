@@ -251,10 +251,10 @@ static Bool obj_is_symbol(Obj o) {
 // if 'true' and 'false' are the names of the bools in the language,
 // then we should use them here as well, and use TRUE and FALSE for c 1 and 0.
 // this would prevent us from using stdbool.h, but that doesn't really matter.
-static const Obj TRUE, FALSE;
+static const Obj s_true, s_false;
 
 static Bool obj_is_bool(Obj s) {
-  return s.u == TRUE.u || s.u == FALSE.u;
+  return s.u == s_true.u || s.u == s_false.u;
 }
 
 
@@ -284,13 +284,13 @@ static Bool obj_is_vec_ref(Obj o) {
 }
 
 
-static const Obj VEC0, CHAIN0;
+static const Obj s_VEC0, s_CHAIN0;
 
 static Bool obj_is_vec(Obj o) {
   // ploy makes distinctions between the zero vector VEC0, the empty list CHAIN0,
   // and the list terminator END to reduce ambiguity (e.g. when printing data structures).
   // only VEC0 and nonzero ref_vec objects are considered true vectors.
-  return o.u == VEC0.u || obj_is_vec_ref(o);
+  return o.u == s_VEC0.u || obj_is_vec_ref(o);
 }
 
 
@@ -303,7 +303,7 @@ static Int vec_len(Obj v);
 static Obj vec_ref_el(Obj v, Int i);
 static Obj* vec_ref_els(Obj v);
 static Obj* vec_els(Obj v);
-static const Obj LABEL, VARIAD;
+static const Obj s_LABEL, s_VARIAD;
 
 
 // iterate over a vec_ref vr.
@@ -314,7 +314,7 @@ it++)
 
 // iterate over a vec v by first checking that it is not VEC0.
 #define it_vec(it, v) \
-if (v.u != VEC0.u) it_vec_ref(it, v)
+if (v.u != s_VEC0.u) it_vec_ref(it, v)
 
 
 static Bool obj_is_par(Obj o) {
@@ -325,7 +325,7 @@ static Bool obj_is_par(Obj o) {
   if (len != 4) return false;
   if (!obj_is_symbol(vec_ref_el(o, 1))) return false; // name must be a symbol.
   Obj e0 = vec_ref_el(o, 0);
-  return (e0.u == LABEL.u || e0.u == VARIAD.u);
+  return (e0.u == s_LABEL.u || e0.u == s_VARIAD.u);
 }
 
 

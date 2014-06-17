@@ -37,7 +37,7 @@ static Obj host_raw_write(Obj env, Mem args) {
   fwrite(data_ptr(d), size_Char, cast(Uns, data_len(d)), file);
   obj_rel(f);
   obj_rel(d);
-  return obj_ret_val(VOID);
+  return obj_ret_val(s_void);
 }
 
 
@@ -51,7 +51,7 @@ static Obj host_raw_write_repr(Obj env, Mem args) {
   write_repr(file, o);
   obj_rel(f);
   obj_rel(o);
-  return obj_ret_val(VOID);
+  return obj_ret_val(s_void);
 }
 
 
@@ -63,7 +63,7 @@ static Obj host_raw_flush(Obj env, Mem args) {
   CFile file = file_file(f);
   fflush(file);
   obj_rel(f);
-  return obj_ret_val(VOID);
+  return obj_ret_val(s_void);
 }
 
 
@@ -72,7 +72,7 @@ static Obj host_len(Obj env, Mem args) {
   assert(args.len == 1);
   Obj o = args.els[0];
   Int l;
-  if (o.u == VEC0.u || o.u == blank.u) {
+  if (o.u == s_VEC0.u || o.u == blank.u) {
     l = 0;
   } else {
     exc_check(obj_is_data(o) || obj_is_vec(o), "len requires Data or Vec; received: %o", o);
@@ -91,7 +91,7 @@ static Obj host_el(Obj env, Mem args) {
   exc_check(obj_is_vec(v), "el requires arg 1 to be a Vec; received: %o", v);
   exc_check(obj_is_int(i), "el requires arg 2 to be a Int; received: %o", i);
   Int j = int_val(i);
-  exc_check(v.u != VEC0.u && v.u != CHAIN0.u,
+  exc_check(v.u != s_VEC0.u && v.u != s_CHAIN0.u,
     "el index out of range; index: %i; vec: %o", j, v);
   Int l = vec_ref_len(v);
   exc_check(j >= 0 && j < l, "el index out of range; index: %i; len: %i", j, l);
@@ -111,7 +111,7 @@ static Obj host_slice(Obj env, Mem args) {
   exc_check(obj_is_vec(v), "el requires arg 1 to be a Vec; received: %o", v);
   exc_check(obj_is_int(from), "el requires arg 2 to be a Int; received: %o", from);
   exc_check(obj_is_int(to), "el requires arg 3 to be a Int; received: %o", to);
-  if (v.u == VEC0.u) {
+  if (v.u == s_VEC0.u) {
     obj_rel(from);
     obj_rel(to);
     return v; // no ret/rel necessary.
@@ -128,7 +128,7 @@ static Obj host_slice(Obj env, Mem args) {
     obj_rel(v);
     obj_rel(from);
     obj_rel(to);
-    return obj_ret_val(VEC0);
+    return obj_ret_val(s_VEC0);
   }
   Obj s = new_vec_raw(ls);
   Obj* src = vec_ref_els(v);
@@ -253,10 +253,10 @@ static Obj host_not(Obj env, Mem args) {
   // owns elements of args.
   assert(args.len == 1);
   Obj b = args.els[0];
-  Obj r = FALSE;
-  if (b.u == FALSE.u) {
-    r = TRUE;
-  } else if (b.u != TRUE.u) {
+  Obj r = s_false;
+  if (b.u == s_false.u) {
+    r = s_true;
+  } else if (b.u != s_true.u) {
     exc_raise("not requires a Bool value; received: %o", b);
   }
   obj_rel_val(b);

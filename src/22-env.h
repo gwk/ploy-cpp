@@ -15,7 +15,7 @@
 static Obj env_get(Obj env, Obj sym) {
   assert(ref_is_vec(env));
   assert(sym_is_symbol(sym));
-  while (env.u != END.u) {
+  while (env.u != s_END.u) {
     Int len = vec_ref_len(env);
     if (len == 2) { // frame marker.
       // for now, just skip the marker.
@@ -41,7 +41,7 @@ static Obj env_add_frame(Obj env, Obj src) {
 static Obj env_bind(Obj env, Obj sym, Obj val) {
   // env, sym, val.
   assert(sym_is_symbol(sym));
-  assert(obj_is_vec(env) || env.u == END.u);
+  assert(obj_is_vec(env) || env.u == s_END.u);
   return new_vec3(sym, val, env);
 }
 
@@ -64,12 +64,12 @@ static Call_envs env_bind_args(Obj caller_env, Obj callee_env, Obj func, Mem par
     Obj par_sym = par_els[1];
     //Obj par_type = par_els[2];
     Obj par_expr = par_els[3];
-    if (par_kind.u == LABEL.u) {
+    if (par_kind.u == s_LABEL.u) {
       Obj arg;
       if (i_args < args.len) {
         arg = args.els[i_args];
         i_args++;
-      } else if (par_expr.u != NIL.u) { // TODO: what about default value of nil? is quote sufficient?
+      } else if (par_expr.u != s_nil.u) { // TODO: what about default value of nil? is quote sufficient?
         arg = par_expr;
       } else {
         error_obj("function received too few arguments", vec_ref_el(func, 0));
@@ -84,7 +84,7 @@ static Call_envs env_bind_args(Obj caller_env, Obj callee_env, Obj func, Mem par
       }
       callee_env = env_bind(callee_env, obj_ret_val(par_sym), val);
     } else {
-      assert(par_kind.u == VARIAD.u);
+      assert(par_kind.u == s_VARIAD.u);
       check_obj(!has_variad, "function has multiple variad parameters", vec_ref_el(func, 0));
       has_variad = true;
       Int variad_count = 0;
@@ -115,7 +115,7 @@ static Call_envs env_bind_args(Obj caller_env, Obj callee_env, Obj func, Mem par
 static void env_trace(Obj env, Bool show_values) {
   assert(ref_is_vec(env));
   errL("trace:");
-  while (env.u != END.u) {
+  while (env.u != s_END.u) {
     Int len = vec_ref_len(env);
     if (len == 2) { // frame marker.
       Obj src = chain_a(env);

@@ -7,11 +7,11 @@
 static Step run_sym(Obj env, Obj code) {
   // owns env.
   assert(obj_is_sym(code));
-  assert(code.u != ILLEGAL.u); // anything that returns ILLEGAL should have raised an error.
-  if (code.u < END_SPECIAL_SYMS.u) {
+  assert(code.u != s_ILLEGAL.u); // anything that returns s_ILLEGAL should have raised an error.
+  if (code.u < s_END_SPECIAL_SYMS.u) {
     return mk_step(env, obj_ret_val(code)); // special symbols are self-evaluating.
   }
-  exc_check(code.u != END_SPECIAL_SYMS.u, "cannot run END_SPECIAL_SYMS");
+  exc_check(code.u != s_END_SPECIAL_SYMS.u, "cannot run END_SPECIAL_SYMS");
   Obj val = env_get(env, code);
   exc_check(val.u != obj0.u, "lookup error: %o", code); // lookup failed.
   return mk_step(env, obj_ret(val));
@@ -20,13 +20,13 @@ static Step run_sym(Obj env, Obj code) {
 
 static Step run_COMMENT(Obj env, Mem args) {
   // owns env.
-  return mk_step(env, obj_ret_val(VOID));
+  return mk_step(env, obj_ret_val(s_void));
 }
 
 
 static Step run_QUO(Obj env, Mem args) {
   // owns env.
-  exc_check(args.len == 1, "QUO requires 1 argument; received %i", args.len);
+  exc_check(args.len == 1, "s_QUO requires 1 argument; received %i", args.len);
   return mk_step(env, obj_ret(args.els[0]));
 }
 
@@ -34,7 +34,7 @@ static Step run_QUO(Obj env, Mem args) {
 static Step run_DO(Obj env, Mem args) {
   // owns env.
   if (!args.len) {
-    return mk_step(env, obj_ret_val(VOID));
+    return mk_step(env, obj_ret_val(s_void));
   }
   Int last = args.len - 1;
   it_mem_to(it, args, last) {
@@ -150,7 +150,7 @@ static Step run_call_native(Obj env, Obj func, Mem args, Bool is_expand) {
   exc_check(obj_is_vec(lex_env), "function %o is malformed (env is not a Vec): %o", name, lex_env);
   Obj callee_env = env_add_frame(obj_ret(lex_env), obj_ret(name));
   // TODO: change env_add_frame src from name to whole func?
-  callee_env = env_bind(callee_env, obj_ret_val(self), obj_ret(func));
+  callee_env = env_bind(callee_env, obj_ret_val(s_self), obj_ret(func));
   Call_envs envs = env_bind_args(env, callee_env, func, vec_mem(pars), args, is_expand);
   Step step = run(envs.callee_env, body); // owns callee_env.
   obj_rel(func);

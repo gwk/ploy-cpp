@@ -25,7 +25,7 @@ static Obj parse_and_eval(Obj env, Obj path, Obj src, Array* sources, Bool out_v
 #endif
     array_append(sources, new_vec2(path, src));
     Step step = eval_vec(env, code);
-    if (out_val && step.obj.u != VOID.u) {
+    if (out_val && step.obj.u != s_void.u) {
       write_repr(stdout, step.obj);
       fputc('\n', stdout);
     }
@@ -65,7 +65,7 @@ int main(int argc, Chars_const argv[]) {
     }
   }
 
-  Obj host_env = obj_ret_val(END);
+  Obj host_env = obj_ret_val(s_END);
   host_env = env_add_frame(host_env, new_data_from_chars(cast(Chars, "<host>")));
   host_env = host_init(host_env);
 

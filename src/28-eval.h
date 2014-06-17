@@ -7,7 +7,7 @@
 static Step eval(Obj env, Obj code) {
   Obj preprocessed = preprocess(code); // borrows code.
   if (preprocessed.u == obj0.u) {
-    return mk_step(env, obj_ret_val(VOID)); // TODO: document why this is necessary.
+    return mk_step(env, obj_ret_val(s_void)); // TODO: document why this is necessary.
   }
   Obj expanded = expand(env, preprocessed); // owns preprocessed.
   Obj compiled = compile(env, expanded); // owns expanded.
@@ -21,8 +21,8 @@ static Step eval_vec(Obj env, Obj v) {
   // this is quite different than calling eval on a DO vector;
   // not only does this vec not have a head DO sym,
   // it also does the complete eval cycle on each member in turn.
-  if (v.u == VEC0.u) {
-    return mk_step(env, obj_ret_val(VOID));
+  if (v.u == s_VEC0.u) {
+    return mk_step(env, obj_ret_val(s_void));
   }
   Mem m = vec_ref_mem(v);
   Int last = m.len - 1;

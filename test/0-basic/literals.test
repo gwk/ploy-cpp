@@ -1,11 +1,12 @@
 {
   'out' : '''\
-`NIL
+`void
+`nil
 []
 [|]
 `END
-`FALSE
-`TRUE
+`false
+`true
 `LABEL
 `VARIAD
 `UNQ
@@ -20,7 +21,6 @@
 `FN
 `SEQ
 `CALL
-`VOID
 0
 1
 0

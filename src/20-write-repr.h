@@ -62,7 +62,7 @@ static void write_repr_chain(CFile f, Obj c, Set* s) {
     }
     write_repr_obj(f, chain_hd(c), s);
     Obj tl = chain_tl(c);
-    if (tl.u == END.u) break;
+    if (tl.u == s_END.u) break;
     assert(obj_is_vec_ref(tl));
     c = tl;
   }
@@ -81,7 +81,7 @@ static void write_repr_fat_chain(CFile f, Obj c, Set* s) {
       write_repr_obj(f, m.els[i], s);
     }
     Obj tl = m.els[m.len - 1];
-    if (tl.u == END.u) break;
+    if (tl.u == s_END.u) break;
     assert(obj_is_vec_ref(tl));
     c = tl;
   }
@@ -100,11 +100,11 @@ static void write_repr_par(CFile f, Obj p, Set* s, Char c) {
   assert(obj_is_symbol(name));
   Obj d = sym_data(name);
   write_data(f, d);
-  if (type.u != NIL.u) {
+  if (type.u != s_nil.u) {
     fputc(':', f);
     write_repr_obj(f, type, s); // TODO: quote this?
   }
-  if (expr.u != NIL.u) {
+  if (expr.u != s_nil.u) {
     fputc('=', f);
     write_repr_obj(f, expr, s); // TODO: quote this?
   }
@@ -144,9 +144,9 @@ static void write_repr_obj(CFile f, Obj o, Set* s) {
   if (ot == ot_int) {
     fprintf(f, "%ld", int_val(o));
   } else if (ot == ot_sym) {
-    if (o.u == VEC0.u) {
+    if (o.u == s_VEC0.u) {
       fputs("[]", f);
-    } else if (o.u == CHAIN0.u) {
+    } else if (o.u == s_CHAIN0.u) {
       fputs("[|]", f);
     } else {
       fputc('`', f);

@@ -1,10 +1,11 @@
 (outRLL
-NIL
+void
+nil
 VEC0
 CHAIN0
 END
-FALSE
-TRUE
+false
+true
 LABEL
 VARIAD
 UNQ
@@ -19,7 +20,6 @@ IF
 FN
 SEQ
 CALL
-`VOID
 0
 1
 -0

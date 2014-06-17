@@ -152,7 +152,7 @@ static Obj parse_comment(Parser* p) {
     if (p->e) return obj0;
     // the QUO prevents macro expansion of the commented code,
     // and also differentiates it from line comments.
-    return new_vec2(obj_ret_val(COMMENT), new_vec2(obj_ret_val(QUO), expr));
+    return new_vec2(obj_ret_val(s_COMMENT), new_vec2(obj_ret_val(s_QUO), expr));
   }
   // otherwise comment out a single line.
   Src_pos sp_report = p->sp;
@@ -173,7 +173,7 @@ static Obj parse_comment(Parser* p) {
   }  while (PC != '\n');
   Str s = str_slice(p->src, pos_start, p->sp.pos);
   Obj d = new_data_from_str(s);
-  return new_vec2(obj_ret_val(COMMENT), d);
+  return new_vec2(obj_ret_val(s_COMMENT), d);
 }
 
 
@@ -311,7 +311,7 @@ static Obj parse_call(Parser* p) {
   P_ADV1;
   Mem m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR(')');
-  Obj v = new_vec_EM(obj_ret_val(CALL), m);
+  Obj v = new_vec_EM(obj_ret_val(s_CALL), m);
   mem_dealloc(m);
   return v;
 }
@@ -321,7 +321,7 @@ static Obj parse_expand(Parser* p) {
   P_ADV1;
   Mem m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR('>');
-  Obj v = new_vec_EM(obj_ret_val(EXPAND), m);
+  Obj v = new_vec_EM(obj_ret_val(s_EXPAND), m);
   mem_dealloc(m);
   return v;
 }
@@ -331,9 +331,9 @@ static Obj parse_seq_simple(Parser* p) {
   Mem m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR(']');
   if (!m.len) {
-    return obj_ret_val(VEC0);
+    return obj_ret_val(s_VEC0);
   }
-  Obj v = new_vec_EM(obj_ret_val(SEQ), m);
+  Obj v = new_vec_EM(obj_ret_val(s_SEQ), m);
   mem_dealloc(m);
   return v;
 }
@@ -344,12 +344,12 @@ static Obj parse_chain_simple(Parser* p) {
   Mem m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR(']');
   if (!m.len) {
-    return obj_ret_val(CHAIN0);
+    return obj_ret_val(s_CHAIN0);
   }
-  Obj c = obj_ret_val(END);
+  Obj c = obj_ret_val(s_END);
   for_in_rev(i, m.len) {
     Obj el = mem_el_move(m, i);
-    c = new_vec3(obj_ret_val(SEQ), el, c);
+    c = new_vec3(obj_ret_val(s_SEQ), el, c);
   }
   mem_dealloc(m);
   return c;
@@ -370,13 +370,13 @@ static Obj parse_chain_blocks(Parser* p) {
     }
     Obj v = new_vec_raw(m.len + 2);
     Obj* els = vec_ref_els(v);
-    els[0] = obj_ret_val(SEQ);
+    els[0] = obj_ret_val(s_SEQ);
     for_in(i, m.len) {
       els[i + 1] = mem_el_move(m, i);
     }
     // temporarily fill tl with ILLEGAL; replaced by vec_put below.
     // since vec_put releases, we must retain here.
-    els[m.len + 1] = obj_ret_val(ILLEGAL);
+    els[m.len + 1] = obj_ret_val(s_ILLEGAL);
     mem_dealloc(m);
     array_append(&a, v);
   }
@@ -384,9 +384,9 @@ static Obj parse_chain_blocks(Parser* p) {
   P_CONSUME_TERMINATOR(']');
   // assemble the chain.
   if (!m.len) {
-    return obj_ret_val(CHAIN0);
+    return obj_ret_val(s_CHAIN0);
   }
-  Obj c = obj_ret_val(END);
+  Obj c = obj_ret_val(s_END);
   for_in_rev(i, m.len) {
     Obj v = mem_el_move(m, i);
     vec_ref_put(v, vec_len(v) - 1, c);
@@ -415,7 +415,7 @@ static Obj parse_qua(Parser* p) {
   assert(PC == '`');
   P_ADV1;
   Obj o = parse_expr(p);
-  return new_vec2(obj_ret_val(QUA), o);
+  return new_vec2(obj_ret_val(s_QUA), o);
 }
 
 
@@ -423,7 +423,7 @@ static Obj parse_unq(Parser* p) {
   assert(PC == ',');
   P_ADV1;
   Obj o = parse_expr(p);
-  return new_vec2(obj_ret_val(UNQ), o);
+  return new_vec2(obj_ret_val(s_UNQ), o);
 }
 
 
@@ -445,14 +445,14 @@ static Obj parse_par(Parser* p, Obj sym, Chars_const par_desc) {
     type = parse_expr(p);
     c = PC;
   } else {
-    type = obj_ret_val(NIL);
+    type = obj_ret_val(s_nil);
   }
   Obj expr;
   if (PC == '=') {
     P_ADV1;
     expr = parse_expr(p);
   } else {
-    expr = obj_ret_val(NIL);
+    expr = obj_ret_val(s_nil);
   }
   return new_vec4(obj_ret_val(sym), name, type, expr);
 }
@@ -471,13 +471,13 @@ static Obj parse_expr_sub(Parser* p) {
     case '\'':  return parse_data(p, '\'');
     case '"':   return parse_data(p, '"');
     case '#':   return parse_comment(p);
-    case '&':   return parse_par(p, VARIAD, "variad");
+    case '&':   return parse_par(p, s_VARIAD, "variad");
     case '+':
       if (isdigit(PC1)) return parse_int(p, 1);
       break;
     case '-':
       if (isdigit(PC1)) return parse_int(p, -1);
-      return parse_par(p, LABEL, "label");
+      return parse_par(p, s_LABEL, "label");
 
   }
   if (isdigit(c)) {
