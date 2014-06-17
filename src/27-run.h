@@ -18,12 +18,6 @@ static Step run_sym(Obj env, Obj code) {
 }
 
 
-static Step run_COMMENT(Obj env, Mem args) {
-  // owns env.
-  return mk_step(env, obj_ret_val(s_void));
-}
-
-
 static Step run_QUO(Obj env, Mem args) {
   // owns env.
   exc_check(args.len == 1, "s_QUO requires 1 argument; received %i", args.len);
@@ -204,7 +198,6 @@ static Step run_Vec(Obj env, Obj code) {
     Int si = sym_index(form);
 #define EVAL_FORM(s) case si_##s: return run_##s(env, mem_next(m))
     switch (si) {
-      EVAL_FORM(COMMENT);
       EVAL_FORM(QUO);
       EVAL_FORM(DO);
       EVAL_FORM(SCOPE);
