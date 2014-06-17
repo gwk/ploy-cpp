@@ -267,15 +267,10 @@ HOST_BIN_OP(ge)
 static Obj host_not(Obj env, Mem args) {
   // owns elements of args.
   assert(args.len == 1);
-  Obj b = args.els[0];
-  Obj r = s_false;
-  if (b.u == s_false.u) {
-    r = s_true;
-  } else if (b.u != s_true.u) {
-    exc_raise("not requires a Bool value; received: %o", b);
-  }
-  obj_rel_val(b);
-  return r;
+  Obj arg = args.els[0];
+  Bool b = is_true(arg);
+  obj_rel(arg);
+  return new_bool(!b);
 }
 
 
