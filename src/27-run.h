@@ -139,13 +139,13 @@ static Step run_call_native(Obj env, Obj func, Mem args, Bool is_expand) {
   Obj body      = m.els[3];
   Obj lex_env   = m.els[4];
   if (is_expand) {
-    exc_check(bool_is_true(is_macro), "cannot expand function: %o", func);
+    exc_check(bool_is_true(is_macro), "cannot expand function: %o", name);
   } else {
-    exc_check(!bool_is_true(is_macro), "cannot call macro: %o", func);
+    exc_check(!bool_is_true(is_macro), "cannot call macro: %o", name);
   }
   exc_check(obj_is_sym(name), "function is malformed (name symbol is not a Sym): %o", name);
-  exc_check(obj_is_vec(pars), "function is malformed (parameters is not a Vec): %o", pars);
-  exc_check(obj_is_vec(lex_env), "function is malformed (env is not a Vec): %o", lex_env);
+  exc_check(obj_is_vec(pars), "function %o is malformed (parameters is not a Vec): %o", name, pars);
+  exc_check(obj_is_vec(lex_env), "function %o is malformed (env is not a Vec): %o", name, lex_env);
   Obj callee_env = env_add_frame(obj_ret(lex_env), obj_ret(name));
   // TODO: change env_add_frame src from name to whole func?
   callee_env = env_bind(callee_env, obj_ret_val(self), obj_ret(func));
