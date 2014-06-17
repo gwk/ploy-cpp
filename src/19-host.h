@@ -111,7 +111,11 @@ static Obj host_slice(Obj env, Mem args) {
   exc_check(obj_is_vec(v), "el requires arg 1 to be a Vec; received: %o", v);
   exc_check(obj_is_int(from), "el requires arg 2 to be a Int; received: %o", from);
   exc_check(obj_is_int(to), "el requires arg 3 to be a Int; received: %o", to);
-  if (v.u == VEC0.u) return obj_ret_val(VEC0);
+  if (v.u == VEC0.u) {
+    obj_rel(from);
+    obj_rel(to);
+    return v; // no ret/rel necessary.
+  }
   Int l = vec_len(v);
   Int f = int_val(from);
   Int t = int_val(to);
@@ -120,7 +124,12 @@ static Obj host_slice(Obj env, Mem args) {
   f = int_clamp(f, 0, l);
   t = int_clamp(t, 0, l);
   Int ls = t - f; // length of slice.
-  if (ls < 1) return obj_ret_val(VEC0);
+  if (ls < 1) {
+    obj_rel(v);
+    obj_rel(from);
+    obj_rel(to);
+    return obj_ret_val(VEC0);
+  }
   Obj s = new_vec_raw(ls);
   Obj* src = vec_ref_els(v);
   Obj* dst = vec_ref_els(s);
