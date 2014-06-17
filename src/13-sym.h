@@ -62,12 +62,14 @@ static Obj new_sym_from_chars(Chars b) {
 // notes:
 // ILLEGAL is a special value for errors inside of well-formed data structures;
 // in contrast, obj0 is never present inside of valid data structures.
-// syms with index lower than VOID are self-evaluating; syms after VOID are looked up.
-// VOID cannot be evaluated, but is a legal return value (which must be ignored).
+// syms with index lower than END_SPECIAL_SYMS are self-evaluating;
+// syms after END_SPECIAL_SYMS are looked up.
+// END_SPECIAL_SYMS cannot be evaluated.
 // the special forms are COMMENT...CALL.
 // the following "X Macro" is expanded with various temporary definitions of SYM.
 #define SYM_LIST \
 SYM(ILLEGAL) \
+SYM(VOID) \
 SYM(NIL) \
 SYM(VEC0) \
 SYM(CHAIN0) \
@@ -88,7 +90,7 @@ SYM(IF) \
 SYM(FN) \
 SYM(SEQ) \
 SYM(CALL) \
-SYM(VOID) \
+SYM(END_SPECIAL_SYMS) \
 SYM(self) \
 
 // sym indices.
@@ -126,9 +128,7 @@ UNUSED_FN static Bool sym_is_form(Obj s) {
 
 
 static Bool sym_is_symbol(Obj s) {
-  // returns true if s is a normal symbol; when evaluated, it is looked up in the current env.
-  // otherwise it is either a predefined constant that is self-evaluating,
-  // VOID, which does not evaluate, or ILLEGAL, which should never be present.
-  // see run_sym for details.
-  return sym_index(s) > si_VOID;
+  // returns true if s is a normal symbol,
+  // meaning that when it is evaluated, it is looked up in the current env.
+  return sym_index(s) > si_END_SPECIAL_SYMS;
 }

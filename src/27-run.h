@@ -8,8 +8,10 @@ static Step run_sym(Obj env, Obj code) {
   // owns env.
   assert(obj_is_sym(code));
   assert(code.u != ILLEGAL.u); // anything that returns ILLEGAL should have raised an error.
-  if (code.u < VOID.u) return mk_step(env, obj_ret_val(code)); // constants are self-evaluating.
-  exc_check(code.u != VOID.u, "cannot run VOID");
+  if (code.u < END_SPECIAL_SYMS.u) {
+    return mk_step(env, obj_ret_val(code)); // special symbols are self-evaluating.
+  }
+  exc_check(code.u != END_SPECIAL_SYMS.u, "cannot run END_SPECIAL_SYMS");
   Obj val = env_get(env, code);
   exc_check(val.u != obj0.u, "lookup error: %o", code); // lookup failed.
   return mk_step(env, obj_ret(val));
