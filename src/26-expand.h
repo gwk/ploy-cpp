@@ -26,20 +26,20 @@ static Obj expr_quasiquote(Obj o) {
     Mem m = vec_ref_mem(o);
     Obj v = new_vec_raw(m.len + 1);
     Obj* dst = vec_ref_els(v);
-    dst[0] = obj_ret_val(s_SEQ);
+    dst[0] = rc_ret_val(s_SEQ);
     for_in(i, m.len) {
       Obj e = m.els[i];
       if (obj_is_vec_ref(e) && vec_ref_el(e, 0).u == s_UNQ.u) { // unquote form
         check_obj(vec_ref_len(e) == 2, "malformed s_UNQ form", e);
-        dst[1 + i] = obj_ret(vec_ref_el(e, 1)); // TODO: expand?
+        dst[1 + i] = rc_ret(vec_ref_el(e, 1)); // TODO: expand?
       } else {
-        dst[1 + i] = expr_quasiquote(obj_ret(e));
+        dst[1 + i] = expr_quasiquote(rc_ret(e));
       }
     }
-    obj_rel(o);
+    rc_rel(o);
     return v;
   } else {
-    return new_vec2(obj_ret_val(s_QUO), o);
+    return new_vec2(rc_ret_val(s_QUO), o);
   }
 }
 
@@ -54,8 +54,8 @@ static Obj expand_macro(Obj env, Mem args) {
   if (macro.u == obj0.u) { // lookup failed.
     error_obj("macro lookup error", macro_sym);
   }
-  Step step = run_call_native(obj_ret(env), obj_ret(macro), mem_next(args), true);
-  obj_rel(step.env);
+  Step step = run_call_native(rc_ret(env), rc_ret(macro), mem_next(args), true);
+  rc_rel(step.env);
   return step.obj;
 }
 
@@ -72,8 +72,8 @@ static Obj expand(Obj env, Obj code) {
   }
   if (hd.u == s_QUA.u) {
     check_obj(m.len == 2, "malformed s_QUA form", code);
-    Obj expr = obj_ret(m.els[1]);
-    obj_rel(code);
+    Obj expr = rc_ret(m.els[1]);
+    rc_rel(code);
     return expr_quasiquote(expr);
   }
   if (hd.u == s_EXPAND.u) {
@@ -81,7 +81,7 @@ static Obj expand(Obj env, Obj code) {
     err(trace_expand_prefix); dbg(code);
 #endif
       Obj expanded = expand_macro(env, mem_next(m));
-      obj_rel(code);
+      rc_rel(code);
 #if VERBOSE_EVAL
     err(trace_post_expand_prefix); dbg(code);
 #endif
@@ -91,9 +91,9 @@ static Obj expand(Obj env, Obj code) {
     Obj expanded = new_vec_raw(m.len);
     Obj* expanded_els = vec_els(expanded);
     for_in(i, m.len) {
-      expanded_els[i] = expand(env, obj_ret(m.els[i]));
+      expanded_els[i] = expand(env, rc_ret(m.els[i]));
     }
-    obj_rel(code);
+    rc_rel(code);
     return expanded;
   }
 }

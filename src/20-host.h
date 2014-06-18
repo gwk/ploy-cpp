@@ -30,7 +30,7 @@ static Obj host_is_true(Obj env, Mem args) {
   assert(args.len == 1);
   Obj o = args.els[0];
   Bool b = is_true(o);
-  obj_rel(o);
+  rc_rel(o);
   return new_bool(b);
 }
 
@@ -40,7 +40,7 @@ static Obj host_not(Obj env, Mem args) {
   assert(args.len == 1);
   Obj arg = args.els[0];
   Bool b = is_true(arg);
-  obj_rel(arg);
+  rc_rel(arg);
   return new_bool(!b);
 }
 
@@ -51,7 +51,7 @@ static Obj host_ineg(Obj env, Mem args) {
   Obj n = args.els[0];
   exc_check(obj_is_int(n), "neg requires Int; received: %o", n);
   Int i = int_val(n);
-  obj_rel_val(n);
+  rc_rel_val(n);
   return new_int(-i);
 }
 
@@ -62,7 +62,7 @@ static Obj host_iabs(Obj env, Mem args) {
   Obj n = args.els[0];
   exc_check(obj_is_int(n), "abs requires Int; received: %o", n);
   Int i = int_val(n);
-  obj_rel_val(n);
+  rc_rel_val(n);
   return new_int(i < 0 ? -i : i);
 }
 
@@ -78,8 +78,8 @@ static Obj host_##name(Obj env, Mem args) { \
   exc_check(obj_is_int(n0), #name " requires arg 1 to be a Int; received: %o", n0); \
   exc_check(obj_is_int(n1), #name " requires arg 2 to be a Int; received: %o", n1); \
   Int i = name(int_val(n0), int_val(n1)); \
-  obj_rel_val(n0); \
-  obj_rel_val(n1); \
+  rc_rel_val(n0); \
+  rc_rel_val(n1); \
   return new_int(i); \
 }
 
@@ -125,8 +125,8 @@ static Obj host_sym_eq(Obj env, Mem args) {
   exc_check(obj_is_sym(a), "sym-eq requires argument 1 to be a Sym; received: %o", a);
   exc_check(obj_is_sym(b), "sym-eq requires argument 2 to be a Sym; received: %o", b);
   Bool res = (a.u == b.u);
-  obj_rel_val(a);
-  obj_rel_val(b);
+  rc_rel_val(a);
+  rc_rel_val(b);
   return new_bool(res);
 }
 
@@ -151,7 +151,7 @@ static Obj host_len(Obj env, Mem args) {
     exc_check(obj_is_data(o) || obj_is_vec(o), "len requires Data or Vec; received: %o", o);
     l = o.rcl->len;
   }
-  obj_rel(o);
+  rc_rel(o);
   return new_int(l);
 }
 
@@ -169,9 +169,9 @@ static Obj host_el(Obj env, Mem args) {
   Int l = vec_ref_len(v);
   exc_check(j >= 0 && j < l, "el index out of range; index: %i; len: %i", j, l);
   Obj el = vec_ref_el(v, j);
-  obj_rel(v);
-  obj_rel_val(i);
-  return obj_ret(el);
+  rc_rel(v);
+  rc_rel_val(i);
+  return rc_ret(el);
 }
 
 
@@ -185,8 +185,8 @@ static Obj host_slice(Obj env, Mem args) {
   exc_check(obj_is_int(from), "el requires arg 2 to be a Int; received: %o", from);
   exc_check(obj_is_int(to), "el requires arg 3 to be a Int; received: %o", to);
   if (v.u == s_VEC0.u) {
-    obj_rel(from);
-    obj_rel(to);
+    rc_rel(from);
+    rc_rel(to);
     return v; // no ret/rel necessary.
   }
   Int l = vec_len(v);
@@ -198,20 +198,20 @@ static Obj host_slice(Obj env, Mem args) {
   t = int_clamp(t, 0, l);
   Int ls = t - f; // length of slice.
   if (ls < 1) {
-    obj_rel(v);
-    obj_rel(from);
-    obj_rel(to);
-    return obj_ret_val(s_VEC0);
+    rc_rel(v);
+    rc_rel(from);
+    rc_rel(to);
+    return rc_ret_val(s_VEC0);
   }
   Obj s = new_vec_raw(ls);
   Obj* src = vec_ref_els(v);
   Obj* dst = vec_ref_els(s);
   for_in(i, ls) {
-    dst[i] = obj_ret(src[i + f]);
+    dst[i] = rc_ret(src[i + f]);
   }
-  obj_rel(v);
-  obj_rel_val(from);
-  obj_rel_val(to);
+  rc_rel(v);
+  rc_rel_val(from);
+  rc_rel_val(to);
   return s;
 }
 
@@ -227,9 +227,9 @@ static Obj host_prepend(Obj env, Mem args) {
   Obj* els = vec_ref_els(res);
   els[0] = el;
   for_in(i, m.len) {
-    els[1 + i] = obj_ret(m.els[i]);
+    els[1 + i] = rc_ret(m.els[i]);
   }
-  obj_rel(vec);
+  rc_rel(vec);
   return res;
 }
 
@@ -244,10 +244,10 @@ static Obj host_append(Obj env, Mem args) {
   Obj res = new_vec_raw(m.len + 1);
   Obj* els = vec_ref_els(res);
   for_in(i, m.len) {
-    els[i] = obj_ret(m.els[i]);
+    els[i] = rc_ret(m.els[i]);
   }
   els[m.len] = el;
-  obj_rel(vec);
+  rc_rel(vec);
   return res;
 }
 
@@ -265,9 +265,9 @@ static Obj host_raw_write(Obj env, Mem args) {
   CFile file = file_file(f);
   // for now, ignore the return value.
   fwrite(data_ptr(d), size_Char, cast(Uns, data_len(d)), file);
-  obj_rel(f);
-  obj_rel(d);
-  return obj_ret_val(s_void);
+  rc_rel(f);
+  rc_rel(d);
+  return rc_ret_val(s_void);
 }
 
 
@@ -279,9 +279,9 @@ static Obj host_raw_write_repr(Obj env, Mem args) {
   exc_check(obj_is_file(f), "write requires arg 1 to be a File; received: %o", f);
   CFile file = file_file(f);
   write_repr(file, o);
-  obj_rel(f);
-  obj_rel(o);
-  return obj_ret_val(s_void);
+  rc_rel(f);
+  rc_rel(o);
+  return rc_ret_val(s_void);
 }
 
 
@@ -292,8 +292,8 @@ static Obj host_raw_flush(Obj env, Mem args) {
   exc_check(obj_is_file(f), "write requires arg 1 to be a File; received: %o", f);
   CFile file = file_file(f);
   fflush(file);
-  obj_rel(f);
-  return obj_ret_val(s_void);
+  rc_rel(f);
+  return rc_ret_val(s_void);
 }
 
 
@@ -321,9 +321,9 @@ static Obj host_run(Obj env, Mem args) {
   assert(args.len == 2);
   Obj target_env = args.els[0];
   Obj code = args.els[1];
-  Step step = run(obj_ret(target_env), code);
-  obj_rel(code);
-  obj_rel(step.env);
+  Step step = run(rc_ret(target_env), code);
+  rc_rel(code);
+  rc_rel(step.env);
   return step.obj;
 }
 
@@ -359,8 +359,8 @@ static Obj host_type_sym(Obj env, Mem args) {
       }
       break;
   }
-  obj_rel(o);
-  return obj_ret_val(s);
+  rc_rel(o);
+  return rc_ret_val(s);
 }
 
 

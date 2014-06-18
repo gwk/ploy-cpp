@@ -79,7 +79,7 @@ static Obj mem_el(Mem m, Int i) {
 
 UNUSED_FN static Obj mem_el_ret(Mem m, Int i) {
   // retain and return element i in m.
-  return obj_ret(mem_el(m, i));
+  return rc_ret(mem_el(m, i));
 }
 
 
@@ -106,7 +106,7 @@ static void mem_realloc(Mem* m, Int len) {
   // note that this function does not set m->len,
   // because that reflects the number of elements used, not allocation size.
   it_mem_from(it, *m, len) { // release any old elements.
-    obj_rel(*it);
+    rc_rel(*it);
   }
   m->els = raw_realloc(m->els, len * size_Obj, ci_Mem);
 #if OPT_ALLOC_SCRIBBLE
@@ -132,7 +132,7 @@ static void mem_dealloc(Mem m) {
 static void mem_release_dealloc(Mem m) {
   // release all elements and dealloc m.
   it_mem(it, m) {
-    obj_rel(*it);
+    rc_rel(*it);
 #if OPT_ALLOC_SCRIBBLE
     *it = obj0;
 #endif

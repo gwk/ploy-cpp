@@ -9,32 +9,32 @@ static Step run_sym(Obj env, Obj code) {
   assert(obj_is_sym(code));
   assert(code.u != s_ILLEGAL.u); // anything that returns s_ILLEGAL should have raised an error.
   if (code.u < s_END_SPECIAL_SYMS.u) {
-    return mk_step(env, obj_ret_val(code)); // special symbols are self-evaluating.
+    return mk_step(env, rc_ret_val(code)); // special symbols are self-evaluating.
   }
   exc_check(code.u != s_END_SPECIAL_SYMS.u, "cannot run END_SPECIAL_SYMS");
   Obj val = env_get(env, code);
   exc_check(val.u != obj0.u, "lookup error: %o", code); // lookup failed.
-  return mk_step(env, obj_ret(val));
+  return mk_step(env, rc_ret(val));
 }
 
 
 static Step run_QUO(Obj env, Mem args) {
   // owns env.
   exc_check(args.len == 1, "s_QUO requires 1 argument; received %i", args.len);
-  return mk_step(env, obj_ret(args.els[0]));
+  return mk_step(env, rc_ret(args.els[0]));
 }
 
 
 static Step run_DO(Obj env, Mem args) {
   // owns env.
   if (!args.len) {
-    return mk_step(env, obj_ret_val(s_void));
+    return mk_step(env, rc_ret_val(s_void));
   }
   Int last = args.len - 1;
   it_mem_to(it, args, last) {
     Step step = run(env, *it);
     env = step.env;
-    obj_rel(step.obj); // value ignored.
+    rc_rel(step.obj); // value ignored.
   };
   return run(env, args.els[last]); // put last run() in tail position for TCO.
 }
@@ -58,8 +58,8 @@ static Step run_LET(Obj env, Mem args) {
     "LET requires argument 1 to be a sym; received: %o", sym);
   Step step = run(env, expr);
   Obj val = step.obj;
-  Obj env1 = env_bind(env, obj_ret_val(sym), val); // owns env, sym, val.
-  return mk_step(env1, obj_ret(val));
+  Obj env1 = env_bind(env, rc_ret_val(sym), val); // owns env, sym, val.
+  return mk_step(env1, rc_ret(val));
 }
 
 
@@ -73,10 +73,10 @@ static Step run_IF(Obj env, Mem args) {
   Obj p_env = step.env;
   Obj p_val = step.obj;
   if (is_true(p_val)) {
-    obj_rel(p_val);
+    rc_rel(p_val);
     return run(p_env, t);
   } else {
-    obj_rel(p_val);
+    rc_rel(p_val);
     return run(p_env, e);
   }
 }
@@ -97,11 +97,11 @@ static Step run_FN(Obj env, Mem args) {
   // TODO: check all pars.
   Obj f = new_vec_raw(5);
   Obj* els = vec_ref_els(f);
-  els[0] = obj_ret_val(name);
-  els[1] = obj_ret_val(is_macro);
-  els[2] = obj_ret(pars);
-  els[3] = obj_ret(body);
-  els[4] = obj_ret(env);
+  els[0] = rc_ret_val(name);
+  els[1] = rc_ret_val(is_macro);
+  els[2] = rc_ret(pars);
+  els[3] = rc_ret(body);
+  els[4] = rc_ret(env);
   return mk_step(env, f);
 }
 
@@ -142,13 +142,13 @@ static Step run_call_native(Obj env, Obj func, Mem args, Bool is_expand) {
   exc_check(obj_is_sym(name), "function is malformed (name symbol is not a Sym): %o", name);
   exc_check(obj_is_vec(pars), "function %o is malformed (parameters is not a Vec): %o", name, pars);
   exc_check(obj_is_vec(lex_env), "function %o is malformed (env is not a Vec): %o", name, lex_env);
-  Obj callee_env = env_add_frame(obj_ret(lex_env), obj_ret(name));
+  Obj callee_env = env_add_frame(rc_ret(lex_env), rc_ret(name));
   // TODO: change env_add_frame src from name to whole func?
-  callee_env = env_bind(callee_env, obj_ret_val(s_self), obj_ret(func));
+  callee_env = env_bind(callee_env, rc_ret_val(s_self), rc_ret(func));
   Call_envs envs = env_bind_args(env, callee_env, func, vec_mem(pars), args, is_expand);
   Step step = run(envs.callee_env, body); // owns callee_env.
-  obj_rel(func);
-  obj_rel(step.env);
+  rc_rel(func);
+  rc_rel(step.env);
   return mk_step(envs.caller_env, step.obj);
 }
 
@@ -162,7 +162,7 @@ static Step run_call_host(Obj env, Obj func, Mem args) {
   exc_check(args.len == len_pars || len_pars == -1,
     "host function expects %i argument%s; received %i",
     len_pars, (len_pars == 1 ? "" : "s"), args.len);
-  obj_rel(func);
+  rc_rel(func);
   Obj arg_vals[args.len]; // requires variable-length-array support from compiler.
   for_in(i, args.len) {
     Step step = run(env, args.els[i]);
@@ -226,7 +226,7 @@ static Step run(Obj env, Obj code) {
 #endif
   Obj_tag ot = obj_tag(code);
   if (ot == ot_int || ot == ot_data) {
-    return mk_step(env, obj_ret_val(code)); // self-evaluating.
+    return mk_step(env, rc_ret_val(code)); // self-evaluating.
   }
   if (ot == ot_sym) {
     return run_sym(env, code);
@@ -242,7 +242,7 @@ static Step run(Obj env, Obj code) {
     case st_U64:
     case st_F32:
     case st_F64:
-      return mk_step(env, obj_ret(code)); // self-evaluating.
+      return mk_step(env, rc_ret(code)); // self-evaluating.
     case st_File:
     case st_Func_host:
     case st_Reserved_A:

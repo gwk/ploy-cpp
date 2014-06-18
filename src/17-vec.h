@@ -5,7 +5,7 @@
 
 
 static Obj new_vec_raw(Int len) {
-  if (!len) return obj_ret_val(s_VEC0);
+  if (!len) return rc_ret_val(s_VEC0);
   Obj v = ref_alloc(st_Vec, size_RCL + (size_Obj * len));
   v.rcl->len = len;
   return v;
@@ -14,7 +14,7 @@ static Obj new_vec_raw(Int len) {
 
 static Obj new_vec_M(Mem m) {
   // owns elements of m.
-  if (!m.len) return obj_ret_val(s_VEC0);
+  if (!m.len) return rc_ret_val(s_VEC0);
   Obj v = new_vec_raw(m.len);
   Obj* els = vec_ref_els(v);
   for_in(i, m.len) {
@@ -122,7 +122,7 @@ static void vec_ref_put(Obj v, Int i, Obj el) {
   Obj* els = vec_ref_els(v);
   // safe to release els[i] first, because even if el is els[i],
   // it is owned by this function so the release could never cause deallocation.
-  obj_rel(els[i]);
+  rc_rel(els[i]);
   els[i] = el;
 }
 

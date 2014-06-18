@@ -40,14 +40,14 @@ static Obj new_sym(Str s) {
   for_in(i, global_sym_names.mem.len) {
     Obj d = mem_el(global_sym_names.mem, i);
     if (str_eq(s, data_str(d))) {
-      return obj_ret_val(sym_with_index(i));
+      return rc_ret_val(sym_with_index(i));
     }
   }
   Obj d = new_data_from_str(s);
   Int i = array_append(&global_sym_names, d);
   Obj sym = sym_with_index(i);
   //errF("NEW SYM: %ld: ", i); obj_errL(sym);
-  return obj_ret_val(sym);
+  return rc_ret_val(sym);
 }
 
 
@@ -125,7 +125,7 @@ static void sym_init() {
 #define S(s) \
 sym = new_sym_from_chars(cast(Chars, #s)); \
 assert(sym_index(sym) == si_##s); \
-obj_rel_val(sym);
+rc_rel_val(sym);
 
 SYM_LIST
 

@@ -12,8 +12,8 @@ static Obj parse_and_eval(Obj env, Obj path, Obj src, Array* sources, Bool out_v
     err("parse error: ");
     errL(e);
     raw_dealloc(e, ci_Chars);
-    obj_rel(path);
-    obj_rel(src);
+    rc_rel(path);
+    rc_rel(src);
     assert(code.u == obj0.u);
     exit(1);
   } else {
@@ -29,8 +29,8 @@ static Obj parse_and_eval(Obj env, Obj path, Obj src, Array* sources, Bool out_v
       write_repr(stdout, step.obj);
       fputc('\n', stdout);
     }
-    obj_rel(code);
-    obj_rel(step.obj);
+    rc_rel(code);
+    rc_rel(step.obj);
     return step.env;
   }
 }
@@ -68,7 +68,7 @@ int main(int argc, Chars_const argv[]) {
     }
   }
 
-  Obj env = obj_ret_val(s_END);
+  Obj env = rc_ret_val(s_END);
   env = env_add_frame(env, new_data_from_chars(cast(Chars, "<host>")));
   env = host_init(env);
 
@@ -78,7 +78,7 @@ int main(int argc, Chars_const argv[]) {
 
   if (should_load_core) { // run embedded core.ploy file.
     path = new_data_from_chars(cast(Chars, "<core>"));
-    env = env_add_frame(env, obj_ret(path));
+    env = env_add_frame(env, rc_ret(path));
     src = new_data_from_chars(cast(Chars, core_src)); // TODO: breaks const correctness?
     env = parse_and_eval(env, path, src, &sources, false);
   }
@@ -92,13 +92,13 @@ int main(int argc, Chars_const argv[]) {
   }
   if (expr) {
     path = new_data_from_chars(cast(Chars, "<expr>"));
-    env = env_add_frame(env, obj_ret(path));
+    env = env_add_frame(env, rc_ret(path));
     src = new_data_from_chars(cast(Chars, expr)); // TODO: breaks const correctness?
     env = parse_and_eval(env, path, src, &sources, should_output_val);
   }
 
 #if OPT_ALLOC_COUNT
-  obj_rel(env);
+  rc_rel(env);
   mem_release_dealloc(global_sym_names.mem);
   mem_release_dealloc(sources.mem);
   counter_stats(vol_err);

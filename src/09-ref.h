@@ -71,14 +71,14 @@ static void ref_dealloc(Obj r) {
   if (st == st_Vec) {
     it_vec_ref(it, r) {
       // TODO: make this tail recursive for deallocating long chains?
-      obj_rel(*it);
+      rc_rel(*it);
     }
   }
 #if OPT_DEALLOC_MARK
   assert(r.rc->sc == 1);
   r.rc->sc = 0;
 #endif
-  // ret/rel counter has already been decremented by obj_rel.
+  // ret/rel counter has already been decremented by rc_rel.
 #if !OPT_DEALLOC_PRESERVE
   raw_dealloc(r.p, st_counter_index(st) + 1); // math relies on layout of COUNTER_LIST.
 #elif OPT_ALLOC_COUNT

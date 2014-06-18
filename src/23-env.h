@@ -76,13 +76,13 @@ static Call_envs env_bind_args(Obj caller_env, Obj callee_env, Obj func, Mem par
       }
       Obj val;
       if (is_expand) {
-        val = obj_ret(arg);
+        val = rc_ret(arg);
       } else {
         Step step = run(caller_env, arg);
         caller_env = step.env;
         val = step.obj;
       }
-      callee_env = env_bind(callee_env, obj_ret_val(par_sym), val);
+      callee_env = env_bind(callee_env, rc_ret_val(par_sym), val);
     } else {
       assert(par_kind.u == s_VARIAD.u);
       check_obj(!has_variad, "function has multiple variad parameters", vec_ref_el(func, 0));
@@ -97,14 +97,14 @@ static Call_envs env_bind_args(Obj caller_env, Obj callee_env, Obj func, Mem par
       it_vec(it, variad_val) {
         Obj arg = args.els[i_args++];
         if (is_expand) {
-          *it = obj_ret(arg);
+          *it = rc_ret(arg);
         } else {
           Step step = run(caller_env, arg);
           caller_env = step.env;
           *it = step.obj;
         }
       }
-      callee_env = env_bind(callee_env, obj_ret_val(par_sym), variad_val);
+      callee_env = env_bind(callee_env, rc_ret_val(par_sym), variad_val);
     }
   }
   check_obj(i_args == args.len, "function received too many arguments", vec_ref_el(func, 0));

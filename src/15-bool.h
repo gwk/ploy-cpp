@@ -5,7 +5,7 @@
 
 
 static Obj new_bool(Int i) {
-  return obj_ret_val(i ? s_true : s_false);
+  return rc_ret_val(i ? s_true : s_false);
 }
 
 

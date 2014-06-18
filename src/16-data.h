@@ -50,7 +50,7 @@ static Obj data_empty(Int len) {
 
 
 static Obj new_data_from_str(Str s) {
-  if (!s.len) return obj_ret_val(blank);
+  if (!s.len) return rc_ret_val(blank);
   Obj d = data_empty(s.len);
   memcpy(data_ptr(d), s.chars, s.len);
   return d;
@@ -67,7 +67,7 @@ static Obj new_data_from_path(Chars_const path) {
   check(f, "could not open file: %s", path);
   fseek(f, 0, SEEK_END);
   Int len = ftell(f);
-  if (!len) return obj_ret_val(blank);
+  if (!len) return rc_ret_val(blank);
   Obj d = data_empty(len);
   fseek(f, 0, SEEK_SET);
   Uns items_read = fread(data_ptr(d), size_Char, cast(Uns, len), f);

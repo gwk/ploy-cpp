@@ -9,7 +9,7 @@
 
 static Obj preprocess(Obj code) {
   if (!obj_is_vec_ref(code)) {
-    return obj_ret(code);
+    return rc_ret(code);
   }
   Mem src = vec_ref_mem(code);
   if (src.els[0].u == s_COMMENT.u) {
