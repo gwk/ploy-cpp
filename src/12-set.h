@@ -3,7 +3,7 @@
 
 // hash set data structure.
 
-#include "10-array.h"
+#include "11-array.h"
 
 
 static const Int min_set_len_buckets = 16;

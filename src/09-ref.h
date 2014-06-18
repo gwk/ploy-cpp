@@ -3,7 +3,7 @@
 
 // reference object functions.
 
-#include "07-obj.h"
+#include "08-rc.h"
 
 
 static Uns ref_hash(Obj r) {
