@@ -3,4 +3,7 @@
 
 cd $(dirname "$0")/..
 
-sh/_compile.sh "$@" -o _build/ploy
+suffix=''
+[[ "$1" == "-dbg" ]] && suffix=$1
+
+sh/_compile.sh "$@" -o _build/ploy$suffix

@@ -3,4 +3,4 @@
 
 cd $(dirname "$0")/..
 
-sh/_compile.sh -S -emit-llvm -o _build/ploy.llvm
+sh/_compile.sh "$@" -S -emit-llvm -o _build/ploy.llvm

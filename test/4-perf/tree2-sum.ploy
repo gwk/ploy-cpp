@@ -1,0 +1,20 @@
+# Copyright 2014 George King.
+# Permission to use this file is granted in ploy/license.txt.
+
+<let depth 20>
+
+<fn gen-tree {-n -t}
+    # generate a binary trie of zeros n branches deep.
+    <if (not n) t
+    <do
+    (self (idec n) [t t])>>>
+
+<fn sum-tree {-t}
+ # walk a tree and add all of the leaves.
+  <if (is-int t) t
+    (iadd (self (el t 0)) (self (el t 1)))>>
+
+
+<let leaf 1>
+<let t (gen-tree depth leaf)>
+(outRL (sum-tree t))

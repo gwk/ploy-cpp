@@ -1,0 +1,5 @@
+{
+  'src': 'tree2-sum.ploy',
+  'out' :'1048576\n',
+  'timeout': 10,
+}

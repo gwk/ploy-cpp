@@ -7,13 +7,8 @@
 
 cd $(dirname "$0")/..
 
-if [[ "$1" == "-release" ]]; then
+if [[ "$1" == "-dbg" ]]; then
   shift
-  opts="\
--DDEBUG=0 \
--Ofast \
-"
-else
   opts="\
 -DDEBUG=1 \
 -fstack-protector \
@@ -22,7 +17,11 @@ else
 -fno-limit-debug-info \
 "
 #-fsanitize=local-bounds
-
+else
+  opts="\
+-DDEBUG=0 \
+-Ofast \
+"
 fi
 
 if [[ "$#" == 0 ]]; then

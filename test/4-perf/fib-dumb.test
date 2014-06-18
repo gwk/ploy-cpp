@@ -1,5 +1,5 @@
 {
-  'out' :'''\
-2584
-'''
+  'src': 'fib-dumb.ploy',
+  'out': '832040\n',
+  'timeout': 10,
 }

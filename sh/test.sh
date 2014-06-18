@@ -6,23 +6,29 @@
 set -e
 cd $(dirname "$0")/..
 
+opt=''
+test_paths=''
 
-if ! sh/is-product-current.sh _build/ploy src/* sh/*; then
-  echo "building..."
-  sh/build.sh
-  echo "testing..."
+if [[ "$1" == '-dbg' ]]; then
+  opt=$1
+  shift;
 fi
 
+if [[ -z "$@" ]]; then
+  echo "defaulting to debug tests..."
+  opt='-dbg'
+  test_paths=test/[0-3]-* # omit the perf tests, which take too long.
+else
+  test_paths="$@"
+fi
 
-ploy_flags=''
-# TODO: ploy flags are escaped with extra dash.
-
-test_args="$@"
-[[ -z "$test_args" ]] && test_args='test'
+if ! sh/is-product-current.sh _build/ploy-dbg src/* sh/*; then
+  echo "building $opt..."
+  sh/build.sh $opt
+  echo "testing $opt..."
+fi
 
 # make sure that ploy can parse an empty file.
-_build/ploy 'test/0-basic/empty.ploy'
+_build/ploy$opt 'test/0-basic/empty.ploy'
 
-set -x
-test/test.py -interpreters '.ploy' "_build/ploy $ploy_flags" - \
-$test_args
+test/test.py -interpreters '.ploy' "_build/ploy$opt" - $test_paths

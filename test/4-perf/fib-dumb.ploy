@@ -1,7 +1,9 @@
+<let n 30>
+
 <fn fib-dumb {-n}
   <if
     (ieq n 0) 0
     (ieq n 1) 1
     (iadd (self (isub n 1)) (self (isub n 2)))>>
 
-(outRL (fib-dumb 18))
+(outRL (fib-dumb n))
