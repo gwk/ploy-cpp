@@ -108,30 +108,27 @@ static Chars_const ref_tag_names[] = {
   "Reserved-F",
 };
 
-// ref objects are currently reference-counted.
 typedef struct {
   Uns rt;
 } ALIGNED_TO_WORD RH; // Ref header.
 DEF_SIZE(RH);
 
-// the Vec and Data ref types are layed out as RC, length word, and then the elements.
+// the Vec and Data ref types are layed out as RH, len word, followed by the elements.
 typedef struct {
   RH rh;
   Int len;
 } ALIGNED_TO_WORD RHL; // Ref header with length.
 DEF_SIZE(RHL);
 
-
 typedef union {
   Int i;
   Uns u;
   Ptr p;
-  Chars c;
+  Chars c; // no valid object can be interpreted as Chars; this for the exc_raise formatter.
   RH* rh;
   RHL* rhl;
 } Obj;
 DEF_SIZE(Obj);
-
 
 // invalid object; essentially the NULL pointer.
 // used as a return value for error conditions and a marker for cleared or invalid memory.
