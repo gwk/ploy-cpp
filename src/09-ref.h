@@ -15,7 +15,7 @@ static Uns ref_hash(Obj r) {
   
 static Ref_tag ref_tag(Obj r) {
   assert(obj_is_ref(r));
-  return r.rh->rt;
+  return cast(Ref_tag, r.rh->rt);
 }
 
 

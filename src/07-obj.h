@@ -109,20 +109,17 @@ static Chars_const ref_tag_names[] = {
 };
 
 // ref objects are currently reference-counted.
-static const Int width_sc  = width_word - width_ref_tag;
-static const Uns pinned_sc = (1L << width_sc) - 1;
-
 typedef struct {
-  Ref_tag rt : width_ref_tag;
-  Uns sc : width_sc; // strong count.
-} RH; // Ref header.
+  Uns rt;
+  Uns sc; // strong count.
+} ALIGNED_TO_WORD RH; // Ref header.
 DEF_SIZE(RH);
 
 // the Vec and Data ref types are layed out as RC, length word, and then the elements.
 typedef struct {
   RH rh;
   Int len;
-} RHL; // Ref header with length.
+} ALIGNED_TO_WORD RHL; // Ref header with length.
 DEF_SIZE(RHL);
 
 
