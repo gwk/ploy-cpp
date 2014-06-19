@@ -136,6 +136,34 @@ SYM_LIST
 #undef SYM_LIST
 
 
+static const Int sym_index_of_ref_type_sym_first = si_DATA;
+static const Int sym_index_of_ref_type_sym_last = si_FUNC_HOST;
+
+
+static Obj rt_type_sym(Ref_tag rt) {
+  switch (rt) {
+    case rt_Data: return s_DATA;
+    case rt_Vec: return s_VEC;
+    case rt_I32: return s_I32;
+    case rt_I64: return s_I64;
+    case rt_U32: return s_U32;
+    case rt_U64: return s_U64;
+    case rt_F32: return s_F32;
+    case rt_F64: return s_F64;
+    case rt_File: return s_FILE;
+    case rt_Func_host: return s_FUNC_HOST;
+    case rt_Reserved_A:
+    case rt_Reserved_B:
+    case rt_Reserved_C:
+    case rt_Reserved_D:
+    case rt_Reserved_E:
+    case rt_Reserved_F:
+      assert(0);
+      return obj0;
+  }
+}
+
+
 UNUSED_FN static Bool sym_is_form(Obj s) {
   Int si = sym_index(s);
   return si >= si_COMMENT && si <= si_FN;

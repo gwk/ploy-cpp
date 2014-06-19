@@ -340,27 +340,7 @@ static Obj host_type_sym(Obj env, Mem args) {
     case ot_int: s = s_INT; break;
     case ot_sym: s = s_SYM; break;
     case ot_data: s = s_DATA_WORD; break;
-    case ot_ref:
-      switch (ref_tag(o)) {
-        case rt_Data: s = s_DATA; break;
-        case rt_Vec: s = s_VEC; break;
-        case rt_I32: s = s_I32; break;
-        case rt_I64: s = s_I64; break;
-        case rt_U32: s = s_U32; break;
-        case rt_U64: s = s_U64; break;
-        case rt_F32: s = s_F32; break;
-        case rt_F64: s = s_F64; break;
-        case rt_File: s = s_FILE; break;
-        case rt_Func_host: s = s_FUNC_HOST; break;
-        case rt_Reserved_A:
-        case rt_Reserved_B:
-        case rt_Reserved_C:
-        case rt_Reserved_D:
-        case rt_Reserved_E:
-        case rt_Reserved_F:
-          error_obj("bad ref tag:", o);
-      }
-      break;
+    case ot_ref: s = ref_type_sym(o); break;
   }
   rc_rel(o);
   return rc_ret_val(s);

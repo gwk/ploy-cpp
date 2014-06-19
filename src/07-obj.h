@@ -122,7 +122,7 @@ typedef union {
 DEF_SIZE(Obj);
 
 struct _RH {
-  Uns rt;
+  Obj type_sym;
 } ALIGNED_TO_WORD; // Ref header.
 DEF_SIZE(RH);
 

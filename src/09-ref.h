@@ -12,14 +12,24 @@ static Uns ref_hash(Obj r) {
   return r.u >> width_min_alloc;
 }
 
-  
+
+static Int sym_index(Obj s);
+static const Int sym_index_of_ref_type_sym_first;
+static const Int sym_index_of_ref_type_sym_last;
+
 static Ref_tag ref_tag(Obj r) {
   assert(obj_is_ref(r));
-  return cast(Ref_tag, r.rh->rt);
+  Int si = sym_index(r.rh->type_sym);
+  assert(si >= sym_index_of_ref_type_sym_first && si <= sym_index_of_ref_type_sym_last);
+  return cast(Ref_tag, si - sym_index_of_ref_type_sym_first);
 }
 
 
-#if OPT_ALLOC_COUNT
+static Obj ref_type_sym(Obj r) {
+  assert(obj_is_ref(r));
+  return r.rh->type_sym;
+}
+
 
 static Counter_index rt_counter_index(Ref_tag rt) {
   // note: this math relies on the layout of both COUNTER_LIST and Struct_tag.
@@ -27,11 +37,11 @@ static Counter_index rt_counter_index(Ref_tag rt) {
 }
 
 
+#if OPT_ALLOC_COUNT
 static Counter_index ref_counter_index(Obj r) {
   assert(obj_is_ref(r));
   return rt_counter_index(ref_tag(r));
 }
-
 #endif
 
 
@@ -56,6 +66,8 @@ static Ptr ref_body(Obj r) {
 }
 
 
+static Obj rt_type_sym(Ref_tag rt); // this is defined in sym to reduce forward declarations.
+
 static Obj ref_alloc(Ref_tag rt, Int size) {
   assert(size >= size_Word * 2);
   Counter_index ci = rt_counter_index(rt);
@@ -63,7 +75,7 @@ static Obj ref_alloc(Ref_tag rt, Int size) {
   counter_inc(ci); // ret/rel counter.
   Obj r = (Obj){.p=raw_alloc(size, ci_alloc)}; // alloc counter also incremented.
   assert(!obj_tag(r)); // check that alloc is really aligned to allow tagging.
-  r.rh->rt = rt;
+  r.rh->type_sym = rt_type_sym(rt);
   rc_insert(ref_hash(r));
   return r;
 }
