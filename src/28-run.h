@@ -178,10 +178,10 @@ static Step run_CALL(Obj env, Mem args) {
   Obj callee = args.els[0];
   Step step = run(env, callee);
   Obj func = step.obj;
-  Tag ot = obj_tag(func);
+  Obj_tag ot = obj_tag(func);
   exc_check(ot == ot_ref, "object is not callable: %o", func);
-  Tag st = ref_struct_tag(func);
-  switch (st) {
+  Struct_tag st = ref_struct_tag(func);
+  switch (cast(Uns,st)) { // appease -Wswitch-enum.
     case st_Vec:        return run_call_native(env, func, mem_next(args), false);
     case st_Func_host:  return run_call_host(env, func, mem_next(args));
     default: exc_raise("object is not callable: %o", func);
@@ -193,7 +193,7 @@ static Step run_Vec(Obj env, Obj code) {
   // owns env.
   Mem m = vec_mem(code);
   Obj form = m.els[0];
-  Tag ot = obj_tag(form);
+  Obj_tag ot = obj_tag(form);
   if (ot == ot_sym) {
     Int si = sym_index(form);
 #define EVAL_FORM(s) case si_##s: return run_##s(env, mem_next(m))

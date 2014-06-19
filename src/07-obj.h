@@ -15,9 +15,6 @@
 // this constant controls whether this event gets logged.
 static const Bool report_pinned_counts = true;
 
-typedef Uns Tag;
-typedef Uns Sym; // index into global_sym_table.
-
 #define width_obj_tag 2
 #define obj_tag_end (1L << width_obj_tag)
 
@@ -43,7 +40,7 @@ typedef enum {
 // and the width of Int and Sym were reduced by one bit.
 // it remains to be seen just how bad an idea this is for 32-bit applications;
 // it also remains to be seen if/how to do the rounding correctly!
-static const Tag ot_flt_bit = 1; // only flt words have low bit set.
+static const Uns ot_flt_bit = 1; // only flt words have low bit set.
 UNUSED_VAR(ot_flt_bit)
 static const Uns flt_body_mask = max_Uns - 1;
 UNUSED_VAR(flt_body_mask)
@@ -116,7 +113,7 @@ static const Int width_sc  = width_word - width_struct_tag;
 static const Uns pinned_sc = (1L << width_sc) - 1;
 
 typedef struct {
-  Tag st : width_struct_tag;  // struct tag.
+  Struct_tag st : width_struct_tag;  // struct tag.
   Uns sc : width_sc;          // strong count.
 } RH; // Ref header.
 DEF_SIZE(RH);
