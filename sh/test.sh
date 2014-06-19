@@ -22,7 +22,9 @@ else
   test_paths="$@"
 fi
 
-if ! sh/is-product-current.sh _build/ploy-dbg src/* sh/*; then
+sh/update-tools.sh
+
+if ! sh/is-product-current.sh _build/ploy$opt src/* sh/*; then
   echo "building $opt..."
   sh/build.sh $opt
   echo "testing $opt..."
@@ -31,4 +33,4 @@ fi
 # make sure that ploy can parse an empty file.
 _build/ploy$opt 'test/0-basic/empty.ploy'
 
-test/test.py -interpreters '.ploy' "_build/ploy$opt" - $test_paths
+test/test.py -interpreters '.ploy' _build/ploy$opt - $test_paths
