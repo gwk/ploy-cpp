@@ -339,7 +339,7 @@ static Obj host_type_sym(Obj env, Mem args) {
   switch (obj_tag(o)) {
     case ot_int: s = s_INT; break;
     case ot_sym: s = s_SYM; break;
-    case ot_data: s = s_DATA; break;
+    case ot_data: s = s_DATA_WORD; break;
     case ot_ref:
       switch (ref_tag(o)) {
         case rt_Data: s = s_DATA; break;

@@ -78,6 +78,7 @@ S(false) \
 S(true) \
 S(INT) \
 S(SYM) \
+S(DATA_WORD) \
 S(DATA) \
 S(VEC) \
 S(I32) \
