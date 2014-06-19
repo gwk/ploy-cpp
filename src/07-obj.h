@@ -213,10 +213,6 @@ static Bool obj_is_symbol(Obj o) {
 }
 
 
-// TODO: fix bool value naming confusion.
-// if 'true' and 'false' are the names of the bools in the language,
-// then we should use them here as well, and use TRUE and FALSE for c 1 and 0.
-// this would prevent us from using stdbool.h, but that doesn't really matter.
 static const Obj s_true, s_false;
 
 static Bool obj_is_bool(Obj s) {
