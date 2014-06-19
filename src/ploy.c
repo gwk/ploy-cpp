@@ -41,6 +41,7 @@ int main(int argc, Chars_const argv[]) {
   assert_host_basic();
   assert(size_Obj == size_Word);
   set_process_name(argv[0]);
+  rc_init();
   sym_init();
   Int vol_err = VERBOSE;
 
@@ -101,6 +102,7 @@ int main(int argc, Chars_const argv[]) {
   rc_rel(env);
   mem_release_dealloc(global_sym_names.mem);
   mem_release_dealloc(sources.mem);
+  rc_cleanup();
   counter_stats(vol_err);
 #endif
 

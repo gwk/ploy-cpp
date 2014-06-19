@@ -57,14 +57,13 @@ static Obj ref_alloc(Struct_tag st, Int size) {
   r.rc->wc = 0;
   r.rc->mt = 0;
   r.rc->sc = 1;
-  rc_errMLV("alloc     ", r.rc);
+  rc_insert(ref_hash(r));
   return r;
 }
 
 
 static void ref_dealloc(Obj r) {
   assert_ref_is_valid(r);
-  rc_errMLV("dealloc   ", r.rc);
   // TODO: could choose to pin the strong and weak counts and leak the object.
   check(r.rc->wc == 0, "attempt to deallocate object with non-zero weak count: %p", r.p);
   Struct_tag st = ref_struct_tag(r);
@@ -74,7 +73,7 @@ static void ref_dealloc(Obj r) {
       rc_rel(*it);
     }
   }
-#if OPT_DEALLOC_MARK
+  #if OPT_DEALLOC_MARK
   assert(r.rc->sc == 1);
   r.rc->sc = 0;
 #endif

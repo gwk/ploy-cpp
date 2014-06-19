@@ -139,23 +139,6 @@ typedef struct {
 DEF_SIZE(RCL);
 
 
-static void rc_err(RC* rc) {
-  // debug helper.
-  errF("%p {st:%s w:%lx mt:%x s:%lx}",
-       rc, struct_tag_names[rc->st], rc->wc, rc->mt, rc->sc);
-}
-
-
-// at some point this should get removed, as the utility of logging ret/rel calls diminishes.
-#if VERBOSE_RET_REL
-#define rc_errMLV(msg, ...) \
-errF("%s %p {st:%s w:%lx mt:%x s:%lx}\n", \
-msg, rc, struct_tag_names[rc->st], rc->wc, rc->mt, rc->sc);
-#else
-#define rc_errMLV(...)
-#endif
-
-
 typedef union {
   Int i;
   Uns u;
@@ -200,7 +183,7 @@ void dbg(Obj o) {
   if (obj_tag(o)) {
     obj_err_tag(o);
   } else { // ref.
-    rc_err(o.rc);
+    errF("%p", o.p);
   }
   err(" : ");
   obj_errL(o);

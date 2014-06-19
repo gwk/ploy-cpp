@@ -12,6 +12,8 @@
 #define COUNTER_LIST \
 C(Chars) \
 C(Str) \
+C(RC_table) \
+C(RC_bucket) \
 C(Mem) \
 C(Hash_bucket) \
 C(Set) \
