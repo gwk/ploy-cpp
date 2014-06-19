@@ -118,15 +118,15 @@ static const Uns pinned_sc = (1L << width_sc) - 1;
 typedef struct {
   Tag st : width_struct_tag;  // struct tag.
   Uns sc : width_sc;          // strong count.
-} RC; // Ref-counts.
-DEF_SIZE(RC);
+} RH; // Ref header.
+DEF_SIZE(RH);
 
 // the Vec and Data ref types are layed out as RC, length word, and then the elements.
 typedef struct {
-  RC rc;
+  RH rh;
   Int len;
-} RCL; // Ref-counts, length.
-DEF_SIZE(RCL);
+} RHL; // Ref header with length.
+DEF_SIZE(RHL);
 
 
 typedef union {
@@ -134,8 +134,8 @@ typedef union {
   Uns u;
   Ptr p;
   Chars c;
-  RC* rc;
-  RCL* rcl;
+  RH* rh;
+  RHL* rhl;
 } Obj;
 DEF_SIZE(Obj);
 

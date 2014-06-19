@@ -149,7 +149,7 @@ static Obj host_len(Obj env, Mem args) {
     l = 0;
   } else {
     exc_check(obj_is_data(o) || obj_is_vec(o), "len requires Data or Vec; received: %o", o);
-    l = o.rcl->len;
+    l = o.rhl->len;
   }
   rc_rel(o);
   return new_int(l);

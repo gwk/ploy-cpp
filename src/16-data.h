@@ -14,8 +14,8 @@ assert(d.u == blank.u || obj_tag(d) == ot_data);
 
 static Int data_ref_len(Obj d) {
   assert(ref_is_data(d));
-  assert(d.rcl->len > 0);
-  return d.rcl->len;
+  assert(d.rhl->len > 0);
+  return d.rhl->len;
 }
 
 
@@ -27,7 +27,7 @@ static Int data_len(Obj d) {
 
 static Chars data_ref_ptr(Obj d) {
   assert(ref_is_data(d));
-  return cast(Chars, d.rcl + 1); // address past rcl.
+  return cast(Chars, d.rhl + 1); // address past rhl.
 }
 
 
@@ -43,8 +43,8 @@ static Str data_str(Obj d) {
 
 
 static Obj data_empty(Int len) {
-  Obj d = ref_alloc(st_Data, size_RCL + len);
-  d.rcl->len = len;
+  Obj d = ref_alloc(st_Data, size_RHL + len);
+  d.rhl->len = len;
   return d; // borrowed.
 }
 

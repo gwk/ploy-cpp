@@ -15,7 +15,7 @@ static Uns ref_hash(Obj r) {
   
 static Struct_tag ref_struct_tag(Obj r) {
   assert(obj_is_ref(r));
-  return r.rc->st;
+  return r.rh->st;
 }
 
 
@@ -52,7 +52,7 @@ static Bool ref_is_file(Obj f) {
 
 static Ptr ref_body(Obj r) {
   assert(!ref_is_data(r) && !ref_is_vec(r));
-  return r.rc + 1; // address past rc.
+  return r.rh + 1; // address past rh.
 }
 
 
@@ -63,8 +63,8 @@ static Obj ref_alloc(Struct_tag st, Int size) {
   counter_inc(ci); // ret/rel counter.
   Obj r = (Obj){.p=raw_alloc(size, ci_alloc)}; // alloc counter also incremented.
   assert(!obj_tag(r)); // check that alloc is really aligned to allow tagging.
-  r.rc->st = st;
-  r.rc->sc = 1;
+  r.rh->st = st;
+  r.rh->sc = 1;
   rc_insert(ref_hash(r));
   return r;
 }
@@ -79,8 +79,8 @@ static void ref_dealloc(Obj r) {
     }
   }
   #if OPT_DEALLOC_MARK
-  assert(r.rc->sc == 1);
-  r.rc->sc = 0;
+  assert(r.rh->sc == 1);
+  r.rh->sc = 0;
 #endif
   // ret/rel counter has already been decremented by rc_rel.
 #if !OPT_DEALLOC_PRESERVE

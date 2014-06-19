@@ -6,8 +6,8 @@
 
 static Obj new_vec_raw(Int len) {
   if (!len) return rc_ret_val(s_VEC0);
-  Obj v = ref_alloc(st_Vec, size_RCL + (size_Obj * len));
-  v.rcl->len = len;
+  Obj v = ref_alloc(st_Vec, size_RHL + (size_Obj * len));
+  v.rhl->len = len;
   return v;
 }
 
@@ -72,8 +72,8 @@ static Obj new_vec4(Obj a, Obj b, Obj c, Obj d) {
 
 static Int vec_ref_len(Obj v) {
   assert(ref_is_vec(v));
-  assert(v.rcl->len > 0);
-  return v.rcl->len;
+  assert(v.rhl->len > 0);
+  return v.rhl->len;
 }
 
 
@@ -85,7 +85,7 @@ static Int vec_len(Obj v) {
 
 static Obj* vec_ref_els(Obj v) {
   assert(ref_is_vec(v));
-  return cast(Obj*, v.rcl + 1); // address past rcl.
+  return cast(Obj*, v.rhl + 1); // address past rhl.
 }
 
 
