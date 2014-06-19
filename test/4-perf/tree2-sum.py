@@ -1,7 +1,7 @@
 # Copyright 2014 George King.
 # Permission to use this file is granted in ploy/license.txt.
 
-depth = 20
+depth = 18
 
 def gen_tree(n, t):
   if not n:

@@ -3,7 +3,7 @@
 
 typedef long Int;
 
-const Int n = 30;
+const Int n = 28;
 
 Int fib_dumb(Int n) {
   if (n == 0) return 0;

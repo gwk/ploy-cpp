@@ -1,7 +1,7 @@
 # Copyright 2014 George King.
 # Permission to use this file is granted in ploy/license.txt.
 
-<let depth 20>
+<let depth 18>
 
 <fn gen-tree {-n -t}
     # generate a binary trie of zeros n branches deep.
