@@ -6,7 +6,7 @@
 
 static Obj new_vec_raw(Int len) {
   if (!len) return rc_ret_val(s_VEC0);
-  Obj v = ref_alloc(st_Vec, size_RHL + (size_Obj * len));
+  Obj v = ref_alloc(rt_Vec, size_RHL + (size_Obj * len));
   v.rhl->len = len;
   return v;
 }

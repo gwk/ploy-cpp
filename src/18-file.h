@@ -13,7 +13,7 @@ typedef struct {
 
 
 static Obj new_file(CFile cfile, Bool is_readable, Bool is_writable) {
-  Obj f = ref_alloc(st_File, size_RH + sizeof(File));
+  Obj f = ref_alloc(rt_File, size_RH + sizeof(File));
   File* b = ref_body(f);
   b->cfile = cfile;
   b->is_readable = is_readable;

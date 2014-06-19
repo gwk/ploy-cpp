@@ -13,40 +13,40 @@ static Uns ref_hash(Obj r) {
 }
 
   
-static Struct_tag ref_struct_tag(Obj r) {
+static Ref_tag ref_tag(Obj r) {
   assert(obj_is_ref(r));
-  return r.rh->st;
+  return r.rh->rt;
 }
 
 
 #if OPT_ALLOC_COUNT
 
-static Counter_index st_counter_index(Struct_tag st) {
+static Counter_index rt_counter_index(Ref_tag rt) {
   // note: this math relies on the layout of both COUNTER_LIST and Struct_tag.
-  return ci_Data + (st * 2);
+  return ci_Data + (rt * 2);
 }
 
 
 static Counter_index ref_counter_index(Obj r) {
   assert(obj_is_ref(r));
-  return st_counter_index(ref_struct_tag(r));
+  return rt_counter_index(ref_tag(r));
 }
 
 #endif
 
 
 static Bool ref_is_vec(Obj r) {
-  return ref_struct_tag(r) == st_Vec;
+  return ref_tag(r) == rt_Vec;
 }
 
 
 static Bool ref_is_data(Obj d) {
-  return ref_struct_tag(d) == st_Data;
+  return ref_tag(d) == rt_Data;
 }
 
 
 static Bool ref_is_file(Obj f) {
-  return ref_struct_tag(f) == st_File;
+  return ref_tag(f) == rt_File;
 }
 
 
@@ -56,14 +56,14 @@ static Ptr ref_body(Obj r) {
 }
 
 
-static Obj ref_alloc(Struct_tag st, Int size) {
+static Obj ref_alloc(Ref_tag rt, Int size) {
   assert(size >= size_Word * 2);
-  Counter_index ci = st_counter_index(st);
+  Counter_index ci = rt_counter_index(rt);
   Counter_index ci_alloc = ci + 1; // this math relies on the layout of COUNTER_LIST.
   counter_inc(ci); // ret/rel counter.
   Obj r = (Obj){.p=raw_alloc(size, ci_alloc)}; // alloc counter also incremented.
   assert(!obj_tag(r)); // check that alloc is really aligned to allow tagging.
-  r.rh->st = st;
+  r.rh->rt = rt;
   r.rh->sc = 1;
   rc_insert(ref_hash(r));
   return r;
@@ -71,8 +71,8 @@ static Obj ref_alloc(Struct_tag st, Int size) {
 
 
 static void ref_dealloc(Obj r) {
-  Struct_tag st = ref_struct_tag(r);
-  if (st == st_Vec) {
+  Ref_tag rt = ref_tag(r);
+  if (rt == rt_Vec) {
     it_vec_ref(it, r) {
       // TODO: make this tail recursive for deallocating long chains?
       rc_rel(*it);
@@ -84,8 +84,8 @@ static void ref_dealloc(Obj r) {
 #endif
   // ret/rel counter has already been decremented by rc_rel.
 #if !OPT_DEALLOC_PRESERVE
-  raw_dealloc(r.p, st_counter_index(st) + 1); // math relies on layout of COUNTER_LIST.
+  raw_dealloc(r.p, rt_counter_index(rt) + 1); // math relies on layout of COUNTER_LIST.
 #elif OPT_ALLOC_COUNT
-  counter_dec(st_counter_index(st) + 1); // math relies on layout of COUNTER_LIST.
+  counter_dec(rt_counter_index(rt) + 1); // math relies on layout of COUNTER_LIST.
 #endif
 }

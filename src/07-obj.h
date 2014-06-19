@@ -64,32 +64,32 @@ static Chars_const obj_tag_names[] = {
 // all ref types (objects that are dynamically allocated) follow a similar convention;
 // the lowest 4 bits of the first allocated word indicate its type.
 // NOTE: the current plan is that eventually this will be replaced by a 'type' pointer.
-#define width_struct_tag 4
-#define struct_tag_end (1L << width_struct_tag)
+#define width_ref_tag 4
+#define ref_tag_end (1L << width_ref_tag)
 
-static const Uns struct_tag_mask = struct_tag_end - 1;
+static const Uns ref_tag_mask = ref_tag_end - 1;
 
 // all the ref types.
 typedef enum {
-  st_Data = 0,    // binary data; obj_counter_index assumes that this is the first index.
-  st_Vec,         // a fixed length vector of objects.
-  st_I32,         // full-width numeric types that do not fit into the tagged words.
-  st_I64,
-  st_U32,
-  st_U64,
-  st_F32,
-  st_F64,
-  st_File,
-  st_Func_host,   // an opaque function built into the host interpreter.
-  st_Reserved_A,  // currently unused.
-  st_Reserved_B,
-  st_Reserved_C,
-  st_Reserved_D,
-  st_Reserved_E,
-  st_Reserved_F,
-} Struct_tag;
+  rt_Data = 0,    // binary data; obj_counter_index assumes that this is the first index.
+  rt_Vec,         // a fixed length vector of objects.
+  rt_I32,         // full-width numeric types that do not fit into the tagged words.
+  rt_I64,
+  rt_U32,
+  rt_U64,
+  rt_F32,
+  rt_F64,
+  rt_File,
+  rt_Func_host,   // an opaque function built into the host interpreter.
+  rt_Reserved_A,  // currently unused.
+  rt_Reserved_B,
+  rt_Reserved_C,
+  rt_Reserved_D,
+  rt_Reserved_E,
+  rt_Reserved_F,
+} Ref_tag;
 
-static Chars_const struct_tag_names[] = {
+static Chars_const ref_tag_names[] = {
   "Data",
   "Vec",
   "I32",
@@ -109,12 +109,12 @@ static Chars_const struct_tag_names[] = {
 };
 
 // ref objects are currently reference-counted.
-static const Int width_sc  = width_word - width_struct_tag;
+static const Int width_sc  = width_word - width_ref_tag;
 static const Uns pinned_sc = (1L << width_sc) - 1;
 
 typedef struct {
-  Struct_tag st : width_struct_tag;  // struct tag.
-  Uns sc : width_sc;          // strong count.
+  Ref_tag rt : width_ref_tag;
+  Uns sc : width_sc; // strong count.
 } RH; // Ref header.
 DEF_SIZE(RH);
 

@@ -8,7 +8,7 @@
 
 // counters enum names, structured as an x macro list.
 // the C macro is temporarily defined to generate various lists of expressions.
-// note: starting with 'Data', the order must match that of Struct_tag.
+// note: starting with 'Data', the order must match that of Ref_tag.
 #define COUNTER_LIST \
 C(Chars) \
 C(Str) \

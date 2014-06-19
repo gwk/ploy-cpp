@@ -161,23 +161,23 @@ static void write_repr_obj(CFile f, Obj o, Set* s) {
       fputs("↺", f); // anticlockwise gapped circle arrow
     } else {
       set_insert(s, o);
-      switch (ref_struct_tag(o)) {
-        case st_Data: write_repr_data(f, o); break;
-        case st_Vec:  write_repr_vec(f, o, s); break;
-        case st_I32:          fputs("(I32 ?)", f); break;
-        case st_I64:          fputs("(I64 ?)", f); break;
-        case st_U32:          fputs("(U32 ?)", f); break;
-        case st_U64:          fputs("(U64 ?)", f); break;
-        case st_F32:          fputs("(F32 ?)", f); break;
-        case st_F64:          fputs("(F64 ?)", f); break;
-        case st_File:         fprintf(f, "(File %p)", file_cfile(o)); break;
-        case st_Func_host:    write_repr_Func_host(f, o); break;
-        case st_Reserved_A:
-        case st_Reserved_B:
-        case st_Reserved_C:
-        case st_Reserved_D:
-        case st_Reserved_E:
-        case st_Reserved_F: fputs("(ReservedX)", f); break;
+      switch (ref_tag(o)) {
+        case rt_Data: write_repr_data(f, o); break;
+        case rt_Vec:  write_repr_vec(f, o, s); break;
+        case rt_I32:          fputs("(I32 ?)", f); break;
+        case rt_I64:          fputs("(I64 ?)", f); break;
+        case rt_U32:          fputs("(U32 ?)", f); break;
+        case rt_U64:          fputs("(U64 ?)", f); break;
+        case rt_F32:          fputs("(F32 ?)", f); break;
+        case rt_F64:          fputs("(F64 ?)", f); break;
+        case rt_File:         fprintf(f, "(File %p)", file_cfile(o)); break;
+        case rt_Func_host:    write_repr_Func_host(f, o); break;
+        case rt_Reserved_A:
+        case rt_Reserved_B:
+        case rt_Reserved_C:
+        case rt_Reserved_D:
+        case rt_Reserved_E:
+        case rt_Reserved_F: fputs("(ReservedX)", f); break;
       }
       set_remove(s, o);
     }

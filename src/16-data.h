@@ -43,7 +43,7 @@ static Str data_str(Obj d) {
 
 
 static Obj data_empty(Int len) {
-  Obj d = ref_alloc(st_Data, size_RHL + len);
+  Obj d = ref_alloc(rt_Data, size_RHL + len);
   d.rhl->len = len;
   return d; // borrowed.
 }

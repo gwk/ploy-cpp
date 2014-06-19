@@ -180,10 +180,10 @@ static Step run_CALL(Obj env, Mem args) {
   Obj func = step.obj;
   Obj_tag ot = obj_tag(func);
   exc_check(ot == ot_ref, "object is not callable: %o", func);
-  Struct_tag st = ref_struct_tag(func);
-  switch (cast(Uns,st)) { // appease -Wswitch-enum.
-    case st_Vec:        return run_call_native(env, func, mem_next(args), false);
-    case st_Func_host:  return run_call_host(env, func, mem_next(args));
+  Ref_tag rt = ref_tag(func);
+  switch (cast(Uns, rt)) { // appease -Wswitch-enum.
+    case rt_Vec:        return run_call_native(env, func, mem_next(args), false);
+    case rt_Func_host:  return run_call_host(env, func, mem_next(args));
     default: exc_raise("object is not callable: %o", func);
   }
 }
@@ -231,24 +231,24 @@ static Step run(Obj env, Obj code) {
   if (ot == ot_sym) {
     return run_sym(env, code);
   }
-  switch (ref_struct_tag(code)) {
-    case st_Vec:
+  switch (ref_tag(code)) {
+    case rt_Vec:
       return run_Vec(env, code);
-    case st_Data:
-    case st_I32:
-    case st_I64:
-    case st_U32:
-    case st_U64:
-    case st_F32:
-    case st_F64:
+    case rt_Data:
+    case rt_I32:
+    case rt_I64:
+    case rt_U32:
+    case rt_U64:
+    case rt_F32:
+    case rt_F64:
       return mk_step(env, rc_ret(code)); // self-evaluating.
-    case st_File:
-    case st_Func_host:
-    case st_Reserved_A:
-    case st_Reserved_B:
-    case st_Reserved_C:
-    case st_Reserved_D:
-    case st_Reserved_E:
-    case st_Reserved_F: exc_raise("cannot run object: %o", code);
+    case rt_File:
+    case rt_Func_host:
+    case rt_Reserved_A:
+    case rt_Reserved_B:
+    case rt_Reserved_C:
+    case rt_Reserved_D:
+    case rt_Reserved_E:
+    case rt_Reserved_F: exc_raise("cannot run object: %o", code);
   }
 }
