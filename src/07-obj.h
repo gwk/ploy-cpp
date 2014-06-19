@@ -72,9 +72,6 @@ static Chars_const obj_tag_names[] = {
 
 static const Uns struct_tag_mask = struct_tag_end - 1;
 
-// a second tag is used by some types to store additional metadata flags.
-#define width_meta_tag 4
-
 // all the ref types.
 typedef enum {
   st_Data = 0,    // binary data; obj_counter_index assumes that this is the first index.
@@ -115,18 +112,11 @@ static Chars_const struct_tag_names[] = {
 };
 
 // ref objects are currently reference-counted.
-// there are separate counts for strong and weak references;
-// currently only strong counts are accessible from within the language,
-// and weak ref semantics remain to be determined.
 static const Int width_sc  = width_word - width_struct_tag;
-static const Int width_wc  = width_word - width_meta_tag;
 static const Uns pinned_sc = (1L << width_sc) - 1;
-static const Uns pinned_wc = (1L << width_wc) - 1;
 
 typedef struct {
   Tag st : width_struct_tag;  // struct tag.
-  Uns wc : width_wc;          // weak count.
-  Tag mt : width_meta_tag;    // meta tag.
   Uns sc : width_sc;          // strong count.
 } RC; // Ref-counts.
 DEF_SIZE(RC);

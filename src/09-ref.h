@@ -54,8 +54,6 @@ static Obj ref_alloc(Struct_tag st, Int size) {
   Obj r = (Obj){.p=raw_alloc(size, ci_alloc)}; // alloc counter also incremented.
   assert(!obj_tag(r)); // check that alloc is really aligned to allow tagging.
   r.rc->st = st;
-  r.rc->wc = 0;
-  r.rc->mt = 0;
   r.rc->sc = 1;
   rc_insert(ref_hash(r));
   return r;
@@ -64,8 +62,6 @@ static Obj ref_alloc(Struct_tag st, Int size) {
 
 static void ref_dealloc(Obj r) {
   assert_ref_is_valid(r);
-  // TODO: could choose to pin the strong and weak counts and leak the object.
-  check(r.rc->wc == 0, "attempt to deallocate object with non-zero weak count: %p", r.p);
   Struct_tag st = ref_struct_tag(r);
   if (st == st_Vec) {
     it_vec_ref(it, r) {
