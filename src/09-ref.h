@@ -12,17 +12,27 @@ static Uns ref_hash(Obj r) {
   return r.u >> width_min_alloc;
 }
 
-
-static void assert_ref_is_valid(Obj r) {
-  assert(obj_is_ref(r));
-  assert(r.rc->sc > 0);
-}
-
-
+  
 static Struct_tag ref_struct_tag(Obj r) {
   assert(obj_is_ref(r));
   return r.rc->st;
 }
+
+
+#if OPT_ALLOC_COUNT
+
+static Counter_index st_counter_index(Struct_tag st) {
+  // note: this math relies on the layout of both COUNTER_LIST and Struct_tag.
+  return ci_Data + (st * 2);
+}
+
+
+static Counter_index ref_counter_index(Obj r) {
+  assert(obj_is_ref(r));
+  return st_counter_index(ref_struct_tag(r));
+}
+
+#endif
 
 
 static Bool ref_is_vec(Obj r) {
@@ -61,7 +71,6 @@ static Obj ref_alloc(Struct_tag st, Int size) {
 
 
 static void ref_dealloc(Obj r) {
-  assert_ref_is_valid(r);
   Struct_tag st = ref_struct_tag(r);
   if (st == st_Vec) {
     it_vec_ref(it, r) {

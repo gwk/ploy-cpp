@@ -302,44 +302,17 @@ static Bool obj_is_par(Obj o) {
 }
 
 
-static Counter_index st_counter_index(Struct_tag st) {
-  // note: this math relies on the layout of both COUNTER_LIST and Struct_tag.
-  return ci_Data + (st * 2);
-}
-
-
-static Struct_tag ref_struct_tag(Obj r);
-
 #if OPT_ALLOC_COUNT
+static Counter_index ref_counter_index(Obj r);
+
 static Counter_index obj_counter_index(Obj o) {
   Obj_tag ot = obj_tag(o);
   switch (ot) {
     case ot_int: return ci_Int;
     case ot_sym: return ci_Sym;
     case ot_data: return ci_Data_word;
-    case ot_ref: break;
+    case ot_ref: return ref_counter_index(o);
   }
-  return st_counter_index(ref_struct_tag(o));
 }
 #endif
 
-
-UNUSED_FN static Bool obj_is_quotable(Obj o) {
-  // indicates whether an object can be correctly represented inside of a quoted vec.
-  // objects whose representation would require explicit quoting to be correct return false,
-  // e.g. (File "~/todo.txt")
-  // note: the File example feels somewhat contrived, because evaluating that call is
-  // questionable; creating a new file handle is not desirable, and does not recreate the
-  // original object faithfully due to process state.
-  // TODO: perhaps non-transparent objects should have an intentionally non-parseable repr?
-  if (obj_tag(o)) return true; // all value types are quotable.
-  Struct_tag st = ref_struct_tag(o);
-  if (st == st_Data) return true; // quotable.
-  if (st == st_Vec) {
-    it_vec_ref(it, o) {
-      if (!obj_is_quotable(*it)) return false;
-    }
-    return true;
-  }
-  return false;
-}

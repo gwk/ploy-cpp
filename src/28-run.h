@@ -231,7 +231,6 @@ static Step run(Obj env, Obj code) {
   if (ot == ot_sym) {
     return run_sym(env, code);
   }
-  assert_ref_is_valid(code);
   switch (ref_struct_tag(code)) {
     case st_Vec:
       return run_Vec(env, code);

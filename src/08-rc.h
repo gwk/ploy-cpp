@@ -98,15 +98,12 @@ static void rc_insert(Uns h) {
 }
 
 
-static void assert_ref_is_valid(Obj o);
-
 static Uns ref_hash(Obj r);
 
 static Obj rc_ret(Obj o) {
   // increase the object's retain count by one.
   counter_inc(obj_counter_index(o));
   if (obj_tag(o)) return o;
-  assert_ref_is_valid(o);
   Uns h = ref_hash(o);
   RC_bucket* b = rc_bucket_ptr(h);
   for_in(i, b->len) {
@@ -128,7 +125,6 @@ static void rc_rel(Obj o) {
   // decrease the object's retain count by one, or deallocate it.
   counter_dec(obj_counter_index(o));
   if (obj_tag(o)) return;
-  assert_ref_is_valid(o);
   Uns h = ref_hash(o);
   RC_bucket* b = rc_bucket_ptr(h);
   for_in(i, b->len) {
