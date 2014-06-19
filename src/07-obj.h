@@ -111,7 +111,6 @@ static Chars_const ref_tag_names[] = {
 // ref objects are currently reference-counted.
 typedef struct {
   Uns rt;
-  Uns sc; // strong count.
 } ALIGNED_TO_WORD RH; // Ref header.
 DEF_SIZE(RH);
 

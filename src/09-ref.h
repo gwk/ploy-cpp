@@ -64,7 +64,6 @@ static Obj ref_alloc(Ref_tag rt, Int size) {
   Obj r = (Obj){.p=raw_alloc(size, ci_alloc)}; // alloc counter also incremented.
   assert(!obj_tag(r)); // check that alloc is really aligned to allow tagging.
   r.rh->rt = rt;
-  r.rh->sc = 1;
   rc_insert(ref_hash(r));
   return r;
 }
@@ -78,10 +77,6 @@ static void ref_dealloc(Obj r) {
       rc_rel(*it);
     }
   }
-  #if OPT_DEALLOC_MARK
-  assert(r.rh->sc == 1);
-  r.rh->sc = 0;
-#endif
   // ret/rel counter has already been decremented by rc_rel.
 #if !OPT_DEALLOC_PRESERVE
   raw_dealloc(r.p, rt_counter_index(rt) + 1); // math relies on layout of COUNTER_LIST.
