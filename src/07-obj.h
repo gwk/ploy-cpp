@@ -79,7 +79,7 @@ typedef enum {
   rt_U64,
   rt_F32,
   rt_F64,
-  rt_File,
+  rt_File,        // wrapper around CFile type, plus additional info.
   rt_Func_host,   // an opaque function built into the host interpreter.
   rt_Reserved_A,  // currently unused.
   rt_Reserved_B,
