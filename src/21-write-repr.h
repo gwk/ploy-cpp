@@ -170,7 +170,7 @@ static void write_repr_obj(CFile f, Obj o, Set* s) {
         case st_U64:          fputs("(U64 ?)", f); break;
         case st_F32:          fputs("(F32 ?)", f); break;
         case st_F64:          fputs("(F64 ?)", f); break;
-        case st_File:         fprintf(f, "(File %p)", file_file(o)); break;
+        case st_File:         fprintf(f, "(File %p)", file_cfile(o)); break;
         case st_Func_host:    write_repr_Func_host(f, o); break;
         case st_Reserved_A:
         case st_Reserved_B:
