@@ -431,10 +431,10 @@ static Obj parse_par(Parser* p, Obj sym, Chars_const par_desc) {
   Src_pos sp_open = p->sp; // for error reporting.
   Obj name = parse_expr(p);
   if (p->e) return obj0;
-  if (!obj_is_symbol(name)) {
+  if (!obj_is_sym(name)) {
     rc_rel(name);
     p->sp = sp_open;
-    return parse_error(p, "%s name is not a symbol", par_desc);
+    return parse_error(p, "%s name is not a sym", par_desc);
   }
   Char c = PC;
   Obj type;

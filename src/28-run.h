@@ -8,10 +8,9 @@ static Step run_sym(Obj env, Obj code) {
   // owns env.
   assert(obj_is_sym(code));
   assert(code.u != s_ILLEGAL.u); // anything that returns s_ILLEGAL should have raised an error.
-  if (code.u < s_END_SPECIAL_SYMS.u) {
-    return mk_step(env, rc_ret_val(code)); // special symbols are self-evaluating.
+  if (code.u <= s_END_SPECIAL_SYMS.u) {
+    return mk_step(env, rc_ret_val(code)); // special syms are self-evaluating.
   }
-  exc_check(code.u != s_END_SPECIAL_SYMS.u, "cannot run END_SPECIAL_SYMS");
   Obj val = env_get(env, code);
   exc_check(val.u != obj0.u, "lookup error: %o", code); // lookup failed.
   return mk_step(env, rc_ret(val));
@@ -54,8 +53,8 @@ static Step run_LET(Obj env, Mem args) {
   exc_check(args.len == 2, "LET requires 2 arguments; received %i", args.len);
   Obj sym = args.els[0];
   Obj expr = args.els[1];
-  exc_check(obj_is_sym(sym) && sym_is_symbol(sym),
-    "LET requires argument 1 to be a sym; received: %o", sym);
+  exc_check(obj_is_sym(sym) && !sym_is_special(sym),
+    "LET requires argument 1 to be a bindable sym; received: %o", sym);
   Step step = run(env, expr);
   Obj val = step.obj;
   Obj env1 = env_bind(env, rc_ret_val(sym), val); // owns env, sym, val.
@@ -139,7 +138,7 @@ static Step run_call_native(Obj env, Obj func, Mem args, Bool is_expand) {
   } else {
     exc_check(!bool_is_true(is_macro), "cannot call macro: %o", name);
   }
-  exc_check(obj_is_sym(name), "function is malformed (name symbol is not a Sym): %o", name);
+  exc_check(obj_is_sym(name), "function is malformed (name is not a Sym): %o", name);
   exc_check(obj_is_vec(pars), "function %o is malformed (parameters is not a Vec): %o", name, pars);
   exc_check(obj_is_vec(lex_env), "function %o is malformed (env is not a Vec): %o", name, lex_env);
   Obj callee_env = env_add_frame(rc_ret(lex_env), rc_ret(name));

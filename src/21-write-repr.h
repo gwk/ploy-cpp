@@ -97,7 +97,7 @@ static void write_repr_par(CFile f, Obj p, Set* s, Char c) {
   Obj name = els[1];
   Obj type = els[2];
   Obj expr = els[3];
-  assert(obj_is_symbol(name));
+  assert(obj_is_sym(name));
   Obj d = sym_data(name);
   write_data(f, d);
   if (type.u != s_nil.u) {

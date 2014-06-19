@@ -170,8 +170,6 @@ UNUSED_FN static Bool sym_is_form(Obj s) {
 }
 
 
-static Bool sym_is_symbol(Obj s) {
-  // returns true if s is a normal symbol,
-  // meaning that when it is evaluated, it is looked up in the current env.
-  return sym_index(s) > si_END_SPECIAL_SYMS;
+static Bool sym_is_special(Obj s) {
+  return sym_index(s) <= si_END_SPECIAL_SYMS;
 }

@@ -14,7 +14,7 @@
 
 static Obj env_get(Obj env, Obj sym) {
   assert(ref_is_vec(env));
-  assert(sym_is_symbol(sym));
+  assert(!sym_is_special(sym));
   while (env.u != s_END.u) {
     Int len = vec_ref_len(env);
     if (len == 2) { // frame marker.
@@ -40,7 +40,7 @@ static Obj env_add_frame(Obj env, Obj src) {
 
 static Obj env_bind(Obj env, Obj sym, Obj val) {
   // env, sym, val.
-  assert(sym_is_symbol(sym));
+  assert(!sym_is_special(sym));
   assert(obj_is_vec(env) || env.u == s_END.u);
   return new_vec3(sym, val, env);
 }

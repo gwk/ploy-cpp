@@ -29,7 +29,7 @@
   ##<macro macro {-sym -pars &body}
       <let sym
         [ FN # this form creates a new function/macro that...
-          sym # contains its name/symbol,
+          sym # contains its name sym,
           true # is a macro,
           pars # has the specified parameter list,
           <if (ieq (len body) 1) # and body...
@@ -38,12 +38,12 @@
   # instead, we must define it using raw forms.
   # note the structural similarity between the outer FN form and the inner vec literal.
   {FN # creates both functions and macros
-    macro # the symbol for this macro is `macro;
+    macro # the sym for this macro is `macro;
     # we do not quote it because this is a raw form, so it is not evaluated.
     true # is-macro
     {-sym -pars &body} # the parameter list; also unquoted, as parameter lists always are.
     [LET # the body of the 'macro' macro is a LET form.
-      sym # the symbol parameter that the macro to be created is bound to (not `macro).
+      sym # the sym parameter that the macro to be created is bound to (not `macro).
       [FN # the value of the binding is created by evaluating the FN form;
         # note that this inner FN is inside a vec literal;
         # when the 'macro' macro is expanded, the literal is evaluated,

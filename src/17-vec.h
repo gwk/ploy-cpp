@@ -163,7 +163,7 @@ typedef enum {
 static Vec_shape vec_ref_shape(Obj v) {
   assert(ref_is_vec(v));
   Int len = vec_len(v);
-  if (len == 4 && obj_is_symbol(vec_ref_el(v, 1))) {
+  if (len == 4 && obj_is_sym(vec_ref_el(v, 1))) {
     Obj e0 = vec_ref_el(v, 0);
     if (e0.u == s_LABEL.u) return vs_label;
     if (e0.u == s_VARIAD.u) return vs_variad;
