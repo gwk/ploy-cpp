@@ -36,9 +36,9 @@ int main(int argc, char* argv[]) {
   getrusage(RUSAGE_CHILDREN, &u);
   errF(
     "status:%3d  "
-    "ut:%03ld.%06d  "
-    "st:%03ld.%06d  "
-    "max_resident:%010ld  "
+    "ut:%03ld.%06ds  "
+    "st:%03ld.%06ds  "
+    "max_resident:%010ldKB  "
     "cmd:",
     status,
     u.ru_utime.tv_sec, u.ru_utime.tv_usec,
