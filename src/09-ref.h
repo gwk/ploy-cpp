@@ -93,6 +93,7 @@ static void ref_dealloc(Obj r) {
 #if !OPT_DEALLOC_PRESERVE
   raw_dealloc(r.p, rt_counter_index(rt) + 1); // math relies on layout of COUNTER_LIST.
 #elif OPT_ALLOC_COUNT
+  // manually count for the missing raw_dealloc.
   counter_dec(rt_counter_index(rt) + 1); // math relies on layout of COUNTER_LIST.
 #endif
 }
