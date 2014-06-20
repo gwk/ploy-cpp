@@ -80,7 +80,7 @@ static Call_envs env_bind_args(Obj caller_env, Obj callee_env, Obj func, Mem par
       } else {
         Step step = run(caller_env, arg);
         caller_env = step.env;
-        val = step.obj;
+        val = step.val;
       }
       callee_env = env_bind(callee_env, rc_ret_val(par_sym), val);
     } else {
@@ -101,7 +101,7 @@ static Call_envs env_bind_args(Obj caller_env, Obj callee_env, Obj func, Mem par
         } else {
           Step step = run(caller_env, arg);
           caller_env = step.env;
-          *it = step.obj;
+          *it = step.val;
         }
       }
       callee_env = env_bind(callee_env, rc_ret_val(par_sym), variad_val);

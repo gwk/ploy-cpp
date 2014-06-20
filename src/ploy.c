@@ -16,23 +16,22 @@ static Obj parse_and_eval(Obj env, Obj path, Obj src, Array* sources, Bool out_v
     rc_rel(src);
     assert(code.u == obj0.u);
     exit(1);
-  } else {
-#if VERBOSE_PARSE
-    errF("parse_and_eval: ");
-    obj_err(path);
-    err_nl();
-    obj_errL(code);
-#endif
-    array_append(sources, new_vec2(path, src));
-    Step step = eval_vec(env, code);
-    if (out_val && step.obj.u != s_void.u) {
-      write_repr(stdout, step.obj);
-      fputc('\n', stdout);
-    }
-    rc_rel(code);
-    rc_rel(step.obj);
-    return step.env;
   }
+#if VERBOSE_PARSE
+  errF("parse_and_eval: ");
+  obj_err(path);
+  err_nl();
+  obj_errL(code);
+#endif
+  array_append(sources, new_vec2(path, src));
+  Step step = eval_vec(env, code);
+  if (out_val && step.val.u != s_void.u) {
+    write_repr(stdout, step.val);
+    fputc('\n', stdout);
+  }
+  rc_rel(code);
+  rc_rel(step.val);
+  return step.env;
 }
 
 

@@ -56,7 +56,7 @@ static Obj expand_macro(Obj env, Mem args) {
   }
   Step step = run_call_native(rc_ret(env), rc_ret(macro), mem_next(args), true);
   rc_rel(step.env);
-  return step.obj;
+  return step.val;
 }
 
 

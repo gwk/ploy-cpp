@@ -10,12 +10,13 @@ static NO_RETURN _exc_raise(Obj env, Chars_const fmt, Chars_const args_src, ...)
 #define exc_check(condition, ...) if (!(condition)) exc_raise(__VA_ARGS__)
 
 
+// struct representing a step of the interpreted computation.
 typedef struct {
-  Obj env;
-  Obj obj;
+  Obj env; // the environment resulting from the previous step.
+  Obj val; // the value resulting from the previous step.
 } Step;
 
-#define mk_step(e, o) (Step){.env=(e), .obj=(o)}
+#define mk_step(e, v) (Step){.env=(e), .val=(v)}
 
 
 static Obj host_identity(Obj env, Mem args) {
@@ -327,7 +328,7 @@ static Obj host_run(Obj env, Mem args) {
   Step step = run(rc_ret(target_env), code);
   rc_rel(code);
   rc_rel(step.env);
-  return step.obj;
+  return step.val;
 }
 
 

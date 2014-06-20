@@ -29,7 +29,7 @@ static Step eval_vec(Obj env, Obj v) {
   it_mem_to(it, m, last) {
     Step step = eval(env, *it);
     env = step.env;
-    rc_rel(step.obj);
+    rc_rel(step.val);
   }
   Step step = eval(env, m.els[last]);
   return step;

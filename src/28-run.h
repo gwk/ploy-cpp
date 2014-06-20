@@ -1,4 +1,4 @@
-// Copyright 2013 George King.
+ // Copyright 2013 George King.
 // Permission to use this file is granted in ploy/license.txt.
 
 #include "27-compile.h"
@@ -24,6 +24,8 @@ static Step run_QUO(Obj env, Mem args) {
 }
 
 
+static Step run_step(Obj env, Obj code);
+
 static Step run_DO(Obj env, Mem args) {
   // owns env.
   if (!args.len) {
@@ -33,9 +35,9 @@ static Step run_DO(Obj env, Mem args) {
   it_mem_to(it, args, last) {
     Step step = run(env, *it);
     env = step.env;
-    rc_rel(step.obj); // value ignored.
+    rc_rel(step.val); // value ignored.
   };
-  return run(env, args.els[last]); // put last run() in tail position for TCO.
+  return run_step(env, args.els[last]); // TCO.
 }
 
 
@@ -44,7 +46,7 @@ static Step run_SCOPE(Obj env, Mem args) {
   exc_check(args.len == 1, "SCOPE requires 1 argument; received %i", args.len);
   Obj body = args.els[0];
   // TODO: create new env frame.
-  return run(env, body);
+  return run_step(env, body); // TCO.
 }
 
 
@@ -56,9 +58,8 @@ static Step run_LET(Obj env, Mem args) {
   exc_check(obj_is_sym(sym) && !sym_is_special(sym),
     "LET requires argument 1 to be a bindable sym; received: %o", sym);
   Step step = run(env, expr);
-  Obj val = step.obj;
-  Obj env1 = env_bind(env, rc_ret_val(sym), val); // owns env, sym, val.
-  return mk_step(env1, rc_ret(val));
+  Obj env1 = env_bind(step.env, rc_ret_val(sym), rc_ret(step.val)); // owns env, sym, val.
+  return mk_step(env1, step.val);
 }
 
 
@@ -69,15 +70,9 @@ static Step run_IF(Obj env, Mem args) {
   Obj t = args.els[1];
   Obj e = args.els[2];
   Step step = run(env, p);
-  Obj p_env = step.env;
-  Obj p_val = step.obj;
-  if (is_true(p_val)) {
-    rc_rel(p_val);
-    return run(p_env, t);
-  } else {
-    rc_rel(p_val);
-    return run(p_env, e);
-  }
+  Obj branch = is_true(step.val) ? t : e;
+  rc_rel(step.val);
+  return run_step(step.env, branch); // TCO.
 }
 
 
@@ -112,7 +107,7 @@ static Step run_SEQ(Obj env, Mem args) {
   for_in(i, args.len) {
     Step step = run(env, args.els[i]);
     env = step.env;
-    els[i] = step.obj;
+    els[i] = step.val;
   }
   return mk_step(env, v);
 }
@@ -148,7 +143,7 @@ static Step run_call_native(Obj env, Obj func, Mem args, Bool is_expand) {
   Step step = run(envs.callee_env, body); // owns callee_env.
   rc_rel(func);
   rc_rel(step.env);
-  return mk_step(envs.caller_env, step.obj);
+  return mk_step(envs.caller_env, step.val); // TODO: add TCO.
 }
 
 
@@ -165,9 +160,9 @@ static Step run_call_host(Obj env, Obj func, Mem args) {
   Obj arg_vals[args.len]; // requires variable-length-array support from compiler.
   for_in(i, args.len) {
     Step step = run(env, args.els[i]);
-    arg_vals[i] = step.obj;
+    arg_vals[i] = step.val;
   }
-  return mk_step(env, f(env, mem_mk(args.len, arg_vals)));
+  return mk_step(env, f(env, mem_mk(args.len, arg_vals))); // TODO: add TCO for host_run?
 }
 
 
@@ -176,13 +171,13 @@ static Step run_CALL(Obj env, Mem args) {
   check(args.len > 0, "call is empty");
   Obj callee = args.els[0];
   Step step = run(env, callee);
-  Obj func = step.obj;
+  Obj func = step.val;
   Obj_tag ot = obj_tag(func);
   exc_check(ot == ot_ref, "object is not callable: %o", func);
   Ref_tag rt = ref_tag(func);
   switch (cast(Uns, rt)) { // appease -Wswitch-enum.
-    case rt_Vec:        return run_call_native(env, func, mem_next(args), false);
-    case rt_Func_host:  return run_call_host(env, func, mem_next(args));
+    case rt_Vec:        return run_call_native(env, func, mem_next(args), false); // TCO.
+    case rt_Func_host:  return run_call_host(env, func, mem_next(args)); // TODO: make TCO?
     default: exc_raise("object is not callable: %o", func);
   }
 }
@@ -218,7 +213,7 @@ static const Chars_const trace_val_prefix    = "◦ "; // during trace, printed 
 static const Chars_const trace_apply_prefix  = "▹ "; // called before each call apply;  white_right_pointing_small_triangle.
 
 
-static Step run(Obj env, Obj code) {
+static Step run_step(Obj env, Obj code) {
   // owns env.
 #if VERBOSE_EVAL
     err(trace_run_prefix); dbg(code); // TODO: improve this?
@@ -251,3 +246,10 @@ static Step run(Obj env, Obj code) {
     case rt_Reserved_F: exc_raise("cannot run object: %o", code);
   }
 }
+
+
+static Step run(Obj env, Obj code) {
+  // owns env.
+  return run_step(env, code);
+}
+
