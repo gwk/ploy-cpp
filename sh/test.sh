@@ -17,7 +17,7 @@ fi
 if [[ -z "$@" ]]; then
   echo "defaulting to debug tests..."
   opt='-dbg'
-  test_paths=test/[0-3]-* # omit the perf tests, which take too long.
+  test_paths=test/[0-3]-* # omit the perf tests, which take too long in debug mode.
 else
   test_paths="$@"
 fi
