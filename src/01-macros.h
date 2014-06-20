@@ -22,13 +22,8 @@
 #include <stdlib.h>
 #endif
 
-// include the generated source here, before 'char' becomes an illegal type.
+// include the generated source here, before 'char' is disallowed via macros below.
 #include "ploy-core.h"
-
-// on ref object dealloc, set the reference count to zero to aid in debugging overelease bugs.
-#ifndef OPT_DEALLOC_MARK
-#define OPT_DEALLOC_MARK DEBUG
-#endif
 
 // on ref object dealloc, do not actually call free to aid in debugging overelease bugs.
 #ifndef OPT_DEALLOC_PRESERVE
