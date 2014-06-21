@@ -34,16 +34,24 @@ int main(int argc, char* argv[]) {
   }
   struct rusage u;
   getrusage(RUSAGE_CHILDREN, &u);
+  long max_resident = u.ru_maxrss;
+#if defined(__APPLE__)
+  max_resident >>= 10; // darwin returns bytes; convert to kilobytes.
+#elif defined(__linux__)
+  // linux returns kilobytes.
+#else
+#error "please add appropriate conversion for your operating system according to 'man getrusage'.
+#endif
   errF(
-    "status:%3d  "
-    "ut:%03ld.%06ds  "
-    "st:%03ld.%06ds  "
-    "max_resident:%010ldKB  "
+    "status:%3d;  "
+    "usr_time:%3ld.%06ds;  "
+    "sys_time:%3ld.%06ds;  "
+    "max_resident:%6ldKB;  "
     "cmd:",
     status,
     u.ru_utime.tv_sec, u.ru_utime.tv_usec,
     u.ru_stime.tv_sec, u.ru_stime.tv_usec,
-    u.ru_maxrss
+    max_resident
   );
 
   char** arg = argv + 1;
