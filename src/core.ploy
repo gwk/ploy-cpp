@@ -19,7 +19,7 @@
     {DO # body.
       # standard files are defined as a [name, file] vec.
       (raw-write (el std-err 1) label)
-      (raw-write_repr (el std-err 1) obj)
+      (raw-write-repr (el std-err 1) obj)
       (raw-write (el std-err 1) '\n')}}}
 
 {LET macro
