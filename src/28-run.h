@@ -115,7 +115,7 @@ static Step run_SEQ(Obj env, Mem args) {
 
 static Step run_call_native(Obj env, Obj func, Mem args, Bool is_expand) {
   // owns env, func.
-  // a native function/macro is a vec consisting of:
+  // a native (interpreted, not hosted) function/macro is a vec consisting of:
   //  name:Sym
   //  is-macro:Bool
   //  pars:Vec
@@ -138,12 +138,19 @@ static Step run_call_native(Obj env, Obj func, Mem args, Bool is_expand) {
   exc_check(obj_is_vec(lex_env), "function %o is malformed (env is not a Vec): %o", name, lex_env);
   Obj callee_env = env_add_frame(rc_ret(lex_env), rc_ret(name));
   // TODO: change env_add_frame src from name to whole func?
-  callee_env = env_bind(callee_env, rc_ret_val(s_self), rc_ret(func));
-  Call_envs envs = env_bind_args(env, callee_env, func, vec_mem(pars), args, is_expand);
-  Step step = run(envs.callee_env, body); // owns callee_env.
+  callee_env = env_bind(callee_env, rc_ret_val(s_self), rc_ret(func)); // bind self.
+  Call_envs envs = env_bind_args(env, callee_env, func, vec_mem(pars), args, is_expand); // owns env, callee_env.
+  // NOTE: because func is bound to self in callee_env, and func contains body,
+  // we can release func now and still safely return the unretained body as .tco_code.
   rc_rel(func);
+#if 1 // TCO.
+  // caller will own .env and .val, but not .tco_code.
+  return (Step){.env=envs.caller_env, .val=envs.callee_env, .tco_code=body}; // TCO.
+#else // NO TCO.
+  Step step = run(envs.callee_env, body); // owns callee_env.
   rc_rel(step.env);
-  return mk_step(envs.caller_env, step.val); // TODO: add TCO.
+  return mk_step(envs.caller_env, step.val); // NO TCO.
+#endif
 }
 
 
@@ -248,8 +255,26 @@ static Step run_step(Obj env, Obj code) {
 }
 
 
+static Step run_tail(Step step) {
+  // owns .env and .val; borrows .tco_code.
+  Obj env = step.env; // hold onto the original 'next' environment for the topmost caller.
+  while (step.tco_code.u != obj0.u) {
+    Obj tco_env = step.val; // val field is reused in the TCO case to hold the callee env.
+    step = run_step(tco_env, step.tco_code); // owns tco_env; borrows .tco_code.
+    rc_rel(step.env); // the modified tco_env is immediately abandoned since tco_code is in the tail position.
+  }
+  step.env = env; // replace whatever modified callee env from TCO with the topmost env.
+  // done. if TCO iterations occurred,
+  // then the intermediate step.val objects were really tc_env, consumed by run_step.
+  // the final val is the one we want to return, so we do not have to ret/rel.
+  assert(step.tco_code.u == obj0.u);
+  return step;
+}
+
+
 static Step run(Obj env, Obj code) {
   // owns env.
-  return run_step(env, code);
+  Step step = run_step(env, code);
+  return run_tail(step);
 }
 

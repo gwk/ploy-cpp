@@ -11,12 +11,15 @@ static NO_RETURN _exc_raise(Obj env, Chars_const fmt, Chars_const args_src, ...)
 
 
 // struct representing a step of the interpreted computation.
+// in the normal case, it contains the environment and value resulting from the previous step.
+// in the tail-call optimization (TCO) case, it contains the tail step to perform.
 typedef struct {
-  Obj env; // the environment resulting from the previous step.
-  Obj val; // the value resulting from the previous step.
+  Obj env; // the env to be passed to the next step, after any TCO steps; the new caller env.
+  Obj val; // the result from the previous step, or the env to be passed to the TCO step.
+  Obj tco_code; // code for the TCO step.
 } Step;
 
-#define mk_step(e, v) (Step){.env=(e), .val=(v)}
+#define mk_step(e, v) (Step){.env=(e), .val=(v), .tco_code=obj0}
 
 
 static Obj host_identity(Obj env, Mem args) {

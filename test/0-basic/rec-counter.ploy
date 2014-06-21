@@ -1,0 +1,4 @@
+<fn f {-n -i}
+  <if (not n) i (self (idec n) (iinc i))>>
+
+(outRL (f 10000 0))

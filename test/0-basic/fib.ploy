@@ -8,4 +8,7 @@
           (self (isub n 1) b (iadd a b))>>
       (f n 0 1)>>>
 
-(outRL (fib 89)) # past this it looks like the c stack overflows.
+# 89 is the max value for 64 bit builds.
+# beyond this requires more than 61 bits which causes overflow and trap.
+# this test case will fail on 32 bit builds.
+(outRL (fib 89))

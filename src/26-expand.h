@@ -45,6 +45,8 @@ static Obj expr_quasiquote(Obj o) {
 
 
 static Step run_call_native(Obj env, Obj func, Mem args, Bool is_expand); // owns func.
+static Step run_tail(Step step);
+
 
 static Obj expand_macro(Obj env, Mem args) {
   check(args.len > 0, "empty macro expand");
@@ -55,6 +57,7 @@ static Obj expand_macro(Obj env, Mem args) {
     error_obj("macro lookup error", macro_sym);
   }
   Step step = run_call_native(rc_ret(env), rc_ret(macro), mem_next(args), true);
+  step = run_tail(step);
   rc_rel(step.env);
   return step.val;
 }
