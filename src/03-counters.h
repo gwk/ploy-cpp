@@ -59,6 +59,12 @@ COUNTER_LIST
 // the global array of inc/dec counter pairs.
 static Int counters[ci_end][2] = {};
 
+static Chars_const counter_names[] = {
+#define C(c) #c,
+COUNTER_LIST
+#undef C
+};
+
 
 static void counter_inc(Counter_index ci) {
   // increment the specified counter.
@@ -75,18 +81,16 @@ static void counter_dec(Counter_index ci) {
 
 static void counter_stats(Bool log_all) {
   // log counter stats to stderr.
-#define C(c) { \
-  Int inc = counters[ci_##c][0]; \
-  Int dec = counters[ci_##c][1]; \
-  const Char* name = #c; \
-  if (log_all || inc != dec) { \
-    fprintf(stderr, "==== PLOY MEMORY STATS: %s: %ld - %ld = %ld\n", \
-      name, inc, dec, inc - dec); \
-  } \
+  for_in(i, ci_end) {
+    Int inc = counters[i][0];
+    Int dec = counters[i][1];
+    if (log_all || inc != dec) {
+      fprintf(stderr, "==== PLOY MEMORY STATS: %s: %ld - %ld = %ld\n",
+        counter_names[i], inc, dec, inc - dec);
+    }
+  }
 }
-COUNTER_LIST
-#undef C
-}
+
 
 #else // !OPT_ALLOC_COUNT
 

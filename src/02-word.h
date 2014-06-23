@@ -29,6 +29,9 @@ typedef double    F64;
 
 typedef void* Ptr;
 
+typedef Char* Chars;
+typedef const Char* Chars_const;
+
 typedef union {
   I32 i;
   U32 u;
@@ -40,7 +43,6 @@ typedef union {
   U64 u;
   F64 f;
 } W64; // 64 bit generic word.
-
 
 #if ARCH_32_WORD
 typedef float Flt;

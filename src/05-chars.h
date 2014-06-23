@@ -7,10 +7,6 @@
 #include "04-raw.h"
 
 
-typedef Char* Chars;
-typedef const Char* Chars_const;
-
-
 static Bool chars_eq(Chars_const a, Chars_const b) {
   return strcmp(a, b) == 0;
 }
