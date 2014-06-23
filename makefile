@@ -31,16 +31,25 @@ _bld/ploy-dbg-post-proc-no-libs.c: tools/cc.sh _bld/ploy-core.h src/*
 _bld/ploy.llvm: tools/cc.sh _bld/ploy-core.h src/* 
 	tools/cc.sh src/ploy.c -o $@ -S -emit-llvm
 
+_bld/ploy-dbg.llvm: tools/cc.sh _bld/ploy-core.h src/* 
+	tools/cc.sh -dbg src/ploy.c -o $@ -S -emit-llvm
+
 _bld/compile_commands.json: tools/cc.sh tools/cdb.sh
 	tools/cdb.sh
 
-_bld/ploy-callgraph.txt: tools/gen-callgraph-txt.sh _bld/ploy.llvm
-	$^ $@
+_bld/ploy-callgraph.txt: tools/gen-callgraph-txt.sh _bld/ploy-dbg.llvm
+	tools/gen-callgraph-txt.sh -print-callgraph _bld/ploy-dbg.llvm $@
 
-_bld/ploy-callgraph.dot: tools/gen-callgraph-dot.py _bld/ploy-callgraph.txt
+_bld/ploy-call-sccs.txt: tools/gen-callgraph-txt.sh _bld/ploy-dbg.llvm
+	tools/gen-callgraph-txt.sh -print-callgraph-sccs _bld/ploy-dbg.llvm $@
+
+_bld/ploy-callgraph.dot: tools/gen-callgraph-dot.py _bld/ploy-callgraph.txt _bld/ploy-call-sccs.txt
 	$^ $@
 
 _bld/ploy-callgraph.svg: tools/gen-callgraph-svg.sh _bld/ploy-callgraph.dot
+	$^ $@
+
+_bld/ploy-call-scc-names.txt: tools/gen-call-sccs-dot.py _bld/ploy-call-sccs.txt
 	$^ $@
 
 _bld/ploy-ast-list.txt: _bld/compile_commands.json src/*
