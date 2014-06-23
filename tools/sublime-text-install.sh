@@ -4,10 +4,10 @@
 set -e
 cd $(dirname "$0")/..
 
-src=_build/sublime-text-Ploy
+bld=_bld/sublime-text-Ploy
 dst=~/"Library/Application Support/Sublime Text 3/Packages/Ploy"
 
-rm -rf "$src" "$dst"
-mkdir "$src"
-json-to-plist sublime-text/ploy-syntax.json "$src"/Ploy.tmlanguage
-cp -r "$src" "$dst"
+rm -rf "$bld" "$dst"
+mkdir "$bld"
+tools/json-to-plist.py conf/atom/grammars/ploy.json "$bld"/Ploy.tmlanguage
+cp -r "$bld" "$dst"

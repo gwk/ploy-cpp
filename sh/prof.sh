@@ -4,12 +4,5 @@
 set -e
 cd $(dirname "$0")/..
 
-sh/update-tools.sh
-
-if ! sh/is-product-current.sh _build/ploy src/* sh/*; then
-  echo "building rel..."
-  sh/build.sh
-  echo "timing rel..."
-fi
-
-_build/prof-res-usage _build/ploy "$@"
+make -s _bld/prof-res-usage _bld/ploy
+_bld/prof-res-usage _bld/ploy "$@"

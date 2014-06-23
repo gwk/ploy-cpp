@@ -3,7 +3,4 @@
 
 set -e
 root=$(dirname "$0")/..
-
-for lang in c py ploy; do
-  "$root/sh/perf-test-$lang.sh" "$@"
-done
+"$root/tools/perf-test.sh" py '' 'python3' "$@"

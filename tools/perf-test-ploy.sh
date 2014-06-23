@@ -3,4 +3,5 @@
 
 set -e
 root=$(dirname "$0")/..
-exec "$root/sh/perf-test-bin.sh" py '' 'python3' "$@"
+make -s _bld/ploy
+"$root/tools/perf-test.sh" ploy '' "$root/_bld/ploy" "$@"

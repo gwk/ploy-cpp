@@ -9,8 +9,6 @@ lang=$1; shift;
 compiler=$1; shift;
 interpreter=$1; shift;
 
-sh/update-tools.sh
-
 for src_path in "$@"; do
   name=$(basename "$src_path")
   ext=${name##*.} # strip up to and including last dot.
@@ -18,16 +16,16 @@ for src_path in "$@"; do
   echo
   echo $name
   if [[ -n "$compiler" ]]; then # compile.
-    bin_path="$root/_build/${name/./-}"
+    bin_path="$root/_bld/${name/./-}"
     $compiler -o "$bin_path" "$src_path"
     cmd="${bin_path//sh\/..\//}"
   else
     cmd="${interpreter//sh\/..\//} $src_path"
   fi
-  res="$root/_build/perf-res-${name/./-}.txt"
+  res="$root/_bld/perf-res-${name/./-}.txt"
   [[ -f "$res" ]] && rm "$res"
   for i in $(seq 0 3); do
-    _build/prof-res-usage $cmd 2>> "$res"
+    _bld/prof-res-usage $cmd 2>> "$res"
   done
   cat "$res"
 done

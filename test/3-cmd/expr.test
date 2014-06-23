@@ -1,4 +1,4 @@
 {
-  'cmd' : '$ROOT/_build/ploy -e "0 1"',
+  'cmd' : '$ROOT/_bld/ploy -e "0 1"',
   'out' : '1\n',
 }

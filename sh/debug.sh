@@ -4,10 +4,5 @@
 set -e
 cd $(dirname "$0")/..
 
-if ! sh/is-product-current.sh _build/ploy-dbg src/* sh/*; then
-  echo "building dbg..."
-  sh/build.sh -dbg
-  echo "running..."
-fi
-
-lldb -- _build/ploy-dbg "$@"
+make -s _bld/ploy-dbg
+lldb -- _bld/ploy-dbg "$@"

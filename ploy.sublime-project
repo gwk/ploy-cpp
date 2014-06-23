@@ -8,13 +8,4 @@
   "settings": {
     "tab_size": 2
   },
-  "build_systems": [
-    {
-      "name": "ploy run",
-      "working_dir": "$project_path",
-      "cmd": ["$project_path/sh/run.sh $project_path/repro.ploy"],
-      "shell": true,
-      "file_regex": "^(.+):(\\d+):(\\d+): (.+)$",
-    }
-  ]
 }

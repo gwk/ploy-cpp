@@ -3,4 +3,4 @@
 
 set -e
 root=$(dirname "$0")/..
-"$root/sh/test.sh" "$root"/test/4-perf
+"$root/tools/perf-test.sh" c 'clang -Ofast' '' "$@"
