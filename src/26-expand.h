@@ -91,6 +91,9 @@ static Obj expand(Obj env, Obj code) {
       return expand(env, expanded); // macro result may contain more expands; recursively expand.
   } else {
     // recursively expand vec.
+    // TODO: collapse comment and VOID nodes or perhaps a special COLLAPSE node?
+    // this might allow for us to do away with the preprocess phase,
+    // and would also allow a macro to collapse into nothing.
     Obj expanded = new_vec_raw(m.len);
     Obj* expanded_els = vec_els(expanded);
     for_in(i, m.len) {

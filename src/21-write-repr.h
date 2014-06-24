@@ -157,6 +157,7 @@ static void write_repr_obj(CFile f, Obj o, Set* s) {
     assert(o.u == blank.u);
     fputs("''", f);
   } else {
+    assert(ot == ot_ref);
     if (set_contains(s, o)) { // recursed
       fputs("↺", f); // anticlockwise gapped circle arrow
     } else {
