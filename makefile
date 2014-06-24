@@ -69,11 +69,11 @@ callgraph: _bld/ploy-callgraph.svg
 
 # omit perf tests, which take too long in debug mode.
 test-dbg: tools/run-tests.sh _bld/ploy-dbg
-	@echo "test-dbg:"
+	@echo "\ntest-dbg:"
 	tools/run-tests.sh -dbg test/[0-3]-*
 
 test-rel: tools/run-tests.sh _bld/ploy
-	@echo "test-rel:"
+	@echo "\ntest-rel:"
 	tools/run-tests.sh test
 
 test: test-rel test-dbg
