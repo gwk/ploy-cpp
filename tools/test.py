@@ -193,10 +193,9 @@ def check_file_exp(path, mode, exp):
   res_path = _path.join(test_dir, path)
   if mode == 'equal': # show a diff
     exp_path = path + '-expected'
-    with open(exp_path, 'w') as f: # write expectation to file
+    with open(exp_path, 'w') as f: # write expectation to file.
       f.write(exp)
-    # note: switch the order of path args so that unexpected text is rendered as red.
-    args = [res_path, _path.join(test_dir, exp_path)]
+    args = [_path.join(test_dir, exp_path), res_path]
     diff_cmd = ['dl'] + args
     outSL(*diff_cmd)
     _ps.runC(diff_cmd, interpreter='sh')
