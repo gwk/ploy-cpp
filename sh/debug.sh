@@ -2,7 +2,7 @@
 # Permission to use this file is granted in ploy/license.txt.
 
 set -e
-cd $(dirname "$0")/..
+[[ $(dirname "$0") == sh ]] || { echo "error: must run from root dir" 1>&2; exit 1; }
 
 make -s _bld/ploy-dbg
 lldb -- _bld/ploy-dbg "$@"
