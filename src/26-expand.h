@@ -8,21 +8,9 @@ static const Chars_const trace_expand_prefix = "◇ ";       // white diamond
 static const Chars_const trace_post_expand_prefix = "▫ ";  // white small square
 
 
-static Bool expr_contains_unquote(Obj o) {
-  if (!obj_is_vec_ref(o)) return false;
-  Mem m = vec_ref_mem(o);
-  assert(m.len > 0);
-  if (m.els[0].u == s_UNQ.u) return true; // vec is an unquote form.
-  it_mem_from(it, m, 1) {
-    if (expr_contains_unquote(*it)) return true;
-  }
-  return false;
-}
-
-
 static Obj expr_quasiquote(Obj o) {
   // owns o.
-  if (expr_contains_unquote(o)) { // implies obj_is_vec_ref.
+  if (obj_is_vec_ref(o) && vec_ref_contains_unquote(o)) {
     Mem m = vec_ref_mem(o);
     Obj v = new_vec_raw(m.len + 1);
     Obj* dst = vec_ref_els(v);
