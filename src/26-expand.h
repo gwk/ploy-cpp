@@ -8,25 +8,29 @@ static const Chars_const trace_expand_prefix = "◇ ";       // white diamond
 static const Chars_const trace_post_expand_prefix = "▫ ";  // white small square
 
 
-static Obj expr_quasiquote(Obj o) {
+static Obj expand_quasiquote(Obj o) {
   // owns o.
-  if (obj_is_vec_ref(o) && vec_ref_contains_unquote(o)) {
-    Mem m = vec_ref_mem(o);
+  if (!obj_is_vec_ref(o)) { // replace the quasiquote with quote.
+    return new_vec2(rc_ret_val(s_QUO), o);
+  }
+  Mem m = vec_ref_mem(o);
+  if (m.els[0].u == s_UNQ.u) { // unquote form.
+    check_obj(m.len == 2, "malformed UNQ form", o);
+    Obj e = rc_ret(m.els[1]);
+    rc_rel(o);
+    return e;
+  }
+  if (vec_ref_contains_unquote(o)) { // unquote exists somewhere in the tree.
     Obj v = new_vec_raw(m.len + 1);
     Obj* dst = vec_ref_els(v);
     dst[0] = rc_ret_val(s_SEQ);
     for_in(i, m.len) {
       Obj e = m.els[i];
-      if (obj_is_vec_ref(e) && vec_ref_el(e, 0).u == s_UNQ.u) { // unquote form
-        check_obj(vec_ref_len(e) == 2, "malformed s_UNQ form", e);
-        dst[1 + i] = rc_ret(vec_ref_el(e, 1)); // TODO: expand?
-      } else {
-        dst[1 + i] = expr_quasiquote(rc_ret(e));
-      }
+      dst[i + 1] = expand_quasiquote(rc_ret(e)); // propagate the quotation into the elements.
     }
     rc_rel(o);
     return v;
-  } else {
+  } else { // no unquotes in the tree; simply quote the top level.
     return new_vec2(rc_ret_val(s_QUO), o);
   }
 }
@@ -62,10 +66,10 @@ static Obj expand(Obj env, Obj code) {
     return code;
   }
   if (hd.u == s_QUA.u) {
-    check_obj(m.len == 2, "malformed s_QUA form", code);
+    check_obj(m.len == 2, "malformed QUA form", code);
     Obj expr = rc_ret(m.els[1]);
     rc_rel(code);
-    return expr_quasiquote(expr);
+    return expand_quasiquote(expr);
   }
   if (hd.u == s_EXPAND.u) {
 #if VERBOSE_EVAL
