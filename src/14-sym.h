@@ -113,27 +113,32 @@ typedef enum {
 } Sym_index;
 #undef S
 
+#define S(s) #s,
+static Chars_const sym_index_names[] = {
+  SYM_LIST
+};
+#undef S
+
 // sym Obj constants.
 #define S(s) static const Obj s_##s = _sym_with_index(si_##s);
 SYM_LIST
 #undef S
 
+#undef SYM_LIST
+
 
 static void sym_init() {
   assert(global_sym_names.mem.len == 0);
-  Obj sym;
-
-#define S(s) \
-sym = new_sym_from_chars(cast(Chars, #s)); \
-assert(sym_index(sym) == si_##s); \
-rc_rel_val(sym);
-
-SYM_LIST
-
-#undef S
+  for_in(i, si_self + 1) { // NOTE: self is not special, but it is the last hardcoded sym.
+    Chars_const name = sym_index_names[i];
+    // special name cases.
+    if (i == si_VEC0) name = "[]";
+    else if (i == si_CHAIN0) name = "[:]";
+    Obj sym = new_sym_from_chars(cast(Chars, name));
+    assert(sym_index(sym) == i);
+    rc_rel_val(sym);
+  }
 }
-
-#undef SYM_LIST
 
 
 static const Int sym_index_of_ref_type_sym_first = si_DATA;

@@ -1,8 +1,8 @@
 (outRLL
 void
 nil
-VEC0
-CHAIN0
+[]
+[:]
 END
 false
 true
