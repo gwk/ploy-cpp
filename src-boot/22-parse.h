@@ -449,7 +449,7 @@ static Obj parse_par(Parser* p, Obj sym, Chars_const par_desc) {
   if (c == ':') {
     P_ADV1;
     type = parse_expr(p);
-    c = PC;
+    PC;
   } else {
     type = rc_ret_val(s_nil);
   }
