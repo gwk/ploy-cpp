@@ -5,4 +5,4 @@ def fib_dumb(n):
   if n == 1: return 1
   return fib_dumb(n - 1) + fib_dumb(n - 2)
 
-print(fib_dumb(30))
+print(fib_dumb(n))
