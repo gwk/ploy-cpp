@@ -175,7 +175,7 @@ void dbg(Obj o) {
 
 
 static NO_RETURN error_obj(Chars_const msg, Obj o) {
-  errF("%s error: %s: ", (process_name ? process_name : __FILE__), msg);
+  errF("ploy error: %s: ", msg);
   obj_errL(o);
   exit(1);
 }

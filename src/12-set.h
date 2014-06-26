@@ -45,7 +45,7 @@ static void set_dealloc(Set* s) {
 static Hash_bucket* set_bucket(Set* s, Obj r) {
   assert_set_is_valid(s);
   assert(s->len > 0);
-  Uns h = ref_hash(r);
+  Uns h = rc_hash(r);
   Uns i = h % cast(Uns, s->len_buckets);
   return s->buckets + i;
 }

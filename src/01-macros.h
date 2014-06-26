@@ -35,6 +35,11 @@
 #define OPT_ALLOC_COUNT DEBUG
 #endif
 
+// reference counter hash table stats.
+#ifndef OPT_RC_TABLE_STATS
+#define OPT_RC_TABLE_STATS 0
+#endif
+
 // write invalid or unlikely values into unused portions of heap allocations.
 // this helps detect illegal reads from uninitialized and dead regions,
 // and also helps detect errors in allocation code,
@@ -127,3 +132,25 @@ for (Int i = (n) - 1, _end_##i = (m), _step_##i = (s); i >= _end_##i; i -= _step
 
 // clang c function overloading extension.
 #define OVERLOAD __attribute__((overloadable))
+
+
+// stderr utilities.
+
+#define err(s) fputs((s), stderr)
+#define err_nl() err("\n")
+#define err_flush() fflush(stderr)
+#define errL(s) { err(s); err_nl(); }
+
+#define errF(fmt, ...) fprintf(stderr, fmt, ## __VA_ARGS__)
+#define errFL(fmt, ...) errF(fmt "\n", ## __VA_ARGS__)
+
+// error macros
+
+#define warn(fmt, ...) errL("warning: " fmt, ## __VA_ARGS__)
+
+#define error(fmt, ...) { \
+  errFL("ploy error: " fmt, ## __VA_ARGS__); \
+  exit(1); \
+}
+
+#define check(condition, fmt, ...) { if (!(condition)) error(fmt, ## __VA_ARGS__); }

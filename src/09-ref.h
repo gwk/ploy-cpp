@@ -6,13 +6,6 @@
 #include "08-rc.h"
 
 
-static Uns ref_hash(Obj r) {
-  // pointer hash simply shifts of the bits that are guaranteed to be zero.
-  assert(obj_is_ref(r));
-  return r.u >> width_min_alloc;
-}
-
-
 static Int sym_index(Obj s);
 static const Int sym_index_of_ref_type_sym_first;
 static const Int sym_index_of_ref_type_sym_last;
@@ -76,7 +69,8 @@ static Obj ref_alloc(Ref_tag rt, Int size) {
   Obj r = (Obj){.p=raw_alloc(size, ci_alloc)}; // alloc counter also incremented.
   assert(!obj_tag(r)); // check that alloc is really aligned to allow tagging.
   r.rh->type_sym = rt_type_sym(rt);
-  rc_insert(ref_hash(r));
+  rc_insert(r);
+  //errFL("REF ALLOC: %d; total: %ld rc len: %ld", rt, counters[ci_alloc][0] - counters[ci_alloc][1], rc_table.len);
   return r;
 }
 

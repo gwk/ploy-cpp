@@ -33,24 +33,3 @@ static void set_process_name(Chars_const arg0) {
   process_name = chars_path_base(arg0);
 }
 
-
-// stderr utilities.
-
-static void err(Chars_const s) { fputs(s, stderr); }
-static void err_nl() { err("\n"); }
-static void err_flush() { fflush(stderr); }
-static void errL(Chars_const s) { err(s); err_nl(); }
-
-#define errF(fmt, ...) fprintf(stderr, fmt, ## __VA_ARGS__)
-#define errFL(fmt, ...) errF(fmt "\n", ## __VA_ARGS__)
-
-// error macros
-
-#define warn(fmt, ...) errL("warning: " fmt, ## __VA_ARGS__)
-
-#define error(fmt, ...) { \
-  errFL("\n%s error: " fmt, (process_name ? process_name : __FILE__), ## __VA_ARGS__); \
-  exit(1); \
-}
-
-#define check(condition, fmt, ...) { if (!(condition)) error(fmt, ## __VA_ARGS__); }

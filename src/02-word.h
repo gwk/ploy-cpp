@@ -78,6 +78,9 @@ typedef union {
 static const Int min_Int = LONG_MIN;
 static const Int max_Int = LONG_MAX;
 static const Uns max_Uns = ULONG_MAX;
+static const I32 min_I32 = INT_MIN;
+static const I32 max_I32 = INT_MAX;
+static const U32 max_U32 = UINT_MAX;
 
 typedef FILE* CFile; // 'File' refers to the ploy type.
 
@@ -100,8 +103,8 @@ DEF_SIZE(CFile);
 // which guarantees 16-byte-aligned malloc.
 // TODO: values for other platforms.
 // terminology: width_ prefix should always refer to a number of bits.
-static const Uns width_min_alloc = 4; // in bits.
-static const Int size_min_alloc = 1 << width_min_alloc;
+static const Uns width_min_alloc = 4; // in mask bits.
+static const Int size_min_alloc = 1 << width_min_alloc; // in bytes.
 
 
 static void assert_host_basic() {
@@ -130,3 +133,16 @@ static Int int_max(Int a, Int b) {
 static Int int_clamp(Int x, Int a, Int b) {
   return int_max(int_min(x, b), a);
 }
+
+
+#if OPT_RC_TABLE_STATS
+static Int int_pow2_fl(Int x) {
+  if (x < 0) x *= -1;
+  Int p = -1;
+  while (x) {
+    p++;
+    x >>= 1;
+  }
+  return p;
+}
+#endif

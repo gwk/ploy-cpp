@@ -105,5 +105,9 @@ int main(int argc, Chars_const argv[]) {
   counter_stats(vol_err);
 #endif
 
+#if OPT_RC_TABLE_STATS
+  rc_table_stats();
+#endif
+
   return 0;
 }

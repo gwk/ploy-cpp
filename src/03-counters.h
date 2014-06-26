@@ -85,8 +85,7 @@ static void counter_stats(Bool log_all) {
     Int inc = counters[i][0];
     Int dec = counters[i][1];
     if (log_all || inc != dec) {
-      fprintf(stderr, "==== PLOY MEMORY STATS: %s: %ld - %ld = %ld\n",
-        counter_names[i], inc, dec, inc - dec);
+      errFL("==== PLOY ALLOC STATS: %s: %ld - %ld = %ld", counter_names[i], inc, dec, inc - dec);
     }
   }
 }
