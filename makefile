@@ -11,8 +11,8 @@ _bld/prof-res-usage: tools/cc.sh tools/prof-res-usage.c
 _bld/text-to-c-literal: tools/cc.sh tools/text-to-c-literal.c
 	tools/cc.sh tools/text-to-c-literal.c -o $@
 
-_bld/ploy-core.h: _bld/text-to-c-literal src-core/core.ploy
-	_bld/text-to-c-literal 'core_src' < src-core/core.ploy > $@
+_bld/ploy-core.h: _bld/text-to-c-literal src-core/*.ploy
+	cat src-core/*.ploy | _bld/text-to-c-literal 'core_src' > $@
 
 _bld/ploy: tools/cc.sh _bld/ploy-core.h src-boot/*
 	tools/cc.sh src-boot/ploy.c -o $@
