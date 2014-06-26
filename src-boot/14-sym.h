@@ -81,12 +81,6 @@ S(SYM) \
 S(DATA_WORD) \
 S(DATA) \
 S(VEC) \
-S(I32) \
-S(I64) \
-S(U32) \
-S(U64) \
-S(F32) \
-S(F64) \
 S(FILE) \
 S(FUNC_HOST) \
 S(LABEL) \
@@ -149,23 +143,11 @@ static Obj rt_type_sym(Ref_tag rt) {
   switch (rt) {
     case rt_Data: return s_DATA;
     case rt_Vec: return s_VEC;
-    case rt_I32: return s_I32;
-    case rt_I64: return s_I64;
-    case rt_U32: return s_U32;
-    case rt_U64: return s_U64;
-    case rt_F32: return s_F32;
-    case rt_F64: return s_F64;
     case rt_File: return s_FILE;
     case rt_Func_host: return s_FUNC_HOST;
-    case rt_Reserved_A:
-    case rt_Reserved_B:
-    case rt_Reserved_C:
-    case rt_Reserved_D:
-    case rt_Reserved_E:
-    case rt_Reserved_F:
-      assert(0);
-      return obj0;
   }
+  assert(0);
+  return obj0;
 }
 
 

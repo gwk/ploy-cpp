@@ -220,20 +220,8 @@ static void write_repr_obj(CFile f, Obj o, Bool is_quoted, Set* s) {
       switch (ref_tag(o)) {
         case rt_Data: write_repr_data(f, o); break;
         case rt_Vec: write_repr_vec(f, o, is_quoted, s); break;
-        case rt_I32: fputs(NO_REPR_PO "I32 ?" NO_REPR_PC, f); break;
-        case rt_I64: fputs(NO_REPR_PO "I64 ?" NO_REPR_PC, f); break;
-        case rt_U32: fputs(NO_REPR_PO "U32 ?" NO_REPR_PC, f); break;
-        case rt_U64: fputs(NO_REPR_PO "U64 ?" NO_REPR_PC, f); break;
-        case rt_F32: fputs(NO_REPR_PO "F32 ?" NO_REPR_PC, f); break;
-        case rt_F64: fputs(NO_REPR_PO "F64 ?" NO_REPR_PC, f); break;
         case rt_File: fprintf(f, NO_REPR_PO "File %p" NO_REPR_PC, file_cfile(o)); break;
         case rt_Func_host: write_repr_Func_host(f, o); break;
-        case rt_Reserved_A:
-        case rt_Reserved_B:
-        case rt_Reserved_C:
-        case rt_Reserved_D:
-        case rt_Reserved_E:
-        case rt_Reserved_F: fputs(NO_REPR_PO "ReservedX" NO_REPR_PC, f); break;
       }
       set_remove(s, o);
     }

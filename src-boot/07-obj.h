@@ -64,7 +64,7 @@ static Chars_const obj_tag_names[] = {
 // all ref types (objects that are dynamically allocated) follow a similar convention;
 // the lowest 4 bits of the first allocated word indicate its type.
 // NOTE: the current plan is that eventually this will be replaced by a 'type' pointer.
-#define width_ref_tag 4
+#define width_ref_tag 2
 #define ref_tag_end (1L << width_ref_tag)
 
 static const Uns ref_tag_mask = ref_tag_end - 1;
@@ -73,39 +73,15 @@ static const Uns ref_tag_mask = ref_tag_end - 1;
 typedef enum {
   rt_Data = 0,    // binary data; obj_counter_index assumes that this is the first index.
   rt_Vec,         // a fixed length vector of objects.
-  rt_I32,         // full-width numeric types that do not fit into the tagged words.
-  rt_I64,
-  rt_U32,
-  rt_U64,
-  rt_F32,
-  rt_F64,
   rt_File,        // wrapper around CFile type, plus additional info.
   rt_Func_host,   // an opaque function built into the host interpreter.
-  rt_Reserved_A,  // currently unused.
-  rt_Reserved_B,
-  rt_Reserved_C,
-  rt_Reserved_D,
-  rt_Reserved_E,
-  rt_Reserved_F,
 } Ref_tag;
 
 static Chars_const ref_tag_names[] = {
   "Data",
   "Vec",
-  "I32",
-  "I64",
-  "U32",
-  "U64",
-  "F32",
-  "F64",
   "File",
   "Func-host",
-  "Reserved-A",
-  "Reserved-B",
-  "Reserved-C",
-  "Reserved-D",
-  "Reserved-E",
-  "Reserved-F",
 };
 
 typedef struct _RH RH;

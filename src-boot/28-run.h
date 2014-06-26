@@ -236,21 +236,10 @@ static Step run_step(Obj env, Obj code) {
     case rt_Vec:
       return run_Vec(env, code);
     case rt_Data:
-    case rt_I32:
-    case rt_I64:
-    case rt_U32:
-    case rt_U64:
-    case rt_F32:
-    case rt_F64:
       return mk_step(env, rc_ret(code)); // self-evaluating.
     case rt_File:
     case rt_Func_host:
-    case rt_Reserved_A:
-    case rt_Reserved_B:
-    case rt_Reserved_C:
-    case rt_Reserved_D:
-    case rt_Reserved_E:
-    case rt_Reserved_F: exc_raise("cannot run object: %o", code);
+      exc_raise("cannot run object: %o", code);
   }
 }
 
