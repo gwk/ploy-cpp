@@ -146,6 +146,7 @@ static Obj host_Vec(Obj env, Mem args) {
 
 static Obj host_len(Obj env, Mem args) {
   // owns elements of args.
+  // TODO: separate host_vec_len and host data_len.
   assert(args.len == 1);
   Obj o = args.els[0];
   Int l;
@@ -153,7 +154,7 @@ static Obj host_len(Obj env, Mem args) {
     l = 0;
   } else {
     exc_check(obj_is_data(o) || obj_is_vec(o), "len requires Data or Vec; received: %o", o);
-    l = o.rhl->len;
+    l = o.data->len;
   }
   rc_rel(o);
   return new_int(l);

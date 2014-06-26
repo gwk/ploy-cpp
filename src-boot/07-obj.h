@@ -84,30 +84,25 @@ static Chars_const ref_tag_names[] = {
   "Func-host",
 };
 
-typedef struct _RH RH;
-typedef struct _RHL RHL;
+union _Obj;
+typedef struct _Vec Vec;
+typedef struct _Data Data;
+typedef struct _File File;
+typedef struct _Func_host Func_host;
 
-typedef union {
+typedef union _Obj {
   Int i;
   Uns u;
   Ptr p;
   Chars c; // no valid object can be interpreted as Chars; this for the exc_raise formatter.
-  RH* rh;
-  RHL* rhl;
+  union _Obj* type_ptr; // common to all ref types.
+  Vec* vec;
+  Data* data;
+  File* file;
+  Func_host* func_host;
 } Obj;
 DEF_SIZE(Obj);
 
-struct _RH {
-  Obj type_sym;
-} ALIGNED_TO_WORD; // Ref header.
-DEF_SIZE(RH);
-
-// the Vec and Data ref types are layed out as RH, len word, followed by the elements.
-struct _RHL {
-  RH rh;
-  Int len;
-} ALIGNED_TO_WORD; // Ref header with length.
-DEF_SIZE(RHL);
 
 // invalid object; essentially the NULL pointer.
 // used as a return value for error conditions and a marker for cleared or invalid memory.

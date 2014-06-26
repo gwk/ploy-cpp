@@ -139,18 +139,6 @@ static const Int sym_index_of_ref_type_sym_first = si_DATA;
 static const Int sym_index_of_ref_type_sym_last = si_FUNC_HOST;
 
 
-static Obj rt_type_sym(Ref_tag rt) {
-  switch (rt) {
-    case rt_Data: return s_DATA;
-    case rt_Vec: return s_VEC;
-    case rt_File: return s_FILE;
-    case rt_Func_host: return s_FUNC_HOST;
-  }
-  assert(0);
-  return obj0;
-}
-
-
 UNUSED_FN static Bool sym_is_form(Obj s) {
   Int si = sym_index(s);
   return si >= si_COMMENT && si <= si_FN;

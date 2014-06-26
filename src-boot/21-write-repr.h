@@ -192,8 +192,7 @@ static void write_repr_vec(CFile f, Obj v, Bool is_quoted, Set* s) {
 
 static void write_repr_Func_host(CFile f, Obj func) {
   fputs(NO_REPR_PO "Func-host ", f);
-  Func_host* fh = ref_body(func);
-  Obj d = sym_data(fh->sym);
+  Obj d = sym_data(func.func_host->sym);
   write_data(f, d);
   fputs(NO_REPR_PC, f);
 }

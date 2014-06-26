@@ -4,10 +4,18 @@
 #include "16-data.h"
 
 
+struct _Vec {
+  Obj type;
+  Int len;
+} ALIGNED_TO_WORD;
+DEF_SIZE(Vec);
+
+
 static Obj new_vec_raw(Int len) {
   if (!len) return rc_ret_val(s_VEC0);
-  Obj v = ref_alloc(rt_Vec, size_RHL + (size_Obj * len));
-  v.rhl->len = len;
+  Obj v = ref_alloc(rt_Vec, size_Vec + (size_Obj * len));
+  v.vec->type = s_VEC;
+  v.vec->len = len;
   return v;
 }
 
@@ -72,8 +80,8 @@ static Obj new_vec4(Obj a, Obj b, Obj c, Obj d) {
 
 static Int vec_ref_len(Obj v) {
   assert(ref_is_vec(v));
-  assert(v.rhl->len > 0);
-  return v.rhl->len;
+  assert(v.vec->len > 0);
+  return v.vec->len;
 }
 
 
@@ -85,7 +93,7 @@ static Int vec_len(Obj v) {
 
 static Obj* vec_ref_els(Obj v) {
   assert(ref_is_vec(v));
-  return cast(Obj*, v.rhl + 1); // address past rhl.
+  return cast(Obj*, v.vec + 1); // address past vec header.
 }
 
 

@@ -4,6 +4,13 @@
 #include "15-bool.h"
 
 
+struct _Data {
+  Obj type;
+  Int len;
+} ALIGNED_TO_WORD;
+DEF_SIZE(Data);
+
+
 // zero length data word.
 static const Obj blank = (Obj){.u = ot_data };
 
@@ -14,8 +21,8 @@ assert(d.u == blank.u || obj_tag(d) == ot_data);
 
 static Int data_ref_len(Obj d) {
   assert(ref_is_data(d));
-  assert(d.rhl->len > 0);
-  return d.rhl->len;
+  assert(d.data->len > 0);
+  return d.data->len;
 }
 
 
@@ -27,7 +34,7 @@ static Int data_len(Obj d) {
 
 static Chars data_ref_ptr(Obj d) {
   assert(ref_is_data(d));
-  return cast(Chars, d.rhl + 1); // address past rhl.
+  return cast(Chars, d.data + 1); // address past data header.
 }
 
 
@@ -43,8 +50,9 @@ static Str data_str(Obj d) {
 
 
 static Obj data_empty(Int len) {
-  Obj d = ref_alloc(rt_Data, size_RHL + len);
-  d.rhl->len = len;
+  Obj d = ref_alloc(rt_Data, size_Data + len);
+  d.data->type = s_DATA;
+  d.data->len = len;
   return d; // borrowed.
 }
 

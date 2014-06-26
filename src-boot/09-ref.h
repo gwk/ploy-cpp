@@ -12,7 +12,7 @@ static const Int sym_index_of_ref_type_sym_last;
 
 static Ref_tag ref_tag(Obj r) {
   assert(obj_is_ref(r));
-  Int si = sym_index(r.rh->type_sym);
+  Int si = sym_index(*r.type_ptr);
   assert(si >= sym_index_of_ref_type_sym_first && si <= sym_index_of_ref_type_sym_last);
   return cast(Ref_tag, si - sym_index_of_ref_type_sym_first);
 }
@@ -20,7 +20,7 @@ static Ref_tag ref_tag(Obj r) {
 
 static Obj ref_type_sym(Obj r) {
   assert(obj_is_ref(r));
-  return r.rh->type_sym;
+  return *r.type_ptr;
 }
 
 
@@ -53,14 +53,6 @@ static Bool ref_is_file(Obj f) {
 }
 
 
-static Ptr ref_body(Obj r) {
-  assert(!ref_is_data(r) && !ref_is_vec(r));
-  return r.rh + 1; // address past rh.
-}
-
-
-static Obj rt_type_sym(Ref_tag rt); // this is defined in sym to reduce forward declarations.
-
 static Obj ref_alloc(Ref_tag rt, Int size) {
   assert(size >= size_Word * 2);
   Counter_index ci = rt_counter_index(rt);
@@ -68,7 +60,6 @@ static Obj ref_alloc(Ref_tag rt, Int size) {
   counter_inc(ci); // ret/rel counter.
   Obj r = (Obj){.p=raw_alloc(size, ci_alloc)}; // alloc counter also incremented.
   assert(!obj_tag(r)); // check that alloc is really aligned to allow tagging.
-  r.rh->type_sym = rt_type_sym(rt);
   rc_insert(r);
   //errFL("REF ALLOC: %d; total: %ld rc len: %ld", rt, counters[ci_alloc][0] - counters[ci_alloc][1], rc_table.len);
   return r;

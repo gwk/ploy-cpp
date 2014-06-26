@@ -156,9 +156,8 @@ static Step run_call_native(Obj env, Obj func, Mem args, Bool is_expand) {
 
 static Step run_call_host(Obj env, Obj func, Mem args) {
   // owns env, func.
-  Func_host* fh = ref_body(func);
-  Int len_pars = fh->len_pars;
-  Func_host_ptr f = fh->ptr;
+  Int len_pars = func.func_host->len_pars;
+  Func_host_ptr f_ptr = func.func_host->ptr;
   // len_pars == -1 indicates a variadic function.
   exc_check(args.len == len_pars || len_pars == -1,
     "host function expects %i argument%s; received %i",
@@ -169,7 +168,7 @@ static Step run_call_host(Obj env, Obj func, Mem args) {
     Step step = run(env, args.els[i]);
     arg_vals[i] = step.val;
   }
-  return mk_step(env, f(env, mem_mk(args.len, arg_vals))); // TODO: add TCO for host_run?
+  return mk_step(env, f_ptr(env, mem_mk(args.len, arg_vals))); // TODO: add TCO for host_run?
 }
 
 
