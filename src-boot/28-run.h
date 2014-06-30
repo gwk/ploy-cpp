@@ -100,6 +100,20 @@ static Step run_FN(Obj env, Mem args) {
 }
 
 
+static Step run_STRUCT_BOOT(Obj env, Mem args) {
+  // owns env.
+  check(args.len > 0, "STRUCT_BOOT form is empty");
+  Obj v = new_vec_raw(args.len);
+  Obj* els = vec_els(v);
+  for_in(i, args.len) {
+    els[i] = rc_ret(args.els[i]);
+  }
+  Step step = run(env, v);
+  rc_rel(v);
+  return step;
+}
+
+
 static Step run_SEQ(Obj env, Mem args) {
   // owns env.
   Obj v = new_vec_raw(args.len);
@@ -204,6 +218,7 @@ static Step run_Vec(Obj env, Obj code) {
       EVAL_FORM(LET);
       EVAL_FORM(IF);
       EVAL_FORM(FN);
+      EVAL_FORM(STRUCT_BOOT);
       EVAL_FORM(SEQ);
       EVAL_FORM(CALL);
     }

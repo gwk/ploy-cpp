@@ -9,20 +9,20 @@
 # as well as increased expressiveness and syntactic consistency.
 
 
-{LET _errR1L
+{!LET _errR1L
   # print a representation of a single object to std-err.
   # defined early for debugging.
-  {FN
+  {!FN
     _errR1L # the name sym of this fn.
     false # not a macro.
     {-label -obj} # parameter list.
-    {DO # body.
+    {!DO # body.
       # standard files are defined as a [name, file] vec.
       (raw-write (el std-err 1) label)
       (raw-write-repr (el std-err 1) obj)
       (raw-write (el std-err 1) '\n')}}}
 
-{LET macro
+{!LET macro
   # the 'macro' macro defines a new macro in the current environment.
   # TODO: refine environment semantics?
   # note: if core was already available, we would define 'macro' using itself like so:
@@ -37,7 +37,7 @@
             (prepend DO body)>]>> # wrapped in a do form if necessary.
   # instead, we must define it using raw forms.
   # note the structural similarity between the outer FN form and the inner vec literal.
-  {FN # creates both functions and macros
+  {!FN # creates both functions and macros
     macro # the sym for this macro is `macro;
     # we do not quote it because this is a raw form, so it is not evaluated.
     true # is-macro
@@ -51,7 +51,7 @@
         sym
         true
         pars
-        {IF (ieq (len body) 1)
+        {!IF (ieq (len body) 1)
           (el body 0)
           (prepend DO body)}]]}}
 
@@ -64,7 +64,7 @@
       sym
       false
       pars
-      {IF (ieq (len body) 1)
+      {!IF (ieq (len body) 1)
         (el body 0)
         (prepend DO body)}]]>
 

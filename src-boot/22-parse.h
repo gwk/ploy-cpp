@@ -76,6 +76,8 @@ if (!(condition)) return parse_error(p, fmt, ##__VA_ARGS__)
 #define P_ADV(n) { p->sp.pos += n; p->sp.col += n; }
 #define P_ADV1 P_ADV(1)
 
+#define P_CHARS (p->src.chars + p->sp.pos)
+
 
 static U64 parse_U64(Parser* p) {
   Char c = PC;
@@ -297,13 +299,31 @@ if (p->e || !parse_terminator(p, t)) { \
 }
 
 
-static Obj parse_struct(Parser* p) {
-  P_ADV1;
+static Obj parse_struct_simple(Parser* p) {
   Mem m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR('}');
-  Obj v = new_vec_M(m);
+  Obj v = new_vec_EM(rc_ret_val(s_STRUCT), m);
   mem_dealloc(m);
   return v;
+}
+
+
+static Obj parse_struct_boot(Parser* p) {
+  Mem m = parse_exprs(p, 0);
+  P_CONSUME_TERMINATOR('}');
+  Obj v = new_vec_EM(rc_ret_val(s_STRUCT_BOOT), m);
+  mem_dealloc(m);
+  return v;
+}
+
+
+static Obj parse_struct(Parser* p) {
+  P_ADV1;
+  if (PC == '!') {
+    P_ADV1;
+    return parse_struct_boot(p);
+  }
+  return parse_struct_simple(p);
 }
 
 
@@ -397,15 +417,14 @@ static Obj parse_chain_fat(Parser* p) {
 
 static Obj parse_seq(Parser* p) {
   P_ADV1;
-  parse_space(p);
+  parse_space(p); // TODO: move this.
   if (PC == ':') {
     return parse_chain_simple(p);
   }
   if (PC == '|') {
     return parse_chain_fat(p);
-  } else {
-    return parse_seq_simple(p);
   }
+  return parse_seq_simple(p);
 }
 
 

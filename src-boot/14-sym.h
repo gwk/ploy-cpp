@@ -95,6 +95,8 @@ S(SCOPE) \
 S(LET) \
 S(IF) \
 S(FN) \
+S(STRUCT_BOOT) \
+S(STRUCT) \
 S(SEQ) \
 S(CALL) \
 S(END_SPECIAL_SYMS) \
