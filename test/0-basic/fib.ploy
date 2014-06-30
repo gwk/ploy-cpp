@@ -1,9 +1,9 @@
-<fn fib {-n}
+<fn fib [-n]
   <if
     (ieq n 0) 0
     (ieq n 1) 1
     <do
-      <fn f {-n -a -b}
+      <fn f [-n -a -b]
         <if (ieq n 1) b
           (self (isub n 1) b (iadd a b))>>
       (f n 0 1)>>>

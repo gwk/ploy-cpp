@@ -4,7 +4,7 @@
 # builtin macros and functions that are available to all programs.
 
 
-<fn error {-msg}
+<fn error [-msg]
   # raise an error. for now we can only print the message and exit.
   (raw-write (el std-err 1) 'error: ')
   (raw-write (el std-err 1) msg)
@@ -13,56 +13,56 @@
 
 # math functions.
 
-<fn iinc {-i} (iadd i 1)>
+<fn iinc [-i] (iadd i 1)>
 
-<fn idec {-i} (isub i 1)>
+<fn idec [-i] (isub i 1)>
 
 # type functions.
 
-<fn is-int {-o} (sym-eq (type-sym o) `INT)>
-<fn is-sym {-o} (sym-eq (type-sym o) `SYM)>
-<fn is-data {-o} (sym-eq (type-sym o) `DATA)>
-<fn is-vec {-o} (sym-eq (type-sym o) `VEC)>
-<fn is-I32 {-o} (sym-eq (type-sym o) `I32)>
-<fn is-I64 {-o} (sym-eq (type-sym o) `I64)>
-<fn is-U32 {-o} (sym-eq (type-sym o) `U32)>
-<fn is-U64 {-o} (sym-eq (type-sym o) `U64)>
-<fn is-F32 {-o} (sym-eq (type-sym o) `F32)>
-<fn is-F64 {-o} (sym-eq (type-sym o) `F64)>
-<fn is-file {-o} (sym-eq (type-sym o) `FILE)>
-<fn is-func_host {-o} (sym-eq (type-sym o) `FUNC_HOST)>
+<fn is-int [-o] (sym-eq (type-sym o) `INT)>
+<fn is-sym [-o] (sym-eq (type-sym o) `SYM)>
+<fn is-data [-o] (sym-eq (type-sym o) `DATA)>
+<fn is-vec [-o] (sym-eq (type-sym o) `VEC)>
+<fn is-I32 [-o] (sym-eq (type-sym o) `I32)>
+<fn is-I64 [-o] (sym-eq (type-sym o) `I64)>
+<fn is-U32 [-o] (sym-eq (type-sym o) `U32)>
+<fn is-U64 [-o] (sym-eq (type-sym o) `U64)>
+<fn is-F32 [-o] (sym-eq (type-sym o) `F32)>
+<fn is-F64 [-o] (sym-eq (type-sym o) `F64)>
+<fn is-file [-o] (sym-eq (type-sym o) `FILE)>
+<fn is-func_host [-o] (sym-eq (type-sym o) `FUNC_HOST)>
 
 
 # vec functions.
 
-<fn hd {-vec} (el vec 0)>
+<fn hd [-vec] (el vec 0)>
 
-<fn tl {-vec} (el vec (idec (len vec)))>
+<fn tl [-vec] (el vec (idec (len vec)))>
 
-<fn vec-next {-vec}
+<fn vec-next [-vec]
   # this a poor substitute for a real vec iterator.
  (slice vec 1 (len vec))>
 
-<fn vec-from {-vec -from}
+<fn vec-from [-vec -from]
   (slice vec from (len vec))>
 
-<fn vec-to {-vec -to}
+<fn vec-to [-vec -to]
   (slice vec 0 to)>
 
 # control flow.
 
-<macro _if-then {-pred -then}
+<macro _if-then [-pred -then]
   # 'if' variant that takes exactly two expressions; for bootstrapping the 'if' macro.
   [IF pred then void]>
 
-<macro _if-then-else {-pred -then -else}
+<macro _if-then-else [-pred -then -else]
   # 'if' variant that takes exactly three expressions; for bootstrapping the 'if' macro.
   [IF pred then else]>
 
-<macro if {&exprs}
+<macro if [&exprs]
   # generic 'if'. inspired by paul graham's arc-lisp.
   <_if-then (ilt (len exprs) 2) (error "degenerate if form")>
-  <fn f {-pred -then -rest}
+  <fn f [-pred -then -rest]
     <let l (len rest)>
     #(_errR1L 'f l: ' l)
     #(_errR1L 'f pred: ' pred)
@@ -75,25 +75,25 @@
         [IF pred then (self (hd rest) (el rest 1) (vec-from rest 2))]>>>
   (f (hd exprs) (el exprs 1) (slice exprs 2 (len exprs)))>
 
-<macro when {-pred &exprs}
+<macro when [-pred &exprs]
   # if 'pred', do 'exprs'. else none.
   [IF pred (prepend DO exprs) void]>
 
 # output functions.
 
-<fn write1 {-file -str}
+<fn write1 [-file -str]
   # write a single string.
   # TODO: support other types.
   (raw-write (el file 1) str)>
 
-<fn writeR1 {-file -obj}
+<fn writeR1 [-file -obj]
   # write a single repr.
   (raw-write-repr (el file 1) obj)>
 
 # TODO: this is a temporary, halfway solution to the desired printing functions.
 # would be better to use a macro to generate each function with no subcalls.
 
-<fn writeSE {-file -sep -end -first -rest}
+<fn writeSE [-file -sep -end -first -rest]
   # write strings with separator and end strings.
   #(_errR1L 'writeSE f: ' first)
   #(_errR1L 'writeSE r: ' rest)
@@ -104,7 +104,7 @@
       (write1 file sep)
       (self file sep end (hd rest) (vec-next rest))>>>
 
-<fn writeRSE {-file -sep -end -first -rest}
+<fn writeRSE [-file -sep -end -first -rest]
   # write reprs with separator and end strings.
   (writeR1 file first)
   <if (not rest)
@@ -113,125 +113,125 @@
       (write1 file sep)
       (self file sep end (hd rest) (vec-next rest))>>>
 
-<fn out {&objs}
+<fn out [&objs]
   <if (not objs)
     void
     (writeSE std-out '' '' (hd objs) (vec-next objs))>>
 
-<fn outS {&objs}
+<fn outS [&objs]
   <if (not objs)
     void
     (writeSE std-out ' ' '' (hd objs) (vec-next objs))>>
 
-<fn outL {&objs}
+<fn outL [&objs]
   <if (not objs)
     (write1 std-out '\n')
     (writeSE std-out '' '\n' (hd objs) (vec-next objs))>>
 
-<fn outSL {&objs}
+<fn outSL [&objs]
   <if (not objs)
     (write1 std-out '\n')
     (writeSE std-out ' ' '\n' (hd objs) (vec-next objs))>>
 
-<fn outSS {&objs}
+<fn outSS [&objs]
   <if (not objs)
     (write1 std-out ' ')
     (writeSE std-out ' ' ' ' (hd objs) (vec-next objs))>>
 
-<fn outLL {&objs}
+<fn outLL [&objs]
   <if (not objs)
     (write1 std-out '\n')
     (writeSE std-out '\n' '\n' (hd objs) (vec-next objs))>>
 
 
-<fn err {&objs}
+<fn err [&objs]
   <if (not objs)
     void
     (writeSE std-err '' '' (hd objs) (vec-next objs))>>
 
-<fn errS {&objs}
+<fn errS [&objs]
   <if (not objs)
     void
     (writeSE std-err ' ' '' (hd objs) (vec-next objs))>>
 
-<fn errL {&objs}
+<fn errL [&objs]
   <if (not objs)
     (write1 std-err '\n')
     (writeSE std-err '' '\n' (hd objs) (vec-next objs))>>
 
-<fn errSS {&objs}
+<fn errSS [&objs]
   <if (not objs)
     (write1 std-err ' ')
     (writeSE std-err ' ' ' ' (hd objs) (vec-next objs))>>
 
-<fn errSL {&objs}
+<fn errSL [&objs]
   <if (not objs)
     (write1 std-err '\n')
     (writeSE std-err ' ' '\n' (hd objs) (vec-next objs))>>
 
-<fn errLL {&objs}
+<fn errLL [&objs]
   <if (not objs)
     (write1 std-err '\n')
     (writeSE std-err '\n' '\n' (hd objs) (vec-next objs))>>
 
 
-<fn outR {&objs}
+<fn outR [&objs]
   <if (not objs)
     void
     (writeSE std-out '' '' (hd objs) (vec-next objs))>>
 
-<fn outRS {&objs}
+<fn outRS [&objs]
   <if (not objs)
     void
     (writeSE std-out ' ' '' (hd objs) (vec-next objs))>>
 
-<fn outRL {&objs}
+<fn outRL [&objs]
   <if (not objs)
     (write1 std-out '\n')
     (writeRSE std-out '' '\n' (hd objs) (vec-next objs))>>
 
-<fn outRSS {&objs}
+<fn outRSS [&objs]
   <if (not objs)
     (write1 std-out ' ')
     (writeRSE std-out ' ' ' ' (hd objs) (vec-next objs))>>
 
-<fn outRSL {&objs}
+<fn outRSL [&objs]
   <if (not objs)
     (write1 std-out '\n')
     (writeRSE std-out ' ' '\n' (hd objs) (vec-next objs))>>
 
-<fn outRLL {&objs}
+<fn outRLL [&objs]
   <if (not objs)
     (write1 std-out '\n')
     (writeRSE std-out '\n' '\n' (hd objs) (vec-next objs))>>
 
 
-<fn errR {&objs}
+<fn errR [&objs]
   <if (not objs)
     void
     (writeRSE std-err '' '' (hd objs) (vec-next objs))>>
 
-<fn errRS {&objs}
+<fn errRS [&objs]
   <if (not objs)
     void
     (writeRSE std-err ' ' '' (hd objs) (vec-next objs))>>
 
-<fn errRL {&objs}
+<fn errRL [&objs]
   <if (not objs)
     (write1 std-err '\n')
     (writeRSE std-err '' '\n' (hd objs) (vec-next objs))>>
 
-<fn errRSS {&objs}
+<fn errRSS [&objs]
   <if (not objs)
     (write1 std-err ' ')
     (writeRSE std-err ' ' ' ' (hd objs) (vec-next objs))>>
 
-<fn errRSL {&objs}
+<fn errRSL [&objs]
   <if (not objs)
     (write1 std-err '\n')
     (writeRSE std-err ' ' '\n' (hd objs) (vec-next objs))>>
 
-<fn errRLL {&objs}
+<fn errRLL [&objs]
   <if (not objs)
     (write1 std-err '\n')
     (writeRSE std-err '\n' '\n' (hd objs) (vec-next objs))>>

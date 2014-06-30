@@ -88,12 +88,14 @@ static Step run_FN(Obj env, Mem args) {
   exc_check(obj_is_sym(name),  "FN: name is not a Sym: %o", name);
   exc_check(obj_is_bool(is_macro), "FN: is-macro is not a Bool: %o", is_macro);
   exc_check(obj_is_vec(pars), "FN: parameters is not a Vec: %o", pars);
+  exc_check(vec_len(pars) > 0 && vec_ref_el(pars, 0).u == s_SEQ.u,
+    "FN: parameters is not a sequence literal: %o", pars);
   // TODO: check all pars.
   Obj f = new_vec_raw(5);
   Obj* els = vec_ref_els(f);
   els[0] = rc_ret_val(name);
   els[1] = rc_ret_val(is_macro);
-  els[2] = rc_ret(pars);
+  els[2] = vec_slice_from(rc_ret(pars), 1); // HACK: remove the inital SEQ form symbol.
   els[3] = rc_ret(body);
   els[4] = rc_ret(env);
   return mk_step(env, f);
@@ -209,7 +211,7 @@ static Step run_Vec(Obj env, Obj code) {
   Obj form = m.els[0];
   Obj_tag ot = obj_tag(form);
   if (ot == ot_sym) {
-    Int si = sym_index(form);
+    Int si = sym_index(form); // Int type avoids incomplete enum switch error.
 #define EVAL_FORM(s) case si_##s: return run_##s(env, mem_next(m))
     switch (si) {
       EVAL_FORM(QUO);

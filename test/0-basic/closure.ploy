@@ -1,5 +1,5 @@
-<fn f {-a}
-  <fn g {-b}
+<fn f [-a]
+  <fn g [-b]
     (iadd a b)>>
 
 <let f3 (f 1)>

@@ -1,6 +1,6 @@
 <let n 28>
 
-<fn fib-dumb {-n}
+<fn fib-dumb [-n]
   <if
     (ieq n 0) 0
     (ieq n 1) 1
