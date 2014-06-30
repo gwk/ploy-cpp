@@ -1,0 +1,134 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXFileReference section */
+		EC35627718527BA500805877 /* _repro.ploy */ = {isa = PBXFileReference; lastKnownFileType = text; path = _repro.ploy; sourceTree = "<group>"; };
+		EC508F3F184D795E00803072 /* ploy */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; name = ploy; path = /Users/gwk/work/ploy/build/Debug/ploy; sourceTree = "<absolute>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		EC508F36184D795E00803072 = {
+			isa = PBXGroup;
+			children = (
+				EC35627718527BA500805877 /* _repro.ploy */,
+			);
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		EC508F3E184D795E00803072 /* ploy */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = EC508F48184D795E00803072 /* Build configuration list for PBXNativeTarget "ploy" */;
+			buildPhases = (
+				EC996D721896CBAF0082CFD5 /* ShellScript */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ploy;
+			productName = ploy;
+			productReference = EC508F3F184D795E00803072 /* ploy */;
+			productType = "com.apple.product-type.tool";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		EC508F37184D795E00803072 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0500;
+				ORGANIZATIONNAME = "George King";
+			};
+			buildConfigurationList = EC508F3A184D795E00803072 /* Build configuration list for PBXProject "ploy" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = EC508F36184D795E00803072;
+			productRefGroup = EC508F36184D795E00803072;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				EC508F3E184D795E00803072 /* ploy */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		EC996D721896CBAF0082CFD5 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "exec make _bld/ploy-dbg\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		EC508F46184D795E00803072 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+			};
+			name = Debug;
+		};
+		EC508F47184D795E00803072 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+			};
+			name = Release;
+		};
+		EC508F49184D795E00803072 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		EC508F4A184D795E00803072 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		EC508F3A184D795E00803072 /* Build configuration list for PBXProject "ploy" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				EC508F46184D795E00803072 /* Debug */,
+				EC508F47184D795E00803072 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		EC508F48184D795E00803072 /* Build configuration list for PBXNativeTarget "ploy" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				EC508F49184D795E00803072 /* Debug */,
+				EC508F4A184D795E00803072 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = EC508F37184D795E00803072 /* Project object */;
+}
