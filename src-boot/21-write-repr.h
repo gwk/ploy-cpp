@@ -51,7 +51,7 @@ static void write_repr_obj(CFile f, Obj o, Bool is_quoted, Set* s);
 static void write_repr_vec_vec(CFile f, Obj v, Bool is_quoted, Set* s) {
   assert(ref_is_vec(v));
   Mem m = vec_ref_mem(v);
-  if (is_quoted) fputc('!', f);
+  if (is_quoted) fputs("???", f);
   fputc('[', f);
   for_in(i, m.len) {
     if (i) fputc(' ', f);
@@ -63,7 +63,7 @@ static void write_repr_vec_vec(CFile f, Obj v, Bool is_quoted, Set* s) {
 
 static void write_repr_chain(CFile f, Obj c, Bool is_quoted, Set* s) {
   assert(ref_is_vec(c));
-  if (is_quoted) fputc('!', f);
+  if (is_quoted) fputs("???", f);
   fputs("[:", f);
   Bool first = true;
   loop {
@@ -84,7 +84,7 @@ static void write_repr_chain(CFile f, Obj c, Bool is_quoted, Set* s) {
 
 static void write_repr_fat_chain(CFile f, Obj c, Bool is_quoted, Set* s) {
   assert(ref_is_vec(c));
-  if (is_quoted) fputc('!', f);
+  if (is_quoted) fputs("???", f);
   fputc('[', f);
   loop {
     Mem m = vec_ref_mem(c);
