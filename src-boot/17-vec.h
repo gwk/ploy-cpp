@@ -159,6 +159,41 @@ static Obj chain_b(Obj v) {
 }
 
 
+static Obj vec_slice(Obj v, Int f, Int t) {
+  // owns v.
+  if (v.u == s_VEC0.u) {
+    return v; // no ret/rel necessary.
+  }
+  Int l = vec_len(v);
+  if (f < 0) f += l;
+  if (t < 0) t += l;
+  f = int_clamp(f, 0, l);
+  t = int_clamp(t, 0, l);
+  Int ls = t - f; // length of slice.
+  if (ls == 0) {
+    rc_rel(v);
+    return rc_ret_val(s_VEC0);
+  }
+  if (ls == l) {
+    return v; // no ret/rel necessary.
+  }
+  Obj s = new_vec_raw(ls);
+  Obj* src = vec_ref_els(v);
+  Obj* dst = vec_ref_els(s);
+  for_in(i, ls) {
+    dst[i] = rc_ret(src[i + f]);
+  }
+  rc_rel(v);
+  return s;
+}
+
+
+static Obj vec_slice_from(Obj v, Int f) {
+  // owns v.
+  return vec_slice(v, f, vec_len(v));
+}
+
+
 typedef enum {
   vs_vec,
   vs_chain,
