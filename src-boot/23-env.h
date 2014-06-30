@@ -60,7 +60,7 @@ static Call_envs env_bind_args(Obj caller_env, Obj callee_env, Obj func, Mem par
     Obj par = pars.els[i_pars];
     check_obj(obj_is_par(par), "function parameter is malformed", vec_ref_el(func, 0));
     Obj* par_els = vec_ref_els(par);
-    Obj par_kind = par_els[0]; // LABEL or VARIAD
+    Obj par_kind = par_els[0]; // LABEL or VARIAD.
     Obj par_sym = par_els[1];
     //Obj par_type = par_els[2];
     Obj par_expr = par_els[3];
@@ -69,7 +69,7 @@ static Call_envs env_bind_args(Obj caller_env, Obj callee_env, Obj func, Mem par
       if (i_args < args.len) {
         arg = args.els[i_args];
         i_args++;
-      } else if (par_expr.u != s_nil.u) { // TODO: what about default value of nil? is quote sufficient?
+      } else if (par_expr.u != s_nil.u) { // TODO: change the default value to be unwritable?
         arg = par_expr;
       } else {
         error_obj("function received too few arguments", vec_ref_el(func, 0));
