@@ -144,7 +144,7 @@ for (Int i = (n) - 1, _end_##i = (m), _step_##i = (s); i >= _end_##i; i -= _step
 #define errF(fmt, ...) fprintf(stderr, fmt, ## __VA_ARGS__)
 #define errFL(fmt, ...) errF(fmt "\n", ## __VA_ARGS__)
 
-// error macros
+// error macros.
 
 #define warn(fmt, ...) errL("warning: " fmt, ## __VA_ARGS__)
 
