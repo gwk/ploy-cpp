@@ -57,7 +57,7 @@ static Obj data_empty(Int len) {
 }
 
 
-static Obj new_data_from_str(Str s) {
+static Obj data_new_from_str(Str s) {
   if (!s.len) return rc_ret_val(blank);
   Obj d = data_empty(s.len);
   memcpy(data_ptr(d), s.chars, s.len);
@@ -65,12 +65,12 @@ static Obj new_data_from_str(Str s) {
 }
 
 
-static Obj new_data_from_chars(Chars c) {
-  return new_data_from_str(str_from_chars(c));
+static Obj data_new_from_chars(Chars c) {
+  return data_new_from_str(str_from_chars(c));
 }
 
 
-static Obj new_data_from_path(Chars_const path) {
+static Obj data_new_from_path(Chars_const path) {
   CFile f = fopen(path, "r");
   check(f, "could not open file: %s", path);
   fseek(f, 0, SEEK_END);

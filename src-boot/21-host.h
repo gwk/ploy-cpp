@@ -23,7 +23,7 @@ static Obj host_is_true(Obj env, Mem args) {
   Obj o = args.els[0];
   Bool b = is_true(o);
   rc_rel(o);
-  return new_bool(b);
+  return bool_new(b);
 }
 
 
@@ -33,7 +33,7 @@ static Obj host_not(Obj env, Mem args) {
   Obj arg = args.els[0];
   Bool b = is_true(arg);
   rc_rel(arg);
-  return new_bool(!b);
+  return bool_new(!b);
 }
 
 
@@ -44,7 +44,7 @@ static Obj host_ineg(Obj env, Mem args) {
   exc_check(obj_is_int(n), "neg requires Int; received: %o", n);
   Int i = int_val(n);
   rc_rel_val(n);
-  return new_int(-i);
+  return int_new(-i);
 }
 
 
@@ -55,7 +55,7 @@ static Obj host_iabs(Obj env, Mem args) {
   exc_check(obj_is_int(n), "abs requires Int; received: %o", n);
   Int i = int_val(n);
   rc_rel_val(n);
-  return new_int(i < 0 ? -i : i);
+  return int_new(i < 0 ? -i : i);
 }
 
 
@@ -72,7 +72,7 @@ static Obj host_##name(Obj env, Mem args) { \
   Int i = name(int_val(n0), int_val(n1)); \
   rc_rel_val(n0); \
   rc_rel_val(n1); \
-  return new_int(i); \
+  return int_new(i); \
 }
 
 
@@ -119,13 +119,13 @@ static Obj host_sym_eq(Obj env, Mem args) {
   Bool res = (a.u == b.u);
   rc_rel_val(a);
   rc_rel_val(b);
-  return new_bool(res);
+  return bool_new(res);
 }
 
 
 static Obj host_Vec(Obj env, Mem args) {
   // owns elements of args.
-  return new_vec_M(args);
+  return vec_new_M(args);
 }
 
 
@@ -145,7 +145,7 @@ static Obj host_len(Obj env, Mem args) {
     l = o.data->len;
   }
   rc_rel(o);
-  return new_int(l);
+  return int_new(l);
 }
 
 
@@ -192,7 +192,7 @@ static Obj host_prepend(Obj env, Mem args) {
   Obj vec = args.els[1];
   exc_check(obj_is_vec(vec), "prepend requires arg 2 to be a Vec; received: %o", vec);
   Mem  m = vec_mem(vec);
-  Obj res = new_vec_raw(m.len + 1);
+  Obj res = vec_new_raw(m.len + 1);
   Obj* els = vec_ref_els(res);
   els[0] = el;
   for_in(i, m.len) {
@@ -210,7 +210,7 @@ static Obj host_append(Obj env, Mem args) {
   Obj el = args.els[1];
   exc_check(obj_is_vec(vec), "append requires arg 1 to be a Vec; received: %o", vec);
   Mem  m = vec_mem(vec);
-  Obj res = new_vec_raw(m.len + 1);
+  Obj res = vec_new_raw(m.len + 1);
   Obj* els = vec_ref_els(res);
   for_in(i, m.len) {
     els[i] = rc_ret(m.els[i]);
@@ -320,8 +320,8 @@ static Obj host_init(Obj env) {
   Obj sym, val;
 
 #define DEF_FH(len_pars, f, n) \
-sym = new_sym_from_chars(cast(Chars, n)); \
-val = new_func_host(sym, len_pars, f); \
+sym = sym_new_from_chars(cast(Chars, n)); \
+val = func_host_new(sym, len_pars, f); \
 env = env_bind(env, sym, val);
 
   DEF_FH(1, host_identity, "identity")
@@ -361,9 +361,9 @@ env = env_bind(env, sym, val);
 #undef DEF_FH
 
 #define DEF_FILE(f, string, is_readable, is_writable) \
-sym = new_sym_from_chars(cast(Chars, string)); \
-val = new_vec2(new_data_from_chars(cast(Chars, "<" string ">")), \
-new_file(f, is_readable, is_writable)); \
+sym = sym_new_from_chars(cast(Chars, string)); \
+val = vec_new2(data_new_from_chars(cast(Chars, "<" string ">")), \
+file_new(f, is_readable, is_writable)); \
 env = env_bind(env, sym, val);
 
   DEF_FILE(stdin, "std-in", true, false)

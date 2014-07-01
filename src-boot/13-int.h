@@ -4,16 +4,16 @@
 #include "12-set.h"
 
 
-static Obj new_int(Int i) {
+static Obj int_new(Int i) {
   check(i >= -max_Int_tagged && i <= max_Int_tagged, "large Int values not yet suppported.");
   Int shifted = i * shift_factor_Int;
   return rc_ret_val((Obj){ .i = (shifted | ot_int) });
 }
 
 
-static Obj new_uns(Uns u) {
+static Obj int_new_from_uns(Uns u) {
   check(u < max_Uns_tagged, "large Uns values not yet supported.");
-  return new_int(cast(Int, u));
+  return int_new(cast(Int, u));
 }
 
 

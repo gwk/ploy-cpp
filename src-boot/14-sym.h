@@ -34,16 +34,16 @@ static Obj sym_data(Obj s) {
 
 
 static Str data_str(Obj d);
-static Obj new_data_from_str(Str s);
+static Obj data_new_from_str(Str s);
 
-static Obj new_sym(Str s) {
+static Obj sym_new(Str s) {
   for_in(i, global_sym_names.mem.len) {
     Obj d = mem_el(global_sym_names.mem, i);
     if (str_eq(s, data_str(d))) {
       return rc_ret_val(sym_with_index(i));
     }
   }
-  Obj d = new_data_from_str(s);
+  Obj d = data_new_from_str(s);
   Int i = array_append(&global_sym_names, d);
   Obj sym = sym_with_index(i);
   //errF("NEW SYM: %ld: ", i); obj_errL(sym);
@@ -51,8 +51,8 @@ static Obj new_sym(Str s) {
 }
 
 
-static Obj new_sym_from_chars(Chars b) {
-  return new_sym(str_from_chars(b));
+static Obj sym_new_from_chars(Chars b) {
+  return sym_new(str_from_chars(b));
 }
 
 
@@ -132,7 +132,7 @@ static void sym_init() {
     // special name cases.
     if (i == si_VEC0) name = "[]";
     else if (i == si_CHAIN0) name = "[:]";
-    Obj sym = new_sym_from_chars(cast(Chars, name));
+    Obj sym = sym_new_from_chars(cast(Chars, name));
     assert(sym_index(sym) == i);
     rc_rel_val(sym);
   }

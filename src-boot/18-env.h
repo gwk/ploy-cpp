@@ -29,7 +29,7 @@ static void env_rel_fields(Obj o) {
 }
 
 
-static Obj new_env(Obj key, Obj val, Obj tl) {
+static Obj env_new(Obj key, Obj val, Obj tl) {
   // owns sym, val, tl.
   assert(obj_is_sym(key));
   assert(tl.u == s_END.u || obj_is_env(tl));
@@ -62,14 +62,14 @@ static Obj env_get(Obj env, Obj sym) {
 
 static Obj env_push_frame(Obj env, Obj src) {
   // owns env, src.
-  return new_env(rc_ret_val(s_ENV_FRAME_MARKER), src, env);
+  return env_new(rc_ret_val(s_ENV_FRAME_MARKER), src, env);
 }
 
 
 static Obj env_bind(Obj env, Obj sym, Obj val) {
   // owns env, sym, val.
   assert(!sym_is_special(sym));
-  return new_env(sym, val, env);
+  return env_new(sym, val, env);
 }
 
 

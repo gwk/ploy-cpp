@@ -11,7 +11,7 @@ static const Chars_const trace_post_expand_prefix = "▫ ";  // white small squa
 static Obj expand_quasiquote(Obj o) {
   // owns o.
   if (!obj_is_vec_ref(o)) { // replace the quasiquote with quote.
-    return new_vec2(rc_ret_val(s_QUO), o);
+    return vec_new2(rc_ret_val(s_QUO), o);
   }
   Mem m = vec_ref_mem(o);
   if (m.els[0].u == s_UNQ.u) { // unquote form.
@@ -21,7 +21,7 @@ static Obj expand_quasiquote(Obj o) {
     return e;
   }
   if (vec_ref_contains_unquote(o)) { // unquote exists somewhere in the tree.
-    Obj v = new_vec_raw(m.len + 1);
+    Obj v = vec_new_raw(m.len + 1);
     Obj* dst = vec_ref_els(v);
     dst[0] = rc_ret_val(s_SEQ);
     for_in(i, m.len) {
@@ -31,7 +31,7 @@ static Obj expand_quasiquote(Obj o) {
     rc_rel(o);
     return v;
   } else { // no unquotes in the tree; simply quote the top level.
-    return new_vec2(rc_ret_val(s_QUO), o);
+    return vec_new2(rc_ret_val(s_QUO), o);
   }
 }
 
@@ -86,7 +86,7 @@ static Obj expand(Obj env, Obj code) {
     // TODO: collapse comment and VOID nodes or perhaps a special COLLAPSE node?
     // this might allow for us to do away with the preprocess phase,
     // and would also allow a macro to collapse into nothing.
-    Obj expanded = new_vec_raw(m.len);
+    Obj expanded = vec_new_raw(m.len);
     Obj* expanded_els = vec_els(expanded);
     for_in(i, m.len) {
       expanded_els[i] = expand(env, rc_ret(m.els[i]));

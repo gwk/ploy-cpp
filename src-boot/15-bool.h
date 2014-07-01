@@ -4,7 +4,7 @@
 #include "14-sym.h"
 
 
-static Obj new_bool(Int i) {
+static Obj bool_new(Int i) {
   return rc_ret_val(i ? s_true : s_false);
 }
 

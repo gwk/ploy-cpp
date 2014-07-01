@@ -23,7 +23,7 @@ static Obj parse_and_eval(Obj env, Obj path, Obj src, Array* sources, Bool out_v
   err_nl();
   obj_errL(code);
 #endif
-  array_append(sources, new_vec2(path, src));
+  array_append(sources, vec_new2(path, src));
   Step step = eval_vec(env, code);
   if (out_val && step.val.u != s_void.u) {
     write_repr(stdout, step.val);
@@ -69,7 +69,7 @@ int main(int argc, Chars_const argv[]) {
   }
 
   Obj env = rc_ret_val(s_END);
-  env = env_push_frame(env, new_data_from_chars(cast(Chars, "<host>")));
+  env = env_push_frame(env, data_new_from_chars(cast(Chars, "<host>")));
   env = host_init(env);
 
   // global array of (path, source) objects for error reporting.
@@ -77,23 +77,23 @@ int main(int argc, Chars_const argv[]) {
   Obj path, src;
 
   if (should_load_core) { // run embedded core.ploy file.
-    path = new_data_from_chars(cast(Chars, "<core>"));
+    path = data_new_from_chars(cast(Chars, "<core>"));
     env = env_push_frame(env, rc_ret(path));
-    src = new_data_from_chars(cast(Chars, core_src)); // TODO: breaks const correctness?
+    src = data_new_from_chars(cast(Chars, core_src)); // TODO: breaks const correctness?
     env = parse_and_eval(env, path, src, &sources, false);
   }
   // handle arguments.
   for_in(i, path_count) {
-    path = new_data_from_chars(cast(Chars, paths[i])); // TODO: breaks const correctness?
-    Obj name = new_data_from_chars(cast(Chars, chars_path_base(paths[i]))); // TODO: breaks const correctness?
+    path = data_new_from_chars(cast(Chars, paths[i])); // TODO: breaks const correctness?
+    Obj name = data_new_from_chars(cast(Chars, chars_path_base(paths[i]))); // TODO: breaks const correctness?
     env = env_push_frame(env, name);
-    src = new_data_from_path(paths[i]);
+    src = data_new_from_path(paths[i]);
     env = parse_and_eval(env, path, src, &sources, false);
   }
   if (expr) {
-    path = new_data_from_chars(cast(Chars, "<expr>"));
+    path = data_new_from_chars(cast(Chars, "<expr>"));
     env = env_push_frame(env, rc_ret(path));
-    src = new_data_from_chars(cast(Chars, expr)); // TODO: breaks const correctness?
+    src = data_new_from_chars(cast(Chars, expr)); // TODO: breaks const correctness?
     env = parse_and_eval(env, path, src, &sources, should_output_val);
   }
 

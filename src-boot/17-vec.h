@@ -11,7 +11,7 @@ struct _Vec {
 DEF_SIZE(Vec);
 
 
-static Obj new_vec_raw(Int len) {
+static Obj vec_new_raw(Int len) {
   if (!len) return rc_ret_val(s_VEC0);
   Obj v = ref_alloc(rt_Vec, size_Vec + (size_Obj * len));
   v.vec->type = rc_ret_val(s_VEC);
@@ -20,10 +20,10 @@ static Obj new_vec_raw(Int len) {
 }
 
 
-static Obj new_vec_M(Mem m) {
+static Obj vec_new_M(Mem m) {
   // owns elements of m.
   if (!m.len) return rc_ret_val(s_VEC0);
-  Obj v = new_vec_raw(m.len);
+  Obj v = vec_new_raw(m.len);
   Obj* els = vec_ref_els(v);
   for_in(i, m.len) {
     els[i] = mem_el_move(m, i);
@@ -32,10 +32,10 @@ static Obj new_vec_M(Mem m) {
 }
 
 
-static Obj new_vec_EM(Obj el, Mem m) {
+static Obj vec_new_EM(Obj el, Mem m) {
   // owns el, elements of m.
   Int len = m.len + 1;
-  Obj v = new_vec_raw(len);
+  Obj v = vec_new_raw(len);
   Obj* els = vec_ref_els(v);
   els[0] = el;
   for_in(i, m.len) {
@@ -45,9 +45,9 @@ static Obj new_vec_EM(Obj el, Mem m) {
 }
 
 
-static Obj new_vec2(Obj a, Obj b) {
+static Obj vec_new2(Obj a, Obj b) {
   // owns all arguments.
-  Obj v = new_vec_raw(2);
+  Obj v = vec_new_raw(2);
   Obj* els = vec_ref_els(v);
   els[0] = a;
   els[1] = b;
@@ -55,9 +55,9 @@ static Obj new_vec2(Obj a, Obj b) {
 }
 
 
-static Obj new_vec3(Obj a, Obj b, Obj c) {
+static Obj vec_new3(Obj a, Obj b, Obj c) {
   // owns all arguments.
-  Obj v = new_vec_raw(3);
+  Obj v = vec_new_raw(3);
   Obj* els = vec_ref_els(v);
   els[0] = a;
   els[1] = b;
@@ -66,9 +66,9 @@ static Obj new_vec3(Obj a, Obj b, Obj c) {
 }
 
 
-static Obj new_vec4(Obj a, Obj b, Obj c, Obj d) {
+static Obj vec_new4(Obj a, Obj b, Obj c, Obj d) {
   // owns all arguments.
-  Obj v = new_vec_raw(4);
+  Obj v = vec_new_raw(4);
   Obj* els = vec_ref_els(v);
   els[0] = a;
   els[1] = b;
@@ -177,7 +177,7 @@ static Obj vec_slice(Obj v, Int f, Int t) {
   if (ls == l) {
     return v; // no ret/rel necessary.
   }
-  Obj s = new_vec_raw(ls);
+  Obj s = vec_new_raw(ls);
   Obj* src = vec_ref_els(v);
   Obj* dst = vec_ref_els(s);
   for_in(i, ls) {

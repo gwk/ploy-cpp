@@ -91,7 +91,7 @@ static Step run_FN(Obj env, Mem args) {
   exc_check(vec_len(pars) > 0 && vec_ref_el(pars, 0).u == s_SEQ.u,
     "FN: parameters is not a sequence literal: %o", pars);
   // TODO: check all pars.
-  Obj f = new_vec_raw(5);
+  Obj f = vec_new_raw(5);
   Obj* els = vec_ref_els(f);
   els[0] = rc_ret_val(name);
   els[1] = rc_ret_val(is_macro);
@@ -105,7 +105,7 @@ static Step run_FN(Obj env, Mem args) {
 static Step run_STRUCT_BOOT(Obj env, Mem args) {
   // owns env.
   check(args.len > 0, "STRUCT_BOOT form is empty");
-  Obj v = new_vec_raw(args.len);
+  Obj v = vec_new_raw(args.len);
   Obj* els = vec_els(v);
   for_in(i, args.len) {
     els[i] = rc_ret(args.els[i]);
@@ -118,7 +118,7 @@ static Step run_STRUCT_BOOT(Obj env, Mem args) {
 
 static Step run_SEQ(Obj env, Mem args) {
   // owns env.
-  Obj v = new_vec_raw(args.len);
+  Obj v = vec_new_raw(args.len);
   Obj* els = vec_els(v);
   for_in(i, args.len) {
     Step step = run(env, args.els[i]);
@@ -177,7 +177,7 @@ static Call_envs run_bind_args(Obj caller_env, Obj callee_env, Obj func, Mem par
         if (obj_is_par(arg)) break;
         variad_count++;
       }
-      Obj variad_val = new_vec_raw(variad_count);
+      Obj variad_val = vec_new_raw(variad_count);
       it_vec(it, variad_val) {
         Obj arg = args.els[i_args++];
         if (is_expand) {

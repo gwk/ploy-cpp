@@ -117,7 +117,7 @@ static U64 parse_U64(Parser* p) {
 
 
 static Obj parse_uns(Parser* p) {
-  return new_uns(parse_U64(p));
+  return int_new_from_uns(parse_U64(p));
 }
 
 
@@ -126,7 +126,7 @@ static Obj parse_int(Parser* p, Int sign) {
   P_ADV1;
   U64 u = parse_U64(p);
   parse_check(u <= max_Int, "signed number literal is too large");
-  return new_int((I64)u * sign);
+  return int_new((I64)u * sign);
 }
 
 
@@ -140,7 +140,7 @@ static Obj parse_sym(Parser* p) {
     if (!(c == '-' || c == '_' || isalnum(c))) break;
   }
   Str s = str_slice(p->src, pos, p->sp.pos);
-  return new_sym(s);
+  return sym_new(s);
 }
 
 
@@ -154,7 +154,7 @@ static Obj parse_comment(Parser* p) {
     if (p->e) return obj0;
     // the QUO prevents macro expansion of the commented code,
     // and also differentiates it from line comments.
-    return new_vec2(rc_ret_val(s_COMMENT), new_vec2(rc_ret_val(s_QUO), expr));
+    return vec_new2(rc_ret_val(s_COMMENT), vec_new2(rc_ret_val(s_QUO), expr));
   }
   // otherwise comment out a single line.
   Src_pos sp_report = p->sp;
@@ -174,8 +174,8 @@ static Obj parse_comment(Parser* p) {
     }
   }  while (PC != '\n');
   Str s = str_slice(p->src, pos_start, p->sp.pos);
-  Obj d = new_data_from_str(s);
-  return new_vec2(rc_ret_val(s_COMMENT), d);
+  Obj d = data_new_from_str(s);
+  return vec_new2(rc_ret_val(s_COMMENT), d);
 }
 
 
@@ -224,7 +224,7 @@ static Obj parse_data(Parser* p, Char q) {
   }
   #undef APPEND
   P_ADV1; // past closing quote.
-  Obj d = new_data_from_str(str_mk(i, s.chars));
+  Obj d = data_new_from_str(str_mk(i, s.chars));
   str_dealloc(s);
   return d;
 }
@@ -302,7 +302,7 @@ if (p->e || !parse_terminator(p, t)) { \
 static Obj parse_struct_simple(Parser* p) {
   Mem m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR('}');
-  Obj v = new_vec_EM(rc_ret_val(s_STRUCT), m);
+  Obj v = vec_new_EM(rc_ret_val(s_STRUCT), m);
   mem_dealloc(m);
   return v;
 }
@@ -311,7 +311,7 @@ static Obj parse_struct_simple(Parser* p) {
 static Obj parse_struct_boot(Parser* p) {
   Mem m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR('}');
-  Obj v = new_vec_EM(rc_ret_val(s_STRUCT_BOOT), m);
+  Obj v = vec_new_EM(rc_ret_val(s_STRUCT_BOOT), m);
   mem_dealloc(m);
   return v;
 }
@@ -331,7 +331,7 @@ static Obj parse_call(Parser* p) {
   P_ADV1;
   Mem m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR(')');
-  Obj v = new_vec_EM(rc_ret_val(s_CALL), m);
+  Obj v = vec_new_EM(rc_ret_val(s_CALL), m);
   mem_dealloc(m);
   return v;
 }
@@ -341,7 +341,7 @@ static Obj parse_expand(Parser* p) {
   P_ADV1;
   Mem m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR('>');
-  Obj v = new_vec_EM(rc_ret_val(s_EXPAND), m);
+  Obj v = vec_new_EM(rc_ret_val(s_EXPAND), m);
   mem_dealloc(m);
   return v;
 }
@@ -353,7 +353,7 @@ static Obj parse_seq_simple(Parser* p) {
   if (!m.len) {
     return rc_ret_val(s_VEC0);
   }
-  Obj v = new_vec_EM(rc_ret_val(s_SEQ), m);
+  Obj v = vec_new_EM(rc_ret_val(s_SEQ), m);
   mem_dealloc(m);
   return v;
 }
@@ -369,7 +369,7 @@ static Obj parse_chain_simple(Parser* p) {
   Obj c = rc_ret_val(s_END);
   for_in_rev(i, m.len) {
     Obj el = mem_el_move(m, i);
-    c = new_vec3(rc_ret_val(s_SEQ), el, c);
+    c = vec_new3(rc_ret_val(s_SEQ), el, c);
   }
   mem_dealloc(m);
   return c;
@@ -388,7 +388,7 @@ static Obj parse_chain_fat(Parser* p) {
       mem_release_dealloc(a.mem);
       return obj0;
     }
-    Obj v = new_vec_raw(m.len + 2);
+    Obj v = vec_new_raw(m.len + 2);
     Obj* els = vec_ref_els(v);
     els[0] = rc_ret_val(s_SEQ);
     for_in(i, m.len) {
@@ -432,7 +432,7 @@ static Obj parse_quo(Parser* p) {
   assert(PC == '`');
   P_ADV1;
   Obj o = parse_expr(p);
-  return new_vec2(rc_ret_val(s_QUO), o);
+  return vec_new2(rc_ret_val(s_QUO), o);
 }
 
 
@@ -440,7 +440,7 @@ static Obj parse_qua(Parser* p) {
   assert(PC == '~');
   P_ADV1;
   Obj o = parse_expr(p);
-  return new_vec2(rc_ret_val(s_QUA), o);
+  return vec_new2(rc_ret_val(s_QUA), o);
 }
 
 
@@ -448,7 +448,7 @@ static Obj parse_unq(Parser* p) {
   assert(PC == ',');
   P_ADV1;
   Obj o = parse_expr(p);
-  return new_vec2(rc_ret_val(s_UNQ), o);
+  return vec_new2(rc_ret_val(s_UNQ), o);
 }
 
 
@@ -479,7 +479,7 @@ static Obj parse_par(Parser* p, Obj sym, Chars_const par_desc) {
   } else {
     expr = rc_ret_val(s_nil);
   }
-  return new_vec4(rc_ret_val(sym), name, type, expr);
+  return vec_new4(rc_ret_val(sym), name, type, expr);
 }
 
 
@@ -542,7 +542,7 @@ static Obj parse_src(Str path, Str src, Chars* e) {
     o = parse_error(&p, "parsing terminated early");
     mem_release_dealloc(m);
   } else {
-    o = new_vec_M(m);
+    o = vec_new_M(m);
     mem_dealloc(m);
   }
   *e = p.e;

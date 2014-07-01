@@ -14,7 +14,7 @@ struct _File {
 DEF_SIZE(File);
 
 
-static Obj new_file(CFile cfile, Bool is_readable, Bool is_writable) {
+static Obj file_new(CFile cfile, Bool is_readable, Bool is_writable) {
   Obj f = ref_alloc(rt_File, size_File);
   f.file->type = rc_ret_val(s_FILE);
   f.file->cfile = cfile;
