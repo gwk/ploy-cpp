@@ -19,18 +19,13 @@
 
 # type functions.
 
-<fn is-int [-o] (sym-eq (type-sym o) `INT)>
-<fn is-sym [-o] (sym-eq (type-sym o) `SYM)>
-<fn is-data [-o] (sym-eq (type-sym o) `DATA)>
-<fn is-vec [-o] (sym-eq (type-sym o) `VEC)>
-<fn is-I32 [-o] (sym-eq (type-sym o) `I32)>
-<fn is-I64 [-o] (sym-eq (type-sym o) `I64)>
-<fn is-U32 [-o] (sym-eq (type-sym o) `U32)>
-<fn is-U64 [-o] (sym-eq (type-sym o) `U64)>
-<fn is-F32 [-o] (sym-eq (type-sym o) `F32)>
-<fn is-F64 [-o] (sym-eq (type-sym o) `F64)>
-<fn is-file [-o] (sym-eq (type-sym o) `FILE)>
-<fn is-func_host [-o] (sym-eq (type-sym o) `FUNC_HOST)>
+<fn is-int [-o] (sym-eq (type-sym o) `Int)>
+<fn is-sym [-o] (sym-eq (type-sym o) `Sym)>
+<fn is-data [-o] (sym-eq (type-sym o) `Data)>
+<fn is-vec [-o] (sym-eq (type-sym o) `Vec)>
+<fn is-env [-o] (sym-eq (type-sym o) `Env)>
+<fn is-file [-o] (sym-eq (type-sym o) `File)>
+<fn is-func_host [-o] (sym-eq (type-sym o) `Func-host)>
 
 
 # vec functions.
@@ -53,11 +48,11 @@
 
 <macro _if-then [-pred -then]
   # 'if' variant that takes exactly two expressions; for bootstrapping the 'if' macro.
-  [IF pred then void]>
+  [If pred then void]>
 
 <macro _if-then-else [-pred -then -else]
   # 'if' variant that takes exactly three expressions; for bootstrapping the 'if' macro.
-  [IF pred then else]>
+  [If pred then else]>
 
 <macro if [&exprs]
   # generic 'if'. inspired by paul graham's arc-lisp.
@@ -69,15 +64,15 @@
     #(_errR1L 'f then: ' then)
     #(_errR1L 'f rest: ' rest)
     <_if-then-else (not l)
-      [IF pred then void] # final if-else
+      [If pred then void] # final if-else
       <_if-then-else (ieq l 1)
-        [IF pred then (hd rest)] # final clause is an unconditional else.
-        [IF pred then (self (hd rest) (el rest 1) (vec-from rest 2))]>>>
+        [If pred then (hd rest)] # final clause is an unconditional else.
+        [If pred then (self (hd rest) (el rest 1) (vec-from rest 2))]>>>
   (f (hd exprs) (el exprs 1) (slice exprs 2 (len exprs)))>
 
 <macro when [-pred &exprs]
   # if 'pred', do 'exprs'. else none.
-  [IF pred (prepend DO exprs) void]>
+  [If pred (prepend Do exprs) void]> # TODO: eventually this should use splice-unquote.
 
 # output functions.
 

@@ -250,7 +250,7 @@ static Int vec_len(Obj v);
 static Obj vec_ref_el(Obj v, Int i);
 static Obj* vec_ref_els(Obj v);
 static Obj* vec_els(Obj v);
-static const Obj s_LABEL, s_VARIAD;
+static const Obj s_Label, s_Variad;
 
 
 // iterate over a vec_ref vr.
@@ -272,7 +272,7 @@ static Bool obj_is_par(Obj o) {
   if (len != 4) return false;
   if (obj_is_special(vec_ref_el(o, 1))) return false; // name must be a regular sym.
   Obj e0 = vec_ref_el(o, 0);
-  return (e0.u == s_LABEL.u || e0.u == s_VARIAD.u);
+  return (e0.u == s_Label.u || e0.u == s_Variad.u);
 }
 
 

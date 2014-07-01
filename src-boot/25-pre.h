@@ -12,7 +12,7 @@ static Obj preprocess(Obj code) {
     return rc_ret(code);
   }
   Mem src = vec_ref_mem(code);
-  if (src.els[0].u == s_COMMENT.u) {
+  if (src.els[0].u == s_Comment.u) {
     return obj0;
   }
   Array dst = array0;

@@ -6,10 +6,7 @@
   "patterns": [
 
     { "name": "keyword.control.ploy",
-      "match": "\\b(ILLEGAL|NIL|VEC0|CHAIN0|END|FALSE|TRUE|LABEL|VARIAD|UNQ|QUA|EXPAND)\\b" },
-
-    { "name": "keyword.control.ploy",
-      "match": "\\b(COMMENT|QUO|DO|SCOPE|LET|IF|FN|SEQ|CALL|VOID)\\b" },
+      "match": "\\b(ILLEGAL|void|nil|VEC0|CHAIN0|END|false|true)\\b" },
 
     { "name": "keyword.operator.ploy",
       "match": "[()<>{}]|\\[|\\]" },

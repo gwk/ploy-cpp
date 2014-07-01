@@ -17,7 +17,7 @@ static Step run_sym(Obj env, Obj code) {
 }
 
 
-static Step run_QUO(Obj env, Mem args) {
+static Step run_Quo(Obj env, Mem args) {
   // owns env.
   exc_check(args.len == 1, "s_QUO requires 1 argument; received %i", args.len);
   return mk_step(env, rc_ret(args.els[0]));
@@ -26,7 +26,7 @@ static Step run_QUO(Obj env, Mem args) {
 
 static Step run_step(Obj env, Obj code);
 
-static Step run_DO(Obj env, Mem args) {
+static Step run_Do(Obj env, Mem args) {
   // owns env.
   if (!args.len) {
     return mk_step(env, rc_ret_val(s_void));
@@ -41,7 +41,7 @@ static Step run_DO(Obj env, Mem args) {
 }
 
 
-static Step run_SCOPE(Obj env, Mem args) {
+static Step run_Scope(Obj env, Mem args) {
   // owns env.
   exc_check(args.len == 1, "SCOPE requires 1 argument; received %i", args.len);
   Obj body = args.els[0];
@@ -50,7 +50,7 @@ static Step run_SCOPE(Obj env, Mem args) {
 }
 
 
-static Step run_LET(Obj env, Mem args) {
+static Step run_Let(Obj env, Mem args) {
   // owns env.
   exc_check(args.len == 2, "LET requires 2 arguments; received %i", args.len);
   Obj sym = args.els[0];
@@ -63,7 +63,7 @@ static Step run_LET(Obj env, Mem args) {
 }
 
 
-static Step run_IF(Obj env, Mem args) {
+static Step run_If(Obj env, Mem args) {
   // owns env.
   exc_check(args.len == 3, "IF requires 3 arguments; received %i", args.len);
   Obj p = args.els[0];
@@ -76,7 +76,7 @@ static Step run_IF(Obj env, Mem args) {
 }
 
 
-static Step run_FN(Obj env, Mem args) {
+static Step run_Fn(Obj env, Mem args) {
   // owns env.
   exc_check(args.len == 4,
     "FN requires 4 arguments: name:Sym is-macro:Bool parameters:Vec body:Obj; received %i",
@@ -88,7 +88,7 @@ static Step run_FN(Obj env, Mem args) {
   exc_check(obj_is_sym(name),  "FN: name is not a Sym: %o", name);
   exc_check(obj_is_bool(is_macro), "FN: is-macro is not a Bool: %o", is_macro);
   exc_check(obj_is_vec(pars), "FN: parameters is not a Vec: %o", pars);
-  exc_check(vec_len(pars) > 0 && vec_ref_el(pars, 0).u == s_SEQ.u,
+  exc_check(vec_len(pars) > 0 && vec_ref_el(pars, 0).u == s_Seq.u,
     "FN: parameters is not a sequence literal: %o", pars);
   // TODO: check all pars.
   Obj f = vec_new_raw(5);
@@ -102,7 +102,7 @@ static Step run_FN(Obj env, Mem args) {
 }
 
 
-static Step run_STRUCT_BOOT(Obj env, Mem args) {
+static Step run_Struct_boot(Obj env, Mem args) {
   // owns env.
   check(args.len > 0, "STRUCT_BOOT form is empty");
   Obj v = vec_new_raw(args.len);
@@ -116,7 +116,7 @@ static Step run_STRUCT_BOOT(Obj env, Mem args) {
 }
 
 
-static Step run_SEQ(Obj env, Mem args) {
+static Step run_Seq(Obj env, Mem args) {
   // owns env.
   Obj v = vec_new_raw(args.len);
   Obj* els = vec_els(v);
@@ -144,11 +144,11 @@ static Call_envs run_bind_args(Obj caller_env, Obj callee_env, Obj func, Mem par
     Obj par = pars.els[i_pars];
     check_obj(obj_is_par(par), "function parameter is malformed", vec_ref_el(func, 0));
     Obj* par_els = vec_ref_els(par);
-    Obj par_kind = par_els[0]; // LABEL or VARIAD.
+    Obj par_kind = par_els[0]; // Label or Variad.
     Obj par_sym = par_els[1];
     //Obj par_type = par_els[2];
     Obj par_expr = par_els[3];
-    if (par_kind.u == s_LABEL.u) {
+    if (par_kind.u == s_Label.u) {
       Obj arg;
       if (i_args < args.len) {
         arg = args.els[i_args];
@@ -168,7 +168,7 @@ static Call_envs run_bind_args(Obj caller_env, Obj callee_env, Obj func, Mem par
       }
       callee_env = env_bind(callee_env, rc_ret_val(par_sym), val);
     } else {
-      assert(par_kind.u == s_VARIAD.u);
+      assert(par_kind.u == s_Variad.u);
       check_obj(!has_variad, "function has multiple variad parameters", vec_ref_el(func, 0));
       has_variad = true;
       Int variad_count = 0;
@@ -255,7 +255,7 @@ static Step run_call_host(Obj env, Obj func, Mem args) {
 }
 
 
-static Step run_CALL(Obj env, Mem args) {
+static Step run_Call(Obj env, Mem args) {
   // owns env.
   check(args.len > 0, "call is empty");
   Obj callee = args.els[0];
@@ -281,15 +281,15 @@ static Step run_Vec(Obj env, Obj code) {
     Int si = sym_index(form); // Int type avoids incomplete enum switch error.
 #define EVAL_FORM(s) case si_##s: return run_##s(env, mem_next(m))
     switch (si) {
-      EVAL_FORM(QUO);
-      EVAL_FORM(DO);
-      EVAL_FORM(SCOPE);
-      EVAL_FORM(LET);
-      EVAL_FORM(IF);
-      EVAL_FORM(FN);
-      EVAL_FORM(STRUCT_BOOT);
-      EVAL_FORM(SEQ);
-      EVAL_FORM(CALL);
+      EVAL_FORM(Quo);
+      EVAL_FORM(Do);
+      EVAL_FORM(Scope);
+      EVAL_FORM(Let);
+      EVAL_FORM(If);
+      EVAL_FORM(Fn);
+      EVAL_FORM(Struct_boot);
+      EVAL_FORM(Seq);
+      EVAL_FORM(Call);
     }
 #undef EVAL_FORM
   }

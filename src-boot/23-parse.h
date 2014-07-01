@@ -154,7 +154,7 @@ static Obj parse_comment(Parser* p) {
     if (p->e) return obj0;
     // the QUO prevents macro expansion of the commented code,
     // and also differentiates it from line comments.
-    return vec_new2(rc_ret_val(s_COMMENT), vec_new2(rc_ret_val(s_QUO), expr));
+    return vec_new2(rc_ret_val(s_Comment), vec_new2(rc_ret_val(s_Quo), expr));
   }
   // otherwise comment out a single line.
   Src_pos sp_report = p->sp;
@@ -175,7 +175,7 @@ static Obj parse_comment(Parser* p) {
   }  while (PC != '\n');
   Str s = str_slice(p->src, pos_start, p->sp.pos);
   Obj d = data_new_from_str(s);
-  return vec_new2(rc_ret_val(s_COMMENT), d);
+  return vec_new2(rc_ret_val(s_Comment), d);
 }
 
 
@@ -302,7 +302,7 @@ if (p->e || !parse_terminator(p, t)) { \
 static Obj parse_struct_simple(Parser* p) {
   Mem m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR('}');
-  Obj v = vec_new_EM(rc_ret_val(s_STRUCT), m);
+  Obj v = vec_new_EM(rc_ret_val(s_Struct), m);
   mem_dealloc(m);
   return v;
 }
@@ -311,7 +311,7 @@ static Obj parse_struct_simple(Parser* p) {
 static Obj parse_struct_boot(Parser* p) {
   Mem m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR('}');
-  Obj v = vec_new_EM(rc_ret_val(s_STRUCT_BOOT), m);
+  Obj v = vec_new_EM(rc_ret_val(s_Struct_boot), m);
   mem_dealloc(m);
   return v;
 }
@@ -331,7 +331,7 @@ static Obj parse_call(Parser* p) {
   P_ADV1;
   Mem m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR(')');
-  Obj v = vec_new_EM(rc_ret_val(s_CALL), m);
+  Obj v = vec_new_EM(rc_ret_val(s_Call), m);
   mem_dealloc(m);
   return v;
 }
@@ -341,7 +341,7 @@ static Obj parse_expand(Parser* p) {
   P_ADV1;
   Mem m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR('>');
-  Obj v = vec_new_EM(rc_ret_val(s_EXPAND), m);
+  Obj v = vec_new_EM(rc_ret_val(s_Expand), m);
   mem_dealloc(m);
   return v;
 }
@@ -353,7 +353,7 @@ static Obj parse_seq_simple(Parser* p) {
   if (!m.len) {
     return rc_ret_val(s_VEC0);
   }
-  Obj v = vec_new_EM(rc_ret_val(s_SEQ), m);
+  Obj v = vec_new_EM(rc_ret_val(s_Seq), m);
   mem_dealloc(m);
   return v;
 }
@@ -369,7 +369,7 @@ static Obj parse_chain_simple(Parser* p) {
   Obj c = rc_ret_val(s_END);
   for_in_rev(i, m.len) {
     Obj el = mem_el_move(m, i);
-    c = vec_new3(rc_ret_val(s_SEQ), el, c);
+    c = vec_new3(rc_ret_val(s_Seq), el, c);
   }
   mem_dealloc(m);
   return c;
@@ -390,7 +390,7 @@ static Obj parse_chain_fat(Parser* p) {
     }
     Obj v = vec_new_raw(m.len + 2);
     Obj* els = vec_ref_els(v);
-    els[0] = rc_ret_val(s_SEQ);
+    els[0] = rc_ret_val(s_Seq);
     for_in(i, m.len) {
       els[i + 1] = mem_el_move(m, i);
     }
@@ -432,7 +432,7 @@ static Obj parse_quo(Parser* p) {
   assert(PC == '`');
   P_ADV1;
   Obj o = parse_expr(p);
-  return vec_new2(rc_ret_val(s_QUO), o);
+  return vec_new2(rc_ret_val(s_Quo), o);
 }
 
 
@@ -440,7 +440,7 @@ static Obj parse_qua(Parser* p) {
   assert(PC == '~');
   P_ADV1;
   Obj o = parse_expr(p);
-  return vec_new2(rc_ret_val(s_QUA), o);
+  return vec_new2(rc_ret_val(s_Qua), o);
 }
 
 
@@ -448,7 +448,7 @@ static Obj parse_unq(Parser* p) {
   assert(PC == ',');
   P_ADV1;
   Obj o = parse_expr(p);
-  return vec_new2(rc_ret_val(s_UNQ), o);
+  return vec_new2(rc_ret_val(s_Unq), o);
 }
 
 
@@ -497,13 +497,13 @@ static Obj parse_expr_sub(Parser* p) {
     case '\'':  return parse_data(p, '\'');
     case '"':   return parse_data(p, '"');
     case '#':   return parse_comment(p);
-    case '&':   return parse_par(p, s_VARIAD, "variad");
+    case '&':   return parse_par(p, s_Variad, "variad");
     case '+':
       if (isdigit(PC1)) return parse_int(p, 1);
       break;
     case '-':
       if (isdigit(PC1)) return parse_int(p, -1);
-      return parse_par(p, s_LABEL, "label");
+      return parse_par(p, s_Label, "label");
 
   }
   if (isdigit(c)) {

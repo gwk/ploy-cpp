@@ -19,7 +19,7 @@ DEF_SIZE(Func_host);
 static Obj func_host_new(Obj sym, Int len_pars, Func_host_ptr ptr) {
   assert(obj_is_sym(sym));
   Obj o = ref_alloc(rt_Func_host, size_Func_host);
-  o.func_host->type = rc_ret_val(s_FUNC_HOST);
+  o.func_host->type = rc_ret_val(s_Func_host);
   o.func_host->sym = sym;
   o.func_host->len_pars = len_pars;
   o.func_host->ptr = ptr;

@@ -14,7 +14,7 @@ DEF_SIZE(Vec);
 static Obj vec_new_raw(Int len) {
   if (!len) return rc_ret_val(s_VEC0);
   Obj v = ref_alloc(rt_Vec, size_Vec + (size_Obj * len));
-  v.vec->type = rc_ret_val(s_VEC);
+  v.vec->type = rc_ret_val(s_Vec);
   v.vec->len = len;
   return v;
 }
@@ -212,15 +212,15 @@ static Vec_shape vec_ref_shape(Obj v) {
   Int len = vec_len(v);
   Obj e0 = vec_ref_el(v, 0);
   if (len == 2) {
-    if (e0.u == s_QUO.u) return vs_quo;
-    if (e0.u == s_QUA.u) return vs_qua;
-    if (e0.u == s_UNQ.u) return vs_unq;
+    if (e0.u == s_Quo.u) return vs_quo;
+    if (e0.u == s_Qua.u) return vs_qua;
+    if (e0.u == s_Unq.u) return vs_unq;
   }
   if (len == 4 && obj_is_sym(vec_ref_el(v, 1))) {
-    if (e0.u == s_LABEL.u) return vs_label;
-    if (e0.u == s_VARIAD.u) return vs_variad;
+    if (e0.u == s_Label.u) return vs_label;
+    if (e0.u == s_Variad.u) return vs_variad;
   }
-  if (e0.u == s_SEQ.u) return vs_seq;
+  if (e0.u == s_Seq.u) return vs_seq;
   Vec_shape s = vs_chain;
   loop {
     if (vec_ref_len(v) != 2) s = vs_chain_blocks;
@@ -235,7 +235,7 @@ static Vec_shape vec_ref_shape(Obj v) {
 static Bool vec_ref_contains_unquote(Obj v) {
   assert(ref_is_vec(v));
   Mem m = vec_ref_mem(v);
-  if (m.els[0].u == s_UNQ.u) return true; // vec is an unquote form.
+  if (m.els[0].u == s_Unq.u) return true; // vec is an unquote form.
   it_mem_from(it, m, 1) {
     Obj e = *it;
     if (obj_is_vec_ref(e) && vec_ref_contains_unquote(e)) return true;

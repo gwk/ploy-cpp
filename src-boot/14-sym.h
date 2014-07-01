@@ -77,30 +77,30 @@ S(END) \
 S(ENV_FRAME_MARKER) \
 S(false) \
 S(true) \
-S(INT) \
-S(SYM) \
-S(DATA_WORD) \
-S(DATA) \
-S(VEC) \
-S(ENV) \
-S(FILE) \
-S(FUNC_HOST) \
-S(LABEL) \
-S(VARIAD) \
-S(UNQ) \
-S(QUA) \
-S(EXPAND) \
-S(COMMENT) \
-S(QUO) \
-S(DO) \
-S(SCOPE) \
-S(LET) \
-S(IF) \
-S(FN) \
-S(STRUCT_BOOT) \
-S(STRUCT) \
-S(SEQ) \
-S(CALL) \
+S(Int) \
+S(Sym) \
+S(Data_word) \
+S(Data) \
+S(Vec) \
+S(Env) \
+S(File) \
+S(Func_host) \
+S(Label) \
+S(Variad) \
+S(Unq) \
+S(Qua) \
+S(Expand) \
+S(Comment) \
+S(Quo) \
+S(Do) \
+S(Scope) \
+S(Let) \
+S(If) \
+S(Fn) \
+S(Struct_boot) \
+S(Struct) \
+S(Seq) \
+S(Call) \
 S(END_SPECIAL_SYMS) \
 S(self) \
 
@@ -132,6 +132,8 @@ static void sym_init() {
     // special name cases.
     if (i == si_VEC0) name = "[]";
     else if (i == si_CHAIN0) name = "[:]";
+    else if (i == si_Func_host) name ="Func-host";
+    else if (i == si_Struct_boot) name = "Struct-boot";
     Obj sym = sym_new_from_chars(cast(Chars, name));
     assert(sym_index(sym) == i);
     rc_rel_val(sym);
@@ -139,13 +141,13 @@ static void sym_init() {
 }
 
 
-static const Int sym_index_of_ref_type_sym_first = si_DATA;
-static const Int sym_index_of_ref_type_sym_last = si_FUNC_HOST;
+static const Int sym_index_of_ref_type_sym_first = si_Data;
+static const Int sym_index_of_ref_type_sym_last = si_Func_host;
 
 
 UNUSED_FN static Bool sym_is_form(Obj s) {
   Int si = sym_index(s);
-  return si >= si_COMMENT && si <= si_FN;
+  return si >= si_Comment && si <= si_Fn;
 }
 
 

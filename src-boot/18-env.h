@@ -34,7 +34,7 @@ static Obj env_new(Obj key, Obj val, Obj tl) {
   assert(obj_is_sym(key));
   assert(tl.u == s_END.u || obj_is_env(tl));
   Obj o = ref_alloc(rt_Env, size_Env);
-  o.env->type = rc_ret_val(s_ENV);
+  o.env->type = rc_ret_val(s_Env);
   o.env->key = key;
   o.env->val = val;
   o.env->tl = tl;

@@ -16,7 +16,7 @@ DEF_SIZE(File);
 
 static Obj file_new(CFile cfile, Bool is_readable, Bool is_writable) {
   Obj f = ref_alloc(rt_File, size_File);
-  f.file->type = rc_ret_val(s_FILE);
+  f.file->type = rc_ret_val(s_File);
   f.file->cfile = cfile;
   f.file->is_readable = is_readable;
   f.file->is_writable = is_writable;

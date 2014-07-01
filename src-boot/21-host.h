@@ -123,7 +123,7 @@ static Obj host_sym_eq(Obj env, Mem args) {
 }
 
 
-static Obj host_Vec(Obj env, Mem args) {
+static Obj host_mk_vec(Obj env, Mem args) {
   // owns elements of args.
   return vec_new_M(args);
 }
@@ -306,9 +306,9 @@ static Obj host_type_sym(Obj env, Mem args) {
   Obj o = args.els[0];
   Obj s = obj0;
   switch (obj_tag(o)) {
-    case ot_int: s = s_INT; break;
-    case ot_sym: s = s_SYM; break;
-    case ot_data: s = s_DATA_WORD; break;
+    case ot_int: s = s_Int; break;
+    case ot_sym: s = s_Sym; break;
+    case ot_data: s = s_Data_word; break;
     case ot_ref: s = ref_type_sym(o); break;
   }
   rc_rel(o);
@@ -344,7 +344,7 @@ env = env_bind(env, sym, val);
   DEF_FH(2, host_igt, "igt")
   DEF_FH(2, host_ige, "ige")
   DEF_FH(2, host_sym_eq, "sym-eq")
-  DEF_FH(-1, host_Vec, "Vec")
+  DEF_FH(-1, host_mk_vec, "mk-vec")
   DEF_FH(1, host_len, "len")
   DEF_FH(2, host_el, "el")
   DEF_FH(3, host_slice, "slice")
