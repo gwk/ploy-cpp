@@ -95,9 +95,9 @@ static Step run_FN(Obj env, Mem args) {
   Obj* els = vec_ref_els(f);
   els[0] = rc_ret_val(name);
   els[1] = rc_ret_val(is_macro);
-  els[2] = vec_slice_from(rc_ret(pars), 1); // HACK: remove the inital SEQ form symbol.
-  els[3] = rc_ret(body);
-  els[4] = rc_ret(env);
+  els[2] = rc_ret(env);
+  els[3] = vec_slice_from(rc_ret(pars), 1); // HACK: remove the inital SEQ form symbol.
+  els[4] = rc_ret(body);
   return mk_step(env, f);
 }
 
@@ -208,17 +208,17 @@ static Step run_call_native(Obj env, Obj func, Mem args, Bool is_expand) {
   exc_check(m.len == 5, "function is malformed (length is not 5): %o", func);
   Obj name      = m.els[0];
   Obj is_macro  = m.els[1];
-  Obj pars      = m.els[2];
-  Obj body      = m.els[3];
-  Obj lex_env   = m.els[4];
+  Obj lex_env   = m.els[2];
+  Obj pars      = m.els[3];
+  Obj body      = m.els[4];
   if (is_expand) {
     exc_check(bool_is_true(is_macro), "cannot expand function: %o", name);
   } else {
     exc_check(!bool_is_true(is_macro), "cannot call macro: %o", name);
   }
   exc_check(obj_is_sym(name), "function is malformed (name is not a Sym): %o", name);
-  exc_check(obj_is_vec(pars), "function %o is malformed (parameters is not a Vec): %o", name, pars);
   exc_check(obj_is_env(lex_env), "function %o is malformed (env is not an Env): %o", name, lex_env);
+  exc_check(obj_is_vec(pars), "function %o is malformed (parameters is not a Vec): %o", name, pars);
   Obj callee_env = env_push_frame(rc_ret(lex_env), rc_ret(name));
   // TODO: change env_push_frame src from name to whole func?
   callee_env = env_bind(callee_env, rc_ret_val(s_self), rc_ret(func)); // bind self.
