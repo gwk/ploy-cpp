@@ -2,3 +2,10 @@
   <if (not n) i (self (idec n) (iinc i))>>
 
 (outRL (f 10000 0))
+
+<fn g [-n -tl]
+  <if (not n) tl (self (idec n) [n tl])>>
+
+(outRL (g 8 END))
+
+(g 10000 END) # TODO: increase this past overflow limit once rc_rel is tail recursive.
