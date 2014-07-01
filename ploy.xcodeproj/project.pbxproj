@@ -8,7 +8,7 @@
 
 /* Begin PBXFileReference section */
 		EC35627718527BA500805877 /* _repro.ploy */ = {isa = PBXFileReference; lastKnownFileType = text; path = _repro.ploy; sourceTree = "<group>"; };
-		EC508F3F184D795E00803072 /* ploy */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; name = ploy; path = /Users/gwk/work/ploy/build/Debug/ploy; sourceTree = "<absolute>"; };
+		ECA9C4561963681C00DBC30A /* ploy */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = ploy; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -16,6 +16,7 @@
 			isa = PBXGroup;
 			children = (
 				EC35627718527BA500805877 /* _repro.ploy */,
+				ECA9C4561963681C00DBC30A /* ploy */,
 			);
 			sourceTree = "<group>";
 		};
@@ -34,7 +35,7 @@
 			);
 			name = ploy;
 			productName = ploy;
-			productReference = EC508F3F184D795E00803072 /* ploy */;
+			productReference = ECA9C4561963681C00DBC30A /* ploy */;
 			productType = "com.apple.product-type.tool";
 		};
 /* End PBXNativeTarget section */
@@ -43,7 +44,7 @@
 		EC508F37184D795E00803072 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0500;
+				LastUpgradeCheck = 0510;
 				ORGANIZATIONNAME = "George King";
 			};
 			buildConfigurationList = EC508F3A184D795E00803072 /* Build configuration list for PBXProject "ploy" */;
@@ -84,6 +85,7 @@
 		EC508F46184D795E00803072 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ONLY_ACTIVE_ARCH = YES;
 			};
 			name = Debug;
 		};
