@@ -1,25 +1,13 @@
 // Copyright 2013 George King.
 // Permission to use this file is granted in ploy/license.txt.
 
-#include "19-func.h"
+#include "20-func.h"
 
 
 static NO_RETURN _exc_raise(Obj env, Chars_const fmt, Chars_const args_src, ...);
 // NOTE: the exc macros expect env:Obj to be defined in the current scope.
 #define exc_raise(fmt, ...) _exc_raise(env, fmt, #__VA_ARGS__, ##__VA_ARGS__)
 #define exc_check(condition, ...) if (!(condition)) exc_raise(__VA_ARGS__)
-
-
-// struct representing a step of the interpreted computation.
-// in the normal case, it contains the environment and value resulting from the previous step.
-// in the tail-call optimization (TCO) case, it contains the tail step to perform.
-typedef struct {
-  Obj env; // the env to be passed to the next step, after any TCO steps; the new caller env.
-  Obj val; // the result from the previous step, or the env to be passed to the TCO step.
-  Obj tco_code; // code for the TCO step.
-} Step;
-
-#define mk_step(e, v) (Step){.env=(e), .val=(v), .tco_code=obj0}
 
 
 static Obj host_identity(Obj env, Mem args) {

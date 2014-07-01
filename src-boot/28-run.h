@@ -129,6 +129,72 @@ static Step run_SEQ(Obj env, Mem args) {
 }
 
 
+typedef struct {
+  Obj caller_env;
+  Obj callee_env;
+} Call_envs;
+
+
+static Call_envs run_bind_args(Obj caller_env, Obj callee_env, Obj func, Mem pars, Mem args, Bool is_expand) {
+  // owns caller_env, callee_env.
+  Int i_args = 0;
+  Bool has_variad = false;
+  for_in(i_pars, pars.len) {
+    Obj par = pars.els[i_pars];
+    check_obj(obj_is_par(par), "function parameter is malformed", vec_ref_el(func, 0));
+    Obj* par_els = vec_ref_els(par);
+    Obj par_kind = par_els[0]; // LABEL or VARIAD.
+    Obj par_sym = par_els[1];
+    //Obj par_type = par_els[2];
+    Obj par_expr = par_els[3];
+    if (par_kind.u == s_LABEL.u) {
+      Obj arg;
+      if (i_args < args.len) {
+        arg = args.els[i_args];
+        i_args++;
+      } else if (par_expr.u != s_nil.u) { // TODO: change the default value to be unwritable?
+        arg = par_expr;
+      } else {
+        error_obj("function received too few arguments", vec_ref_el(func, 0));
+      }
+      Obj val;
+      if (is_expand) {
+        val = rc_ret(arg);
+      } else {
+        Step step = run(caller_env, arg);
+        caller_env = step.env;
+        val = step.val;
+      }
+      callee_env = env_bind(callee_env, rc_ret_val(par_sym), val);
+    } else {
+      assert(par_kind.u == s_VARIAD.u);
+      check_obj(!has_variad, "function has multiple variad parameters", vec_ref_el(func, 0));
+      has_variad = true;
+      Int variad_count = 0;
+      for_imn(i, i_args, args.len) {
+        Obj arg = args.els[i];
+        if (obj_is_par(arg)) break;
+        variad_count++;
+      }
+      Obj variad_val = new_vec_raw(variad_count);
+      it_vec(it, variad_val) {
+        Obj arg = args.els[i_args++];
+        if (is_expand) {
+          *it = rc_ret(arg);
+        } else {
+          Step step = run(caller_env, arg);
+          caller_env = step.env;
+          *it = step.val;
+        }
+      }
+      callee_env = env_bind(callee_env, rc_ret_val(par_sym), variad_val);
+    }
+  }
+  check_obj(i_args == args.len, "function received too many arguments", vec_ref_el(func, 0));
+  return (Call_envs){.caller_env=caller_env, .callee_env=callee_env};
+}
+
+
 static Step run_call_native(Obj env, Obj func, Mem args, Bool is_expand) {
   // owns env, func.
   // a native (interpreted, not hosted) function/macro is a vec consisting of:
@@ -155,7 +221,7 @@ static Step run_call_native(Obj env, Obj func, Mem args, Bool is_expand) {
   Obj callee_env = env_add_frame(rc_ret(lex_env), rc_ret(name));
   // TODO: change env_add_frame src from name to whole func?
   callee_env = env_bind(callee_env, rc_ret_val(s_self), rc_ret(func)); // bind self.
-  Call_envs envs = env_bind_args(env, callee_env, func, vec_mem(pars), args, is_expand); // owns env, callee_env.
+  Call_envs envs = run_bind_args(env, callee_env, func, vec_mem(pars), args, is_expand); // owns env, callee_env.
   // NOTE: because func is bound to self in callee_env, and func contains body,
   // we can release func now and still safely return the unretained body as .tco_code.
   rc_rel(func);

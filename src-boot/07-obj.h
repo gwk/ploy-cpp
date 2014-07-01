@@ -109,6 +109,18 @@ DEF_SIZE(Obj);
 static const Obj obj0 = (Obj){.p=NULL};
 
 
+// struct representing a step of the interpreted computation.
+// in the normal case, it contains the environment and value resulting from the previous step.
+// in the tail-call optimization (TCO) case, it contains the tail step to perform.
+typedef struct {
+  Obj env; // the env to be passed to the next step, after any TCO steps; the new caller env.
+  Obj val; // the result from the previous step, or the env to be passed to the TCO step.
+  Obj tco_code; // code for the TCO step.
+} Step;
+
+#define mk_step(e, v) (Step){.env=(e), .val=(v), .tco_code=obj0}
+
+
 static Obj_tag obj_tag(Obj o) {
   return o.u & obj_tag_mask;
 }
