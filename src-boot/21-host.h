@@ -316,8 +316,6 @@ static Obj host_type_sym(Obj env, Mem args) {
 }
 
 
-static Obj env_bind(Obj env, Obj sym, Obj func);
-
 static Obj host_init(Obj env) {
   Obj sym, val;
 

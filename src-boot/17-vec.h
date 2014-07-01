@@ -147,13 +147,13 @@ static Obj chain_tl(Obj v) {
 }
 
 
-static Obj chain_a(Obj v) {
+UNUSED_FN static Obj chain_a(Obj v) {
   // idiomatic accessor for fat chains.
   return vec_ref_el(v, 0);
 }
 
 
-static Obj chain_b(Obj v) {
+UNUSED_FN static Obj chain_b(Obj v) {
   // idiomatic accessor for fat chains.
   return vec_ref_el(v, 1);
 }

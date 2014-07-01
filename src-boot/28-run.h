@@ -135,7 +135,8 @@ typedef struct {
 } Call_envs;
 
 
-static Call_envs run_bind_args(Obj caller_env, Obj callee_env, Obj func, Mem pars, Mem args, Bool is_expand) {
+static Call_envs run_bind_args(Obj caller_env, Obj callee_env, Obj func, Mem pars, Mem args,
+  Bool is_expand) {
   // owns caller_env, callee_env.
   Int i_args = 0;
   Bool has_variad = false;
@@ -217,9 +218,9 @@ static Step run_call_native(Obj env, Obj func, Mem args, Bool is_expand) {
   }
   exc_check(obj_is_sym(name), "function is malformed (name is not a Sym): %o", name);
   exc_check(obj_is_vec(pars), "function %o is malformed (parameters is not a Vec): %o", name, pars);
-  exc_check(obj_is_vec(lex_env), "function %o is malformed (env is not a Vec): %o", name, lex_env);
-  Obj callee_env = env_add_frame(rc_ret(lex_env), rc_ret(name));
-  // TODO: change env_add_frame src from name to whole func?
+  exc_check(obj_is_env(lex_env), "function %o is malformed (env is not an Env): %o", name, lex_env);
+  Obj callee_env = env_push_frame(rc_ret(lex_env), rc_ret(name));
+  // TODO: change env_push_frame src from name to whole func?
   callee_env = env_bind(callee_env, rc_ret_val(s_self), rc_ret(func)); // bind self.
   Call_envs envs = run_bind_args(env, callee_env, func, vec_mem(pars), args, is_expand); // owns env, callee_env.
   // NOTE: because func is bound to self in callee_env, and func contains body,
@@ -319,6 +320,7 @@ static Step run_step(Obj env, Obj code) {
       return run_Vec(env, code);
     case rt_Data:
       return mk_step(env, rc_ret(code)); // self-evaluating.
+    case rt_Env:
     case rt_File:
     case rt_Func_host:
       exc_raise("cannot run object: %o", code);

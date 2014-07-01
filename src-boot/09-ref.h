@@ -38,13 +38,18 @@ static Counter_index ref_counter_index(Obj r) {
 #endif
 
 
+static Bool ref_is_data(Obj d) {
+  return ref_tag(d) == rt_Data;
+}
+
+
 static Bool ref_is_vec(Obj r) {
   return ref_tag(r) == rt_Vec;
 }
 
 
-static Bool ref_is_data(Obj d) {
-  return ref_tag(d) == rt_Data;
+static Bool ref_is_env(Obj r) {
+  return ref_tag(r) == rt_Env;
 }
 
 
@@ -66,6 +71,8 @@ static Obj ref_alloc(Ref_tag rt, Int size) {
 }
 
 
+static void env_rel_fields(Obj o);
+
 static void ref_dealloc(Obj r) {
   Ref_tag rt = ref_tag(r);
   if (rt == rt_Vec) {
@@ -73,6 +80,8 @@ static void ref_dealloc(Obj r) {
       // TODO: make this tail recursive for deallocating long chains?
       rc_rel(*it);
     }
+  } else if (rt == rt_Env) {
+    env_rel_fields(r);
   }
   // ret/rel counter has already been decremented by rc_rel.
 #if !OPT_DEALLOC_PRESERVE

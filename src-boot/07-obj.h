@@ -61,18 +61,11 @@ static Chars_const obj_tag_names[] = {
   "Data-word",
 };
 
-// all ref types (objects that are dynamically allocated) follow a similar convention;
-// the lowest 4 bits of the first allocated word indicate its type.
-// NOTE: the current plan is that eventually this will be replaced by a 'type' pointer.
-#define width_ref_tag 2
-#define ref_tag_end (1L << width_ref_tag)
-
-static const Uns ref_tag_mask = ref_tag_end - 1;
-
 // all the ref types.
 typedef enum {
   rt_Data = 0,    // binary data; obj_counter_index assumes that this is the first index.
   rt_Vec,         // a fixed length vector of objects.
+  rt_Env,         // an opaque lexical environment.
   rt_File,        // wrapper around CFile type, plus additional info.
   rt_Func_host,   // an opaque function built into the host interpreter.
 } Ref_tag;
@@ -80,13 +73,15 @@ typedef enum {
 static Chars_const ref_tag_names[] = {
   "Data",
   "Vec",
+  "Env",
   "File",
   "Func-host",
 };
 
 union _Obj;
-typedef struct _Vec Vec;
 typedef struct _Data Data;
+typedef struct _Vec Vec;
+typedef struct _Env Env;
 typedef struct _File File;
 typedef struct _Func_host Func_host;
 
@@ -96,8 +91,9 @@ typedef union _Obj {
   Ptr p;
   Chars c; // no valid object can be interpreted as Chars; this for the exc_raise formatter.
   union _Obj* type_ptr; // common to all ref types.
-  Vec* vec;
   Data* data;
+  Vec* vec;
+  Env* env;
   File* file;
   Func_host* func_host;
 } Obj;
@@ -211,6 +207,7 @@ static Bool obj_is_data_word(Obj o) {
 
 static Bool ref_is_data(Obj o);
 static Bool ref_is_vec(Obj o);
+static Bool ref_is_env(Obj o);
 static Bool ref_is_file(Obj o);
 
 
@@ -236,6 +233,11 @@ static Bool obj_is_vec(Obj o) {
   // and the list terminator END to reduce ambiguity (e.g. when printing data structures).
   // only VEC0 and nonzero ref_vec objects are considered true vectors.
   return o.u == s_VEC0.u || obj_is_vec_ref(o);
+}
+
+
+static Bool obj_is_env(Obj o) {
+  return obj_is_ref(o) && ref_is_env(o);
 }
 
 

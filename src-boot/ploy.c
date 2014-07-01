@@ -69,7 +69,7 @@ int main(int argc, Chars_const argv[]) {
   }
 
   Obj env = rc_ret_val(s_END);
-  env = env_add_frame(env, new_data_from_chars(cast(Chars, "<host>")));
+  env = env_push_frame(env, new_data_from_chars(cast(Chars, "<host>")));
   env = host_init(env);
 
   // global array of (path, source) objects for error reporting.
@@ -78,7 +78,7 @@ int main(int argc, Chars_const argv[]) {
 
   if (should_load_core) { // run embedded core.ploy file.
     path = new_data_from_chars(cast(Chars, "<core>"));
-    env = env_add_frame(env, rc_ret(path));
+    env = env_push_frame(env, rc_ret(path));
     src = new_data_from_chars(cast(Chars, core_src)); // TODO: breaks const correctness?
     env = parse_and_eval(env, path, src, &sources, false);
   }
@@ -86,13 +86,13 @@ int main(int argc, Chars_const argv[]) {
   for_in(i, path_count) {
     path = new_data_from_chars(cast(Chars, paths[i])); // TODO: breaks const correctness?
     Obj name = new_data_from_chars(cast(Chars, chars_path_base(paths[i]))); // TODO: breaks const correctness?
-    env = env_add_frame(env, name);
+    env = env_push_frame(env, name);
     src = new_data_from_path(paths[i]);
     env = parse_and_eval(env, path, src, &sources, false);
   }
   if (expr) {
     path = new_data_from_chars(cast(Chars, "<expr>"));
-    env = env_add_frame(env, rc_ret(path));
+    env = env_push_frame(env, rc_ret(path));
     src = new_data_from_chars(cast(Chars, expr)); // TODO: breaks const correctness?
     env = parse_and_eval(env, path, src, &sources, should_output_val);
   }

@@ -74,6 +74,7 @@ S(nil) \
 S(VEC0) \
 S(CHAIN0) \
 S(END) \
+S(ENV_FRAME_MARKER) \
 S(false) \
 S(true) \
 S(INT) \
@@ -81,6 +82,7 @@ S(SYM) \
 S(DATA_WORD) \
 S(DATA) \
 S(VEC) \
+S(ENV) \
 S(FILE) \
 S(FUNC_HOST) \
 S(LABEL) \

@@ -190,6 +190,19 @@ static void write_repr_vec(CFile f, Obj v, Bool is_quoted, Int depth, Set* s) {
 #define NO_REPR_PO "⟮" // U+27EE Mathematical left flattened parenthesis.
 #define NO_REPR_PC "⟯" // U+27EF Mathematical right flattened parenthesis.
 
+
+
+static void write_repr_env(CFile f, Obj env) {
+  // TODO: show frame and binding count.
+  fprintf(f, NO_REPR_PO "Env %p" NO_REPR_PC, env.p);
+}
+
+
+static void write_repr_file(CFile f, Obj file) {
+  fprintf(f, NO_REPR_PO "File %p" NO_REPR_PC, file_cfile(file));
+}
+
+
 static void write_repr_Func_host(CFile f, Obj func) {
   fputs(NO_REPR_PO "Func-host ", f);
   Obj d = sym_data(func.func_host->sym);
@@ -222,7 +235,8 @@ static void write_repr_obj(CFile f, Obj o, Bool is_quoted, Int depth, Set* s) {
       switch (ref_tag(o)) {
         case rt_Data: write_repr_data(f, o); break;
         case rt_Vec: write_repr_vec(f, o, is_quoted, depth, s); break;
-        case rt_File: fprintf(f, NO_REPR_PO "File %p" NO_REPR_PC, file_cfile(o)); break;
+        case rt_Env: write_repr_env(f, o); break;
+        case rt_File: write_repr_file(f, o); break;
         case rt_Func_host: write_repr_Func_host(f, o); break;
       }
       set_remove(s, o);
