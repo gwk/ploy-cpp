@@ -134,6 +134,13 @@ for (Int i = (n) - 1, _end_##i = (m), _step_##i = (s); i >= _end_##i; i -= _step
 #define OVERLOAD __attribute__((overloadable))
 
 
+#if DEBUG
+#define DEBUG_FN
+#else
+#define DEBUG_FN UNUSED_FN
+#endif
+
+
 // stderr utilities.
 
 #define err(s) fputs((s), stderr)
