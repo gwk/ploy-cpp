@@ -9,6 +9,8 @@
 /* Begin PBXFileReference section */
 		EC35627718527BA500805877 /* _repro.ploy */ = {isa = PBXFileReference; lastKnownFileType = text; path = _repro.ploy; sourceTree = "<group>"; };
 		ECA9C4561963681C00DBC30A /* ploy */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = ploy; sourceTree = BUILT_PRODUCTS_DIR; };
+		ECA9C45719636CC600DBC30A /* src-boot */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "src-boot"; sourceTree = "<group>"; };
+		ECA9C45819636CC600DBC30A /* src-core */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "src-core"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -16,6 +18,8 @@
 			isa = PBXGroup;
 			children = (
 				EC35627718527BA500805877 /* _repro.ploy */,
+				ECA9C45719636CC600DBC30A /* src-boot */,
+				ECA9C45819636CC600DBC30A /* src-core */,
 				ECA9C4561963681C00DBC30A /* ploy */,
 			);
 			sourceTree = "<group>";
