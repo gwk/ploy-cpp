@@ -14,7 +14,7 @@ DEF_SIZE(Vec);
 static Obj new_vec_raw(Int len) {
   if (!len) return rc_ret_val(s_VEC0);
   Obj v = ref_alloc(rt_Vec, size_Vec + (size_Obj * len));
-  v.vec->type = s_VEC;
+  v.vec->type = rc_ret_val(s_VEC);
   v.vec->len = len;
   return v;
 }

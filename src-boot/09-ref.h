@@ -75,6 +75,7 @@ static void env_rel_fields(Obj o);
 
 static void ref_dealloc(Obj r) {
   Ref_tag rt = ref_tag(r);
+  rc_rel(*r.type_ptr);
   if (rt == rt_Vec) {
     it_vec_ref(it, r) {
       // TODO: make this tail recursive for deallocating long chains?

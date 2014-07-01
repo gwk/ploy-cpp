@@ -51,7 +51,7 @@ static Str data_str(Obj d) {
 
 static Obj data_empty(Int len) {
   Obj d = ref_alloc(rt_Data, size_Data + len);
-  d.data->type = s_DATA;
+  d.data->type = rc_ret_val(s_DATA);
   d.data->len = len;
   return d; // borrowed.
 }
