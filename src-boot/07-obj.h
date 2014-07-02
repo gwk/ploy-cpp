@@ -28,10 +28,10 @@ static const Uns max_Uns_tagged  = max_Int_tagged;
 static const Int shift_factor_Int = 1L << width_obj_tag;
 
 typedef enum {
-  ot_ref  = 0,  // pointer to managed object.
-  ot_int  = 1,  // val; 30/62 bit signed int; 30 bits gives a range of  +/-536M.
-  ot_sym  = 2,  // Sym values are indices into global_sym_table.
-  ot_data = 3,  // small Data object that fits into a word.
+  ot_ref = 0,  // pointer to managed object.
+  ot_ptr = 1,  // Host pointer.
+  ot_int = 2,  // val; 30/62 bit signed int; 30 bits gives a range of  +/-536M.
+  ot_sym = 3,  // Sym values are indices into global_sym_table, interleaved with Data words.
 } Obj_tag;
 
 // note: previously there was a scheme to have a 31/63 bit float type;
@@ -45,20 +45,18 @@ UNUSED_VAR(ot_flt_bit)
 static const Uns flt_body_mask = max_Uns - 1;
 UNUSED_VAR(flt_body_mask)
 
-// note: previously there was a scheme to interleave Sym indices with word-sized Data values.
-// this would work by making the next-lowest bit a flag to differentiate between Sym and Data.
+// Sym indices are interleaved with word-sized Data values.
+// The low bit after the tag differentiates between Sym (0) and Data (1).
 // Data-words would use the remaining bits in the byte to represent the length.
-// currently that would mean the low byte layout is TTTFLLLL;
-// 4 bits is a wide enouh len field for a maximum of 3/7 data bytes.
-// this is only desirable if we need the last Obj_tag index slot for something else.
+// For 64 bit archs, this length field must count up to 7, so it requires 3 bits;
+// this implies that Obj_tag must be at most 4 bits wide (4 + 1 + 3 == 8 bits in the low byte).
 static const Uns data_word_bit = (1 << width_obj_tag);
-UNUSED_VAR(data_word_bit)
 
 static Chars_const obj_tag_names[] = {
   "Ref",
+  "Ptr",
   "Int",
   "Sym",
-  "Data-word",
 };
 
 // all the ref types.
@@ -162,13 +160,18 @@ static NO_RETURN error_obj(Chars_const msg, Obj o) {
 #define check_obj(condition, msg, o) { if (!(condition)) error_obj(msg, o); }
 
 
-static Bool obj_is_val(Obj o) {
+UNUSED_FN static Bool obj_is_val(Obj o) {
   return (o.u & obj_tag_mask);
 }
 
 
 static Bool obj_is_ref(Obj o) {
-  return !obj_is_val(o);
+  return obj_tag(o) == ot_ref;
+}
+
+
+UNUSED_FN static Bool obj_is_ptr(Obj o) {
+  return obj_tag(o) == ot_ptr;
 }
 
 
@@ -200,8 +203,7 @@ static Bool obj_is_bool(Obj s) {
 
 
 static Bool obj_is_data_word(Obj o) {
-  // note: if we choose to interleave Sym and Data-word, this requires additonal checks.
-  return obj_tag(o) == ot_data;
+  return obj_tag(o) == ot_sym && o.u & data_word_bit;
 }
 
 
@@ -283,10 +285,10 @@ static Counter_index ref_counter_index(Obj r);
 static Counter_index obj_counter_index(Obj o) {
   Obj_tag ot = obj_tag(o);
   switch (ot) {
-    case ot_int: return ci_Int;
-    case ot_sym: return ci_Sym;
-    case ot_data: return ci_Data_word;
     case ot_ref: return ref_counter_index(o);
+    case ot_ptr: return ci_Ptr;
+    case ot_int: return ci_Int;
+    case ot_sym: return obj_is_data_word(o) ? ci_Data_word : ci_Sym;
   }
 }
 #endif

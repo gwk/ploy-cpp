@@ -6,7 +6,7 @@
 
 #define ERR_SYM(s) errFL("SYM %s: u:%lu; si:%li", #s, s.u, sym_index(s));
 
-static const Int shift_sym = width_obj_tag + 1; // 1 bit reserved for Data-word flag.
+static const Int shift_sym = width_obj_tag + 1; // extra bit for Data-word flag.
 static const Int sym_index_end = 1L << (size_Int * 8 - shift_sym);
 
 // each Sym object is an index into this array of strings.
@@ -77,6 +77,7 @@ S(END) \
 S(ENV_FRAME_MARKER) \
 S(false) \
 S(true) \
+S(Ptr) \
 S(Int) \
 S(Sym) \
 S(Data_word) \
@@ -132,7 +133,7 @@ static void sym_init() {
     // special name cases.
     if (i == si_VEC0) name = "[]";
     else if (i == si_CHAIN0) name = "[:]";
-    else if (i == si_Func_host) name ="Func-host";
+    else if (i == si_Func_host) name = "Func-host";
     else if (i == si_Struct_boot) name = "Struct-boot";
     Obj sym = sym_new_from_chars(cast(Chars, name));
     assert(sym_index(sym) == i);

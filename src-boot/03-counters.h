@@ -19,6 +19,7 @@ C(Hash_bucket) \
 C(Set) \
 C(Int) \
 C(Sym) \
+C(Ptr) \
 C(Data_word) \
 C(Data) \
 C(Data_allocs) \

@@ -12,11 +12,7 @@ DEF_SIZE(Data);
 
 
 // zero length data word.
-static const Obj blank = (Obj){.u = ot_data };
-
-
-#define assert_is_data(d) \
-assert(d.u == blank.u || obj_tag(d) == ot_data);
+static const Obj blank = (Obj){.u = ot_sym | data_word_bit };
 
 
 static Int data_ref_len(Obj d) {

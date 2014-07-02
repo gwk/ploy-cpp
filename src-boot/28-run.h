@@ -309,11 +309,15 @@ static Step run_step(Obj env, Obj code) {
     err(trace_run_prefix); dbg(code); // TODO: improve this?
 #endif
   Obj_tag ot = obj_tag(code);
-  if (ot == ot_int || ot == ot_data) {
+  if (ot == ot_int) {
     return mk_step(env, rc_ret_val(code)); // self-evaluating.
   }
   if (ot == ot_sym) {
-    return run_sym(env, code);
+    if (obj_is_data_word(code)) {
+      return mk_step(env, rc_ret_val(code)); // self-evaluating.
+    } else {
+      return run_sym(env, code);
+    }
   }
   switch (ref_tag(code)) {
     case rt_Vec:

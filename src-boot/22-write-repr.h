@@ -217,11 +217,13 @@ static void write_repr_obj(CFile f, Obj o, Bool is_quoted, Int depth, Set* s) {
   if (ot == ot_int) {
     fprintf(f, "%ld", int_val(o));
   } else if (ot == ot_sym) {
-    write_repr_sym(f, o, is_quoted);
-  } else if (ot == ot_data) { // data-word
-    // TODO: support all word values.
-    assert(o.u == blank.u);
-    fputs("''", f);
+    if (obj_is_data_word(o)) {
+      // TODO: support all word values.
+      assert(o.u == blank.u);
+      fputs("''", f);
+    } else {
+      write_repr_sym(f, o, is_quoted);
+    }
   } else {
     assert(ot == ot_ref);
     depth++;

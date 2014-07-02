@@ -306,10 +306,10 @@ static Obj host_type_sym(Obj env, Mem args) {
   Obj o = args.els[0];
   Obj s = obj0;
   switch (obj_tag(o)) {
-    case ot_int: s = s_Int; break;
-    case ot_sym: s = s_Sym; break;
-    case ot_data: s = s_Data_word; break;
     case ot_ref: s = ref_type_sym(o); break;
+    case ot_ptr: s = s_Ptr; break;
+    case ot_int: s = s_Int; break;
+    case ot_sym: s = (obj_is_data_word(o) ? s_Data_word : s_Sym); break;
   }
   rc_rel(o);
   return rc_ret_val(s);
