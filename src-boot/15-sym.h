@@ -84,7 +84,6 @@ S(Data_word) \
 S(Data) \
 S(Vec) \
 S(Env) \
-S(File) \
 S(Func_host) \
 S(Label) \
 S(Variad) \
@@ -126,6 +125,10 @@ SYM_LIST
 #undef SYM_LIST
 
 
+static const Int sym_index_of_ref_type_sym_first = si_Data;
+static const Int sym_index_of_ref_type_sym_last = si_Func_host;
+
+
 static void sym_init() {
   assert(global_sym_names.mem.len == 0);
   for_in(i, si_self + 1) { // NOTE: self is not special, but it is the last hardcoded sym.
@@ -140,10 +143,6 @@ static void sym_init() {
     rc_rel_val(sym);
   }
 }
-
-
-static const Int sym_index_of_ref_type_sym_first = si_Data;
-static const Int sym_index_of_ref_type_sym_last = si_Func_host;
 
 
 UNUSED_FN static Bool sym_is_form(Obj s) {

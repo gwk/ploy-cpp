@@ -49,6 +49,7 @@ $cmd_prefix clang \
 -Wno-unused-parameter \
 -Wno-gnu \
 -Wno-vla \
+-Wno-covered-switch-default \
 -fstrict-aliasing \
 -ftrapv \
 -g \

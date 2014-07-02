@@ -64,7 +64,6 @@ typedef enum {
   rt_Data = 0,    // binary data; obj_counter_index assumes that this is the first index.
   rt_Vec,         // a fixed length vector of objects.
   rt_Env,         // an opaque lexical environment.
-  rt_File,        // wrapper around CFile type, plus additional info.
   rt_Func_host,   // an opaque function built into the host interpreter.
 } Ref_tag;
 
@@ -72,7 +71,6 @@ static Chars_const ref_tag_names[] = {
   "Data",
   "Vec",
   "Env",
-  "File",
   "Func-host",
 };
 
@@ -80,7 +78,6 @@ union _Obj;
 typedef struct _Data Data;
 typedef struct _Vec Vec;
 typedef struct _Env Env;
-typedef struct _File File;
 typedef struct _Func_host Func_host;
 
 typedef union _Obj {
@@ -92,7 +89,6 @@ typedef union _Obj {
   Data* data;
   Vec* vec;
   Env* env;
-  File* file;
   Func_host* func_host;
 } Obj;
 DEF_SIZE(Obj);
@@ -170,7 +166,7 @@ static Bool obj_is_ref(Obj o) {
 }
 
 
-UNUSED_FN static Bool obj_is_ptr(Obj o) {
+static Bool obj_is_ptr(Obj o) {
   return obj_tag(o) == ot_ptr;
 }
 
@@ -210,7 +206,6 @@ static Bool obj_is_data_word(Obj o) {
 static Bool ref_is_data(Obj o);
 static Bool ref_is_vec(Obj o);
 static Bool ref_is_env(Obj o);
-static Bool ref_is_file(Obj o);
 
 
 static Bool obj_is_data_ref(Obj o) {
@@ -243,10 +238,6 @@ static Bool obj_is_env(Obj o) {
   return obj_is_ref(o) && ref_is_env(o);
 }
 
-
-static Bool obj_is_file(Obj o) {
-  return obj_is_ref(o) && ref_is_file(o);
-}
 
 static Int vec_ref_len(Obj v);
 static Int vec_len(Obj v);

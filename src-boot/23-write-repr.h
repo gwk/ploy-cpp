@@ -198,11 +198,6 @@ static void write_repr_env(CFile f, Obj env) {
 }
 
 
-static void write_repr_file(CFile f, Obj file) {
-  fprintf(f, NO_REPR_PO "File %p" NO_REPR_PC, file_cfile(file));
-}
-
-
 static void write_repr_Func_host(CFile f, Obj func) {
   fputs(NO_REPR_PO "Func-host ", f);
   Obj d = sym_data(func.func_host->sym);
@@ -214,7 +209,9 @@ static void write_repr_Func_host(CFile f, Obj func) {
 static void write_repr_obj(CFile f, Obj o, Bool is_quoted, Int depth, Set* s) {
   // is_quoted indicates that we are writing part of a repr that has already been quoted.
   Obj_tag ot = obj_tag(o);
-  if (ot == ot_int) {
+  if (ot == ot_ptr) {
+    fprintf(f, "%p", ptr_val(o));
+  } else if (ot == ot_int) {
     fprintf(f, "%ld", int_val(o));
   } else if (ot == ot_sym) {
     if (obj_is_data_word(o)) {
@@ -238,8 +235,8 @@ static void write_repr_obj(CFile f, Obj o, Bool is_quoted, Int depth, Set* s) {
         case rt_Data: write_repr_data(f, o); break;
         case rt_Vec: write_repr_vec(f, o, is_quoted, depth, s); break;
         case rt_Env: write_repr_env(f, o); break;
-        case rt_File: write_repr_file(f, o); break;
         case rt_Func_host: write_repr_Func_host(f, o); break;
+        default: assert(0);
       }
       set_remove(s, o);
     }

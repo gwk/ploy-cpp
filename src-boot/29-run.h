@@ -325,7 +325,6 @@ static Step run_step(Obj env, Obj code) {
     case rt_Data:
       return mk_step(env, rc_ret(code)); // self-evaluating.
     case rt_Env:
-    case rt_File:
     case rt_Func_host:
       exc_raise("cannot run object: %o", code);
   }

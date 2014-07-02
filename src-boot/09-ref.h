@@ -53,11 +53,6 @@ static Bool ref_is_env(Obj r) {
 }
 
 
-static Bool ref_is_file(Obj f) {
-  return ref_tag(f) == rt_File;
-}
-
-
 static Obj ref_alloc(Ref_tag rt, Int size) {
   assert(size >= size_Word * 2);
   Counter_index ci = rt_counter_index(rt);
