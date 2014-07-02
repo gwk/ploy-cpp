@@ -103,7 +103,7 @@ static void set_remove(Set* s, Obj r) {
   Hash_bucket* b = set_bucket(s, r);
   assert_array_is_valid(b);
   for_in(i, b->mem.len) {
-    if (b->mem.els[i].p == r.p) {
+    if (b->mem.els[i].r == r.r) {
       // replace r with the last element. no-op if len == 1.
       b->mem.els[i] = b->mem.els[b->mem.len - 1];
       b->mem.len--;

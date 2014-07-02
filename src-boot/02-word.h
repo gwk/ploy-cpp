@@ -27,7 +27,7 @@ typedef uint64_t  U64;
 typedef float     F32;
 typedef double    F64;
 
-typedef void* Ptr;
+typedef void* Raw;
 
 typedef Char* Chars;
 typedef const Char* Chars_const;
@@ -54,7 +54,7 @@ typedef union {
   Int i;
   Uns u;
   Flt f;
-  Ptr p;
+  Raw r;
 } Word; // generic word.
 
 // enforce usage of custom types defined above.
@@ -95,7 +95,7 @@ DEF_SIZE(Bool);
 DEF_SIZE(Int);
 DEF_SIZE(Uns);
 DEF_SIZE(Flt);
-DEF_SIZE(Ptr);
+DEF_SIZE(Raw);
 DEF_SIZE(Word);
 DEF_SIZE(CFile);
 
@@ -112,14 +112,14 @@ static void assert_host_basic() {
   assert(size_Word == size_Int);
   assert(size_Word == size_Uns);
   assert(size_Word == size_Flt);
-  assert(size_Word == size_Ptr);
+  assert(size_Word == size_Raw);
 }
 
 
 UNUSED_FN static Word word_with_Int(Int i) { return (Word){.i=i}; }
 UNUSED_FN static Word word_with_Uns(Uns u) { return (Word){.u=u}; }
 UNUSED_FN static Word word_with_Flt(Flt f) { return (Word){.f=f}; }
-UNUSED_FN static Word word_with_Ptr(Ptr p) { return (Word){.p=p}; }
+UNUSED_FN static Word word_with_Raw(Raw r) { return (Word){.r=r}; }
 
 
 static Int int_min(Int a, Int b) {

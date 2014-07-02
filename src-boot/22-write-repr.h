@@ -194,7 +194,7 @@ static void write_repr_vec(CFile f, Obj v, Bool is_quoted, Int depth, Set* s) {
 
 static void write_repr_env(CFile f, Obj env) {
   // TODO: show frame and binding count.
-  fprintf(f, NO_REPR_PO "Env %p" NO_REPR_PC, env.p);
+  fprintf(f, NO_REPR_PO "Env %p" NO_REPR_PC, env.r);
 }
 
 

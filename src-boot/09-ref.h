@@ -63,7 +63,7 @@ static Obj ref_alloc(Ref_tag rt, Int size) {
   Counter_index ci = rt_counter_index(rt);
   Counter_index ci_alloc = ci + 1; // this math relies on the layout of COUNTER_LIST.
   counter_inc(ci); // ret/rel counter.
-  Obj r = (Obj){.p=raw_alloc(size, ci_alloc)}; // alloc counter also incremented.
+  Obj r = (Obj){.r=raw_alloc(size, ci_alloc)}; // alloc counter also incremented.
   assert(!obj_tag(r)); // check that alloc is really aligned to allow tagging.
   rc_insert(r);
   //errFL("REF ALLOC: %d; total: %ld rc len: %ld", rt, counters[ci_alloc][0] - counters[ci_alloc][1], rc_table.len);
@@ -86,7 +86,7 @@ static void ref_dealloc(Obj r) {
   }
   // ret/rel counter has already been decremented by rc_rel.
 #if !OPT_DEALLOC_PRESERVE
-  raw_dealloc(r.p, rt_counter_index(rt) + 1); // math relies on layout of COUNTER_LIST.
+  raw_dealloc(r.r, rt_counter_index(rt) + 1); // math relies on layout of COUNTER_LIST.
 #elif OPT_ALLOC_COUNT
   // manually count for the missing raw_dealloc.
   counter_dec(rt_counter_index(rt) + 1); // math relies on layout of COUNTER_LIST.

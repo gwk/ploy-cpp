@@ -88,7 +88,7 @@ typedef struct _Func_host Func_host;
 typedef union _Obj {
   Int i;
   Uns u;
-  Ptr p;
+  Raw r;
   Chars c; // no valid object can be interpreted as Chars; this for the exc_raise formatter.
   union _Obj* type_ptr; // common to all ref types.
   Data* data;
@@ -102,7 +102,7 @@ DEF_SIZE(Obj);
 
 // invalid object; essentially the NULL pointer.
 // used as a return value for error conditions and a marker for cleared or invalid memory.
-static const Obj obj0 = (Obj){.p=NULL};
+static const Obj obj0 = (Obj){.u=0};
 
 
 // struct representing a step of the interpreted computation.
@@ -145,7 +145,7 @@ void dbg(Obj o) {
   if (obj_tag(o)) {
     obj_err_tag(o);
   } else { // ref.
-    errF("%p", o.p);
+    errF("%p", o.r);
   }
   err(" : ");
   obj_errL(o);
