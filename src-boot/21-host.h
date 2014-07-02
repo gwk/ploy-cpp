@@ -231,7 +231,6 @@ static Obj host_raw_write(Obj env, Mem args) {
   Obj d = args.els[1];
   exc_check(obj_is_file(f), "write requires arg 1 to be a File; received: %o", f);
   exc_check(obj_is_data(d), "write requires arg 2 to be a Data; received: %o", d);
-  exc_check(file_is_writable(f), "file is not writable: %o", f);
   CFile file = file_cfile(f);
   // for now, ignore the return value.
   fwrite(data_ptr(d), size_Char, cast(Uns, data_len(d)), file);
@@ -247,7 +246,6 @@ static Obj host_raw_write_repr(Obj env, Mem args) {
   Obj f = args.els[0];
   Obj o = args.els[1];
   exc_check(obj_is_file(f), "write requires arg 1 to be a File; received: %o", f);
-  exc_check(file_is_writable(f), "file is not writable: %o", f);
   CFile file = file_cfile(f);
   write_repr(file, o);
   rc_rel(f);
@@ -261,7 +259,6 @@ static Obj host_raw_flush(Obj env, Mem args) {
   assert(args.len == 1);
   Obj f = args.els[0];
   exc_check(obj_is_file(f), "write requires arg 1 to be a File; received: %o", f);
-  exc_check(file_is_writable(f), "file is not writable: %o", f);
   CFile file = file_cfile(f);
   fflush(file);
   rc_rel(f);
@@ -360,15 +357,17 @@ env = env_bind(env, sym, val);
 
 #undef DEF_FH
 
-#define DEF_FILE(f, string, is_readable, is_writable) \
+#define DEF_FILE(string, f, is_readable, is_writable) \
 sym = sym_new_from_chars(cast(Chars, string)); \
-val = vec_new2(data_new_from_chars(cast(Chars, "<" string ">")), \
-file_new(f, is_readable, is_writable)); \
+val = vec_new4(data_new_from_chars(cast(Chars, "<" string ">")), \
+file_new(f), \
+bool_new(is_readable), \
+bool_new(is_writable)); \
 env = env_bind(env, sym, val);
 
-  DEF_FILE(stdin, "std-in", true, false)
-  DEF_FILE(stdout, "std-out", false, true)
-  DEF_FILE(stderr, "std-err", false, true)
+  DEF_FILE("std-in", stdin, true, false)
+  DEF_FILE("std-out", stdout, false, true)
+  DEF_FILE("std-err", stderr, false, true)
 
 #undef DEF_FILE
 
