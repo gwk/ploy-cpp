@@ -1,7 +1,7 @@
 // Copyright 2013 George King.
 // Permission to use this file is granted in ploy/license.txt.
 
-#include "12-set.h"
+#include "13-ptr.h"
 
 
 static Obj int_new(Int i) {

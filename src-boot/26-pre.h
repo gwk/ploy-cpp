@@ -4,7 +4,7 @@
 // preprocessing stage.
 // eliminates comment expressions from a code tree.
 
-#include "24-exc.h"
+#include "25-exc.h"
 
 
 static Obj preprocess(Obj code) {
