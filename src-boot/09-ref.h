@@ -66,18 +66,17 @@ static Obj ref_alloc(Ref_tag rt, Int size) {
 }
 
 
-static void env_rel_fields(Obj o);
+static Obj vec_ref_rel_fields(Obj v);
+static Obj env_rel_fields(Obj o);
 
-static void ref_dealloc(Obj r) {
+static Obj ref_dealloc(Obj r) {
   Ref_tag rt = ref_tag(r);
   rc_rel(*r.type_ptr);
+  Obj tail = obj0;
   if (rt == rt_Vec) {
-    it_vec_ref(it, r) {
-      // TODO: make this tail recursive for deallocating long chains?
-      rc_rel(*it);
-    }
+    tail = vec_ref_rel_fields(r);
   } else if (rt == rt_Env) {
-    env_rel_fields(r);
+    tail = env_rel_fields(r);
   }
   // ret/rel counter has already been decremented by rc_rel.
 #if !OPT_DEALLOC_PRESERVE
@@ -86,4 +85,5 @@ static void ref_dealloc(Obj r) {
   // manually count for the missing raw_dealloc.
   counter_dec(rt_counter_index(rt) + 1); // math relies on layout of COUNTER_LIST.
 #endif
+  return tail;
 }

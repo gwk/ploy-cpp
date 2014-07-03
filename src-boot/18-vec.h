@@ -203,6 +203,16 @@ static Obj vec_slice_from(Obj v, Int f) {
 }
 
 
+static Obj vec_ref_rel_fields(Obj v) {
+  Mem m = vec_ref_mem(v);
+  Int last_i = m.len - 1;
+  it_mem_to(it, m, last_i) {
+    rc_rel(*it);
+  }
+  return m.els[last_i];
+}
+
+
 typedef enum {
   vs_vec,
   vs_chain,

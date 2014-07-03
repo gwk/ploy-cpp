@@ -8,4 +8,4 @@
 
 (outRL (g 8 END))
 
-(g 10000 END) # TODO: increase this past overflow limit once rc_rel is tail recursive.
+(g 40000 END)

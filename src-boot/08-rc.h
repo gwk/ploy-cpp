@@ -205,29 +205,37 @@ static Obj rc_ret(Obj o) {
 }
 
 
-static void ref_dealloc(Obj o);
+static Obj ref_dealloc(Obj o);
 
 static void rc_rel(Obj o) {
   // decrease the object's retain count by one, or deallocate it.
-  counter_dec(obj_counter_index(o));
-  if (obj_tag(o)) return;
-  Uns h = rc_hash(o);
-  RC_bucket* b = rc_bucket_ptr(h);
-  for_in(i, b->len) {
-    RC_item* item = b->items + i;
-    if (item->h == h) {
-      assert(item->c > 0);
-      if (item->c == 1) {
-        rc_remove(b, i);
-        ref_dealloc(o);
-      } else {
-        item->c--;
+  assert(o.u != obj0.u);
+  do {
+    counter_dec(obj_counter_index(o));
+    if (obj_tag(o)) return;
+    Int round = 0;
+    Bool found = false;
+    Uns h = rc_hash(o);
+    RC_bucket* b = rc_bucket_ptr(h);
+    for_in(i, b->len) {
+      RC_item* item = b->items + i;
+      if (item->h == h) {
+        assert(item->c > 0);
+        found = true;
+        rc_hist_count_gets(i);
+        if (item->c == 1) {
+          rc_remove(b, i);
+          o = ref_dealloc(o); // returns tail object to be released.
+        } else {
+          item->c--;
+          o = obj0;
+        }
+        break;
       }
-      rc_hist_count_gets(i);
-      return;
     }
-  }
-  assert(0); // could not find object.
+    assert(found);
+    round++;
+  } while (o.u != obj0.u);
 }
 
 

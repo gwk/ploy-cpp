@@ -22,10 +22,11 @@ struct _Env {
 DEF_SIZE(Env);
 
 
-static void env_rel_fields(Obj o) {
+static Obj env_rel_fields(Obj o) {
+  // returns last element for release by parent; this is a c tail call optimization.
   rc_rel(o.env->key);
   rc_rel(o.env->val);
-  rc_rel(o.env->tl);
+  return o.env->tl;
 }
 
 
