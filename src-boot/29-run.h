@@ -78,26 +78,28 @@ static Step run_If(Obj env, Mem args) {
 
 static Step run_Fn(Obj env, Mem args) {
   // owns env.
-  exc_check(args.len == 4,
-    "FN requires 4 arguments: name:Sym is-macro:Bool parameters:Vec body:Obj; received %i",
-    args.len);
+  exc_check(args.len == 6, "FN requires 6 arguments; received %i", args.len);
   Obj name      = args.els[0];
-  Obj is_macro  = args.els[1];
-  Obj pars      = args.els[2];
-  Obj body      = args.els[3];
+  Obj is_native = args.els[1];
+  Obj is_macro  = args.els[2];
+  Obj pars      = args.els[3];
+  Obj ret_type  = args.els[4];
+  Obj body      = args.els[5];
   exc_check(obj_is_sym(name),  "FN: name is not a Sym: %o", name);
   exc_check(obj_is_bool(is_macro), "FN: is-macro is not a Bool: %o", is_macro);
   exc_check(obj_is_vec(pars), "FN: parameters is not a Vec: %o", pars);
   exc_check(vec_len(pars) > 0 && vec_ref_el(pars, 0).u == s_Seq.u,
     "FN: parameters is not a sequence literal: %o", pars);
   // TODO: check all pars.
-  Obj f = vec_new_raw(5);
+  Obj f = vec_new_raw(7);
   Obj* els = vec_ref_els(f);
   els[0] = rc_ret_val(name);
-  els[1] = rc_ret_val(is_macro);
-  els[2] = rc_ret(env);
-  els[3] = vec_slice_from(rc_ret(pars), 1); // HACK: remove the inital SEQ form symbol.
-  els[4] = rc_ret(body);
+  els[1] = rc_ret_val(is_native);
+  els[2] = rc_ret_val(is_macro);
+  els[3] = rc_ret(env);
+  els[4] = vec_slice_from(rc_ret(pars), 1); // HACK: remove the inital SEQ form symbol.
+  els[5] = rc_ret(ret_type);
+  els[6] = rc_ret(body);
   return mk_step(env, f);
 }
 
@@ -205,12 +207,16 @@ static Step run_call_native(Obj env, Obj func, Mem args, Bool is_expand) {
   //  body:Expr
   //  env:Env (currently implemented as a nested Vec structure, likely to change)
   Mem m = vec_mem(func);
-  exc_check(m.len == 5, "function is malformed (length is not 5): %o", func);
+  exc_check(m.len == 7, "function is malformed (length is not 7): %o", func);
   Obj name      = m.els[0];
-  Obj is_macro  = m.els[1];
-  Obj lex_env   = m.els[2];
-  Obj pars      = m.els[3];
-  Obj body      = m.els[4];
+  Obj is_native = m.els[1];
+  Obj is_macro  = m.els[2];
+  Obj lex_env   = m.els[3];
+  Obj pars      = m.els[4];
+  Obj ret_type  = m.els[5];
+  Obj body      = m.els[6];
+  exc_check(bool_is_true(is_native), "native function appears to be non-native: %o", func);
+  exc_check(ret_type.u == s_nil.u, "function ret field is non-nil: %o", func);
   if (is_expand) {
     exc_check(bool_is_true(is_macro), "cannot expand function: %o", name);
   } else {

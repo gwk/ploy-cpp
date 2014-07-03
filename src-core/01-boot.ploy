@@ -14,8 +14,10 @@
   # defined early for debugging.
   {!Fn
     _errR1L # the name sym of this fn.
+    true # is native.
     false # not a macro.
     [-label -obj] # parameter list.
+    nil # unspecified ret type.
     {!Do # body.
       # standard files are defined as a [name, file] vec.
       (raw-write (el std-err 1) label)
@@ -27,30 +29,36 @@
   # TODO: refine environment semantics?
   # note: if core was already available, we would define 'macro' using itself like so:
   ##<macro macro [-sym -pars &body]
-      <let sym
+      [Let sym
         [ Fn # this form creates a new function/macro that...
           sym # contains its name sym,
+          true # is a native function,
           true # is a macro,
           pars # has the specified parameter list,
-          <if (ieq (len body) 1) # and body...
+          nil # unspecified ret type.
+          {!if (ieq (len body) 1) # and body...
             (el body 0)
-            (prepend Do body)>]>> # wrapped in a do form if necessary.
+            (prepend Do body)}]]> # wrapped in a do form if necessary.
   # instead, we must define it using raw forms.
   # note the structural similarity between the outer FN form and the inner vec literal.
   {!Fn # creates both functions and macros
     macro # the sym for this macro is `macro;
     # we do not quote it because this is a raw form, so it is not evaluated.
-    true # is-macro
+    true # is-native.
+    true # is-macro.
     [-sym -pars &body] # the parameter list; also unquoted, as parameter lists always are.
+    nil # ret.
     [Let # the body of the 'macro' macro is a LET form.
       sym # the sym parameter that the macro to be created is bound to (not `macro).
-      [Fn # the value of the binding is created by evaluating the FN form;
+      [ Fn # the value of the binding is created by evaluating the FN form;
         # note that this inner FN is inside a vec literal;
         # when the 'macro' macro is expanded, the literal is evaluated,
         # and a {FN ...} form is the resulting code vector.
         sym
         true
+        true
         pars
+        nil # unspecified ret type.
         {!If (ieq (len body) 1)
           (el body 0)
           (prepend Do body)}]]}}
@@ -62,8 +70,10 @@
   [Let sym
     [ Fn
       sym
+      true
       false
       pars
+      nil # unspecified ret type.
       {!If (ieq (len body) 1)
         (el body 0)
         (prepend Do body)}]]>
