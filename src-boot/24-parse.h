@@ -452,7 +452,6 @@ static Obj parse_unq(Parser* p) {
 }
 
 
-
 static Obj parse_par(Parser* p, Obj sym, Chars_const par_desc) {
   P_ADV1;
   Src_pos sp_open = p->sp; // for error reporting.
@@ -470,14 +469,14 @@ static Obj parse_par(Parser* p, Obj sym, Chars_const par_desc) {
     type = parse_expr(p);
     PC;
   } else {
-    type = rc_ret_val(s_nil);
+    type = rc_ret_val(s_INFER);
   }
   Obj expr;
   if (PC == '=') {
     P_ADV1;
     expr = parse_expr(p);
   } else {
-    expr = rc_ret_val(s_nil);
+    expr = rc_ret_val(s_void);
   }
   return vec_new4(rc_ret_val(sym), name, type, expr);
 }

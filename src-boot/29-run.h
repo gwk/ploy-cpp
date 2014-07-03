@@ -155,7 +155,7 @@ static Call_envs run_bind_args(Obj caller_env, Obj callee_env, Obj func, Mem par
       if (i_args < args.len) {
         arg = args.els[i_args];
         i_args++;
-      } else if (par_expr.u != s_nil.u) { // TODO: change the default value to be unwritable?
+      } else if (par_expr.u != s_void.u) {
         arg = par_expr;
       } else {
         error_obj("function received too few arguments", vec_ref_el(func, 0));

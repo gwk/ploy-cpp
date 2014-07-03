@@ -77,6 +77,7 @@ S(END) \
 S(ENV_FRAME_MARKER) \
 S(false) \
 S(true) \
+S(INFER) \
 S(Ptr) \
 S(Int) \
 S(Sym) \

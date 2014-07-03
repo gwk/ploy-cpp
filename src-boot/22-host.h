@@ -319,8 +319,9 @@ typedef Obj(*Func_host_ptr)(Obj, Mem);
 static Obj host_init_func(Obj env, Int len_pars, Chars name, Func_host_ptr ptr) {
   // owns env.
   Obj sym = sym_new_from_chars(name);
-  Obj pars; // HACK.
-  #define PAR(s) vec_new2(rc_ret_val(s_Label), rc_ret_val(s))
+  Obj pars; // TODO: add real types.
+  #define PAR(s) \
+  vec_new4(rc_ret_val(s_Label), rc_ret_val(s), rc_ret_val(s_nil), rc_ret_val(s_INFER))
   switch (len_pars) {
     //case -1: pars = vec_new1(vec_new2(s_Variad, s_nil)); break;
     case 1: pars = vec_new1(PAR(s_a)); break;
