@@ -313,62 +313,69 @@ static Obj host_type_sym(Obj env, Mem args) {
 }
 
 
+static Obj host_init_func(Obj env, Int len_pars, Chars name, Func_host_ptr ptr) {
+  // owns env.
+  Obj sym = sym_new_from_chars(name);
+  Obj o = ref_alloc(rt_Func_host, size_Func_host);
+  o.func_host->type = rc_ret_val(s_Func_host);
+  o.func_host->sym = sym;
+  o.func_host->len_pars = len_pars;
+  o.func_host->ptr = ptr;
+  return env_bind(env, sym, o);
+}
+
+
+static Obj host_init_file(Obj env, Chars s_name, Chars name, CFile f, Bool r, Bool w) {
+  // owns env.
+  Obj sym = sym_new_from_chars(s_name);
+  Obj val = vec_new4(data_new_from_chars(name), ptr_new(f), bool_new(r), bool_new(w));
+  return env_bind(env, sym, val);
+}
+
+
 static Obj host_init(Obj env) {
-  Obj sym, val;
-
-#define DEF_FH(len_pars, f, n) \
-sym = sym_new_from_chars(cast(Chars, n)); \
-val = func_host_new(sym, len_pars, f); \
-env = env_bind(env, sym, val);
-
-  DEF_FH(1, host_identity, "identity")
-  DEF_FH(1, host_is_true, "is-true")
-  DEF_FH(1, host_not, "not")
-  DEF_FH(1, host_ineg, "ineg")
-  DEF_FH(1, host_iabs, "iabs")
-  DEF_FH(2, host_iadd, "iadd")
-  DEF_FH(2, host_isub, "isub")
-  DEF_FH(2, host_imul, "imul")
-  DEF_FH(2, host_idiv, "idiv")
-  DEF_FH(2, host_imod, "imod")
-  DEF_FH(2, host_ipow, "ipow")
-  DEF_FH(2, host_ishl, "ishl")
-  DEF_FH(2, host_ishr, "ishr")
-  DEF_FH(2, host_ieq, "ieq")
-  DEF_FH(2, host_ine, "ine")
-  DEF_FH(2, host_ilt, "ilt")
-  DEF_FH(2, host_ile, "ile")
-  DEF_FH(2, host_igt, "igt")
-  DEF_FH(2, host_ige, "ige")
-  DEF_FH(2, host_sym_eq, "sym-eq")
-  DEF_FH(-1, host_mk_vec, "mk-vec")
-  DEF_FH(1, host_len, "len")
-  DEF_FH(2, host_el, "el")
-  DEF_FH(3, host_slice, "slice")
-  DEF_FH(2, host_prepend, "prepend")
-  DEF_FH(2, host_append, "append")
-  DEF_FH(2, host_raw_write, "raw-write")
-  DEF_FH(2, host_raw_write_repr, "raw-write-repr")
-  DEF_FH(1, host_raw_flush, "raw-flush")
-  DEF_FH(1, host_exit, "exit")
-  DEF_FH(1, host_error, "error")
-  DEF_FH(2, host_run, "run")
-  DEF_FH(1, host_type_sym, "type-sym")
-
+#define DEF_FH(len_pars, n, f) env = host_init_func(env, len_pars, cast(Chars, n), f);
+  DEF_FH(1, "identity", host_identity)
+  DEF_FH(1, "is-true", host_is_true)
+  DEF_FH(1, "not", host_not)
+  DEF_FH(1, "ineg", host_ineg)
+  DEF_FH(1, "iabs", host_iabs)
+  DEF_FH(2, "iadd", host_iadd)
+  DEF_FH(2, "isub", host_isub)
+  DEF_FH(2, "imul", host_imul)
+  DEF_FH(2, "idiv", host_idiv)
+  DEF_FH(2, "imod", host_imod)
+  DEF_FH(2, "ipow", host_ipow)
+  DEF_FH(2, "ishl", host_ishl)
+  DEF_FH(2, "ishr", host_ishr)
+  DEF_FH(2, "ieq", host_ieq)
+  DEF_FH(2, "ine", host_ine)
+  DEF_FH(2, "ilt", host_ilt)
+  DEF_FH(2, "ile", host_ile)
+  DEF_FH(2, "igt", host_igt)
+  DEF_FH(2, "ige", host_ige)
+  DEF_FH(2, "sym-eq", host_sym_eq)
+  DEF_FH(-1, "mk-vec", host_mk_vec)
+  DEF_FH(1, "len", host_len)
+  DEF_FH(2, "el", host_el)
+  DEF_FH(3, "slice", host_slice)
+  DEF_FH(2, "prepend", host_prepend)
+  DEF_FH(2, "append", host_append)
+  DEF_FH(2, "raw-write", host_raw_write)
+  DEF_FH(2, "raw-write-repr", host_raw_write_repr)
+  DEF_FH(1, "raw-flush", host_raw_flush)
+  DEF_FH(1, "exit", host_exit)
+  DEF_FH(1, "error", host_error)
+  DEF_FH(2, "run", host_run)
+  DEF_FH(1, "type-sym", host_type_sym)
 #undef DEF_FH
 
-#define DEF_FILE(string, f, is_readable, is_writable) \
-sym = sym_new_from_chars(cast(Chars, string)); \
-val = vec_new4(data_new_from_chars(cast(Chars, "<" string ">")), \
-ptr_new(f), \
-bool_new(is_readable), \
-bool_new(is_writable)); \
-env = env_bind(env, sym, val);
-
+#define DEF_FILE(n, f, r, w)  \
+  env = host_init_file(env, cast(Chars, n), cast(Chars, "<" n ">"), f, r, w);
+  
   DEF_FILE("std-in", stdin, true, false)
   DEF_FILE("std-out", stdout, false, true)
   DEF_FILE("std-err", stderr, false, true)
-
 #undef DEF_FILE
 
   return env;
