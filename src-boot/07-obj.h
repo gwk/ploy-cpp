@@ -64,21 +64,18 @@ typedef enum {
   rt_Data = 0,    // binary data; obj_counter_index assumes that this is the first index.
   rt_Vec,         // a fixed length vector of objects.
   rt_Env,         // an opaque lexical environment.
-  rt_Func_host,   // an opaque function built into the host interpreter.
 } Ref_tag;
 
 static Chars_const ref_tag_names[] = {
   "Data",
   "Vec",
   "Env",
-  "Func-host",
 };
 
 union _Obj;
 typedef struct _Data Data;
 typedef struct _Vec Vec;
 typedef struct _Env Env;
-typedef struct _Func_host Func_host;
 
 typedef union _Obj {
   Int i;
@@ -89,7 +86,6 @@ typedef union _Obj {
   Data* data;
   Vec* vec;
   Env* env;
-  Func_host* func_host;
 } Obj;
 DEF_SIZE(Obj);
 

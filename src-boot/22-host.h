@@ -123,7 +123,7 @@ static Obj host_sym_eq(Obj env, Mem args) {
 }
 
 
-static Obj host_mk_vec(Obj env, Mem args) {
+UNUSED_FN static Obj host_mk_vec(Obj env, Mem args) {
   // owns elements of args.
   return vec_new_M(args);
 }
@@ -313,15 +313,32 @@ static Obj host_type_sym(Obj env, Mem args) {
 }
 
 
+typedef Obj(*Func_host_ptr)(Obj, Mem);
+
+
 static Obj host_init_func(Obj env, Int len_pars, Chars name, Func_host_ptr ptr) {
   // owns env.
   Obj sym = sym_new_from_chars(name);
-  Obj o = ref_alloc(rt_Func_host, size_Func_host);
-  o.func_host->type = rc_ret_val(s_Func_host);
-  o.func_host->sym = sym;
-  o.func_host->len_pars = len_pars;
-  o.func_host->ptr = ptr;
-  return env_bind(env, sym, o);
+  Obj pars; // HACK.
+  #define PAR(s) vec_new2(rc_ret_val(s_Label), rc_ret_val(s))
+  switch (len_pars) {
+    //case -1: pars = vec_new1(vec_new2(s_Variad, s_nil)); break;
+    case 1: pars = vec_new1(PAR(s_a)); break;
+    case 2: pars = vec_new2(PAR(s_a), PAR(s_b)); break;
+    case 3: pars = vec_new3(PAR(s_a), PAR(s_b), PAR(s_c)); break;
+    default: assert(0);
+  }
+  #undef PAR
+  Obj f = vec_new_raw(7);
+  Obj* els = vec_ref_els(f);
+  els[0] = rc_ret_val(sym);
+  els[1] = bool_new(false);
+  els[2] = bool_new(false);
+  els[3] = rc_ret(env);
+  els[4] = pars;
+  els[5] = rc_ret_val(s_nil); // TODO: specify actual return type?
+  els[6] = ptr_new(cast(Raw, ptr));
+  return env_bind(env, sym, f);
 }
 
 
@@ -355,7 +372,7 @@ static Obj host_init(Obj env) {
   DEF_FH(2, "igt", host_igt)
   DEF_FH(2, "ige", host_ige)
   DEF_FH(2, "sym-eq", host_sym_eq)
-  DEF_FH(-1, "mk-vec", host_mk_vec)
+  //DEF_FH(-1, "mk-vec", host_mk_vec)
   DEF_FH(1, "len", host_len)
   DEF_FH(2, "el", host_el)
   DEF_FH(3, "slice", host_slice)

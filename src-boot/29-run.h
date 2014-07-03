@@ -200,31 +200,24 @@ static Call_envs run_bind_args(Obj caller_env, Obj callee_env, Obj func, Mem par
 
 static Step run_call_native(Obj env, Obj func, Mem args, Bool is_expand) {
   // owns env, func.
-  // a native (interpreted, not hosted) function/macro is a vec consisting of:
-  //  name:Sym
-  //  is-macro:Bool
-  //  pars:Vec
-  //  body:Expr
-  //  env:Env (currently implemented as a nested Vec structure, likely to change)
-  Mem m = vec_mem(func);
-  exc_check(m.len == 7, "function is malformed (length is not 7): %o", func);
+  Mem m = vec_ref_mem(func);
+  assert(m.len == 7);
   Obj name      = m.els[0];
-  Obj is_native = m.els[1];
+  //Obj is_native = m.els[1];
   Obj is_macro  = m.els[2];
   Obj lex_env   = m.els[3];
   Obj pars      = m.els[4];
   Obj ret_type  = m.els[5];
   Obj body      = m.els[6];
-  exc_check(bool_is_true(is_native), "native function appears to be non-native: %o", func);
-  exc_check(ret_type.u == s_nil.u, "function ret field is non-nil: %o", func);
   if (is_expand) {
     exc_check(bool_is_true(is_macro), "cannot expand function: %o", name);
   } else {
     exc_check(!bool_is_true(is_macro), "cannot call macro: %o", name);
   }
-  exc_check(obj_is_sym(name), "function is malformed (name is not a Sym): %o", name);
-  exc_check(obj_is_env(lex_env), "function %o is malformed (env is not an Env): %o", name, lex_env);
-  exc_check(obj_is_vec(pars), "function %o is malformed (parameters is not a Vec): %o", name, pars);
+  exc_check(obj_is_sym(name), "function name is not a Sym: %o", name);
+  exc_check(obj_is_env(lex_env), "function %o env is not an Env: %o", name, lex_env);
+  exc_check(obj_is_vec(pars), "function %o pars is not a Vec: %o", name, pars);
+  exc_check(ret_type.u == s_nil.u, "function %o ret-type is non-nil: %o", name, ret_type);
   Obj callee_env = env_push_frame(rc_ret(lex_env), rc_ret(name));
   // TODO: change env_push_frame src from name to whole func?
   callee_env = env_bind(callee_env, rc_ret_val(s_self), rc_ret(func)); // bind self.
@@ -245,12 +238,26 @@ static Step run_call_native(Obj env, Obj func, Mem args, Bool is_expand) {
 
 static Step run_call_host(Obj env, Obj func, Mem args) {
   // owns env, func.
-  Int len_pars = func.func_host->len_pars;
-  Func_host_ptr f_ptr = func.func_host->ptr;
-  // len_pars == -1 indicates a variadic function.
-  exc_check(args.len == len_pars || len_pars == -1,
-    "host function expects %i argument%s; received %i",
+  Mem m = vec_ref_mem(func);
+  assert(m.len == 7);
+  Obj name      = m.els[0];
+  //Obj is_native = m.els[1];
+  Obj is_macro  = m.els[2];
+  Obj lex_env   = m.els[3];
+  Obj pars      = m.els[4];
+  Obj ret_type  = m.els[5];
+  Obj body      = m.els[6];
+  exc_check(!bool_is_true(is_macro), "host function appears to be a macro: %o", func);
+  exc_check(obj_is_sym(name), "host function name is not a Sym: %o", name);
+  exc_check(obj_is_env(lex_env), "host function %o env is not an Env: %o", name, lex_env);
+  exc_check(obj_is_vec(pars), "host function %o pars is not a Vec: %o", name, pars);
+  exc_check(ret_type.u == s_nil.u, "host function %o ret-type is non-nil: %o", name, ret_type);
+  exc_check(obj_is_ptr(body), "host function %o body is not a Ptr: %o", name, body);
+  Int len_pars = vec_ref_len(pars);
+  exc_check(args.len == len_pars, "host function expects %i argument%s; received %i",
     len_pars, (len_pars == 1 ? "" : "s"), args.len);
+  // TODO: check arg types against parameters; use run_bind_args?
+  Func_host_ptr f_ptr = cast(Func_host_ptr, ptr_val(body));
   rc_rel(func);
   Obj arg_vals[args.len]; // requires variable-length-array support from compiler.
   for_in(i, args.len) {
@@ -267,13 +274,14 @@ static Step run_Call(Obj env, Mem args) {
   Obj callee = args.els[0];
   Step step = run(env, callee);
   Obj func = step.val;
-  Obj_tag ot = obj_tag(func);
-  exc_check(ot == ot_ref, "object is not callable: %o", func);
-  Ref_tag rt = ref_tag(func);
-  switch (cast(Uns, rt)) { // appease -Wswitch-enum.
-    case rt_Vec:        return run_call_native(env, func, mem_next(args), false); // TCO.
-    case rt_Func_host:  return run_call_host(env, func, mem_next(args)); // TODO: make TCO?
-    default: exc_raise("object is not callable: %o", func);
+  exc_check(obj_is_vec_ref(func), "object is not callable: %o", func);
+  Mem m = vec_ref_mem(func);
+  exc_check(m.len == 7, "function is malformed (length is not 7): %o", func);
+  Obj is_native = m.els[1];
+  if (bool_is_true(is_native)) {
+    return run_call_native(env, func, mem_next(args), false); // TCO.
+  } else {
+    return run_call_host(env, func, mem_next(args)); // TODO: make TCO?
   }
 }
 
@@ -331,7 +339,6 @@ static Step run_step(Obj env, Obj code) {
     case rt_Data:
       return mk_step(env, rc_ret(code)); // self-evaluating.
     case rt_Env:
-    case rt_Func_host:
       exc_raise("cannot run object: %o", code);
   }
 }

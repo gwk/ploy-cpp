@@ -84,7 +84,6 @@ S(Data_word) \
 S(Data) \
 S(Vec) \
 S(Env) \
-S(Func_host) \
 S(Label) \
 S(Variad) \
 S(Unq) \
@@ -103,6 +102,9 @@ S(Seq) \
 S(Call) \
 S(END_SPECIAL_SYMS) \
 S(self) \
+S(a) \
+S(b) \
+S(c) \
 
 // sym indices.
 #define S(s) si_##s,
@@ -126,7 +128,7 @@ SYM_LIST
 
 
 static const Int sym_index_of_ref_type_sym_first = si_Data;
-static const Int sym_index_of_ref_type_sym_last = si_Func_host;
+static const Int sym_index_of_ref_type_sym_last = si_Env;
 
 
 static void sym_init() {
@@ -136,7 +138,6 @@ static void sym_init() {
     // special name cases.
     if (i == si_VEC0) name = "[]";
     else if (i == si_CHAIN0) name = "[:]";
-    else if (i == si_Func_host) name = "Func-host";
     else if (i == si_Struct_boot) name = "Struct-boot";
     Obj sym = sym_new_from_chars(cast(Chars, name));
     assert(sym_index(sym) == i);

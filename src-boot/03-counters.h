@@ -25,14 +25,8 @@ C(Data) \
 C(Data_allocs) \
 C(Vec) \
 C(Vec_allocs) \
-C(File) \
-C(File_allocs) \
-C(Func_host_1) \
-C(Func_host_1_allocs) \
-C(Func_host_2) \
-C(Func_host_2_allocs) \
-C(Func_host_3) \
-C(Func_host_3_allocs)
+C(Env) \
+C(Env_allocs)
 
 // index enum for the counters.
 typedef enum {

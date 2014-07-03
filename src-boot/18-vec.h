@@ -45,6 +45,15 @@ static Obj vec_new_EM(Obj el, Mem m) {
 }
 
 
+static Obj vec_new1(Obj a) {
+  // owns all arguments.
+  Obj v = vec_new_raw(1);
+  Obj* els = vec_ref_els(v);
+  els[0] = a;
+  return v;
+}
+
+
 static Obj vec_new2(Obj a, Obj b) {
   // owns all arguments.
   Obj v = vec_new_raw(2);
