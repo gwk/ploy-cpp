@@ -62,20 +62,20 @@ static Chars_const obj_tag_names[] = {
 // all the ref types.
 typedef enum {
   rt_Data = 0,    // binary data; obj_counter_index assumes that this is the first index.
-  rt_Vec,         // a fixed length vector of objects.
   rt_Env,         // an opaque lexical environment.
+  rt_Vec,         // a fixed length vector of objects.
 } Ref_tag;
 
 static Chars_const ref_tag_names[] = {
   "Data",
-  "Vec",
   "Env",
+  "Vec",
 };
 
 union _Obj;
 typedef struct _Data Data;
-typedef struct _Vec Vec;
 typedef struct _Env Env;
+typedef struct _Vec Vec;
 
 typedef union _Obj {
   Int i;
@@ -84,8 +84,8 @@ typedef union _Obj {
   Chars c; // no valid object can be interpreted as Chars; this for the exc_raise formatter.
   union _Obj* type_ptr; // common to all ref types.
   Data* data;
-  Vec* vec;
   Env* env;
+  Vec* vec;
 } Obj;
 DEF_SIZE(Obj);
 
@@ -200,8 +200,8 @@ static Bool obj_is_data_word(Obj o) {
 
 
 static Bool ref_is_data(Obj o);
-static Bool ref_is_vec(Obj o);
 static Bool ref_is_env(Obj o);
+static Bool ref_is_vec(Obj o);
 
 
 static Bool obj_is_data_ref(Obj o) {
@@ -211,6 +211,11 @@ static Bool obj_is_data_ref(Obj o) {
 
 static Bool obj_is_data(Obj o) {
   return obj_is_data_word(o) || obj_is_data_ref(o);
+}
+
+
+static Bool obj_is_env(Obj o) {
+  return obj_is_ref(o) && ref_is_env(o);
 }
 
 
@@ -227,11 +232,6 @@ static Bool obj_is_vec(Obj o) {
   // only VEC0 and ref_vec objects are considered true vectors by the c interpreter;
   // CHAIN0 and END are never appropriate where we expect a vec internally.
   return o.u == s_VEC0.u || obj_is_vec_ref(o);
-}
-
-
-static Bool obj_is_env(Obj o) {
-  return obj_is_ref(o) && ref_is_env(o);
 }
 
 

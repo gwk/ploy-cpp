@@ -43,13 +43,13 @@ static Bool ref_is_data(Obj d) {
 }
 
 
-static Bool ref_is_vec(Obj r) {
-  return ref_tag(r) == rt_Vec;
+static Bool ref_is_env(Obj r) {
+  return ref_tag(r) == rt_Env;
 }
 
 
-static Bool ref_is_env(Obj r) {
-  return ref_tag(r) == rt_Env;
+static Bool ref_is_vec(Obj r) {
+  return ref_tag(r) == rt_Vec;
 }
 
 
@@ -66,8 +66,8 @@ static Obj ref_alloc(Ref_tag rt, Int size) {
 }
 
 
-static Obj vec_ref_rel_fields(Obj v);
 static Obj env_rel_fields(Obj o);
+static Obj vec_ref_rel_fields(Obj v);
 
 static Obj ref_dealloc(Obj r) {
   Ref_tag rt = ref_tag(r);
