@@ -353,7 +353,7 @@ static Obj parse_seq_simple(Parser* p) {
   if (!m.len) {
     return rc_ret_val(s_VEC0);
   }
-  Obj v = vec_new_EM(rc_ret_val(s_Seq), m);
+  Obj v = vec_new_EM(rc_ret_val(s_Syn_seq), m);
   mem_dealloc(m);
   return v;
 }
@@ -369,7 +369,7 @@ static Obj parse_chain_simple(Parser* p) {
   Obj c = rc_ret_val(s_END);
   for_in_rev(i, m.len) {
     Obj el = mem_el_move(m, i);
-    c = vec_new3(rc_ret_val(s_Seq), el, c);
+    c = vec_new3(rc_ret_val(s_Syn_seq), el, c);
   }
   mem_dealloc(m);
   return c;
@@ -390,11 +390,11 @@ static Obj parse_chain_fat(Parser* p) {
     }
     Obj v = vec_new_raw(m.len + 2);
     Obj* els = vec_ref_els(v);
-    els[0] = rc_ret_val(s_Seq);
+    els[0] = rc_ret_val(s_Syn_seq);
     for_in(i, m.len) {
       els[i + 1] = mem_el_move(m, i);
     }
-    // temporarily fill tl with ILLEGAL; replaced by vec_put below.
+    // temporarily fill tl with ILLEGAL; replaced by vec_ref_put below.
     // since vec_put releases, we must retain here.
     els[m.len + 1] = rc_ret_val(s_ILLEGAL);
     mem_dealloc(m);

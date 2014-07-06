@@ -23,7 +23,7 @@ static Obj expand_quasiquote(Obj o) {
   if (vec_ref_contains_unquote(o)) { // unquote exists somewhere in the tree.
     Obj v = vec_new_raw(m.len + 1);
     Obj* dst = vec_ref_els(v);
-    dst[0] = rc_ret_val(s_Seq);
+    dst[0] = rc_ret_val(s_Syn_seq);
     for_in(i, m.len) {
       Obj e = m.els[i];
       dst[i + 1] = expand_quasiquote(rc_ret(e)); // propagate the quotation into the elements.

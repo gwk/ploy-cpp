@@ -99,7 +99,7 @@ S(If) \
 S(Fn) \
 S(Struct_boot) \
 S(Struct) \
-S(Seq) \
+S(Syn_seq) \
 S(Call) \
 S(END_SPECIAL_SYMS) \
 S(self) \
@@ -140,6 +140,7 @@ static void sym_init() {
     if (i == si_VEC0) name = "[]";
     else if (i == si_CHAIN0) name = "[:]";
     else if (i == si_Struct_boot) name = "Struct-boot";
+    else if (i == si_Syn_seq) name = "Syn-seq";
     Obj sym = sym_new_from_chars(cast(Chars, name));
     assert(sym_index(sym) == i);
     rc_rel_val(sym);

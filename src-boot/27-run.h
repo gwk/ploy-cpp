@@ -88,7 +88,7 @@ static Step run_Fn(Obj env, Mem args) {
   exc_check(obj_is_sym(name),  "FN: name is not a Sym: %o", name);
   exc_check(obj_is_bool(is_macro), "FN: is-macro is not a Bool: %o", is_macro);
   exc_check(obj_is_vec(pars), "FN: parameters is not a Vec: %o", pars);
-  exc_check(vec_len(pars) > 0 && vec_ref_el(pars, 0).u == s_Seq.u,
+  exc_check(vec_len(pars) > 0 && vec_ref_el(pars, 0).u == s_Syn_seq.u,
     "FN: parameters is not a sequence literal: %o", pars);
   // TODO: check all pars.
   Obj f = vec_new_raw(7);
@@ -97,7 +97,7 @@ static Step run_Fn(Obj env, Mem args) {
   els[1] = rc_ret_val(is_native);
   els[2] = rc_ret_val(is_macro);
   els[3] = rc_ret(env);
-  els[4] = vec_slice_from(rc_ret(pars), 1); // HACK: remove the inital SEQ form symbol.
+  els[4] = vec_slice_from(rc_ret(pars), 1); // remove the syntax type.
   els[5] = rc_ret(ret_type);
   els[6] = rc_ret(body);
   return mk_step(env, f);
@@ -118,7 +118,7 @@ static Step run_Struct_boot(Obj env, Mem args) {
 }
 
 
-static Step run_Seq(Obj env, Mem args) {
+static Step run_Syn_seq(Obj env, Mem args) {
   // owns env.
   Obj v = vec_new_raw(args.len);
   Obj* els = vec_els(v);
@@ -302,7 +302,7 @@ static Step run_Vec(Obj env, Obj code) {
       EVAL_FORM(If);
       EVAL_FORM(Fn);
       EVAL_FORM(Struct_boot);
-      EVAL_FORM(Seq);
+      EVAL_FORM(Syn_seq);
       EVAL_FORM(Call);
     }
 #undef EVAL_FORM

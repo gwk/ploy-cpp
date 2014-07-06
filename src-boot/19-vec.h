@@ -239,7 +239,7 @@ static Vec_shape vec_ref_shape(Obj v) {
     if (e0.u == s_Label.u) return vs_label;
     if (e0.u == s_Variad.u) return vs_variad;
   }
-  if (e0.u == s_Seq.u) return vs_seq;
+  if (e0.u == s_Syn_seq.u) return vs_seq;
   Vec_shape s = vs_chain;
   loop {
     if (vec_ref_len(v) != 2) s = vs_chain_blocks;
