@@ -149,7 +149,7 @@ static Obj host_len(Obj env, Mem args) {
   // owns elements of args.
   assert(args.len == 1);
   Obj o = args.els[0];
-  exc_check(obj_is_vec(o), "vlen requires Vec; received: %o", o);
+  exc_check(obj_is_vec(o), "vlen requires Struct; received: %o", o);
   Int l = o.vec->len;
   rc_rel(o);
   return int_new(l);
@@ -161,7 +161,7 @@ static Obj host_el(Obj env, Mem args) {
   assert(args.len == 2);
   Obj v = args.els[0];
   Obj i = args.els[1];
-  exc_check(obj_is_vec(v), "el requires arg 1 to be a Vec; received: %o", v);
+  exc_check(obj_is_vec(v), "el requires arg 1 to be a Struct; received: %o", v);
   exc_check(obj_is_int(i), "el requires arg 2 to be a Int; received: %o", i);
   Int j = int_val(i);
   Int l = vec_len(v);
@@ -179,7 +179,7 @@ static Obj host_slice(Obj env, Mem args) {
   Obj v = args.els[0];
   Obj from = args.els[1];
   Obj to = args.els[2];
-  exc_check(obj_is_vec(v), "el requires arg 1 to be a Vec; received: %o", v);
+  exc_check(obj_is_vec(v), "el requires arg 1 to be a Struct; received: %o", v);
   exc_check(obj_is_int(from), "el requires arg 2 to be a Int; received: %o", from);
   exc_check(obj_is_int(to), "el requires arg 3 to be a Int; received: %o", to);
   Int f = int_val(from);
@@ -195,7 +195,7 @@ static Obj host_prepend(Obj env, Mem args) {
   assert(args.len == 2);
   Obj el = args.els[0];
   Obj vec = args.els[1];
-  exc_check(obj_is_vec(vec), "prepend requires arg 2 to be a Vec; received: %o", vec);
+  exc_check(obj_is_vec(vec), "prepend requires arg 2 to be a Struct; received: %o", vec);
   Mem  m = vec_mem(vec);
   Obj res = vec_new_raw(m.len + 1);
   Obj* els = vec_els(res);
@@ -213,7 +213,7 @@ static Obj host_append(Obj env, Mem args) {
   assert(args.len == 2);
   Obj vec = args.els[0];
   Obj el = args.els[1];
-  exc_check(obj_is_vec(vec), "append requires arg 1 to be a Vec; received: %o", vec);
+  exc_check(obj_is_vec(vec), "append requires arg 1 to be a Struct; received: %o", vec);
   Mem  m = vec_mem(vec);
   Obj res = vec_new_raw(m.len + 1);
   Obj* els = vec_els(res);

@@ -87,7 +87,7 @@ static Step run_Fn(Obj env, Mem args) {
   Obj body      = args.els[5];
   exc_check(obj_is_sym(name),  "FN: name is not a Sym: %o", name);
   exc_check(obj_is_bool(is_macro), "FN: is-macro is not a Bool: %o", is_macro);
-  exc_check(obj_is_vec(pars), "FN: parameters is not a Vec: %o", pars);
+  exc_check(obj_is_vec(pars), "FN: parameters is not a Struct: %o", pars);
   exc_check(vec_len(pars) > 0 && vec_el(pars, 0).u == s_Syn_seq.u,
     "FN: parameters is not a sequence literal: %o", pars);
   // TODO: check all pars.
@@ -216,7 +216,7 @@ static Step run_call_native(Obj env, Obj func, Mem args, Bool is_expand) {
   }
   exc_check(obj_is_sym(name), "function name is not a Sym: %o", name);
   exc_check(obj_is_env(lex_env), "function %o env is not an Env: %o", name, lex_env);
-  exc_check(obj_is_vec(pars), "function %o pars is not a Vec: %o", name, pars);
+  exc_check(obj_is_vec(pars), "function %o pars is not a Struct: %o", name, pars);
   exc_check(ret_type.u == s_nil.u, "function %o ret-type is non-nil: %o", name, ret_type);
   Obj callee_env = env_push_frame(rc_ret(lex_env), rc_ret(name));
   // TODO: change env_push_frame src from name to whole func?
@@ -250,7 +250,7 @@ static Step run_call_host(Obj env, Obj func, Mem args) {
   exc_check(!bool_is_true(is_macro), "host function appears to be a macro: %o", func);
   exc_check(obj_is_sym(name), "host function name is not a Sym: %o", name);
   exc_check(obj_is_env(lex_env), "host function %o env is not an Env: %o", name, lex_env);
-  exc_check(obj_is_vec(pars), "host function %o pars is not a Vec: %o", name, pars);
+  exc_check(obj_is_vec(pars), "host function %o pars is not a Struct: %o", name, pars);
   exc_check(ret_type.u == s_nil.u, "host function %o ret-type is non-nil: %o", name, ret_type);
   exc_check(obj_is_ptr(body), "host function %o body is not a Ptr: %o", name, body);
   Int len_pars = vec_len(pars);
@@ -286,7 +286,7 @@ static Step run_Call(Obj env, Mem args) {
 }
 
 
-static Step run_Vec(Obj env, Obj code) {
+static Step run_Struct(Obj env, Obj code) {
   // owns env.
   Mem m = vec_mem(code);
   Obj form = m.els[0];
@@ -307,7 +307,7 @@ static Step run_Vec(Obj env, Obj code) {
     }
 #undef EVAL_FORM
   }
-  exc_raise("cannot call Vec object: %o", code);
+  exc_raise("cannot call Struct object: %o", code);
 }
 
 
@@ -334,8 +334,8 @@ static Step run_step(Obj env, Obj code) {
     }
   }
   switch (ref_tag(code)) {
-    case rt_Vec:
-      return run_Vec(env, code);
+    case rt_Struct:
+      return run_Struct(env, code);
     case rt_Data:
       return mk_step(env, rc_ret(code)); // self-evaluating.
     case rt_Env:

@@ -63,19 +63,19 @@ static Chars_const obj_tag_names[] = {
 typedef enum {
   rt_Data = 0,    // binary data; obj_counter_index assumes that this is the first index.
   rt_Env,         // an opaque lexical environment.
-  rt_Vec,         // a fixed length vector of objects.
+  rt_Struct,         // a fixed length vector of objects.
 } Ref_tag;
 
 static Chars_const ref_tag_names[] = {
   "Data",
   "Env",
-  "Vec",
+  "Struct",
 };
 
 union _Obj;
 typedef struct _Data Data;
 typedef struct _Env Env;
-typedef struct _Vec Vec;
+typedef struct _Struct Struct;
 
 typedef union _Obj {
   Int i;
@@ -85,7 +85,7 @@ typedef union _Obj {
   union _Obj* type_ptr; // common to all ref types.
   Data* data;
   Env* env;
-  Vec* vec;
+  Struct* vec;
 } Obj;
 DEF_SIZE(Obj);
 

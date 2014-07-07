@@ -49,7 +49,7 @@ static Bool ref_is_env(Obj r) {
 
 
 static Bool ref_is_vec(Obj r) {
-  return ref_tag(r) == rt_Vec;
+  return ref_tag(r) == rt_Struct;
 }
 
 
@@ -73,7 +73,7 @@ static Obj ref_dealloc(Obj r) {
   Ref_tag rt = ref_tag(r);
   rc_rel(*r.type_ptr);
   Obj tail = obj0;
-  if (rt == rt_Vec) {
+  if (rt == rt_Struct) {
     tail = vec_rel_fields(r);
   } else if (rt == rt_Env) {
     tail = env_rel_fields(r);

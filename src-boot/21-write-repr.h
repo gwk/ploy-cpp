@@ -182,7 +182,7 @@ static void write_repr_obj(CFile f, Obj o, Bool is_quoted, Int depth, Set* s) {
       assert(ot == ot_ref);
       switch (ref_tag(o)) {
         case rt_Data: write_repr_data(f, o); break;
-        case rt_Vec: write_repr_vec(f, o, is_quoted, depth, s); break;
+        case rt_Struct: write_repr_vec(f, o, is_quoted, depth, s); break;
         case rt_Env: write_repr_env(f, o); break;
         default: assert(0);
       }

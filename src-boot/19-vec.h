@@ -4,16 +4,16 @@
 #include "18-env.h"
 
 
-struct _Vec {
+struct _Struct {
   Obj type;
   Int len;
 } ALIGNED_TO_WORD;
-DEF_SIZE(Vec);
+DEF_SIZE(Struct);
 
 
 static Obj vec_new_raw(Int len) {
-  Obj v = ref_alloc(rt_Vec, size_Vec + (size_Obj * len));
-  v.vec->type = rc_ret_val(s_Vec);
+  Obj v = ref_alloc(rt_Struct, size_Struct + (size_Obj * len));
+  v.vec->type = rc_ret_val(s_Struct);
   v.vec->len = len;
   return v;
 }
@@ -172,10 +172,10 @@ typedef enum {
   vs_label,
   vs_variad,
   vs_seq,
-} Vec_shape;
+} Struct_shape;
 
 
-static Vec_shape vec_shape(Obj v) {
+static Struct_shape vec_shape(Obj v) {
   assert(ref_is_vec(v));
   Int len = vec_len(v);
   if (!len) return vs_vec;

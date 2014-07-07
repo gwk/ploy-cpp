@@ -23,8 +23,8 @@ C(Ptr) \
 C(Data_word) \
 C(Data) \
 C(Data_allocs) \
-C(Vec) \
-C(Vec_allocs) \
+C(Struct) \
+C(Struct_allocs) \
 C(Env) \
 C(Env_allocs)
 

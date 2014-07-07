@@ -81,7 +81,7 @@ S(Int) \
 S(Sym) \
 S(Data) \
 S(Env) \
-S(Vec) \
+S(Struct) \
 S(Label) \
 S(Variad) \
 S(Unq) \
@@ -127,7 +127,7 @@ SYM_LIST
 
 
 static const Int sym_index_of_ref_type_sym_first = si_Data;
-static const Int sym_index_of_ref_type_sym_last = si_Vec;
+static const Int sym_index_of_ref_type_sym_last = si_Struct;
 
 
 static void sym_init() {
