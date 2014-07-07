@@ -79,7 +79,6 @@ S(INFER) \
 S(Ptr) \
 S(Int) \
 S(Sym) \
-S(Data_word) \
 S(Data) \
 S(Env) \
 S(Vec) \
