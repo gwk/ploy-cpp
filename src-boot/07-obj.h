@@ -224,9 +224,9 @@ static Bool obj_is_struct(Obj o) {
 }
 
 
-static Int struct_len(Obj v);
-static Obj struct_el(Obj v, Int i);
-static Obj* struct_els(Obj v);
+static Int struct_len(Obj s);
+static Obj struct_el(Obj s, Int i);
+static Obj* struct_els(Obj s);
 static const Obj s_Label, s_Variad;
 
 

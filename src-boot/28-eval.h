@@ -17,12 +17,12 @@ static Step eval(Obj env, Obj code) {
 }
 
 
-static Step eval_struct(Obj env, Obj v) {
+static Step eval_struct(Obj env, Obj s) {
   // top level eval of a series of expressions.
   // this is quite different than calling eval on a DO structtor;
   // not only does this struct not have a head DO sym,
   // it also does the complete eval cycle on each member in turn.
-  Mem m = struct_mem(v);
+  Mem m = struct_mem(s);
   if (m.len == 0) {
     return mk_step(env, rc_ret_val(s_void));
   }

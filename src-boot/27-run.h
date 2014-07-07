@@ -107,27 +107,27 @@ static Step run_Fn(Obj env, Mem args) {
 static Step run_Syn_struct_boot(Obj env, Mem args) {
   // owns env.
   check(args.len > 0, "STRUCT_BOOT form is empty");
-  Obj v = struct_new_raw(args.len);
-  Obj* els = struct_els(v);
+  Obj s = struct_new_raw(args.len);
+  Obj* els = struct_els(s);
   for_in(i, args.len) {
     els[i] = rc_ret(args.els[i]);
   }
-  Step step = run(env, v);
-  rc_rel(v);
+  Step step = run(env, s);
+  rc_rel(s);
   return step;
 }
 
 
 static Step run_Syn_seq(Obj env, Mem args) {
   // owns env.
-  Obj v = struct_new_raw(args.len);
-  Obj* els = struct_els(v);
+  Obj s = struct_new_raw(args.len);
+  Obj* els = struct_els(s);
   for_in(i, args.len) {
     Step step = run(env, args.els[i]);
     env = step.env;
     els[i] = step.val;
   }
-  return mk_step(env, v);
+  return mk_step(env, s);
 }
 
 

@@ -21,15 +21,15 @@ static Obj expand_quasiquote(Obj o) {
     return e;
   }
   if (struct_contains_unquote(o)) { // unquote exists somewhere in the tree.
-    Obj v = struct_new_raw(m.len + 1);
-    Obj* dst = struct_els(v);
+    Obj s = struct_new_raw(m.len + 1);
+    Obj* dst = struct_els(s);
     dst[0] = rc_ret_val(s_Syn_seq);
     for_in(i, m.len) {
       Obj e = m.els[i];
       dst[i + 1] = expand_quasiquote(rc_ret(e)); // propagate the quotation into the elements.
     }
     rc_rel(o);
-    return v;
+    return s;
   } else { // no unquotes in the tree; simply quote the top level.
     return struct_new2(rc_ret_val(s_Quo), o);
   }

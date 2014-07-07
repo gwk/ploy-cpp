@@ -159,15 +159,15 @@ static Obj host_len(Obj env, Mem args) {
 static Obj host_el(Obj env, Mem args) {
   // owns elements of args.
   assert(args.len == 2);
-  Obj v = args.els[0];
+  Obj s = args.els[0];
   Obj i = args.els[1];
-  exc_check(obj_is_struct(v), "el requires arg 1 to be a Struct; received: %o", v);
+  exc_check(obj_is_struct(s), "el requires arg 1 to be a Struct; received: %o", s);
   exc_check(obj_is_int(i), "el requires arg 2 to be a Int; received: %o", i);
   Int j = int_val(i);
-  Int l = struct_len(v);
+  Int l = struct_len(s);
   exc_check(j >= 0 && j < l, "el index out of range; index: %i; len: %i", j, l);
-  Obj el = struct_el(v, j);
-  rc_rel(v);
+  Obj el = struct_el(s, j);
+  rc_rel(s);
   rc_rel_val(i);
   return rc_ret(el);
 }
@@ -176,17 +176,17 @@ static Obj host_el(Obj env, Mem args) {
 static Obj host_slice(Obj env, Mem args) {
   // owns elements of args.
   assert(args.len == 3);
-  Obj v = args.els[0];
+  Obj s = args.els[0];
   Obj from = args.els[1];
   Obj to = args.els[2];
-  exc_check(obj_is_struct(v), "el requires arg 1 to be a Struct; received: %o", v);
+  exc_check(obj_is_struct(s), "el requires arg 1 to be a Struct; received: %o", s);
   exc_check(obj_is_int(from), "el requires arg 2 to be a Int; received: %o", from);
   exc_check(obj_is_int(to), "el requires arg 3 to be a Int; received: %o", to);
   Int f = int_val(from);
   Int t = int_val(to);
   rc_rel_val(from);
   rc_rel_val(to);
-  return struct_slice(v, f, t);
+  return struct_slice(s, f, t);
 }
 
 

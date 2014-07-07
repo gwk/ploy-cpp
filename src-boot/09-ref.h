@@ -67,7 +67,7 @@ static Obj ref_alloc(Ref_tag rt, Int size) {
 
 
 static Obj env_rel_fields(Obj o);
-static Obj struct_rel_fields(Obj v);
+static Obj struct_rel_fields(Obj s);
 
 static Obj ref_dealloc(Obj r) {
   Ref_tag rt = ref_tag(r);

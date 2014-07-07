@@ -22,7 +22,7 @@ static Obj preprocess(Obj code) {
       array_append(&dst, o); // owns o.
     }
   }
-  Obj v = struct_new_M(dst.mem);
+  Obj s = struct_new_M(dst.mem);
   mem_dealloc(dst.mem);
-  return v;
+  return s;
 }

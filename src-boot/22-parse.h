@@ -302,18 +302,18 @@ if (p->e || !parse_terminator(p, t)) { \
 static Obj parse_struct_simple(Parser* p) {
   Mem m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR('}');
-  Obj v = struct_new_EM(rc_ret_val(s_Syn_struct), m);
+  Obj s = struct_new_EM(rc_ret_val(s_Syn_struct), m);
   mem_dealloc(m);
-  return v;
+  return s;
 }
 
 
 static Obj parse_struct_boot(Parser* p) {
   Mem m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR('}');
-  Obj v = struct_new_EM(rc_ret_val(s_Syn_struct_boot), m);
+  Obj s = struct_new_EM(rc_ret_val(s_Syn_struct_boot), m);
   mem_dealloc(m);
-  return v;
+  return s;
 }
 
 
@@ -331,9 +331,9 @@ static Obj parse_call(Parser* p) {
   P_ADV1;
   Mem m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR(')');
-  Obj v = struct_new_EM(rc_ret_val(s_Call), m);
+  Obj s = struct_new_EM(rc_ret_val(s_Call), m);
   mem_dealloc(m);
-  return v;
+  return s;
 }
 
 
@@ -341,18 +341,18 @@ static Obj parse_expand(Parser* p) {
   P_ADV1;
   Mem m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR('>');
-  Obj v = struct_new_EM(rc_ret_val(s_Expand), m);
+  Obj s = struct_new_EM(rc_ret_val(s_Expand), m);
   mem_dealloc(m);
-  return v;
+  return s;
 }
 
 
 static Obj parse_syn_seq(Parser* p) {
   Mem m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR(']');
-  Obj v = struct_new_EM(rc_ret_val(s_Syn_seq), m);
+  Obj s = struct_new_EM(rc_ret_val(s_Syn_seq), m);
   mem_dealloc(m);
-  return v;
+  return s;
 }
 
 
@@ -360,10 +360,9 @@ static Obj parse_syn_chain_simple(Parser* p) {
   P_ADV1;
   Mem m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR(']');
-  Obj v = struct_new_EM(rc_ret_val(s_Syn_chain), m);
+  Obj s = struct_new_EM(rc_ret_val(s_Syn_chain), m);
   mem_dealloc(m);
-  dbg(v);
-  return v;
+  return s;
 }
 
 
