@@ -129,21 +129,28 @@ UNUSED_FN static Obj host_mk_vec(Obj env, Mem args) {
 }
 
 
-//static Obj host_chain(Obj env, Mem args) {}
-
-
-static Obj host_len(Obj env, Mem args) {
+static Obj host_dlen(Obj env, Mem args) {
   // owns elements of args.
-  // TODO: separate host_vec_len and host data_len.
   assert(args.len == 1);
   Obj o = args.els[0];
   Int l;
   if (o.u == blank.u) {
     l = 0;
   } else {
-    exc_check(obj_is_data(o) || obj_is_vec(o), "len requires Data or Vec; received: %o", o);
+    exc_check(obj_is_data(o), "data-len requires Data; received: %o", o);
     l = o.data->len;
   }
+  rc_rel(o);
+  return int_new(l);
+}
+
+
+static Obj host_len(Obj env, Mem args) {
+  // owns elements of args.
+  assert(args.len == 1);
+  Obj o = args.els[0];
+  exc_check(obj_is_vec(o), "vlen requires Vec; received: %o", o);
+  Int l = o.vec->len;
   rc_rel(o);
   return int_new(l);
 }
@@ -372,6 +379,7 @@ static Obj host_init(Obj env) {
   DEF_FH(2, "ige", host_ige)
   DEF_FH(2, "sym-eq", host_sym_eq)
   //DEF_FH(-1, "mk-vec", host_mk_vec)
+  DEF_FH(1, "dlen", host_dlen)
   DEF_FH(1, "len", host_len)
   DEF_FH(2, "el", host_el)
   DEF_FH(3, "slice", host_slice)
