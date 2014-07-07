@@ -6,6 +6,6 @@
 <fn g [-n -tl]
   <if (not n) tl (self (idec n) [n tl])>>
 
-(outRL (g 8 END))
+(outRL (g 8 nil))
 
-(g 40000 END)
+(g 40000 nil)

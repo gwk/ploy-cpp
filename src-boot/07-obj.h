@@ -224,13 +224,9 @@ static Bool obj_is_vec_ref(Obj o) {
 }
 
 
-static const Obj s_VEC0, s_CHAIN0;
+static const Obj s_VEC0;
 
 static Bool obj_is_vec(Obj o) {
-  // ploy makes distinctions between the zero vector VEC0, the empty list CHAIN0,
-  // and the list terminator END to reduce ambiguity (e.g. when printing data structures).
-  // only VEC0 and ref_vec objects are considered true vectors by the c interpreter;
-  // CHAIN0 and END are never appropriate where we expect a vec internally.
   return o.u == s_VEC0.u || obj_is_vec_ref(o);
 }
 

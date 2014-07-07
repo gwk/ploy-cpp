@@ -72,8 +72,7 @@ S(ILLEGAL) \
 S(void) \
 S(nil) \
 S(VEC0) \
-S(CHAIN0) \
-S(END) \
+S(ENV_END_MARKER) \
 S(ENV_FRAME_MARKER) \
 S(false) \
 S(true) \
@@ -100,6 +99,7 @@ S(Fn) \
 S(Struct_boot) \
 S(Struct) \
 S(Syn_seq) \
+S(Syn_chain) \
 S(Call) \
 S(END_SPECIAL_SYMS) \
 S(self) \
@@ -138,9 +138,9 @@ static void sym_init() {
     Chars_const name = sym_index_names[i];
     // special name cases.
     if (i == si_VEC0) name = "[]";
-    else if (i == si_CHAIN0) name = "[:]";
     else if (i == si_Struct_boot) name = "Struct-boot";
     else if (i == si_Syn_seq) name = "Syn-seq";
+    else if (i == si_Syn_chain) name = "Syn-chain";
     Obj sym = sym_new_from_chars(cast(Chars, name));
     assert(sym_index(sym) == i);
     rc_rel_val(sym);

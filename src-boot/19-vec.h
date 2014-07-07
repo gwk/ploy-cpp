@@ -131,7 +131,7 @@ static Obj vec_ref_el(Obj v, Int i) {
 }
 
 
-static void vec_ref_put(Obj v, Int i, Obj el) {
+UNUSED_FN static void vec_ref_put(Obj v, Int i, Obj el) {
   // owns el.
   // assumes the caller knows the size of the vector.
   assert(ref_is_vec(v));
@@ -141,30 +141,6 @@ static void vec_ref_put(Obj v, Int i, Obj el) {
   // it is owned by this function so the release could never cause deallocation.
   rc_rel(els[i]);
   els[i] = el;
-}
-
-
-static Obj chain_hd(Obj v) {
-  return vec_ref_el(v, 0);
-}
-
-
-static Obj chain_tl(Obj v) {
-  // tl is defined to be the last element of a vec.
-  // this allows us to create fat chains with more than one element per link.
-  return vec_ref_el(v, vec_ref_len(v) - 1);
-}
-
-
-UNUSED_FN static Obj chain_a(Obj v) {
-  // idiomatic accessor for fat chains.
-  return vec_ref_el(v, 0);
-}
-
-
-UNUSED_FN static Obj chain_b(Obj v) {
-  // idiomatic accessor for fat chains.
-  return vec_ref_el(v, 1);
 }
 
 
@@ -215,8 +191,6 @@ static Obj vec_ref_rel_fields(Obj v) {
 
 typedef enum {
   vs_vec,
-  vs_chain,
-  vs_chain_blocks,
   vs_quo,
   vs_qua,
   vs_unq,
@@ -240,14 +214,7 @@ static Vec_shape vec_ref_shape(Obj v) {
     if (e0.u == s_Variad.u) return vs_variad;
   }
   if (e0.u == s_Syn_seq.u) return vs_seq;
-  Vec_shape s = vs_chain;
-  loop {
-    if (vec_ref_len(v) != 2) s = vs_chain_blocks;
-    Obj tl = chain_tl(v);
-    if (tl.u == s_END.u) return s;
-    if (!obj_is_vec_ref(tl)) return vs_vec;
-    v = tl;
-  }
+  return vs_vec;
 }
 
 

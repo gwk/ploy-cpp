@@ -157,8 +157,7 @@ static Obj host_el(Obj env, Mem args) {
   exc_check(obj_is_vec(v), "el requires arg 1 to be a Vec; received: %o", v);
   exc_check(obj_is_int(i), "el requires arg 2 to be a Int; received: %o", i);
   Int j = int_val(i);
-  exc_check(v.u != s_VEC0.u && v.u != s_CHAIN0.u,
-    "el index out of range; index: %i; vec: %o", j, v);
+  exc_check(v.u != s_VEC0.u, "el index out of range for empty vec; index: %i", j);
   Int l = vec_ref_len(v);
   exc_check(j >= 0 && j < l, "el index out of range; index: %i; len: %i", j, l);
   Obj el = vec_ref_el(v, j);

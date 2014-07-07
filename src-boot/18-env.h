@@ -33,7 +33,7 @@ static Obj env_rel_fields(Obj o) {
 static Obj env_new(Obj key, Obj val, Obj tl) {
   // owns sym, val, tl.
   assert(obj_is_sym(key));
-  assert(tl.u == s_END.u || obj_is_env(tl));
+  assert(tl.u == s_ENV_END_MARKER.u || obj_is_env(tl));
   Obj o = ref_alloc(rt_Env, size_Env);
   o.env->type = rc_ret_val(s_Env);
   o.env->key = key;
@@ -45,7 +45,7 @@ static Obj env_new(Obj key, Obj val, Obj tl) {
 
 static Obj env_get(Obj env, Obj sym) {
   assert(!sym_is_special(sym));
-  while (env.u != s_END.u) {
+  while (env.u != s_ENV_END_MARKER.u) {
     assert(obj_is_env(env));
     Obj key = env.env->key;
     if (key.u == s_ENV_FRAME_MARKER.u) { // frame marker.
@@ -76,7 +76,7 @@ static Obj env_bind(Obj env, Obj sym, Obj val) {
 
 static void env_trace(Obj env, Bool show_values) {
   errL("trace:");
-  while (env.u != s_END.u) {
+  while (env.u != s_ENV_END_MARKER.u) {
     assert(obj_is_env(env));
     Obj key = env.env->key;
     if (key.u == s_ENV_FRAME_MARKER.u) { // frame marker.

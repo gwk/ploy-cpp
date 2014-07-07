@@ -2,8 +2,6 @@
 void
 nil
 []
-[:]
-END
 false
 true
 Label

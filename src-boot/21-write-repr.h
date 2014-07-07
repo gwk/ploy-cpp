@@ -61,47 +61,6 @@ static void write_repr_vec_vec(CFile f, Obj v, Bool is_quoted, Int depth, Set* s
 }
 
 
-static void write_repr_chain(CFile f, Obj c, Bool is_quoted, Int depth, Set* s) {
-  assert(ref_is_vec(c));
-  if (is_quoted) fputs("???", f);
-  fputs("[:", f);
-  Bool first = true;
-  loop {
-    if (first) {
-      first = false;
-    } else {
-      fputc(' ', f);
-    }
-    write_repr_obj(f, chain_hd(c), is_quoted, depth, s);
-    Obj tl = chain_tl(c);
-    if (tl.u == s_END.u) break;
-    assert(obj_is_vec_ref(tl));
-    c = tl;
-  }
-  fputc(']', f);
-}
-
-
-static void write_repr_fat_chain(CFile f, Obj c, Bool is_quoted, Int depth, Set* s) {
-  assert(ref_is_vec(c));
-  if (is_quoted) fputs("???", f);
-  fputc('[', f);
-  loop {
-    Mem m = vec_ref_mem(c);
-    fputc('|', f);
-    for_in(i, m.len - 1) {
-      if (i) fputc(' ', f);
-      write_repr_obj(f, m.els[i], is_quoted, depth, s);
-    }
-    Obj tl = m.els[m.len - 1];
-    if (tl.u == s_END.u) break;
-    assert(obj_is_vec_ref(tl));
-    c = tl;
-  }
-  fputc(']', f);
-}
-
-
 static void write_repr_quo(CFile f, Obj q, Bool is_quoted, Int depth, Set* s) {
   assert(vec_ref_len(q) == 2);
   if (!is_quoted) {
@@ -172,15 +131,13 @@ static void write_repr_seq(CFile f, Obj v, Bool is_quoted, Int depth, Set* s) {
 static void write_repr_vec(CFile f, Obj v, Bool is_quoted, Int depth, Set* s) {
   assert(ref_is_vec(v));
   switch (vec_ref_shape(v)) {
-    case vs_vec:          write_repr_vec_vec(f, v, is_quoted, depth, s);    return;
-    case vs_chain:        write_repr_chain(f, v, is_quoted, depth, s);      return;
-    case vs_chain_blocks: write_repr_fat_chain(f, v, is_quoted, depth, s);  return;
-    case vs_quo:          write_repr_quo(f, v, is_quoted, depth, s);        return;
-    case vs_qua:          write_repr_qua(f, v, is_quoted, depth, s);        return;
-    case vs_unq:          write_repr_unq(f, v, is_quoted, depth, s);        return;
-    case vs_label:        write_repr_par(f, v, is_quoted, depth, s, '-');   return;
-    case vs_variad:       write_repr_par(f, v, is_quoted, depth, s, '&');   return;
-    case vs_seq:          write_repr_seq(f, v, is_quoted, depth, s);        return;
+    case vs_vec:    write_repr_vec_vec(f, v, is_quoted, depth, s);  return;
+    case vs_quo:    write_repr_quo(f, v, is_quoted, depth, s);      return;
+    case vs_qua:    write_repr_qua(f, v, is_quoted, depth, s);      return;
+    case vs_unq:    write_repr_unq(f, v, is_quoted, depth, s);      return;
+    case vs_label:  write_repr_par(f, v, is_quoted, depth, s, '-'); return;
+    case vs_variad: write_repr_par(f, v, is_quoted, depth, s, '&'); return;
+    case vs_seq:    write_repr_seq(f, v, is_quoted, depth, s);      return;
   }
   assert(0);
 }

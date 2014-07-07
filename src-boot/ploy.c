@@ -67,7 +67,7 @@ int main(int argc, Chars_const argv[]) {
     }
   }
 
-  Obj env = rc_ret_val(s_END);
+  Obj env = rc_ret_val(s_ENV_END_MARKER);
   env = env_push_frame(env, data_new_from_chars(cast(Chars, "<host>")));
   env = host_init(env);
 

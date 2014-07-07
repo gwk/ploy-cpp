@@ -347,7 +347,7 @@ static Obj parse_expand(Parser* p) {
 }
 
 
-static Obj parse_seq_simple(Parser* p) {
+static Obj parse_syn_seq(Parser* p) {
   Mem m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR(']');
   if (!m.len) {
@@ -359,59 +359,14 @@ static Obj parse_seq_simple(Parser* p) {
 }
 
 
-static Obj parse_chain_simple(Parser* p) {
+static Obj parse_syn_chain_simple(Parser* p) {
   P_ADV1;
   Mem m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR(']');
-  if (!m.len) {
-    return rc_ret_val(s_CHAIN0);
-  }
-  Obj c = rc_ret_val(s_END);
-  for_in_rev(i, m.len) {
-    Obj el = mem_el_move(m, i);
-    c = vec_new3(rc_ret_val(s_Syn_seq), el, c);
-  }
+  Obj v = vec_new_EM(rc_ret_val(s_Syn_chain), m);
   mem_dealloc(m);
-  return c;
-}
-
-
-static Obj parse_chain_fat(Parser* p) {
-  Array a = array0;
-  while (parser_has_next_expr(p)) {
-    if (PC != '|') {
-      parse_error(p, "expected '|'");
-    }
-    P_ADV1;
-    Mem m = parse_exprs(p, '|');
-    if (p->e) {
-      mem_release_dealloc(a.mem);
-      return obj0;
-    }
-    Obj v = vec_new_raw(m.len + 2);
-    Obj* els = vec_ref_els(v);
-    els[0] = rc_ret_val(s_Syn_seq);
-    for_in(i, m.len) {
-      els[i + 1] = mem_el_move(m, i);
-    }
-    // temporarily fill tl with ILLEGAL; replaced by vec_ref_put below.
-    // since vec_put releases, we must retain here.
-    els[m.len + 1] = rc_ret_val(s_ILLEGAL);
-    mem_dealloc(m);
-    array_append(&a, v);
-  }
-  Mem m = a.mem;
-  P_CONSUME_TERMINATOR(']');
-  // assemble the chain.
-  assert(m.len);
-  Obj c = rc_ret_val(s_END);
-  for_in_rev(i, m.len) {
-    Obj v = mem_el_move(m, i);
-    vec_ref_put(v, vec_len(v) - 1, c);
-    c = v;
-  }
-  mem_dealloc(m);
-  return c;
+  dbg(v);
+  return v;
 }
 
 
@@ -419,12 +374,12 @@ static Obj parse_seq(Parser* p) {
   P_ADV1;
   parse_space(p); // TODO: move this.
   if (PC == ':') {
-    return parse_chain_simple(p);
+    return parse_syn_chain_simple(p);
   }
   if (PC == '|') {
-    return parse_chain_fat(p);
+    return parse_error(p, "fat chains are not implemented");
   }
-  return parse_seq_simple(p);
+  return parse_syn_seq(p);
 }
 
 
