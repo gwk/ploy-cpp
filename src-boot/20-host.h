@@ -123,9 +123,9 @@ static Obj host_sym_eq(Obj env, Mem args) {
 }
 
 
-UNUSED_FN static Obj host_mk_vec(Obj env, Mem args) {
+UNUSED_FN static Obj host_mk_struct(Obj env, Mem args) {
   // owns elements of args.
-  return vec_new_M(args);
+  return struct_new_M(args);
 }
 
 
@@ -149,8 +149,8 @@ static Obj host_len(Obj env, Mem args) {
   // owns elements of args.
   assert(args.len == 1);
   Obj o = args.els[0];
-  exc_check(obj_is_vec(o), "vlen requires Struct; received: %o", o);
-  Int l = o.vec->len;
+  exc_check(obj_is_struct(o), "vlen requires Struct; received: %o", o);
+  Int l = o.s->len;
   rc_rel(o);
   return int_new(l);
 }
@@ -161,12 +161,12 @@ static Obj host_el(Obj env, Mem args) {
   assert(args.len == 2);
   Obj v = args.els[0];
   Obj i = args.els[1];
-  exc_check(obj_is_vec(v), "el requires arg 1 to be a Struct; received: %o", v);
+  exc_check(obj_is_struct(v), "el requires arg 1 to be a Struct; received: %o", v);
   exc_check(obj_is_int(i), "el requires arg 2 to be a Int; received: %o", i);
   Int j = int_val(i);
-  Int l = vec_len(v);
+  Int l = struct_len(v);
   exc_check(j >= 0 && j < l, "el index out of range; index: %i; len: %i", j, l);
-  Obj el = vec_el(v, j);
+  Obj el = struct_el(v, j);
   rc_rel(v);
   rc_rel_val(i);
   return rc_ret(el);
@@ -179,14 +179,14 @@ static Obj host_slice(Obj env, Mem args) {
   Obj v = args.els[0];
   Obj from = args.els[1];
   Obj to = args.els[2];
-  exc_check(obj_is_vec(v), "el requires arg 1 to be a Struct; received: %o", v);
+  exc_check(obj_is_struct(v), "el requires arg 1 to be a Struct; received: %o", v);
   exc_check(obj_is_int(from), "el requires arg 2 to be a Int; received: %o", from);
   exc_check(obj_is_int(to), "el requires arg 3 to be a Int; received: %o", to);
   Int f = int_val(from);
   Int t = int_val(to);
   rc_rel_val(from);
   rc_rel_val(to);
-  return vec_slice(v, f, t);
+  return struct_slice(v, f, t);
 }
 
 
@@ -194,16 +194,16 @@ static Obj host_prepend(Obj env, Mem args) {
   // owns elements of args.
   assert(args.len == 2);
   Obj el = args.els[0];
-  Obj vec = args.els[1];
-  exc_check(obj_is_vec(vec), "prepend requires arg 2 to be a Struct; received: %o", vec);
-  Mem  m = vec_mem(vec);
-  Obj res = vec_new_raw(m.len + 1);
-  Obj* els = vec_els(res);
+  Obj s = args.els[1];
+  exc_check(obj_is_struct(s), "prepend requires arg 2 to be a Struct; received: %o", s);
+  Mem  m = struct_mem(s);
+  Obj res = struct_new_raw(m.len + 1);
+  Obj* els = struct_els(res);
   els[0] = el;
   for_in(i, m.len) {
     els[1 + i] = rc_ret(m.els[i]);
   }
-  rc_rel(vec);
+  rc_rel(s);
   return res;
 }
 
@@ -211,17 +211,17 @@ static Obj host_prepend(Obj env, Mem args) {
 static Obj host_append(Obj env, Mem args) {
   // owns elements of args.
   assert(args.len == 2);
-  Obj vec = args.els[0];
+  Obj s = args.els[0];
   Obj el = args.els[1];
-  exc_check(obj_is_vec(vec), "append requires arg 1 to be a Struct; received: %o", vec);
-  Mem  m = vec_mem(vec);
-  Obj res = vec_new_raw(m.len + 1);
-  Obj* els = vec_els(res);
+  exc_check(obj_is_struct(s), "append requires arg 1 to be a Struct; received: %o", s);
+  Mem  m = struct_mem(s);
+  Obj res = struct_new_raw(m.len + 1);
+  Obj* els = struct_els(res);
   for_in(i, m.len) {
     els[i] = rc_ret(m.els[i]);
   }
   els[m.len] = el;
-  rc_rel(vec);
+  rc_rel(s);
   return res;
 }
 
@@ -326,17 +326,17 @@ static Obj host_init_func(Obj env, Int len_pars, Chars name, Func_host_ptr ptr) 
   Obj sym = sym_new_from_chars(name);
   Obj pars; // TODO: add real types.
   #define PAR(s) \
-  vec_new4(rc_ret_val(s_Label), rc_ret_val(s), rc_ret_val(s_nil), rc_ret_val(s_INFER))
+  struct_new4(rc_ret_val(s_Label), rc_ret_val(s), rc_ret_val(s_nil), rc_ret_val(s_INFER))
   switch (len_pars) {
-    //case -1: pars = vec_new1(vec_new2(s_Variad, s_nil)); break;
-    case 1: pars = vec_new1(PAR(s_a)); break;
-    case 2: pars = vec_new2(PAR(s_a), PAR(s_b)); break;
-    case 3: pars = vec_new3(PAR(s_a), PAR(s_b), PAR(s_c)); break;
+    //case -1: pars = struct_new1(struct_new2(s_Variad, s_nil)); break;
+    case 1: pars = struct_new1(PAR(s_a)); break;
+    case 2: pars = struct_new2(PAR(s_a), PAR(s_b)); break;
+    case 3: pars = struct_new3(PAR(s_a), PAR(s_b), PAR(s_c)); break;
     default: assert(0);
   }
   #undef PAR
-  Obj f = vec_new_raw(7);
-  Obj* els = vec_els(f);
+  Obj f = struct_new_raw(7);
+  Obj* els = struct_els(f);
   els[0] = rc_ret_val(sym);
   els[1] = bool_new(false);
   els[2] = bool_new(false);
@@ -351,7 +351,7 @@ static Obj host_init_func(Obj env, Int len_pars, Chars name, Func_host_ptr ptr) 
 static Obj host_init_file(Obj env, Chars s_name, Chars name, CFile f, Bool r, Bool w) {
   // owns env.
   Obj sym = sym_new_from_chars(s_name);
-  Obj val = vec_new4(data_new_from_chars(name), ptr_new(f), bool_new(r), bool_new(w));
+  Obj val = struct_new4(data_new_from_chars(name), ptr_new(f), bool_new(r), bool_new(w));
   return env_bind(env, sym, val);
 }
 
@@ -378,7 +378,7 @@ static Obj host_init(Obj env) {
   DEF_FH(2, "igt", host_igt)
   DEF_FH(2, "ige", host_ige)
   DEF_FH(2, "sym-eq", host_sym_eq)
-  //DEF_FH(-1, "mk-vec", host_mk_vec)
+  //DEF_FH(-1, "mk-struct", host_mk_struct)
   DEF_FH(1, "dlen", host_dlen)
   DEF_FH(1, "len", host_len)
   DEF_FH(2, "el", host_el)

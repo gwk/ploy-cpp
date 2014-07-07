@@ -61,9 +61,9 @@ static Chars_const obj_tag_names[] = {
 
 // all the ref types.
 typedef enum {
-  rt_Data = 0,    // binary data; obj_counter_index assumes that this is the first index.
-  rt_Env,         // an opaque lexical environment.
-  rt_Struct,         // a fixed length vector of objects.
+  rt_Data = 0,  // binary data; obj_counter_index assumes that this is the first index.
+  rt_Env,       // an opaque lexical environment.
+  rt_Struct,    // an arbitrary structure: length word followed by fields.
 } Ref_tag;
 
 static Chars_const ref_tag_names[] = {
@@ -85,7 +85,7 @@ typedef union _Obj {
   union _Obj* type_ptr; // common to all ref types.
   Data* data;
   Env* env;
-  Struct* vec;
+  Struct* s;
 } Obj;
 DEF_SIZE(Obj);
 
@@ -201,7 +201,7 @@ static Bool obj_is_data_word(Obj o) {
 
 static Bool ref_is_data(Obj o);
 static Bool ref_is_env(Obj o);
-static Bool ref_is_vec(Obj o);
+static Bool ref_is_struct(Obj o);
 
 
 static Bool obj_is_data_ref(Obj o) {
@@ -219,32 +219,32 @@ static Bool obj_is_env(Obj o) {
 }
 
 
-static Bool obj_is_vec(Obj o) {
-  return obj_is_ref(o) && ref_is_vec(o);
+static Bool obj_is_struct(Obj o) {
+  return obj_is_ref(o) && ref_is_struct(o);
 }
 
 
-static Int vec_len(Obj v);
-static Obj vec_el(Obj v, Int i);
-static Obj* vec_els(Obj v);
+static Int struct_len(Obj v);
+static Obj struct_el(Obj v, Int i);
+static Obj* struct_els(Obj v);
 static const Obj s_Label, s_Variad;
 
 
-// iterate over a vec v.
-#define it_vec(it, v) \
-for (Obj *it = vec_els(v), *_end_##it = it + vec_len(v); \
+// iterate over a struct v.
+#define it_struct(it, v) \
+for (Obj *it = struct_els(v), *_end_##it = it + struct_len(v); \
 it < _end_##it; \
 it++)
 
 
 static Bool obj_is_par(Obj o) {
-  // a parameter is a vector with first element of LABEL or VARIAD,
+  // a parameter is a struct with first element of LABEL or VARIAD,
   // representing those two syntactic constructs respectively.
-  if (!obj_is_vec(o)) return false;
-  Int len = vec_len(o);
+  if (!obj_is_struct(o)) return false;
+  Int len = struct_len(o);
   if (len != 4) return false;
-  if (obj_is_special(vec_el(o, 1))) return false; // name must be a regular sym.
-  Obj e0 = vec_el(o, 0);
+  if (obj_is_special(struct_el(o, 1))) return false; // name must be a regular sym.
+  Obj e0 = struct_el(o, 0);
   return (e0.u == s_Label.u || e0.u == s_Variad.u);
 }
 

@@ -48,11 +48,11 @@ static void write_repr_sym(CFile f, Obj s, Bool is_quoted) {
 
 static void write_repr_obj(CFile f, Obj o, Bool is_quoted, Int depth, Set* s);
 
-static void write_repr_vec_vec(CFile f, Obj v, Bool is_quoted, Int depth, Set* s) {
-  assert(ref_is_vec(v));
+static void write_repr_struct_struct(CFile f, Obj v, Bool is_quoted, Int depth, Set* s) {
+  assert(ref_is_struct(v));
   if (is_quoted) fputs("???", f);
   fputc('[', f);
-  Mem m = vec_mem(v);
+  Mem m = struct_mem(v);
   for_in(i, m.len) {
     if (i) fputc(' ', f);
     write_repr_obj(f, m.els[i], is_quoted, depth, s);
@@ -62,42 +62,42 @@ static void write_repr_vec_vec(CFile f, Obj v, Bool is_quoted, Int depth, Set* s
 
 
 static void write_repr_quo(CFile f, Obj q, Bool is_quoted, Int depth, Set* s) {
-  assert(vec_len(q) == 2);
+  assert(struct_len(q) == 2);
   if (!is_quoted) {
     fputc('`', f);
   }
   fputc('`', f);
-  write_repr_obj(f, vec_el(q, 1), true, depth, s);
+  write_repr_obj(f, struct_el(q, 1), true, depth, s);
 }
 
 
 static void write_repr_qua(CFile f, Obj q, Bool is_quoted, Int depth, Set* s) {
-  assert(vec_len(q) == 2);
+  assert(struct_len(q) == 2);
   if (!is_quoted) {
     fputc('`', f);
   }
   fputc('~', f);
-  write_repr_obj(f, vec_el(q, 1), true, depth, s);
+  write_repr_obj(f, struct_el(q, 1), true, depth, s);
 }
 
 
 static void write_repr_unq(CFile f, Obj q, Bool is_quoted, Int depth, Set* s) {
-  assert(vec_len(q) == 2);
+  assert(struct_len(q) == 2);
   if (!is_quoted) {
     fputc('`', f);
   }
   fputc(',', f);
-  write_repr_obj(f, vec_el(q, 1), true, depth, s);
+  write_repr_obj(f, struct_el(q, 1), true, depth, s);
 }
 
 
 static void write_repr_par(CFile f, Obj p, Bool is_quoted, Int depth, Set* s, Char c) {
-  assert(vec_len(p) == 4);
+  assert(struct_len(p) == 4);
   if (!is_quoted) {
     fputc('`', f);
   }
   fputc(c, f);
-  Obj* els = vec_els(p);
+  Obj* els = struct_els(p);
   Obj name = els[1];
   Obj type = els[2];
   Obj expr = els[3];
@@ -114,12 +114,12 @@ static void write_repr_par(CFile f, Obj p, Bool is_quoted, Int depth, Set* s, Ch
 
 
 static void write_repr_seq(CFile f, Obj v, Bool is_quoted, Int depth, Set* s) {
-  assert(ref_is_vec(v));
+  assert(ref_is_struct(v));
   if (!is_quoted) {
     fputc('`', f);
   }
   fputc('[', f);
-  Mem m = vec_mem(v);
+  Mem m = struct_mem(v);
   for_imn(i, 1, m.len) {
     if (i > 1) fputc(' ', f);
     write_repr_obj(f, m.els[i], true, depth, s);
@@ -128,10 +128,10 @@ static void write_repr_seq(CFile f, Obj v, Bool is_quoted, Int depth, Set* s) {
 }
 
 
-static void write_repr_vec(CFile f, Obj v, Bool is_quoted, Int depth, Set* s) {
-  assert(ref_is_vec(v));
-  switch (vec_shape(v)) {
-    case vs_vec:    write_repr_vec_vec(f, v, is_quoted, depth, s);  return;
+static void write_repr_struct(CFile f, Obj v, Bool is_quoted, Int depth, Set* s) {
+  assert(ref_is_struct(v));
+  switch (struct_shape(v)) {
+    case vs_struct:    write_repr_struct_struct(f, v, is_quoted, depth, s);  return;
     case vs_quo:    write_repr_quo(f, v, is_quoted, depth, s);      return;
     case vs_qua:    write_repr_qua(f, v, is_quoted, depth, s);      return;
     case vs_unq:    write_repr_unq(f, v, is_quoted, depth, s);      return;
@@ -182,7 +182,7 @@ static void write_repr_obj(CFile f, Obj o, Bool is_quoted, Int depth, Set* s) {
       assert(ot == ot_ref);
       switch (ref_tag(o)) {
         case rt_Data: write_repr_data(f, o); break;
-        case rt_Struct: write_repr_vec(f, o, is_quoted, depth, s); break;
+        case rt_Struct: write_repr_struct(f, o, is_quoted, depth, s); break;
         case rt_Env: write_repr_env(f, o); break;
         default: assert(0);
       }

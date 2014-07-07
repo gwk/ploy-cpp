@@ -8,10 +8,10 @@
 
 
 static Obj preprocess(Obj code) {
-  if (!obj_is_vec(code)) {
+  if (!obj_is_struct(code)) {
     return rc_ret(code);
   }
-  Mem src = vec_mem(code);
+  Mem src = struct_mem(code);
   if (src.els[0].u == s_Comment.u) {
     return obj0;
   }
@@ -22,7 +22,7 @@ static Obj preprocess(Obj code) {
       array_append(&dst, o); // owns o.
     }
   }
-  Obj v = vec_new_M(dst.mem);
+  Obj v = struct_new_M(dst.mem);
   mem_dealloc(dst.mem);
   return v;
 }

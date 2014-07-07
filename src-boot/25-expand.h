@@ -10,19 +10,19 @@ static const Chars_const trace_post_expand_prefix = "▫ ";  // white small squa
 
 static Obj expand_quasiquote(Obj o) {
   // owns o.
-  if (!obj_is_vec(o)) { // replace the quasiquote with quote.
-    return vec_new2(rc_ret_val(s_Quo), o);
+  if (!obj_is_struct(o)) { // replace the quasiquote with quote.
+    return struct_new2(rc_ret_val(s_Quo), o);
   }
-  Mem m = vec_mem(o);
+  Mem m = struct_mem(o);
   if (m.els[0].u == s_Unq.u) { // unquote form.
     check_obj(m.len == 2, "malformed UNQ form", o);
     Obj e = rc_ret(m.els[1]);
     rc_rel(o);
     return e;
   }
-  if (vec_contains_unquote(o)) { // unquote exists somewhere in the tree.
-    Obj v = vec_new_raw(m.len + 1);
-    Obj* dst = vec_els(v);
+  if (struct_contains_unquote(o)) { // unquote exists somewhere in the tree.
+    Obj v = struct_new_raw(m.len + 1);
+    Obj* dst = struct_els(v);
     dst[0] = rc_ret_val(s_Syn_seq);
     for_in(i, m.len) {
       Obj e = m.els[i];
@@ -31,7 +31,7 @@ static Obj expand_quasiquote(Obj o) {
     rc_rel(o);
     return v;
   } else { // no unquotes in the tree; simply quote the top level.
-    return vec_new2(rc_ret_val(s_Quo), o);
+    return struct_new2(rc_ret_val(s_Quo), o);
   }
 }
 
@@ -57,10 +57,10 @@ static Obj expand_macro(Obj env, Mem args) {
 
 static Obj expand(Obj env, Obj code) {
   // owns code.
-  if (!obj_is_vec(code)) {
+  if (!obj_is_struct(code)) {
     return code;
   }
-  Mem m = vec_mem(code);
+  Mem m = struct_mem(code);
   Obj hd = m.els[0];
   if (hd.u == s_Quo.u) {
     return code;
@@ -82,12 +82,12 @@ static Obj expand(Obj env, Obj code) {
 #endif
       return expand(env, expanded); // macro result may contain more expands; recursively expand.
   } else {
-    // recursively expand vec.
+    // recursively expand struct.
     // TODO: collapse comment and VOID nodes or perhaps a special COLLAPSE node?
     // this might allow for us to do away with the preprocess phase,
     // and would also allow a macro to collapse into nothing.
-    Obj expanded = vec_new_raw(m.len);
-    Obj* expanded_els = vec_els(expanded);
+    Obj expanded = struct_new_raw(m.len);
+    Obj* expanded_els = struct_els(expanded);
     for_in(i, m.len) {
       expanded_els[i] = expand(env, rc_ret(m.els[i]));
     }

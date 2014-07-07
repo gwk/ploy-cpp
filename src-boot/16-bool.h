@@ -27,7 +27,7 @@ static Bool is_true(Obj o) {
         case rt_Env:
           return true;
         case rt_Struct:
-          return !!vec_len(o);
+          return !!struct_len(o);
       }
     case ot_ptr:
       return (ptr_val(o) != NULL);

@@ -11,18 +11,18 @@ struct _Struct {
 DEF_SIZE(Struct);
 
 
-static Obj vec_new_raw(Int len) {
+static Obj struct_new_raw(Int len) {
   Obj v = ref_alloc(rt_Struct, size_Struct + (size_Obj * len));
-  v.vec->type = rc_ret_val(s_Struct);
-  v.vec->len = len;
+  v.s->type = rc_ret_val(s_Struct);
+  v.s->len = len;
   return v;
 }
 
 
-static Obj vec_new_M(Mem m) {
+static Obj struct_new_M(Mem m) {
   // owns elements of m.
-  Obj v = vec_new_raw(m.len);
-  Obj* els = vec_els(v);
+  Obj v = struct_new_raw(m.len);
+  Obj* els = struct_els(v);
   for_in(i, m.len) {
     els[i] = mem_el_move(m, i);
   }
@@ -30,11 +30,11 @@ static Obj vec_new_M(Mem m) {
 }
 
 
-static Obj vec_new_EM(Obj el, Mem m) {
+static Obj struct_new_EM(Obj el, Mem m) {
   // owns el, elements of m.
   Int len = m.len + 1;
-  Obj v = vec_new_raw(len);
-  Obj* els = vec_els(v);
+  Obj v = struct_new_raw(len);
+  Obj* els = struct_els(v);
   els[0] = el;
   for_in(i, m.len) {
     els[i + 1] = mem_el_move(m, i);
@@ -43,29 +43,29 @@ static Obj vec_new_EM(Obj el, Mem m) {
 }
 
 
-static Obj vec_new1(Obj a) {
+static Obj struct_new1(Obj a) {
   // owns all arguments.
-  Obj v = vec_new_raw(1);
-  Obj* els = vec_els(v);
+  Obj v = struct_new_raw(1);
+  Obj* els = struct_els(v);
   els[0] = a;
   return v;
 }
 
 
-static Obj vec_new2(Obj a, Obj b) {
+static Obj struct_new2(Obj a, Obj b) {
   // owns all arguments.
-  Obj v = vec_new_raw(2);
-  Obj* els = vec_els(v);
+  Obj v = struct_new_raw(2);
+  Obj* els = struct_els(v);
   els[0] = a;
   els[1] = b;
   return v;
 }
 
 
-static Obj vec_new3(Obj a, Obj b, Obj c) {
+static Obj struct_new3(Obj a, Obj b, Obj c) {
   // owns all arguments.
-  Obj v = vec_new_raw(3);
-  Obj* els = vec_els(v);
+  Obj v = struct_new_raw(3);
+  Obj* els = struct_els(v);
   els[0] = a;
   els[1] = b;
   els[2] = c;
@@ -73,10 +73,10 @@ static Obj vec_new3(Obj a, Obj b, Obj c) {
 }
 
 
-static Obj vec_new4(Obj a, Obj b, Obj c, Obj d) {
+static Obj struct_new4(Obj a, Obj b, Obj c, Obj d) {
   // owns all arguments.
-  Obj v = vec_new_raw(4);
-  Obj* els = vec_els(v);
+  Obj v = struct_new_raw(4);
+  Obj* els = struct_els(v);
   els[0] = a;
   els[1] = b;
   els[2] = c;
@@ -85,39 +85,39 @@ static Obj vec_new4(Obj a, Obj b, Obj c, Obj d) {
 }
 
 
-static Int vec_len(Obj v) {
-  assert(ref_is_vec(v));
-  assert(v.vec->len >= 0);
-  return v.vec->len;
+static Int struct_len(Obj v) {
+  assert(ref_is_struct(v));
+  assert(v.s->len >= 0);
+  return v.s->len;
 }
 
 
-static Obj* vec_els(Obj v) {
-  assert(ref_is_vec(v));
-  return cast(Obj*, v.vec + 1); // address past vec header.
+static Obj* struct_els(Obj v) {
+  assert(ref_is_struct(v));
+  return cast(Obj*, v.s + 1); // address past struct header.
 }
 
 
-static Mem vec_mem(Obj v) {
-  return mem_mk(vec_len(v), vec_els(v));
+static Mem struct_mem(Obj v) {
+  return mem_mk(struct_len(v), struct_els(v));
 }
 
 
-static Obj vec_el(Obj v, Int i) {
-  // assumes the caller knows the size of the vector.
-  assert(ref_is_vec(v));
-  assert(i >= 0 && i < vec_len(v));
-  Obj* els = vec_els(v);
+static Obj struct_el(Obj v, Int i) {
+  // assumes the caller knows the size of the structtor.
+  assert(ref_is_struct(v));
+  assert(i >= 0 && i < struct_len(v));
+  Obj* els = struct_els(v);
   return els[i];
 }
 
 
-UNUSED_FN static void vec_put(Obj v, Int i, Obj el) {
+UNUSED_FN static void struct_put(Obj v, Int i, Obj el) {
   // owns el.
-  // assumes the caller knows the size of the vector.
-  assert(ref_is_vec(v));
-  assert(i >= 0 && i < vec_len(v));
-  Obj* els = vec_els(v);
+  // assumes the caller knows the size of the structtor.
+  assert(ref_is_struct(v));
+  assert(i >= 0 && i < struct_len(v));
+  Obj* els = struct_els(v);
   // safe to release els[i] first, because even if el is els[i],
   // it is owned by this function so the release could never cause deallocation.
   rc_rel(els[i]);
@@ -125,9 +125,9 @@ UNUSED_FN static void vec_put(Obj v, Int i, Obj el) {
 }
 
 
-static Obj vec_slice(Obj v, Int f, Int t) {
+static Obj struct_slice(Obj v, Int f, Int t) {
   // owns v.
-  Int l = vec_len(v);
+  Int l = struct_len(v);
   if (f < 0) f += l;
   if (t < 0) t += l;
   f = int_clamp(f, 0, l);
@@ -136,9 +136,9 @@ static Obj vec_slice(Obj v, Int f, Int t) {
   if (ls == l) {
     return v; // no ret/rel necessary.
   }
-  Obj s = vec_new_raw(ls);
-  Obj* src = vec_els(v);
-  Obj* dst = vec_els(s);
+  Obj s = struct_new_raw(ls);
+  Obj* src = struct_els(v);
+  Obj* dst = struct_els(s);
   for_in(i, ls) {
     dst[i] = rc_ret(src[i + f]);
   }
@@ -147,14 +147,14 @@ static Obj vec_slice(Obj v, Int f, Int t) {
 }
 
 
-static Obj vec_slice_from(Obj v, Int f) {
+static Obj struct_slice_from(Obj v, Int f) {
   // owns v.
-  return vec_slice(v, f, vec_len(v));
+  return struct_slice(v, f, struct_len(v));
 }
 
 
-static Obj vec_rel_fields(Obj v) {
-  Mem m = vec_mem(v);
+static Obj struct_rel_fields(Obj v) {
+  Mem m = struct_mem(v);
   if (!m.len) return obj0; // termination sentinel for rc_rel tail loop.
   Int last_i = m.len - 1;
   it_mem_to(it, m, last_i) {
@@ -165,7 +165,7 @@ static Obj vec_rel_fields(Obj v) {
 
 
 typedef enum {
-  vs_vec,
+  vs_struct,
   vs_quo,
   vs_qua,
   vs_unq,
@@ -175,33 +175,33 @@ typedef enum {
 } Struct_shape;
 
 
-static Struct_shape vec_shape(Obj v) {
-  assert(ref_is_vec(v));
-  Int len = vec_len(v);
-  if (!len) return vs_vec;
-  Obj e0 = vec_el(v, 0);
+static Struct_shape struct_shape(Obj v) {
+  assert(ref_is_struct(v));
+  Int len = struct_len(v);
+  if (!len) return vs_struct;
+  Obj e0 = struct_el(v, 0);
   if (len == 2) {
     if (e0.u == s_Quo.u) return vs_quo;
     if (e0.u == s_Qua.u) return vs_qua;
     if (e0.u == s_Unq.u) return vs_unq;
   }
-  if (len == 4 && obj_is_sym(vec_el(v, 1))) {
+  if (len == 4 && obj_is_sym(struct_el(v, 1))) {
     if (e0.u == s_Label.u) return vs_label;
     if (e0.u == s_Variad.u) return vs_variad;
   }
   if (e0.u == s_Syn_seq.u) return vs_seq;
-  return vs_vec;
+  return vs_struct;
 }
 
 
-static Bool vec_contains_unquote(Obj v) {
-  assert(ref_is_vec(v));
-  Mem m = vec_mem(v);
+static Bool struct_contains_unquote(Obj v) {
+  assert(ref_is_struct(v));
+  Mem m = struct_mem(v);
   if (!m.len) return false;
-  if (m.els[0].u == s_Unq.u) return true; // vec is an unquote form.
+  if (m.els[0].u == s_Unq.u) return true; // struct is an unquote form.
   it_mem_from(it, m, 1) {
     Obj e = *it;
-    if (obj_is_vec(e) && vec_contains_unquote(e)) return true;
+    if (obj_is_struct(e) && struct_contains_unquote(e)) return true;
   }
   return false;
 }
