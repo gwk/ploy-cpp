@@ -24,9 +24,9 @@ DEF_SIZE(Env);
 
 static Obj env_rel_fields(Obj o) {
   // returns last element for release by parent; this is a c tail call optimization.
-  rc_rel(o.env->key);
-  rc_rel(o.env->val);
-  return o.env->tl;
+  rc_rel(o.e->key);
+  rc_rel(o.e->val);
+  return o.e->tl;
 }
 
 
@@ -35,10 +35,10 @@ static Obj env_new(Obj key, Obj val, Obj tl) {
   assert(obj_is_sym(key));
   assert(tl.u == s_ENV_END_MARKER.u || obj_is_env(tl));
   Obj o = ref_alloc(rt_Env, size_Env);
-  o.env->type = rc_ret_val(s_Env);
-  o.env->key = key;
-  o.env->val = val;
-  o.env->tl = tl;
+  o.e->type = rc_ret_val(s_Env);
+  o.e->key = key;
+  o.e->val = val;
+  o.e->tl = tl;
   return o;
 }
 
@@ -47,15 +47,15 @@ static Obj env_get(Obj env, Obj sym) {
   assert(!sym_is_special(sym));
   while (env.u != s_ENV_END_MARKER.u) {
     assert(obj_is_env(env));
-    Obj key = env.env->key;
+    Obj key = env.e->key;
     if (key.u == s_ENV_FRAME_MARKER.u) { // frame marker.
       // for now, just skip the marker.
     } else { // binding.
       if (key.u == sym.u) {
-        return env.env->val;
+        return env.e->val;
       }
     }
-    env = env.env->tl;
+    env = env.e->tl;
   }
   return obj0; // lookup failed.
 }
@@ -78,9 +78,9 @@ static void env_trace(Obj env, Bool show_values) {
   errL("trace:");
   while (env.u != s_ENV_END_MARKER.u) {
     assert(obj_is_env(env));
-    Obj key = env.env->key;
+    Obj key = env.e->key;
     if (key.u == s_ENV_FRAME_MARKER.u) { // frame marker.
-      Obj src = env.env->val;
+      Obj src = env.e->val;
       err("  ");
       write_repr(stderr, src);
       err_nl();
@@ -88,9 +88,9 @@ static void env_trace(Obj env, Bool show_values) {
       if (show_values) {
         obj_err(key);
         err(" : ");
-        obj_errL(env.env->val);
+        obj_errL(env.e->val);
       }
     }
-    env = env.env->tl;
+    env = env.e->tl;
   }
 }

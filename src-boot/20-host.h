@@ -138,7 +138,7 @@ static Obj host_dlen(Obj env, Mem args) {
     l = 0;
   } else {
     exc_check(obj_is_data(o), "data-len requires Data; received: %o", o);
-    l = o.data->len;
+    l = o.d->len;
   }
   rc_rel(o);
   return int_new(l);

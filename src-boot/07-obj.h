@@ -83,8 +83,8 @@ typedef union _Obj {
   Raw r;
   Chars c; // no valid object can be interpreted as Chars; this for the exc_raise formatter.
   union _Obj* type_ptr; // common to all ref types.
-  Data* data;
-  Env* env;
+  Data* d;
+  Env* e;
   Struct* s;
 } Obj;
 DEF_SIZE(Obj);

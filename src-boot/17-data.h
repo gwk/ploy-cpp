@@ -17,8 +17,8 @@ static const Obj blank = (Obj){.u = ot_sym | data_word_bit };
 
 static Int data_ref_len(Obj d) {
   assert(ref_is_data(d));
-  assert(d.data->len > 0);
-  return d.data->len;
+  assert(d.d->len > 0);
+  return d.d->len;
 }
 
 
@@ -30,7 +30,7 @@ static Int data_len(Obj d) {
 
 static Chars data_ref_ptr(Obj d) {
   assert(ref_is_data(d));
-  return cast(Chars, d.data + 1); // address past data header.
+  return cast(Chars, d.d + 1); // address past data header.
 }
 
 
@@ -47,8 +47,8 @@ static Str data_str(Obj d) {
 
 static Obj data_empty(Int len) {
   Obj d = ref_alloc(rt_Data, size_Data + len);
-  d.data->type = rc_ret_val(s_Data);
-  d.data->len = len;
+  d.d->type = rc_ret_val(s_Data);
+  d.d->len = len;
   return d; // borrowed.
 }
 
