@@ -104,7 +104,7 @@ static Step run_Fn(Obj env, Mem args) {
 }
 
 
-static Step run_Struct_boot(Obj env, Mem args) {
+static Step run_Syn_struct_boot(Obj env, Mem args) {
   // owns env.
   check(args.len > 0, "STRUCT_BOOT form is empty");
   Obj v = vec_new_raw(args.len);
@@ -301,7 +301,7 @@ static Step run_Vec(Obj env, Obj code) {
       EVAL_FORM(Let);
       EVAL_FORM(If);
       EVAL_FORM(Fn);
-      EVAL_FORM(Struct_boot);
+      EVAL_FORM(Syn_struct_boot);
       EVAL_FORM(Syn_seq);
       EVAL_FORM(Call);
     }

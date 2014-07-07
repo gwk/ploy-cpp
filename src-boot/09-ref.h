@@ -25,7 +25,7 @@ static Obj ref_type_sym(Obj r) {
 
 
 static Counter_index rt_counter_index(Ref_tag rt) {
-  // note: this math relies on the layout of both COUNTER_LIST and Struct_tag.
+  // note: this math relies on the layout of both COUNTER_LIST and ref_tag.
   return ci_Data + (rt * 2);
 }
 

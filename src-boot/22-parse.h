@@ -302,7 +302,7 @@ if (p->e || !parse_terminator(p, t)) { \
 static Obj parse_struct_simple(Parser* p) {
   Mem m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR('}');
-  Obj v = vec_new_EM(rc_ret_val(s_Struct), m);
+  Obj v = vec_new_EM(rc_ret_val(s_Syn_struct), m);
   mem_dealloc(m);
   return v;
 }
@@ -311,7 +311,7 @@ static Obj parse_struct_simple(Parser* p) {
 static Obj parse_struct_boot(Parser* p) {
   Mem m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR('}');
-  Obj v = vec_new_EM(rc_ret_val(s_Struct_boot), m);
+  Obj v = vec_new_EM(rc_ret_val(s_Syn_struct_boot), m);
   mem_dealloc(m);
   return v;
 }

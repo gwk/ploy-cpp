@@ -94,8 +94,8 @@ S(Scope) \
 S(Let) \
 S(If) \
 S(Fn) \
-S(Struct_boot) \
-S(Struct) \
+S(Syn_struct_boot) \
+S(Syn_struct) \
 S(Syn_seq) \
 S(Syn_chain) \
 S(Call) \
@@ -135,7 +135,8 @@ static void sym_init() {
   for_in(i, si_self + 1) { // NOTE: self is not special, but it is the last hardcoded sym.
     Chars_const name = sym_index_names[i];
     // special name cases.
-    if (i == si_Struct_boot) name = "Struct-boot";
+    if (i == si_Syn_struct_boot) name = "Syn-struct-boot";
+    else if (i == si_Syn_struct) name = "syn-struct";
     else if (i == si_Syn_seq) name = "Syn-seq";
     else if (i == si_Syn_chain) name = "Syn-chain";
     Obj sym = sym_new_from_chars(cast(Chars, name));
