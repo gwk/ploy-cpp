@@ -129,7 +129,7 @@ static Str str_line_at_pos(Str s, Int pos) {
 static Chars str_src_loc_str(Str src, Str path, Int pos, Int len, Int line_num, Int col,
                              Chars msg) {
   // get source line.
-  // caller is responsible for raw_dealloc of return Chars.
+  // caller is responsible for raw_dealloc of returned Chars.
   Str line = str_line_at_pos(src, pos);
   Chars_const nl = str_ends_with_char(line, '\n') ? "" : "\n";
   // create underline.
@@ -144,8 +144,8 @@ static Chars str_src_loc_str(Str src, Str path, Int pos, Int len, Int line_num, 
   }
   // create result.
   Chars s;
-  Int s_len = asprintf(&s, "%s:%ld:%ld: %s\n%.*s%s%s\n",
-                       path.chars, line_num + 1, col + 1, msg, FMT_STR(line), nl, under);
+  Int s_len = asprintf(&s, "%.*s:%ld:%ld: %s\n%.*s%s%s\n",
+                       FMT_STR(path), line_num + 1, col + 1, msg, FMT_STR(line), nl, under);
   counter_inc(ci_Chars); // matches asprinf.
   check(s_len > 0, "str_src_loc_str allocation failed: %s", msg);
   return s;
