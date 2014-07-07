@@ -18,13 +18,14 @@ static Step eval(Obj env, Obj code) {
 
 
 static Step eval_vec(Obj env, Obj v) {
+  // top level eval of a series of expressions.
   // this is quite different than calling eval on a DO vector;
   // not only does this vec not have a head DO sym,
   // it also does the complete eval cycle on each member in turn.
-  if (v.u == s_VEC0.u) {
+  Mem m = vec_mem(v);
+  if (m.len == 0) {
     return mk_step(env, rc_ret_val(s_void));
   }
-  Mem m = vec_ref_mem(v);
   Int last = m.len - 1;
   it_mem_to(it, m, last) {
     Step step = eval(env, *it);

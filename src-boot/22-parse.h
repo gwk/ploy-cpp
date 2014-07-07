@@ -350,9 +350,6 @@ static Obj parse_expand(Parser* p) {
 static Obj parse_syn_seq(Parser* p) {
   Mem m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR(']');
-  if (!m.len) {
-    return rc_ret_val(s_VEC0);
-  }
   Obj v = vec_new_EM(rc_ret_val(s_Syn_seq), m);
   mem_dealloc(m);
   return v;

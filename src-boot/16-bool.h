@@ -19,12 +19,23 @@ static Bool bool_is_true(Obj b) {
 static const Obj blank;
 
 static Bool is_true(Obj o) {
-  if (obj_is_sym(o)) {
-    return (sym_index(o) >= si_true);
+  switch (obj_tag(o)) {
+    case ot_ref:
+      switch (ref_tag(o)) {
+        case rt_Data:
+          return o.u != blank.u;
+        case rt_Env:
+          return true;
+        case rt_Vec:
+          return !!vec_len(o);
+      }
+    case ot_ptr:
+      return (ptr_val(o) != NULL);
+    case ot_int:
+      return (o.u != int0.u);
+    case ot_sym:
+      return (sym_index(o) >= si_true);
   }
-#define F(c) if (o.u == c.u) return false;
-  F(blank);
-  F(int0);
-#undef F
-  return true;
+  assert(0);
 }
+

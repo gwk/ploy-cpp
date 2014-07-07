@@ -88,11 +88,11 @@ static Step run_Fn(Obj env, Mem args) {
   exc_check(obj_is_sym(name),  "FN: name is not a Sym: %o", name);
   exc_check(obj_is_bool(is_macro), "FN: is-macro is not a Bool: %o", is_macro);
   exc_check(obj_is_vec(pars), "FN: parameters is not a Vec: %o", pars);
-  exc_check(vec_len(pars) > 0 && vec_ref_el(pars, 0).u == s_Syn_seq.u,
+  exc_check(vec_len(pars) > 0 && vec_el(pars, 0).u == s_Syn_seq.u,
     "FN: parameters is not a sequence literal: %o", pars);
   // TODO: check all pars.
   Obj f = vec_new_raw(7);
-  Obj* els = vec_ref_els(f);
+  Obj* els = vec_els(f);
   els[0] = rc_ret_val(name);
   els[1] = rc_ret_val(is_native);
   els[2] = rc_ret_val(is_macro);
@@ -144,8 +144,8 @@ static Call_envs run_bind_args(Obj caller_env, Obj callee_env, Obj func, Mem par
   Bool has_variad = false;
   for_in(i_pars, pars.len) {
     Obj par = pars.els[i_pars];
-    check_obj(obj_is_par(par), "function parameter is malformed", vec_ref_el(func, 0));
-    Obj* par_els = vec_ref_els(par);
+    check_obj(obj_is_par(par), "function parameter is malformed", vec_el(func, 0));
+    Obj* par_els = vec_els(par);
     Obj par_kind = par_els[0]; // Label or Variad.
     Obj par_sym = par_els[1];
     //Obj par_type = par_els[2];
@@ -158,7 +158,7 @@ static Call_envs run_bind_args(Obj caller_env, Obj callee_env, Obj func, Mem par
       } else if (par_expr.u != s_void.u) {
         arg = par_expr;
       } else {
-        error_obj("function received too few arguments", vec_ref_el(func, 0));
+        error_obj("function received too few arguments", vec_el(func, 0));
       }
       Obj val;
       if (is_expand) {
@@ -171,7 +171,7 @@ static Call_envs run_bind_args(Obj caller_env, Obj callee_env, Obj func, Mem par
       callee_env = env_bind(callee_env, rc_ret_val(par_sym), val);
     } else {
       assert(par_kind.u == s_Variad.u);
-      check_obj(!has_variad, "function has multiple variad parameters", vec_ref_el(func, 0));
+      check_obj(!has_variad, "function has multiple variad parameters", vec_el(func, 0));
       has_variad = true;
       Int variad_count = 0;
       for_imn(i, i_args, args.len) {
@@ -193,14 +193,14 @@ static Call_envs run_bind_args(Obj caller_env, Obj callee_env, Obj func, Mem par
       callee_env = env_bind(callee_env, rc_ret_val(par_sym), variad_val);
     }
   }
-  check_obj(i_args == args.len, "function received too many arguments", vec_ref_el(func, 0));
+  check_obj(i_args == args.len, "function received too many arguments", vec_el(func, 0));
   return (Call_envs){.caller_env=caller_env, .callee_env=callee_env};
 }
 
 
 static Step run_call_native(Obj env, Obj func, Mem args, Bool is_expand) {
   // owns env, func.
-  Mem m = vec_ref_mem(func);
+  Mem m = vec_mem(func);
   assert(m.len == 7);
   Obj name      = m.els[0];
   //Obj is_native = m.els[1];
@@ -238,7 +238,7 @@ static Step run_call_native(Obj env, Obj func, Mem args, Bool is_expand) {
 
 static Step run_call_host(Obj env, Obj func, Mem args) {
   // owns env, func.
-  Mem m = vec_ref_mem(func);
+  Mem m = vec_mem(func);
   assert(m.len == 7);
   Obj name      = m.els[0];
   //Obj is_native = m.els[1];
@@ -253,7 +253,7 @@ static Step run_call_host(Obj env, Obj func, Mem args) {
   exc_check(obj_is_vec(pars), "host function %o pars is not a Vec: %o", name, pars);
   exc_check(ret_type.u == s_nil.u, "host function %o ret-type is non-nil: %o", name, ret_type);
   exc_check(obj_is_ptr(body), "host function %o body is not a Ptr: %o", name, body);
-  Int len_pars = vec_ref_len(pars);
+  Int len_pars = vec_len(pars);
   exc_check(args.len == len_pars, "host function expects %i argument%s; received %i",
     len_pars, (len_pars == 1 ? "" : "s"), args.len);
   // TODO: check arg types against parameters; use run_bind_args?
@@ -274,8 +274,8 @@ static Step run_Call(Obj env, Mem args) {
   Obj callee = args.els[0];
   Step step = run(env, callee);
   Obj func = step.val;
-  exc_check(obj_is_vec_ref(func), "object is not callable: %o", func);
-  Mem m = vec_ref_mem(func);
+  exc_check(obj_is_vec(func), "object is not callable: %o", func);
+  Mem m = vec_mem(func);
   exc_check(m.len == 7, "function is malformed (length is not 7): %o", func);
   Obj is_native = m.els[1];
   if (bool_is_true(is_native)) {

@@ -219,45 +219,32 @@ static Bool obj_is_env(Obj o) {
 }
 
 
-static Bool obj_is_vec_ref(Obj o) {
+static Bool obj_is_vec(Obj o) {
   return obj_is_ref(o) && ref_is_vec(o);
 }
 
 
-static const Obj s_VEC0;
-
-static Bool obj_is_vec(Obj o) {
-  return o.u == s_VEC0.u || obj_is_vec_ref(o);
-}
-
-
-static Int vec_ref_len(Obj v);
 static Int vec_len(Obj v);
-static Obj vec_ref_el(Obj v, Int i);
-static Obj* vec_ref_els(Obj v);
+static Obj vec_el(Obj v, Int i);
 static Obj* vec_els(Obj v);
 static const Obj s_Label, s_Variad;
 
 
-// iterate over a vec_ref vr.
-#define it_vec_ref(it, vr) \
-for (Obj *it = vec_ref_els(vr), *_end_##it = it + vec_ref_len(vr); \
+// iterate over a vec v.
+#define it_vec(it, v) \
+for (Obj *it = vec_els(v), *_end_##it = it + vec_len(v); \
 it < _end_##it; \
 it++)
-
-// iterate over a vec v by first checking that it is not VEC0.
-#define it_vec(it, v) \
-if (v.u != s_VEC0.u) it_vec_ref(it, v)
 
 
 static Bool obj_is_par(Obj o) {
   // a parameter is a vector with first element of LABEL or VARIAD,
   // representing those two syntactic constructs respectively.
-  if (!obj_is_vec_ref(o)) return false;
-  Int len = vec_ref_len(o);
+  if (!obj_is_vec(o)) return false;
+  Int len = vec_len(o);
   if (len != 4) return false;
-  if (obj_is_special(vec_ref_el(o, 1))) return false; // name must be a regular sym.
-  Obj e0 = vec_ref_el(o, 0);
+  if (obj_is_special(vec_el(o, 1))) return false; // name must be a regular sym.
+  Obj e0 = vec_el(o, 0);
   return (e0.u == s_Label.u || e0.u == s_Variad.u);
 }
 

@@ -10,19 +10,19 @@ static const Chars_const trace_post_expand_prefix = "▫ ";  // white small squa
 
 static Obj expand_quasiquote(Obj o) {
   // owns o.
-  if (!obj_is_vec_ref(o)) { // replace the quasiquote with quote.
+  if (!obj_is_vec(o)) { // replace the quasiquote with quote.
     return vec_new2(rc_ret_val(s_Quo), o);
   }
-  Mem m = vec_ref_mem(o);
+  Mem m = vec_mem(o);
   if (m.els[0].u == s_Unq.u) { // unquote form.
     check_obj(m.len == 2, "malformed UNQ form", o);
     Obj e = rc_ret(m.els[1]);
     rc_rel(o);
     return e;
   }
-  if (vec_ref_contains_unquote(o)) { // unquote exists somewhere in the tree.
+  if (vec_contains_unquote(o)) { // unquote exists somewhere in the tree.
     Obj v = vec_new_raw(m.len + 1);
-    Obj* dst = vec_ref_els(v);
+    Obj* dst = vec_els(v);
     dst[0] = rc_ret_val(s_Syn_seq);
     for_in(i, m.len) {
       Obj e = m.els[i];
@@ -57,10 +57,10 @@ static Obj expand_macro(Obj env, Mem args) {
 
 static Obj expand(Obj env, Obj code) {
   // owns code.
-  if (!obj_is_vec_ref(code)) {
+  if (!obj_is_vec(code)) {
     return code;
   }
-  Mem m = vec_ref_mem(code);
+  Mem m = vec_mem(code);
   Obj hd = m.els[0];
   if (hd.u == s_Quo.u) {
     return code;

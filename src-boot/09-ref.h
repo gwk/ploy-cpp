@@ -67,14 +67,14 @@ static Obj ref_alloc(Ref_tag rt, Int size) {
 
 
 static Obj env_rel_fields(Obj o);
-static Obj vec_ref_rel_fields(Obj v);
+static Obj vec_rel_fields(Obj v);
 
 static Obj ref_dealloc(Obj r) {
   Ref_tag rt = ref_tag(r);
   rc_rel(*r.type_ptr);
   Obj tail = obj0;
   if (rt == rt_Vec) {
-    tail = vec_ref_rel_fields(r);
+    tail = vec_rel_fields(r);
   } else if (rt == rt_Env) {
     tail = env_rel_fields(r);
   }

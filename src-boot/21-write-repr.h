@@ -50,9 +50,9 @@ static void write_repr_obj(CFile f, Obj o, Bool is_quoted, Int depth, Set* s);
 
 static void write_repr_vec_vec(CFile f, Obj v, Bool is_quoted, Int depth, Set* s) {
   assert(ref_is_vec(v));
-  Mem m = vec_ref_mem(v);
   if (is_quoted) fputs("???", f);
   fputc('[', f);
+  Mem m = vec_mem(v);
   for_in(i, m.len) {
     if (i) fputc(' ', f);
     write_repr_obj(f, m.els[i], is_quoted, depth, s);
@@ -62,42 +62,42 @@ static void write_repr_vec_vec(CFile f, Obj v, Bool is_quoted, Int depth, Set* s
 
 
 static void write_repr_quo(CFile f, Obj q, Bool is_quoted, Int depth, Set* s) {
-  assert(vec_ref_len(q) == 2);
+  assert(vec_len(q) == 2);
   if (!is_quoted) {
     fputc('`', f);
   }
   fputc('`', f);
-  write_repr_obj(f, vec_ref_el(q, 1), true, depth, s);
+  write_repr_obj(f, vec_el(q, 1), true, depth, s);
 }
 
 
 static void write_repr_qua(CFile f, Obj q, Bool is_quoted, Int depth, Set* s) {
-  assert(vec_ref_len(q) == 2);
+  assert(vec_len(q) == 2);
   if (!is_quoted) {
     fputc('`', f);
   }
   fputc('~', f);
-  write_repr_obj(f, vec_ref_el(q, 1), true, depth, s);
+  write_repr_obj(f, vec_el(q, 1), true, depth, s);
 }
 
 
 static void write_repr_unq(CFile f, Obj q, Bool is_quoted, Int depth, Set* s) {
-  assert(vec_ref_len(q) == 2);
+  assert(vec_len(q) == 2);
   if (!is_quoted) {
     fputc('`', f);
   }
   fputc(',', f);
-  write_repr_obj(f, vec_ref_el(q, 1), true, depth, s);
+  write_repr_obj(f, vec_el(q, 1), true, depth, s);
 }
 
 
 static void write_repr_par(CFile f, Obj p, Bool is_quoted, Int depth, Set* s, Char c) {
-  assert(vec_ref_len(p) == 4);
+  assert(vec_len(p) == 4);
   if (!is_quoted) {
     fputc('`', f);
   }
   fputc(c, f);
-  Obj* els = vec_ref_els(p);
+  Obj* els = vec_els(p);
   Obj name = els[1];
   Obj type = els[2];
   Obj expr = els[3];
@@ -115,11 +115,11 @@ static void write_repr_par(CFile f, Obj p, Bool is_quoted, Int depth, Set* s, Ch
 
 static void write_repr_seq(CFile f, Obj v, Bool is_quoted, Int depth, Set* s) {
   assert(ref_is_vec(v));
-  Mem m = vec_ref_mem(v);
   if (!is_quoted) {
     fputc('`', f);
   }
   fputc('[', f);
+  Mem m = vec_mem(v);
   for_imn(i, 1, m.len) {
     if (i > 1) fputc(' ', f);
     write_repr_obj(f, m.els[i], true, depth, s);
@@ -130,7 +130,7 @@ static void write_repr_seq(CFile f, Obj v, Bool is_quoted, Int depth, Set* s) {
 
 static void write_repr_vec(CFile f, Obj v, Bool is_quoted, Int depth, Set* s) {
   assert(ref_is_vec(v));
-  switch (vec_ref_shape(v)) {
+  switch (vec_shape(v)) {
     case vs_vec:    write_repr_vec_vec(f, v, is_quoted, depth, s);  return;
     case vs_quo:    write_repr_quo(f, v, is_quoted, depth, s);      return;
     case vs_qua:    write_repr_qua(f, v, is_quoted, depth, s);      return;

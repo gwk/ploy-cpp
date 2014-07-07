@@ -8,10 +8,10 @@
 
 
 static Obj preprocess(Obj code) {
-  if (!obj_is_vec_ref(code)) {
+  if (!obj_is_vec(code)) {
     return rc_ret(code);
   }
-  Mem src = vec_ref_mem(code);
+  Mem src = vec_mem(code);
   if (src.els[0].u == s_Comment.u) {
     return obj0;
   }

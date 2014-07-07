@@ -138,7 +138,7 @@ static Obj host_len(Obj env, Mem args) {
   assert(args.len == 1);
   Obj o = args.els[0];
   Int l;
-  if (o.u == s_VEC0.u || o.u == blank.u) {
+  if (o.u == blank.u) {
     l = 0;
   } else {
     exc_check(obj_is_data(o) || obj_is_vec(o), "len requires Data or Vec; received: %o", o);
@@ -157,10 +157,9 @@ static Obj host_el(Obj env, Mem args) {
   exc_check(obj_is_vec(v), "el requires arg 1 to be a Vec; received: %o", v);
   exc_check(obj_is_int(i), "el requires arg 2 to be a Int; received: %o", i);
   Int j = int_val(i);
-  exc_check(v.u != s_VEC0.u, "el index out of range for empty vec; index: %i", j);
-  Int l = vec_ref_len(v);
+  Int l = vec_len(v);
   exc_check(j >= 0 && j < l, "el index out of range; index: %i; len: %i", j, l);
-  Obj el = vec_ref_el(v, j);
+  Obj el = vec_el(v, j);
   rc_rel(v);
   rc_rel_val(i);
   return rc_ret(el);
@@ -192,7 +191,7 @@ static Obj host_prepend(Obj env, Mem args) {
   exc_check(obj_is_vec(vec), "prepend requires arg 2 to be a Vec; received: %o", vec);
   Mem  m = vec_mem(vec);
   Obj res = vec_new_raw(m.len + 1);
-  Obj* els = vec_ref_els(res);
+  Obj* els = vec_els(res);
   els[0] = el;
   for_in(i, m.len) {
     els[1 + i] = rc_ret(m.els[i]);
@@ -210,7 +209,7 @@ static Obj host_append(Obj env, Mem args) {
   exc_check(obj_is_vec(vec), "append requires arg 1 to be a Vec; received: %o", vec);
   Mem  m = vec_mem(vec);
   Obj res = vec_new_raw(m.len + 1);
-  Obj* els = vec_ref_els(res);
+  Obj* els = vec_els(res);
   for_in(i, m.len) {
     els[i] = rc_ret(m.els[i]);
   }
@@ -330,7 +329,7 @@ static Obj host_init_func(Obj env, Int len_pars, Chars name, Func_host_ptr ptr) 
   }
   #undef PAR
   Obj f = vec_new_raw(7);
-  Obj* els = vec_ref_els(f);
+  Obj* els = vec_els(f);
   els[0] = rc_ret_val(sym);
   els[1] = bool_new(false);
   els[2] = bool_new(false);
