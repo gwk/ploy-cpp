@@ -248,6 +248,19 @@ static Bool obj_is_par(Obj o) {
 }
 
 
+static Obj ref_type(Obj r);
+static const Obj s_Ptr, s_Int, s_Data, s_Sym;
+
+static Obj obj_type(Obj o) {
+  switch (obj_tag(o)) {
+    case ot_ref: return ref_type(o);
+    case ot_ptr: return s_Ptr;
+    case ot_int: return s_Int;
+    case ot_sym: return (obj_is_data_word(o) ? s_Data : s_Sym);
+  }
+}
+
+
 #if OPT_ALLOC_COUNT
 static Counter_index ref_counter_index(Obj r);
 

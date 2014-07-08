@@ -138,7 +138,7 @@ static Obj struct_slice(Obj s, Int f, Int t) {
   if (ls == l) {
     return s; // no ret/rel necessary.
   }
-  Obj slice = struct_new_raw(rc_ret(ref_type_sym(s)), ls);
+  Obj slice = struct_new_raw(rc_ret(ref_type(s)), ls);
   Obj* src = struct_els(s);
   Obj* dst = struct_els(slice);
   for_in(i, ls) {

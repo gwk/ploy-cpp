@@ -190,7 +190,7 @@ static Obj host_prepend(Obj env, Mem args) {
   Obj s = args.els[1];
   exc_check(obj_is_struct(s), "prepend requires arg 2 to be a Struct; received: %o", s);
   Mem  m = struct_mem(s);
-  Obj res = struct_new_raw(rc_ret(ref_type_sym(s)), m.len + 1);
+  Obj res = struct_new_raw(rc_ret(ref_type(s)), m.len + 1);
   Obj* els = struct_els(res);
   els[0] = el;
   for_in(i, m.len) {
@@ -208,7 +208,7 @@ static Obj host_append(Obj env, Mem args) {
   Obj el = args.els[1];
   exc_check(obj_is_struct(s), "append requires arg 1 to be a Struct; received: %o", s);
   Mem  m = struct_mem(s);
-  Obj res = struct_new_raw(rc_ret(ref_type_sym(s)), m.len + 1);
+  Obj res = struct_new_raw(rc_ret(ref_type(s)), m.len + 1);
   Obj* els = struct_els(res);
   for_in(i, m.len) {
     els[i] = rc_ret(m.els[i]);
@@ -295,17 +295,11 @@ static Obj host_run(Obj env, Mem args) {
 }
 
 
-static Obj host_type_sym(Obj env, Mem args) {
+static Obj host_type_of(Obj env, Mem args) {
   // owns elements of args.
   assert(args.len == 1);
   Obj o = args.els[0];
-  Obj s = obj0;
-  switch (obj_tag(o)) {
-    case ot_ref: s = ref_type_sym(o); break;
-    case ot_ptr: s = s_Ptr; break;
-    case ot_int: s = s_Int; break;
-    case ot_sym: s = (obj_is_data_word(o) ? s_Data : s_Sym); break;
-  }
+  Obj s = obj_type(o);
   rc_rel(o);
   return rc_ret_val(s);
 }
@@ -382,7 +376,7 @@ static Obj host_init(Obj env) {
   DEF_FH(1, "exit", host_exit)
   DEF_FH(1, "error", host_error)
   DEF_FH(2, "run", host_run)
-  DEF_FH(1, "type-sym", host_type_sym)
+  DEF_FH(1, "type-of", host_type_of)
 #undef DEF_FH
 
 #define DEF_FILE(n, f, r, w)  \

@@ -9,7 +9,7 @@
 static Ref_tag ref_tag(Obj r);
 
 
-static Obj ref_type_sym(Obj r) {
+static Obj ref_type(Obj r) {
   assert(obj_is_ref(r));
   return *r.type_ptr;
 }
