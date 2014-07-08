@@ -122,12 +122,6 @@ static Obj host_sym_eq(Obj env, Mem args) {
 }
 
 
-UNUSED_FN static Obj host_mk_struct(Obj env, Mem args) {
-  // owns elements of args.
-  return struct_new_M(args);
-}
-
-
 static Obj host_dlen(Obj env, Mem args) {
   // owns elements of args.
   assert(args.len == 1);
@@ -196,7 +190,7 @@ static Obj host_prepend(Obj env, Mem args) {
   Obj s = args.els[1];
   exc_check(obj_is_struct(s), "prepend requires arg 2 to be a Struct; received: %o", s);
   Mem  m = struct_mem(s);
-  Obj res = struct_new_raw(m.len + 1);
+  Obj res = struct_new_raw(rc_ret(ref_type_sym(s)), m.len + 1);
   Obj* els = struct_els(res);
   els[0] = el;
   for_in(i, m.len) {
@@ -214,7 +208,7 @@ static Obj host_append(Obj env, Mem args) {
   Obj el = args.els[1];
   exc_check(obj_is_struct(s), "append requires arg 1 to be a Struct; received: %o", s);
   Mem  m = struct_mem(s);
-  Obj res = struct_new_raw(m.len + 1);
+  Obj res = struct_new_raw(rc_ret(ref_type_sym(s)), m.len + 1);
   Obj* els = struct_els(res);
   for_in(i, m.len) {
     els[i] = rc_ret(m.els[i]);
@@ -325,16 +319,15 @@ static Obj host_init_func(Obj env, Int len_pars, Chars name, Func_host_ptr ptr) 
   Obj sym = sym_new_from_chars(name);
   Obj pars; // TODO: add real types.
   #define PAR(s) \
-  struct_new4(rc_ret_val(s_Label), rc_ret_val(s), rc_ret_val(s_nil), rc_ret_val(s_INFER))
+  struct_new4(rc_ret(s_Par), rc_ret_val(s_Label), rc_ret_val(s), rc_ret_val(s_nil), rc_ret_val(s_INFER))
   switch (len_pars) {
-    //case -1: pars = struct_new1(struct_new2(s_Variad, s_nil)); break;
-    case 1: pars = struct_new1(PAR(s_a)); break;
-    case 2: pars = struct_new2(PAR(s_a), PAR(s_b)); break;
-    case 3: pars = struct_new3(PAR(s_a), PAR(s_b), PAR(s_c)); break;
+    case 1: pars = struct_new1(rc_ret(s_Vec_Par), PAR(s_a)); break;
+    case 2: pars = struct_new2(rc_ret(s_Vec_Par), PAR(s_a), PAR(s_b)); break;
+    case 3: pars = struct_new3(rc_ret(s_Vec_Par), PAR(s_a), PAR(s_b), PAR(s_c)); break;
     default: assert(0);
   }
   #undef PAR
-  Obj f = struct_new_raw(7);
+  Obj f = struct_new_raw(rc_ret(s_Func), 7);
   Obj* els = struct_els(f);
   els[0] = rc_ret_val(sym);
   els[1] = bool_new(false);
@@ -350,7 +343,7 @@ static Obj host_init_func(Obj env, Int len_pars, Chars name, Func_host_ptr ptr) 
 static Obj host_init_file(Obj env, Chars s_name, Chars name, CFile f, Bool r, Bool w) {
   // owns env.
   Obj sym = sym_new_from_chars(s_name);
-  Obj val = struct_new4(data_new_from_chars(name), ptr_new(f), bool_new(r), bool_new(w));
+  Obj val = struct_new4(rc_ret(s_File), data_new_from_chars(name), ptr_new(f), bool_new(r), bool_new(w));
   return env_bind(env, sym, val);
 }
 
@@ -377,7 +370,6 @@ static Obj host_init(Obj env) {
   DEF_FH(2, "igt", host_igt)
   DEF_FH(2, "ige", host_ige)
   DEF_FH(2, "sym-eq", host_sym_eq)
-  //DEF_FH(-1, "mk-struct", host_mk_struct)
   DEF_FH(1, "dlen", host_dlen)
   DEF_FH(1, "len", host_len)
   DEF_FH(2, "el", host_el)

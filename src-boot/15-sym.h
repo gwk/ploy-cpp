@@ -81,9 +81,6 @@ S(Int) \
 S(Sym) \
 S(Data) \
 S(Env) \
-S(Struct) \
-S(Label) \
-S(Variad) \
 S(Unq) \
 S(Qua) \
 S(Expand) \
@@ -99,6 +96,16 @@ S(Syn_struct) \
 S(Syn_seq) \
 S(Syn_chain) \
 S(Call) \
+S(Obj) \
+S(Label) \
+S(Variad) \
+S(Par) \
+S(Vec_Obj) \
+S(Vec_Par) \
+S(Vec_Expr) \
+S(Func) \
+S(File) \
+S(Src) \
 S(END_SPECIAL_SYMS) \
 S(self) \
 S(a) \

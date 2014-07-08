@@ -91,7 +91,7 @@ static Step run_Fn(Obj env, Mem args) {
   exc_check(struct_len(pars) > 0 && struct_el(pars, 0).u == s_Syn_seq.u,
     "FN: parameters is not a sequence literal: %o", pars);
   // TODO: check all pars.
-  Obj f = struct_new_raw(7);
+  Obj f = struct_new_raw(rc_ret(s_Func), 7);
   Obj* els = struct_els(f);
   els[0] = rc_ret_val(name);
   els[1] = rc_ret_val(is_native);
@@ -107,7 +107,7 @@ static Step run_Fn(Obj env, Mem args) {
 static Step run_Syn_struct_boot(Obj env, Mem args) {
   // owns env.
   check(args.len > 0, "STRUCT_BOOT form is empty");
-  Obj s = struct_new_raw(args.len);
+  Obj s = struct_new_raw(rc_ret(s_Obj), args.len); // TODO: correct type.
   Obj* els = struct_els(s);
   for_in(i, args.len) {
     els[i] = rc_ret(args.els[i]);
@@ -120,7 +120,7 @@ static Step run_Syn_struct_boot(Obj env, Mem args) {
 
 static Step run_Syn_seq(Obj env, Mem args) {
   // owns env.
-  Obj s = struct_new_raw(args.len);
+  Obj s = struct_new_raw(rc_ret(s_Vec_Obj), args.len); // TODO: corrrect type.
   Obj* els = struct_els(s);
   for_in(i, args.len) {
     Step step = run(env, args.els[i]);
@@ -179,7 +179,7 @@ static Call_envs run_bind_args(Obj caller_env, Obj callee_env, Obj func, Mem par
         if (obj_is_par(arg)) break;
         variad_count++;
       }
-      Obj variad_val = struct_new_raw(variad_count);
+      Obj variad_val = struct_new_raw(rc_ret(s_Vec_Obj), variad_count);
       it_struct(it, variad_val) {
         Obj arg = args.els[i_args++];
         if (is_expand) {

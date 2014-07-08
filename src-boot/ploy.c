@@ -23,7 +23,7 @@ static Obj parse_and_eval(Obj env, Obj path, Obj src, Array* sources, Bool out_v
   err_nl();
   obj_errL(code);
 #endif
-  array_append(sources, struct_new2(path, src));
+  array_append(sources, struct_new2(rc_ret(s_Src), path, src));
   Step step = eval_struct(env, code);
   if (out_val && step.val.u != s_void.u) {
     write_repr(stdout, step.val);

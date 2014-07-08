@@ -154,7 +154,8 @@ static Obj parse_comment(Parser* p) {
     if (p->e) return obj0;
     // the QUO prevents macro expansion of the commented code,
     // and also differentiates it from line comments.
-    return struct_new2(rc_ret_val(s_Comment), struct_new2(rc_ret_val(s_Quo), expr));
+    return struct_new2(rc_ret(s_Comment), rc_ret_val(s_Comment),
+      struct_new2(rc_ret(s_Quo), rc_ret_val(s_Quo), expr)); // TODO: remove duplicate type syms.
   }
   // otherwise comment out a single line.
   Src_pos sp_report = p->sp;
@@ -175,7 +176,7 @@ static Obj parse_comment(Parser* p) {
   }  while (PC != '\n');
   Str s = str_slice(p->src, pos_start, p->sp.pos);
   Obj d = data_new_from_str(s);
-  return struct_new2(rc_ret_val(s_Comment), d);
+  return struct_new2(rc_ret(s_Comment), rc_ret_val(s_Comment), d);
 }
 
 
@@ -302,7 +303,7 @@ if (p->e || !parse_terminator(p, t)) { \
 static Obj parse_struct_simple(Parser* p) {
   Mem m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR('}');
-  Obj s = struct_new_EM(rc_ret_val(s_Syn_struct), m);
+  Obj s = struct_new_EM(rc_ret(s_Syn_struct), rc_ret_val(s_Syn_struct), m);
   mem_dealloc(m);
   return s;
 }
@@ -311,7 +312,7 @@ static Obj parse_struct_simple(Parser* p) {
 static Obj parse_struct_boot(Parser* p) {
   Mem m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR('}');
-  Obj s = struct_new_EM(rc_ret_val(s_Syn_struct_boot), m);
+  Obj s = struct_new_EM(rc_ret(s_Syn_struct_boot), rc_ret_val(s_Syn_struct_boot), m);
   mem_dealloc(m);
   return s;
 }
@@ -331,7 +332,7 @@ static Obj parse_call(Parser* p) {
   P_ADV1;
   Mem m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR(')');
-  Obj s = struct_new_EM(rc_ret_val(s_Call), m);
+  Obj s = struct_new_EM(rc_ret(s_Call), rc_ret_val(s_Call), m);
   mem_dealloc(m);
   return s;
 }
@@ -341,7 +342,7 @@ static Obj parse_expand(Parser* p) {
   P_ADV1;
   Mem m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR('>');
-  Obj s = struct_new_EM(rc_ret_val(s_Expand), m);
+  Obj s = struct_new_EM(rc_ret(s_Expand), rc_ret_val(s_Expand), m);
   mem_dealloc(m);
   return s;
 }
@@ -350,7 +351,7 @@ static Obj parse_expand(Parser* p) {
 static Obj parse_syn_seq(Parser* p) {
   Mem m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR(']');
-  Obj s = struct_new_EM(rc_ret_val(s_Syn_seq), m);
+  Obj s = struct_new_EM(rc_ret(s_Syn_seq), rc_ret_val(s_Syn_seq), m);
   mem_dealloc(m);
   return s;
 }
@@ -360,7 +361,7 @@ static Obj parse_syn_chain_simple(Parser* p) {
   P_ADV1;
   Mem m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR(']');
-  Obj s = struct_new_EM(rc_ret_val(s_Syn_chain), m);
+  Obj s = struct_new_EM(rc_ret(s_Syn_chain), rc_ret_val(s_Syn_chain), m);
   mem_dealloc(m);
   return s;
 }
@@ -382,7 +383,7 @@ static Obj parse_quo(Parser* p) {
   assert(PC == '`');
   P_ADV1;
   Obj o = parse_expr(p);
-  return struct_new2(rc_ret_val(s_Quo), o);
+  return struct_new2(rc_ret(s_Quo), rc_ret_val(s_Quo), o);
 }
 
 
@@ -390,7 +391,7 @@ static Obj parse_qua(Parser* p) {
   assert(PC == '~');
   P_ADV1;
   Obj o = parse_expr(p);
-  return struct_new2(rc_ret_val(s_Qua), o);
+  return struct_new2(rc_ret(s_Qua), rc_ret_val(s_Qua), o);
 }
 
 
@@ -398,7 +399,7 @@ static Obj parse_unq(Parser* p) {
   assert(PC == ',');
   P_ADV1;
   Obj o = parse_expr(p);
-  return struct_new2(rc_ret_val(s_Unq), o);
+  return struct_new2(rc_ret(s_Unq), rc_ret_val(s_Unq), o);
 }
 
 
@@ -428,7 +429,7 @@ static Obj parse_par(Parser* p, Obj sym, Chars_const par_desc) {
   } else {
     expr = rc_ret_val(s_void);
   }
-  return struct_new4(rc_ret_val(sym), name, type, expr);
+  return struct_new4(rc_ret(s_Par), rc_ret_val(sym), name, type, expr);
 }
 
 
@@ -491,7 +492,7 @@ static Obj parse_src(Str path, Str src, Chars* e) {
     o = parse_error(&p, "parsing terminated early");
     mem_release_dealloc(m);
   } else {
-    o = struct_new_M(m);
+    o = struct_new_M(rc_ret(s_Vec_Expr), m);
     mem_dealloc(m);
   }
   *e = p.e;

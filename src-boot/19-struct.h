@@ -11,17 +11,18 @@ struct _Struct {
 DEF_SIZE(Struct);
 
 
-static Obj struct_new_raw(Int len) {
+static Obj struct_new_raw(Obj type, Int len) {
+  // owns type.
   Obj s = ref_alloc(rt_Struct, size_Struct + (size_Obj * len));
-  s.s->type = rc_ret_val(s_Struct);
+  s.s->type = type;
   s.s->len = len;
   return s;
 }
 
 
-static Obj struct_new_M(Mem m) {
-  // owns elements of m.
-  Obj s = struct_new_raw(m.len);
+static Obj struct_new_M(Obj type, Mem m) {
+  // owns type, elements of m.
+  Obj s = struct_new_raw(type, m.len);
   Obj* els = struct_els(s);
   for_in(i, m.len) {
     els[i] = mem_el_move(m, i);
@@ -30,10 +31,10 @@ static Obj struct_new_M(Mem m) {
 }
 
 
-static Obj struct_new_EM(Obj el, Mem m) {
-  // owns el, elements of m.
+static Obj struct_new_EM(Obj type, Obj el, Mem m) {
+  // owns type, el, elements of m.
   Int len = m.len + 1;
-  Obj s = struct_new_raw(len);
+  Obj s = struct_new_raw(type, len);
   Obj* els = struct_els(s);
   els[0] = el;
   for_in(i, m.len) {
@@ -43,18 +44,18 @@ static Obj struct_new_EM(Obj el, Mem m) {
 }
 
 
-static Obj struct_new1(Obj a) {
+static Obj struct_new1(Obj type, Obj a) {
   // owns all arguments.
-  Obj s = struct_new_raw(1);
+  Obj s = struct_new_raw(type, 1);
   Obj* els = struct_els(s);
   els[0] = a;
   return s;
 }
 
 
-static Obj struct_new2(Obj a, Obj b) {
+static Obj struct_new2(Obj type, Obj a, Obj b) {
   // owns all arguments.
-  Obj s = struct_new_raw(2);
+  Obj s = struct_new_raw(type, 2);
   Obj* els = struct_els(s);
   els[0] = a;
   els[1] = b;
@@ -62,9 +63,9 @@ static Obj struct_new2(Obj a, Obj b) {
 }
 
 
-static Obj struct_new3(Obj a, Obj b, Obj c) {
+static Obj struct_new3(Obj type, Obj a, Obj b, Obj c) {
   // owns all arguments.
-  Obj s = struct_new_raw(3);
+  Obj s = struct_new_raw(type, 3);
   Obj* els = struct_els(s);
   els[0] = a;
   els[1] = b;
@@ -73,9 +74,9 @@ static Obj struct_new3(Obj a, Obj b, Obj c) {
 }
 
 
-static Obj struct_new4(Obj a, Obj b, Obj c, Obj d) {
+static Obj struct_new4(Obj type, Obj a, Obj b, Obj c, Obj d) {
   // owns all arguments.
-  Obj s = struct_new_raw(4);
+  Obj s = struct_new_raw(type, 4);
   Obj* els = struct_els(s);
   els[0] = a;
   els[1] = b;
@@ -127,6 +128,7 @@ UNUSED_FN static void struct_put(Obj s, Int i, Obj el) {
 
 static Obj struct_slice(Obj s, Int f, Int t) {
   // owns s.
+  assert(ref_is_struct(s));
   Int l = struct_len(s);
   if (f < 0) f += l;
   if (t < 0) t += l;
@@ -136,7 +138,7 @@ static Obj struct_slice(Obj s, Int f, Int t) {
   if (ls == l) {
     return s; // no ret/rel necessary.
   }
-  Obj slice = struct_new_raw(ls);
+  Obj slice = struct_new_raw(rc_ret(ref_type_sym(s)), ls);
   Obj* src = struct_els(s);
   Obj* dst = struct_els(slice);
   for_in(i, ls) {
