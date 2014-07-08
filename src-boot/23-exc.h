@@ -11,9 +11,12 @@ static NO_RETURN _exc_raise(Obj env, Chars_const fmt, Chars_const args_src, ...)
   // NOTE: there is not yet any exception unwind mechanism, so this just calls exit.
   Chars_const pa = args_src;
   Int arg_count = bit(*pa);
+  Int level = 0;
   while (*pa) {
-    if (*pa++ == ',') {
-      arg_count++;
+    switch (*pa++) {
+      case '(': level++; continue;
+      case ')': level--; continue;
+      case ',': if (!level) arg_count++; continue;
     }
   }
   Int i = 0;

@@ -137,20 +137,22 @@ typedef struct {
 } Call_envs;
 
 
-static Call_envs run_bind_args(Obj caller_env, Obj callee_env, Obj func, Mem pars, Mem args,
+static Call_envs run_bind_args(Obj env, Obj callee_env, Obj func, Mem pars, Mem args,
   Bool is_expand) {
-  // owns caller_env, callee_env.
+  // owns env, callee_env.
+  // NOTE: env is the caller env.
   Int i_args = 0;
   Bool has_variad = false;
   for_in(i_pars, pars.len) {
     Obj par = pars.els[i_pars];
-    check_obj(obj_is_par(par), "function parameter is malformed", struct_el(func, 0));
+    exc_check(obj_type(par).u == s_Par.u, "function %o parameter %i is malformed: %o (%o)",
+      struct_el(func, 0), i_pars, par, obj_type(par));
     Obj* par_els = struct_els(par);
-    Obj par_kind = par_els[0]; // Label or Variad.
+    Obj par_is_variad = par_els[0];
     Obj par_sym = par_els[1];
     //Obj par_type = par_els[2];
     Obj par_expr = par_els[3];
-    if (par_kind.u == s_Label.u) {
+    if (!bool_is_true(par_is_variad)) { // label.
       Obj arg;
       if (i_args < args.len) {
         arg = args.els[i_args];
@@ -164,19 +166,18 @@ static Call_envs run_bind_args(Obj caller_env, Obj callee_env, Obj func, Mem par
       if (is_expand) {
         val = rc_ret(arg);
       } else {
-        Step step = run(caller_env, arg);
-        caller_env = step.env;
+        Step step = run(env, arg);
+        env = step.env;
         val = step.val;
       }
       callee_env = env_bind(callee_env, rc_ret_val(par_sym), val);
-    } else {
-      assert(par_kind.u == s_Variad.u);
+    } else { // variad.
       check_obj(!has_variad, "function has multiple variad parameters", struct_el(func, 0));
       has_variad = true;
       Int variad_count = 0;
       for_imn(i, i_args, args.len) {
         Obj arg = args.els[i];
-        if (obj_is_par(arg)) break;
+        if (obj_type(arg).u == s_Par.u) break;
         variad_count++;
       }
       Obj variad_val = struct_new_raw(rc_ret(s_Vec_Obj), variad_count);
@@ -185,8 +186,8 @@ static Call_envs run_bind_args(Obj caller_env, Obj callee_env, Obj func, Mem par
         if (is_expand) {
           *it = rc_ret(arg);
         } else {
-          Step step = run(caller_env, arg);
-          caller_env = step.env;
+          Step step = run(env, arg);
+          env = step.env;
           *it = step.val;
         }
       }
@@ -194,7 +195,7 @@ static Call_envs run_bind_args(Obj caller_env, Obj callee_env, Obj func, Mem par
     }
   }
   check_obj(i_args == args.len, "function received too many arguments", struct_el(func, 0));
-  return (Call_envs){.caller_env=caller_env, .callee_env=callee_env};
+  return (Call_envs){.caller_env=env, .callee_env=callee_env};
 }
 
 

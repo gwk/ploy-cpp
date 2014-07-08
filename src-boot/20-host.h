@@ -313,7 +313,7 @@ static Obj host_init_func(Obj env, Int len_pars, Chars name, Func_host_ptr ptr) 
   Obj sym = sym_new_from_chars(name);
   Obj pars; // TODO: add real types.
   #define PAR(s) \
-  struct_new4(rc_ret(s_Par), rc_ret_val(s_Label), rc_ret_val(s), rc_ret_val(s_nil), rc_ret_val(s_INFER))
+  struct_new4(rc_ret(s_Par), rc_ret_val(s_false), rc_ret_val(s), rc_ret_val(s_nil), rc_ret_val(s_INFER))
   switch (len_pars) {
     case 1: pars = struct_new1(rc_ret(s_Vec_Par), PAR(s_a)); break;
     case 2: pars = struct_new2(rc_ret(s_Vec_Par), PAR(s_a), PAR(s_b)); break;

@@ -403,7 +403,8 @@ static Obj parse_unq(Parser* p) {
 }
 
 
-static Obj parse_par(Parser* p, Obj sym, Chars_const par_desc) {
+static Obj parse_par(Parser* p, Obj is_variad, Chars_const par_desc) {
+  // owns is_variad.
   P_ADV1;
   Src_pos sp_open = p->sp; // for error reporting.
   Obj name = parse_expr(p);
@@ -429,7 +430,7 @@ static Obj parse_par(Parser* p, Obj sym, Chars_const par_desc) {
   } else {
     expr = rc_ret_val(s_void);
   }
-  return struct_new4(rc_ret(s_Par), rc_ret_val(sym), name, type, expr);
+  return struct_new4(rc_ret(s_Par), is_variad, name, type, expr);
 }
 
 
@@ -447,13 +448,13 @@ static Obj parse_expr_sub(Parser* p) {
     case '\'':  return parse_data(p, '\'');
     case '"':   return parse_data(p, '"');
     case '#':   return parse_comment(p);
-    case '&':   return parse_par(p, s_Variad, "variad");
+    case '&':   return parse_par(p, rc_ret_val(s_true), "variad");
     case '+':
       if (isdigit(PC1)) return parse_int(p, 1);
       break;
     case '-':
       if (isdigit(PC1)) return parse_int(p, -1);
-      return parse_par(p, s_Label, "label");
+      return parse_par(p, rc_ret_val(s_false), "label");
 
   }
   if (isdigit(c)) {

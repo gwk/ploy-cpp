@@ -177,15 +177,6 @@ static Bool obj_is_sym(Obj o) {
 }
 
 
-static Bool sym_is_special(Obj o);
-
-static Bool obj_is_special_sym(Obj o) {
-  // there are semantic differences between the special predefined Sym values
-  // and regular syms which, when evaluated, get looked up in the environment.
-  return obj_is_sym(o) && sym_is_special(o);
-}
-
-
 static const Obj s_true, s_false;
 
 static Bool obj_is_bool(Obj s) {
@@ -234,18 +225,6 @@ static const Obj s_Label, s_Variad;
 for (Obj *it = struct_els(v), *_end_##it = it + struct_len(v); \
 it < _end_##it; \
 it++)
-
-
-static Bool obj_is_par(Obj o) {
-  // a parameter is a struct with first element of LABEL or VARIAD,
-  // representing those two syntactic constructs respectively.
-  if (!obj_is_struct(o)) return false;
-  Int len = struct_len(o);
-  if (len != 4) return false;
-  if (obj_is_special_sym(struct_el(o, 1))) return false; // name must be a regular sym.
-  Obj e0 = struct_el(o, 0);
-  return (e0.u == s_Label.u || e0.u == s_Variad.u);
-}
 
 
 static Obj ref_type(Obj r);
