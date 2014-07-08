@@ -6,7 +6,7 @@
 
 static Step eval(Obj env, Obj code) {
   Obj preprocessed = preprocess(code); // borrows code.
-  if (preprocessed.u == obj0.u) {
+  if (is(preprocessed, obj0)) {
     return mk_step(env, rc_ret_val(s_void)); // TODO: document why this is necessary.
   }
   Obj expanded = expand(env, preprocessed); // owns preprocessed.

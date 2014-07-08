@@ -102,11 +102,11 @@ static void write_repr_par(CFile f, Obj p, Bool is_quoted, Int depth, Set* set, 
   Obj type = els[2];
   Obj expr = els[3];
   write_repr_obj(f, name, true, depth, set);
-  if (type.u != s_nil.u) {
+  if (!is(type, s_nil)) {
     fputc(':', f);
     write_repr_obj(f, type, true, depth, set);
   }
-  if (expr.u != s_nil.u) {
+  if (!is(expr, s_nil)) {
     fputc('=', f);
     write_repr_obj(f, expr, true, depth, set);
   }
@@ -165,7 +165,7 @@ static void write_repr_obj(CFile f, Obj o, Bool is_quoted, Int depth, Set* set) 
   } else if (ot == ot_sym) {
     if (obj_is_data_word(o)) {
       // TODO: support all word values.
-      assert(o.u == blank.u);
+      assert(is(o, blank));
       fputs("''", f);
     } else {
       write_repr_sym(f, o, is_quoted);

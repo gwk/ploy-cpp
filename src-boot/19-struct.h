@@ -183,15 +183,15 @@ static Struct_shape struct_shape(Obj s) {
   if (!len) return ss_struct;
   Obj e0 = struct_el(s, 0);
   if (len == 2) {
-    if (e0.u == s_Quo.u) return ss_quo;
-    if (e0.u == s_Qua.u) return ss_qua;
-    if (e0.u == s_Unq.u) return ss_unq;
+    if (is(e0, s_Quo)) return ss_quo;
+    if (is(e0, s_Qua)) return ss_qua;
+    if (is(e0, s_Unq)) return ss_unq;
   }
   if (len == 4 && obj_is_sym(struct_el(s, 1))) {
-    if (e0.u == s_Label.u) return ss_label;
-    if (e0.u == s_Variad.u) return ss_variad;
+    if (is(e0, s_Label)) return ss_label;
+    if (is(e0, s_Variad)) return ss_variad;
   }
-  if (e0.u == s_Syn_seq.u) return ss_seq;
+  if (is(e0, s_Syn_seq)) return ss_seq;
   return ss_struct;
 }
 

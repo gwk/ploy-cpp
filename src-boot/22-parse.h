@@ -280,7 +280,7 @@ static Mem parse_exprs(Parser* p, Char term) {
     if (term && PC == term) break;
     Obj o = parse_expr(p);
     if (p->e) {
-      assert(o.u == obj0.u);
+      assert(is(o, obj0));
       break;
     }
     array_append(&a, o);

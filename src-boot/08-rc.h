@@ -209,7 +209,7 @@ static Obj ref_dealloc(Obj o);
 
 static void rc_rel(Obj o) {
   // decrease the object's retain count by one, or deallocate it.
-  assert(o.u != obj0.u);
+  assert(!is(o, obj0));
   do {
     counter_dec(obj_counter_index(o));
     if (obj_tag(o)) return;
@@ -235,7 +235,7 @@ static void rc_rel(Obj o) {
     }
     assert(found);
     round++;
-  } while (o.u != obj0.u);
+  } while (!is(o, obj0));
 }
 
 

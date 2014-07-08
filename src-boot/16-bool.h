@@ -10,8 +10,8 @@ static Obj bool_new(Int i) {
 
 
 static Bool bool_is_true(Obj b) {
-  if (b.u == s_true.u) return true;
-  if (b.u == s_false.u) return false;
+  if (is(b, s_true)) return true;
+  if (is(b, s_false)) return false;
   error_obj("obj is not a Bool", b);
 }
 
@@ -23,7 +23,7 @@ static Bool is_true(Obj o) {
     case ot_ref:
       switch (ref_tag(o)) {
         case rt_Data:
-          return o.u != blank.u;
+          return !is(o, blank);
         case rt_Env:
           return true;
         case rt_Struct:
@@ -32,7 +32,7 @@ static Bool is_true(Obj o) {
     case ot_ptr:
       return (ptr_val(o) != NULL);
     case ot_int:
-      return (o.u != int0.u);
+      return (!is(o, int0));
     case ot_sym:
       return (sym_index(o) >= si_true);
   }

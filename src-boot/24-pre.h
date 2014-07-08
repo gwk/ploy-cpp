@@ -18,7 +18,7 @@ static Obj preprocess(Obj code) {
   Array dst = array0;
   it_mem(it, src) {
     Obj o = preprocess(*it);
-    if (o.u != obj0.u) {
+    if (!is(o, obj0)) {
       array_append(&dst, o); // owns o.
     }
   }

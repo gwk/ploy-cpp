@@ -115,7 +115,7 @@ static Obj host_sym_eq(Obj env, Mem args) {
   Obj b = args.els[1];
   exc_check(obj_is_sym(a), "sym-eq requires argument 1 to be a Sym; received: %o", a);
   exc_check(obj_is_sym(b), "sym-eq requires argument 2 to be a Sym; received: %o", b);
-  Bool res = (a.u == b.u);
+  Bool res = (is(a, b));
   rc_rel_val(a);
   rc_rel_val(b);
   return bool_new(res);
@@ -127,7 +127,7 @@ static Obj host_dlen(Obj env, Mem args) {
   assert(args.len == 1);
   Obj o = args.els[0];
   Int l;
-  if (o.u == blank.u) {
+  if (is(o, blank)) {
     l = 0;
   } else {
     exc_check(obj_is_data(o), "data-len requires Data; received: %o", o);

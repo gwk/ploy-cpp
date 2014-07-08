@@ -7,12 +7,12 @@
 static Step run_sym(Obj env, Obj code) {
   // owns env.
   assert(obj_is_sym(code));
-  assert(code.u != s_ILLEGAL.u); // anything that returns s_ILLEGAL should have raised an error.
+  assert(!is(code, s_ILLEGAL)); // anything that returns s_ILLEGAL should have raised an error.
   if (code.u <= s_END_SPECIAL_SYMS.u) {
     return mk_step(env, rc_ret_val(code)); // special syms are self-evaluating.
   }
   Obj val = env_get(env, code);
-  exc_check(val.u != obj0.u, "lookup error: %o", code); // lookup failed.
+  exc_check(!is(val, obj0), "lookup error: %o", code); // lookup failed.
   return mk_step(env, rc_ret(val));
 }
 
@@ -157,7 +157,7 @@ static Call_envs run_bind_args(Obj env, Obj callee_env, Obj func, Mem pars, Mem 
       if (i_args < args.len) {
         arg = args.els[i_args];
         i_args++;
-      } else if (par_expr.u != s_void.u) {
+      } else if (!is(par_expr, s_void)) {
         arg = par_expr;
       } else {
         error_obj("function received too few arguments", struct_el(func, 0));
@@ -218,7 +218,7 @@ static Step run_call_native(Obj env, Obj func, Mem args, Bool is_expand) {
   exc_check(obj_is_sym(name), "function name is not a Sym: %o", name);
   exc_check(obj_is_env(lex_env), "function %o env is not an Env: %o", name, lex_env);
   exc_check(obj_is_struct(pars), "function %o pars is not a Struct: %o", name, pars);
-  exc_check(ret_type.u == s_nil.u, "function %o ret-type is non-nil: %o", name, ret_type);
+  exc_check(is(ret_type, s_nil), "function %o ret-type is non-nil: %o", name, ret_type);
   Obj callee_env = env_push_frame(rc_ret(lex_env), rc_ret(name));
   // TODO: change env_push_frame src from name to whole func?
   callee_env = env_bind(callee_env, rc_ret_val(s_self), rc_ret(func)); // bind self.
@@ -252,7 +252,7 @@ static Step run_call_host(Obj env, Obj func, Mem args) {
   exc_check(obj_is_sym(name), "host function name is not a Sym: %o", name);
   exc_check(obj_is_env(lex_env), "host function %o env is not an Env: %o", name, lex_env);
   exc_check(obj_is_struct(pars), "host function %o pars is not a Struct: %o", name, pars);
-  exc_check(ret_type.u == s_nil.u, "host function %o ret-type is non-nil: %o", name, ret_type);
+  exc_check(is(ret_type, s_nil), "host function %o ret-type is non-nil: %o", name, ret_type);
   exc_check(obj_is_ptr(body), "host function %o body is not a Ptr: %o", name, body);
   Int len_pars = struct_len(pars);
   exc_check(args.len == len_pars, "host function expects %i argument%s; received %i",
@@ -348,7 +348,7 @@ static Step run_step(Obj env, Obj code) {
 static Step run_tail(Step step) {
   // owns .env and .val; borrows .tco_code.
   Obj env = step.env; // hold onto the original 'next' environment for the topmost caller.
-  while (step.tco_code.u != obj0.u) {
+  while (!is(step.tco_code, obj0)) {
     Obj tco_env = step.val; // val field is reused in the TCO case to hold the callee env.
     step = run_step(tco_env, step.tco_code); // owns tco_env; borrows .tco_code.
     rc_rel(step.env); // the modified tco_env is immediately abandoned since tco_code is in the tail position.
@@ -357,7 +357,7 @@ static Step run_tail(Step step) {
   // done. if TCO iterations occurred,
   // then the intermediate step.val objects were really tc_env, consumed by run_step.
   // the final val is the one we want to return, so we do not have to ret/rel.
-  assert(step.tco_code.u == obj0.u);
+  assert(is(step.tco_code, obj0));
   return step;
 }
 

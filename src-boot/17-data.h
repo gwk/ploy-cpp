@@ -23,7 +23,7 @@ static Int data_ref_len(Obj d) {
 
 
 static Int data_len(Obj d) {
-  if (d.u == blank.u) return 0; // TODO: support all data-word values.
+  if (is(d, blank)) return 0; // TODO: support all data-word values.
   return data_ref_len(d);
 }
 
@@ -35,7 +35,7 @@ static Chars data_ref_ptr(Obj d) {
 
 
 static Chars data_ptr(Obj d) {
-  if (d.u == blank.u) return NULL; // TODO: support all data-word values.
+  if (is(d, blank)) return NULL; // TODO: support all data-word values.
   return data_ref_ptr(d);
 }
 

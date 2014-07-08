@@ -33,7 +33,7 @@ static Obj env_rel_fields(Obj o) {
 static Obj env_new(Obj key, Obj val, Obj tl) {
   // owns sym, val, tl.
   assert(obj_is_sym(key));
-  assert(tl.u == s_ENV_END_MARKER.u || obj_is_env(tl));
+  assert(is(tl, s_ENV_END_MARKER) || obj_is_env(tl));
   Obj o = ref_alloc(rt_Env, size_Env);
   o.e->type = rc_ret_val(s_Env);
   o.e->key = key;
@@ -45,13 +45,13 @@ static Obj env_new(Obj key, Obj val, Obj tl) {
 
 static Obj env_get(Obj env, Obj sym) {
   assert(!sym_is_special(sym));
-  while (env.u != s_ENV_END_MARKER.u) {
+  while (!is(env, s_ENV_END_MARKER)) {
     assert(obj_is_env(env));
     Obj key = env.e->key;
-    if (key.u == s_ENV_FRAME_MARKER.u) { // frame marker.
+    if (is(key, s_ENV_FRAME_MARKER)) { // frame marker.
       // for now, just skip the marker.
     } else { // binding.
-      if (key.u == sym.u) {
+      if (is(key, sym)) {
         return env.e->val;
       }
     }
@@ -76,10 +76,10 @@ static Obj env_bind(Obj env, Obj sym, Obj val) {
 
 static void env_trace(Obj env, Bool show_values) {
   errL("trace:");
-  while (env.u != s_ENV_END_MARKER.u) {
+  while (!is(env, s_ENV_END_MARKER)) {
     assert(obj_is_env(env));
     Obj key = env.e->key;
-    if (key.u == s_ENV_FRAME_MARKER.u) { // frame marker.
+    if (is(key, s_ENV_FRAME_MARKER)) { // frame marker.
       Obj src = env.e->val;
       err("  ");
       write_repr(stderr, src);

@@ -107,6 +107,11 @@ typedef struct {
 #define mk_step(e, v) (Step){.env=(e), .val=(v), .tco_code=obj0}
 
 
+static Bool is(Obj a, Obj b) {
+  return a.u == b.u;
+}
+
+
 static Obj_tag obj_tag(Obj o) {
   return o.u & obj_tag_mask;
 }
@@ -180,7 +185,7 @@ static Bool obj_is_sym(Obj o) {
 static const Obj s_true, s_false;
 
 static Bool obj_is_bool(Obj s) {
-  return s.u == s_true.u || s.u == s_false.u;
+  return is(s, s_true) || is(s, s_false);
 }
 
 

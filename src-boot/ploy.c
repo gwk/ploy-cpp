@@ -14,7 +14,7 @@ static Obj parse_and_eval(Obj env, Obj path, Obj src, Array* sources, Bool out_v
     raw_dealloc(e, ci_Chars);
     rc_rel(path);
     rc_rel(src);
-    assert(code.u == obj0.u);
+    assert(is(code, obj0));
     exit(1);
   }
 #if VERBOSE_PARSE
@@ -25,7 +25,7 @@ static Obj parse_and_eval(Obj env, Obj path, Obj src, Array* sources, Bool out_v
 #endif
   array_append(sources, struct_new2(rc_ret(s_Src), path, src));
   Step step = eval_struct(env, code);
-  if (out_val && step.val.u != s_void.u) {
+  if (out_val && !is(step.val, s_void)) {
     write_repr(stdout, step.val);
     fputc('\n', stdout);
   }

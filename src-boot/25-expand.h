@@ -45,7 +45,7 @@ static Obj expand_macro(Obj env, Mem args) {
   Obj macro_sym = mem_el(args, 0);
   check_obj(obj_is_sym(macro_sym), "expand argument 0 must be a Sym; found", macro_sym);
   Obj macro = env_get(env, macro_sym);
-  if (macro.u == obj0.u) { // lookup failed.
+  if (is(macro, obj0)) { // lookup failed.
     error_obj("macro lookup error", macro_sym);
   }
   Step step = run_call_native(rc_ret(env), rc_ret(macro), mem_next(args), true);
@@ -62,16 +62,16 @@ static Obj expand(Obj env, Obj code) {
   }
   Mem m = struct_mem(code);
   Obj hd = m.els[0];
-  if (hd.u == s_Quo.u) {
+  if (is(hd, s_Quo)) {
     return code;
   }
-  if (hd.u == s_Qua.u) {
+  if (is(hd, s_Qua)) {
     check_obj(m.len == 2, "malformed QUA form", code);
     Obj expr = rc_ret(m.els[1]);
     rc_rel(code);
     return expand_quasiquote(expr);
   }
-  if (hd.u == s_Expand.u) {
+  if (is(hd, s_Expand)) {
 #if VERBOSE_EVAL
     err(trace_expand_prefix); dbg(code);
 #endif
