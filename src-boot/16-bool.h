@@ -17,6 +17,7 @@ static Bool bool_is_true(Obj b) {
 
 
 static const Obj blank;
+static Int struct_len(Obj s);
 
 static Bool is_true(Obj o) {
   switch (obj_tag(o)) {

@@ -20,6 +20,8 @@ static Obj struct_new_raw(Obj type, Int len) {
 }
 
 
+static Obj* struct_els(Obj s);
+
 static Obj struct_new_M(Obj type, Mem m) {
   // owns type, elements of m.
   Obj s = struct_new_raw(type, m.len);
@@ -207,4 +209,11 @@ static Bool struct_contains_unquote(Obj s) {
   }
   return false;
 }
+
+
+// iterate over a struct v.
+#define it_struct(it, v) \
+for (Obj *it = struct_els(v), *_end_##it = it + struct_len(v); \
+it < _end_##it; \
+it++)
 

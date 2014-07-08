@@ -219,19 +219,6 @@ static Bool obj_is_struct(Obj o) {
 }
 
 
-static Int struct_len(Obj s);
-static Obj struct_el(Obj s, Int i);
-static Obj* struct_els(Obj s);
-static const Obj s_Label, s_Variad;
-
-
-// iterate over a struct v.
-#define it_struct(it, v) \
-for (Obj *it = struct_els(v), *_end_##it = it + struct_len(v); \
-it < _end_##it; \
-it++)
-
-
 static Obj ref_type(Obj r);
 static const Obj s_Ptr, s_Int, s_Data, s_Sym;
 
