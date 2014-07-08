@@ -59,8 +59,7 @@ static Obj host_iabs(Obj env, Mem args) {
 }
 
 
-// TODO: handle flt.
-// TODO: check for overflow.
+// TODO: check for overflow. currently we rely on clang to insert overflow traps.
 // owns elements of args.
 #define HOST_BIN_OP(name) \
 static Obj host_##name(Obj env, Mem args) { \
