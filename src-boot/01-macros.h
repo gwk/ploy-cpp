@@ -141,7 +141,7 @@ for (Int i = (n) - 1, _end_##i = (m), _step_##i = (s); i >= _end_##i; i -= _step
 #endif
 
 
-// stderr utilities.
+// stderr utilities: write info/error/debug messages to the console.
 
 #define err(s) fputs((s), stderr)
 #define err_nl() err("\n")
@@ -151,13 +151,11 @@ for (Int i = (n) - 1, _end_##i = (m), _step_##i = (s); i >= _end_##i; i -= _step
 #define errF(fmt, ...) fprintf(stderr, fmt, ## __VA_ARGS__)
 #define errFL(fmt, ...) errF(fmt "\n", ## __VA_ARGS__)
 
-// error macros.
-
-#define warn(fmt, ...) errL("warning: " fmt, ## __VA_ARGS__)
-
+// write an error message and then exit.
 #define error(fmt, ...) { \
   errFL("ploy error: " fmt, ## __VA_ARGS__); \
   exit(1); \
 }
 
+// check that a condition is true; otherwise error.
 #define check(condition, fmt, ...) { if (!(condition)) error(fmt, ## __VA_ARGS__); }
