@@ -368,7 +368,6 @@ static Obj parse_syn_chain_simple(Parser* p) {
 
 static Obj parse_seq(Parser* p) {
   P_ADV1;
-  parse_space(p); // TODO: move this.
   if (PC == ':') {
     return parse_syn_chain_simple(p);
   }
