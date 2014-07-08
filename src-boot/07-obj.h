@@ -179,10 +179,9 @@ static Bool obj_is_sym(Obj o) {
 
 static Bool sym_is_special(Obj o);
 
-// TODO: improve this naming subtlety.
-// there are semantic differences between the special predefined Sym values
-// and regular syms which, when evaluated, get looked up in the environment.
-static Bool obj_is_special(Obj o) {
+static Bool obj_is_special_sym(Obj o) {
+  // there are semantic differences between the special predefined Sym values
+  // and regular syms which, when evaluated, get looked up in the environment.
   return obj_is_sym(o) && sym_is_special(o);
 }
 
@@ -243,7 +242,7 @@ static Bool obj_is_par(Obj o) {
   if (!obj_is_struct(o)) return false;
   Int len = struct_len(o);
   if (len != 4) return false;
-  if (obj_is_special(struct_el(o, 1))) return false; // name must be a regular sym.
+  if (obj_is_special_sym(struct_el(o, 1))) return false; // name must be a regular sym.
   Obj e0 = struct_el(o, 0);
   return (e0.u == s_Label.u || e0.u == s_Variad.u);
 }
