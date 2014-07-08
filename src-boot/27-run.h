@@ -335,12 +335,12 @@ static Step run_step(Obj env, Obj code) {
     }
   }
   switch (ref_tag(code)) {
-    case rt_Struct:
-      return run_Struct(env, code);
     case rt_Data:
       return mk_step(env, rc_ret(code)); // self-evaluating.
     case rt_Env:
       exc_raise("cannot run object: %o", code);
+    case rt_Struct:
+      return run_Struct(env, code);
   }
 }
 
