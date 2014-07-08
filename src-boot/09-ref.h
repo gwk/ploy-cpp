@@ -6,16 +6,7 @@
 #include "08-rc.h"
 
 
-static Int sym_index(Obj s);
-static const Int sym_index_of_ref_type_sym_first;
-static const Int sym_index_of_ref_type_sym_last;
-
-static Ref_tag ref_tag(Obj r) {
-  assert(obj_is_ref(r));
-  Int si = sym_index(*r.type_ptr);
-  assert(si >= sym_index_of_ref_type_sym_first && si <= sym_index_of_ref_type_sym_last);
-  return cast(Ref_tag, si - sym_index_of_ref_type_sym_first);
-}
+static Ref_tag ref_tag(Obj r);
 
 
 static Obj ref_type_sym(Obj r) {

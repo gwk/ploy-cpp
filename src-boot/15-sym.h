@@ -126,8 +126,13 @@ SYM_LIST
 #undef SYM_LIST
 
 
-static const Int sym_index_of_ref_type_sym_first = si_Data;
-static const Int sym_index_of_ref_type_sym_last = si_Struct;
+static Ref_tag ref_tag(Obj r) {
+  assert(obj_is_ref(r));
+  Int si = sym_index(*r.type_ptr);
+  if (si == si_Data) return rt_Data;
+  if (si == si_Env) return rt_Env;
+  return rt_Struct;
+}
 
 
 static void sym_init() {
