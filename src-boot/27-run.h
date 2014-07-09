@@ -19,7 +19,7 @@ static Step run_sym(Obj env, Obj code) {
 
 static Step run_Quo(Obj env, Mem args) {
   // owns env.
-  exc_check(args.len == 1, "s_QUO requires 1 argument; received %i", args.len);
+  exc_check(args.len == 1, "Quo requires 1 argument; received %i", args.len);
   return mk_step(env, rc_ret(args.els[0]));
 }
 
@@ -43,7 +43,7 @@ static Step run_Do(Obj env, Mem args) {
 
 static Step run_Scope(Obj env, Mem args) {
   // owns env.
-  exc_check(args.len == 1, "SCOPE requires 1 argument; received %i", args.len);
+  exc_check(args.len == 1, "Scope requires 1 argument; received %i", args.len);
   Obj body = args.els[0];
   // TODO: create new env frame.
   return run_step(env, body); // TCO.
@@ -52,11 +52,11 @@ static Step run_Scope(Obj env, Mem args) {
 
 static Step run_Let(Obj env, Mem args) {
   // owns env.
-  exc_check(args.len == 2, "LET requires 2 arguments; received %i", args.len);
+  exc_check(args.len == 2, "Let requires 2 arguments; received %i", args.len);
   Obj sym = args.els[0];
   Obj expr = args.els[1];
   exc_check(obj_is_sym(sym) && !sym_is_special(sym),
-    "LET requires argument 1 to be a bindable sym; received: %o", sym);
+    "Let requires argument 1 to be a bindable sym; received: %o", sym);
   Step step = run(env, expr);
   Obj env1 = env_bind(step.env, rc_ret_val(sym), rc_ret(step.val)); // owns env, sym, val.
   return mk_step(env1, step.val);
@@ -65,7 +65,7 @@ static Step run_Let(Obj env, Mem args) {
 
 static Step run_If(Obj env, Mem args) {
   // owns env.
-  exc_check(args.len == 3, "IF requires 3 arguments; received %i", args.len);
+  exc_check(args.len == 3, "If requires 3 arguments; received %i", args.len);
   Obj p = args.els[0];
   Obj t = args.els[1];
   Obj e = args.els[2];
@@ -78,18 +78,18 @@ static Step run_If(Obj env, Mem args) {
 
 static Step run_Fn(Obj env, Mem args) {
   // owns env.
-  exc_check(args.len == 6, "FN requires 6 arguments; received %i", args.len);
+  exc_check(args.len == 6, "Fn requires 6 arguments; received %i", args.len);
   Obj name      = args.els[0];
   Obj is_native = args.els[1];
   Obj is_macro  = args.els[2];
   Obj pars      = args.els[3];
   Obj ret_type  = args.els[4];
   Obj body      = args.els[5];
-  exc_check(obj_is_sym(name),  "FN: name is not a Sym: %o", name);
-  exc_check(obj_is_bool(is_macro), "FN: is-macro is not a Bool: %o", is_macro);
-  exc_check(obj_is_struct(pars), "FN: parameters is not a Struct: %o", pars);
+  exc_check(obj_is_sym(name),  "Fn: name is not a Sym: %o", name);
+  exc_check(obj_is_bool(is_macro), "Fn: is-macro is not a Bool: %o", is_macro);
+  exc_check(obj_is_struct(pars), "Fn: parameters is not a Struct: %o", pars);
   exc_check(struct_len(pars) > 0 && struct_el(pars, 0).u == s_Syn_seq.u,
-    "FN: parameters is not a sequence literal: %o", pars);
+    "Fn: parameters is not a sequence literal: %o", pars);
   // TODO: check all pars.
   Obj f = struct_new_raw(rc_ret(s_Func), 7);
   Obj* els = struct_els(f);
@@ -106,7 +106,7 @@ static Step run_Fn(Obj env, Mem args) {
 
 static Step run_Syn_struct_boot(Obj env, Mem args) {
   // owns env.
-  check(args.len > 0, "STRUCT_BOOT form is empty");
+  check(args.len > 0, "Syn-struct-boot form is empty");
   Obj s = struct_new_raw(rc_ret(s_Obj), args.len); // TODO: correct type.
   Obj* els = struct_els(s);
   for_in(i, args.len) {
