@@ -23,6 +23,7 @@ if [[ "$1" == "-dbg" ]]; then
 -fsanitize=undefined-trap \
 -fsanitize-undefined-trap-on-error \
 -fno-limit-debug-info \
+-O0
 "
 #-fsanitize=local-bounds
 else
