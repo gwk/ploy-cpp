@@ -19,22 +19,6 @@ typedef struct {
 } Parser;
 
 
-// character terminates a syntactic sequence.
-static Bool char_is_seq_term(Char c) {
-  return
-  c == ')' ||
-  c == ']' ||
-  c == '}' ||
-  c == '>';
-}
-
-
-// character terminates an atom.
-static Bool char_is_atom_term(Char c) {
-  return c == '|' || isspace(c) || char_is_seq_term(c);
-}
-
-
 static void parse_err(Parser* p) {
   errF("%.*s:%ld:%ld (%ld): ", FMT_STR(p->path), p->sp.line + 1, p->sp.col + 1, p->sp.pos);
   if (p->e) errF("\nerror: %s\nobj:  ", p->e);
@@ -77,6 +61,80 @@ if (!(condition)) return parse_error(p, fmt, ##__VA_ARGS__)
 #define P_ADV1 P_ADV(1)
 
 #define P_CHARS (p->src.chars + p->sp.pos)
+
+
+static Bool char_is_seq_term(Char c) {
+  // character terminates a syntactic sequence.
+  return
+  c == ')' ||
+  c == ']' ||
+  c == '}' ||
+  c == '>';
+}
+
+
+static Bool char_is_atom_term(Char c) {
+  // character terminates an atom.
+  return c == '|' || isspace(c) || char_is_seq_term(c);
+}
+
+
+static Bool parse_space(Parser* p) {
+  // return true if parsing can continue.
+  while (PP) {
+    Char c = PC;
+    //parse_err(p); errFL("space? '%c'", c);
+    switch (c) {
+      case ' ':
+        P_ADV1;
+        continue;
+      case '\n':
+        p->sp.pos++;
+        p->sp.line++;
+        p->sp.col = 0;
+        continue;
+      case '\t':
+        parse_error(p, "illegal tab character");
+        return false;
+      default:
+        if (isspace(c)) {
+          parse_error(p, "illegal space character: '%c' (%02x)", c, c);
+          return false;
+        }
+        return true;
+    }
+  }
+  return false; // EOS.
+}
+
+
+static Bool parser_has_next_expr(Parser* p) {
+  return parse_space(p) && !char_is_seq_term(PC);
+}
+
+
+static Obj parse_expr(Parser* p);
+
+static Mem parse_exprs(Parser* p, Char term) {
+  // caller must call mem_release_dealloc or mem_dealloc on returned Mem.
+  // term is a the expected terminator character (e.g. closing paren).
+  Array a = array0;
+  while (parser_has_next_expr(p)) {
+    if (term && PC == term) break;
+    Obj o = parse_expr(p);
+    if (p->e) {
+      assert(is(o, obj0));
+      break;
+    }
+    array_append(&a, o);
+  }
+  if (p->e) {
+    mem_release_dealloc(a.mem);
+    return mem0;
+  }
+  return a.mem;
+}
+
 
 
 static U64 parse_U64(Parser* p) {
@@ -143,8 +201,6 @@ static Obj parse_sym(Parser* p) {
   return sym_new(s);
 }
 
-
-static Obj parse_expr(Parser* p);
 
 static Obj parse_comment(Parser* p) {
   assert(PC == '#');
@@ -231,34 +287,6 @@ static Obj parse_data(Parser* p, Char q) {
 }
 
 
-static Bool parse_space(Parser* p) {
-  while (PP) {
-    Char c = PC;
-    //parse_err(p); errFL("space? '%c'", c);
-    switch (c) {
-      case ' ':
-        P_ADV1;
-        continue;
-      case '\n':
-        p->sp.pos++;
-        p->sp.line++;
-        p->sp.col = 0;
-        continue;
-      case '\t':
-        parse_error(p, "illegal tab character");
-        return false;
-      default:
-        if (isspace(c)) {
-          parse_error(p, "illegal space character: '%c' (%02x)", c, c);
-          return false;
-        }
-        return true;
-    }
-  }
-  return false; // EOS.
-}
-
-
 static Bool parse_terminator(Parser* p, Char t) {
   if (PC != t) {
     parse_error(p, "expected terminator: '%c'", t);
@@ -266,30 +294,6 @@ static Bool parse_terminator(Parser* p, Char t) {
   }
   P_ADV1;
   return true;
-}
-
-static Bool parser_has_next_expr(Parser* p) {
-  return parse_space(p) && !char_is_seq_term(PC);
-}
-
-
-static Mem parse_exprs(Parser* p, Char term) {
-  // caller must call mem_release_dealloc or mem_dealloc on returned Mem.
-  Array a = array0;
-  while (parser_has_next_expr(p)) {
-    if (term && PC == term) break;
-    Obj o = parse_expr(p);
-    if (p->e) {
-      assert(is(o, obj0));
-      break;
-    }
-    array_append(&a, o);
-  }
-  if (p->e) {
-    mem_release_dealloc(a.mem);
-    return mem0;
-  }
-  return a.mem;
 }
 
 
