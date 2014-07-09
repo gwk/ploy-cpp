@@ -85,6 +85,7 @@ S(Unq) \
 S(Qua) \
 S(Expand) \
 S(Comment) \
+S(Eval) \
 S(Quo) \
 S(Do) \
 S(Scope) \

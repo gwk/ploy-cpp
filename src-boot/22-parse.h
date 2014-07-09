@@ -403,6 +403,14 @@ static Obj parse_unq(Parser* p) {
 }
 
 
+static Obj parse_eval(Parser* p) {
+  assert(PC == '!');
+  P_ADV1;
+  Obj o = parse_expr(p);
+  return struct_new2(rc_ret(s_Eval), rc_ret_val(s_Eval), o);
+}
+
+
 static Obj parse_par(Parser* p, Obj is_variad, Chars_const par_desc) {
   // owns is_variad.
   P_ADV1;
@@ -445,6 +453,7 @@ static Obj parse_expr_sub(Parser* p) {
     case '`':   return parse_quo(p);
     case '~':   return parse_qua(p);
     case ',':   return parse_unq(p);
+    case '!':   return parse_eval(p);
     case '\'':  return parse_data(p, '\'');
     case '"':   return parse_data(p, '"');
     case '#':   return parse_comment(p);

@@ -281,20 +281,6 @@ static Obj host_error(Obj env, Mem args) {
 }
 
 
-static Step run(Obj env, Obj code);
-
-static Obj host_run(Obj env, Mem args) {
-  // owns elements of args.
-  assert(args.len == 2);
-  Obj target_env = args.els[0];
-  Obj code = args.els[1];
-  Step step = run(rc_ret(target_env), code);
-  rc_rel(code);
-  rc_rel(step.env);
-  return step.val;
-}
-
-
 static Obj host_type_of(Obj env, Mem args) {
   // owns elements of args.
   assert(args.len == 1);
@@ -375,7 +361,6 @@ static Obj host_init(Obj env) {
   DEF_FH(1, "raw-flush", host_raw_flush)
   DEF_FH(1, "exit", host_exit)
   DEF_FH(1, "error", host_error)
-  DEF_FH(2, "run", host_run)
   DEF_FH(1, "type-of", host_type_of)
 #undef DEF_FH
 

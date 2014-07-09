@@ -17,6 +17,21 @@ static Step run_sym(Obj env, Obj code) {
 }
 
 
+static Step run(Obj env, Obj code);
+
+static Step run_Eval(Obj env, Mem args) {
+  // owns env.
+  exc_check(args.len == 1, "Env requires 1 argument; received %i", args.len);
+  Obj expr = args.els[0];
+  Step step = run(env, expr);
+  env = step.env;
+  Obj code = step.val;
+  step = run(env, code);
+  rc_rel(code);
+  return step;
+}
+
+
 static Step run_Quo(Obj env, Mem args) {
   // owns env.
   exc_check(args.len == 1, "Quo requires 1 argument; received %i", args.len);
@@ -296,6 +311,7 @@ static Step run_Struct(Obj env, Obj code) {
     Int si = sym_index(form); // Int type avoids incomplete enum switch error.
 #define EVAL_FORM(s) case si_##s: return run_##s(env, mem_next(m))
     switch (si) {
+      EVAL_FORM(Eval);
       EVAL_FORM(Quo);
       EVAL_FORM(Do);
       EVAL_FORM(Scope);
