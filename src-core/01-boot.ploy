@@ -26,22 +26,9 @@
 
 {!Let macro
   # the 'macro' macro defines a new macro in the current environment.
-  # TODO: refine environment semantics?
-  # note: if core was already available, we would define 'macro' using itself like so:
-  ##<macro macro [-sym -pars &body]
-      [Let sym
-        [ Fn # this form creates a new function/macro that...
-          sym # contains its name sym,
-          true # is a native function,
-          true # is a macro,
-          pars # has the specified parameter list,
-          nil # unspecified ret type.
-          {!if (ieq (len body) 1) # and body...
-            (el body 0)
-            (prepend Do body)}]]> # wrapped in a do form if necessary.
   # instead, we must define it using raw forms.
-  # note the structural similarity between the outer FN form and the inner vec literal.
-  {!Fn # creates both functions and macros
+  # note the structural similarity between the outer Fn form and the inner struct literal.
+  {!Fn # creates both functions and macros.
     macro # the sym for this macro is `macro;
     # we do not quote it because this is a raw form, so it is not evaluated.
     true # is-native.
