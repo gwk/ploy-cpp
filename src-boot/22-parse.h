@@ -147,7 +147,7 @@ static U64 parse_U64(Parser* p) {
       case 'q': base = 4;   break;
       case 'o': base = 8;   break;
       case 'd': base = 10;  break;
-      case 'h': base = 16;  break;
+      case 'x': base = 16;  break;
     }
     if (base) {
       P_ADV(2);
