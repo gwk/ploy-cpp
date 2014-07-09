@@ -175,7 +175,9 @@ static U64 parse_U64(Parser* p) {
 
 
 static Obj parse_uns(Parser* p) {
-  return int_new_from_uns(parse_U64(p));
+  U64 u = parse_U64(p);
+  if (p->e) return obj0;
+  return int_new_from_uns(u);
 }
 
 
@@ -183,6 +185,7 @@ static Obj parse_int(Parser* p, Int sign) {
   assert(PC == '-' || PC == '+');
   P_ADV1;
   U64 u = parse_U64(p);
+  if (p->e) return obj0;
   parse_check(u <= max_Int, "signed number literal is too large");
   return int_new((I64)u * sign);
 }

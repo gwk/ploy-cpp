@@ -1,0 +1,4 @@
+{
+  'code' : 1,
+  'err' : ('search', 'parse error: .*/ploy/test/2-errors/int-base.ploy:1:2: invalid number literal terminator: z.*')
+}
