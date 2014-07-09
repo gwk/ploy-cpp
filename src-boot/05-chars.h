@@ -33,3 +33,30 @@ static void set_process_name(Chars_const arg0) {
   process_name = chars_path_base(arg0);
 }
 
+
+static Chars char_repr(Char c) {
+  static Char reprs[256][8] = {};
+  Chars r = reprs[cast(Int, c)];
+  if (*r) return r;
+  switch (c) {
+    case '\a': strcpy(r, "\\a");   break; // bell - BEL
+    case '\b': strcpy(r, "\\b");   break; // backspace - BS
+    case '\f': strcpy(r, "\\f");   break; // form feed - FF
+    case '\n': strcpy(r, "\\n");   break; // line feed - LF
+    case '\r': strcpy(r, "\\r");   break; // carriage return - CR
+    case '\t': strcpy(r, "\\t");   break; // horizontal tab - TAB
+    case '\v': strcpy(r, "\\v");   break; // vertical tab - VT
+    case '\\': strcpy(r, "\\\\");  break;
+    case '\'': strcpy(r, "\\'");   break;
+    case '"':  strcpy(r, "\\\"");  break;
+    default:
+    if (isprint(c)) {
+      r[0] = c;
+      r[1] = '\0';
+    } else {
+      sprintf(r, "\\x%02x", c);
+    }
+  }
+  return r;
+}
+

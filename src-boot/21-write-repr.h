@@ -16,21 +16,7 @@ static void write_repr_data(CFile f, Obj d) {
   Chars p = data_ptr(d);
   fputc('\'', f);
   for_in(i, data_len(d)) {
-    Char c = p[i];
-    switch (c) {
-      case '\a': fputc('\\', f); fputc('a', f);  continue; // bell - BEL
-      case '\b': fputc('\\', f); fputc('b', f);  continue; // backspace - BS
-      case '\f': fputc('\\', f); fputc('f', f);  continue; // form feed - FF
-      case '\n': fputc('\\', f); fputc('n', f);  continue; // line feed - LF
-      case '\r': fputc('\\', f); fputc('r', f);  continue; // carriage return - CR
-      case '\t': fputc('\\', f); fputc('t', f);  continue; // horizontal tab - TAB
-      case '\v': fputc('\\', f); fputc('v', f);  continue; // vertical tab - VT
-      case '\\': fputc('\\', f); fputc('\\', f); continue;
-      case '\'': fputc('\\', f); fputc('\'', f); continue;
-      case '"':  fputc('\\', f); fputc('"', f);  continue;
-    }
-    // TODO: escape non-printable characters
-    fputc(c, f);
+    fputs(char_repr(p[i]), f);
   }
   fputc('\'', f);
 }
