@@ -1,0 +1,5 @@
+{
+  'code' : 1,
+  'err' : ('search',
+    r"parse error: .*/ploy/test/2-errors/quo-nl.ploy:1:2: unexpected character: '\\n'.*")
+}

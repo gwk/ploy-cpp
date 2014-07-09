@@ -1,0 +1,4 @@
+{
+  'code' : 1,
+  'err' : ('search', 'parse error: .*/ploy/test/2-errors/quo-bare.ploy:1:2: expected sub-expression.*')
+}

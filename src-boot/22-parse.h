@@ -205,11 +205,13 @@ static Obj parse_sym(Parser* p) {
 }
 
 
+static Obj parse_sub_expr(Parser* p);
+
 static Obj parse_comment(Parser* p) {
   assert(PC == '#');
   if (PP1 && PC1 == '#') { // double-hash comments out the following expression.
     P_ADV(2);
-    Obj expr = parse_expr(p);
+    Obj expr = parse_sub_expr(p);
     if (p->e) return obj0;
     // the QUO prevents macro expansion of the commented code,
     // and also differentiates it from line comments.
@@ -389,7 +391,8 @@ static Obj parse_seq(Parser* p) {
 static Obj parse_quo(Parser* p) {
   assert(PC == '`');
   P_ADV1;
-  Obj o = parse_expr(p);
+  Obj o = parse_sub_expr(p);
+  if (p->e) return obj0;
   return struct_new2(rc_ret(s_Quo), rc_ret_val(s_Quo), o);
 }
 
@@ -397,7 +400,8 @@ static Obj parse_quo(Parser* p) {
 static Obj parse_qua(Parser* p) {
   assert(PC == '~');
   P_ADV1;
-  Obj o = parse_expr(p);
+  Obj o = parse_sub_expr(p);
+  if (p->e) return obj0;
   return struct_new2(rc_ret(s_Qua), rc_ret_val(s_Qua), o);
 }
 
@@ -405,7 +409,8 @@ static Obj parse_qua(Parser* p) {
 static Obj parse_unq(Parser* p) {
   assert(PC == ',');
   P_ADV1;
-  Obj o = parse_expr(p);
+  Obj o = parse_sub_expr(p);
+  if (p->e) return obj0;
   return struct_new2(rc_ret(s_Unq), rc_ret_val(s_Unq), o);
 }
 
@@ -413,7 +418,8 @@ static Obj parse_unq(Parser* p) {
 static Obj parse_eval(Parser* p) {
   assert(PC == '!');
   P_ADV1;
-  Obj o = parse_expr(p);
+  Obj o = parse_sub_expr(p);
+  if (p->e) return obj0;
   return struct_new2(rc_ret(s_Eval), rc_ret_val(s_Eval), o);
 }
 
@@ -422,7 +428,7 @@ static Obj parse_par(Parser* p, Obj is_variad, Chars_const par_desc) {
   // owns is_variad.
   P_ADV1;
   Src_pos sp_open = p->sp; // for error reporting.
-  Obj name = parse_expr(p);
+  Obj name = parse_sub_expr(p);
   if (p->e) return obj0;
   if (!obj_is_sym(name)) {
     rc_rel(name);
@@ -433,15 +439,25 @@ static Obj parse_par(Parser* p, Obj is_variad, Chars_const par_desc) {
   Obj type;
   if (c == ':') {
     P_ADV1;
-    type = parse_expr(p);
-    PC;
+    type = parse_sub_expr(p);
+    if (p->e) {
+      rc_rel(name);
+      rc_rel(type);
+      return obj0;
+    }
   } else {
     type = rc_ret_val(s_INFER);
   }
   Obj expr;
   if (PC == '=') {
     P_ADV1;
-    expr = parse_expr(p);
+    expr = parse_sub_expr(p);
+    if (p->e) {
+      rc_rel(name);
+      rc_rel(type);
+      rc_rel(expr);
+      return obj0;
+    }
   } else {
     expr = rc_ret_val(s_void);
   }
@@ -450,7 +466,7 @@ static Obj parse_par(Parser* p, Obj is_variad, Chars_const par_desc) {
 
 
 // parse an expression.
-static Obj parse_expr_sub(Parser* p) {
+static Obj parse_expr_dispatch(Parser* p) {
   Char c = PC;
   switch (c) {
     case '{':   return parse_struct(p);
@@ -479,16 +495,22 @@ static Obj parse_expr_sub(Parser* p) {
   if (c == '_' || isalpha(c)) {
     return parse_sym(p);
   }
-  return parse_error(p, "unexpected character");
+  return parse_error(p, "unexpected character: '%s'", char_repr(c));
 }
 
 
 static Obj parse_expr(Parser* p) {
-  Obj o = parse_expr_sub(p);
+  Obj o = parse_expr_dispatch(p);
 #if VERBOSE_PARSE
   parse_err(p); obj_errL(o);
 #endif
   return o;
+}
+
+
+static Obj parse_sub_expr(Parser* p) {
+  parse_check(PP, "expected sub-expression");
+  return parse_expr(p);
 }
 
 
