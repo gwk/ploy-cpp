@@ -12,7 +12,7 @@ static Obj preprocess(Obj code) {
     return rc_ret(code);
   }
   Mem src = struct_mem(code);
-  if (src.els[0].u == s_Comment.u) {
+  if (is(ref_type(code), s_Comment)) {
     return obj0;
   }
   Array dst = array0;

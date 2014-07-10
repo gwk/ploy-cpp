@@ -75,7 +75,10 @@ S(ENV_END_MARKER) \
 S(ENV_FRAME_MARKER) \
 S(false) \
 S(true) \
-S(INFER) \
+S(INFER_STRUCT) \
+S(INFER_SEQ) \
+S(INFER_PAR) \
+S(INFER_EXPR) \
 S(Ptr) \
 S(Int) \
 S(Sym) \
@@ -92,21 +95,25 @@ S(Scope) \
 S(Let) \
 S(If) \
 S(Fn) \
-S(Syn_struct_boot) \
 S(Syn_struct) \
+S(Syn_struct_typed) \
 S(Syn_seq) \
+S(Syn_seq_typed) \
 S(Syn_chain) \
+S(syn_chain_typed) \
 S(Call) \
 S(Obj) \
 S(Label) \
 S(Variad) \
 S(Par) \
-S(Vec_Obj) \
-S(Vec_Par) \
-S(Vec_Expr) \
 S(Func) \
 S(File) \
 S(Src) \
+S(Expr) \
+S(Mem_Obj) \
+S(Mem_Par) \
+S(Mem_Expr) \
+S(Mem_Int) \
 S(END_SPECIAL_SYMS) \
 S(self) \
 S(a) \
@@ -148,10 +155,15 @@ static void sym_init() {
   for_in(i, si_self + 1) { // NOTE: self is not special, but it is the last hardcoded sym.
     Chars_const name = sym_index_names[i];
     // special name cases.
-    if (i == si_Syn_struct_boot) name = "Syn-struct-boot";
-    else if (i == si_Syn_struct) name = "syn-struct";
+    if (i == si_Syn_struct) name = "Syn-struct";
+    else if (i == si_Syn_struct_typed) name = "Syn-struct-typed";
     else if (i == si_Syn_seq) name = "Syn-seq";
+    else if (i == si_Syn_seq_typed) name = "Syn-seq-typed";
     else if (i == si_Syn_chain) name = "Syn-chain";
+    else if (i == si_Mem_Obj) name = "Mem-Obj";
+    else if (i == si_Mem_Par) name = "Mem-Par";
+    else if (i == si_Mem_Expr) name = "Mem-Expr";
+    else if (i == si_Mem_Int) name = "Mem-Int";
     Obj sym = sym_new_from_chars(cast(Chars, name));
     assert(sym_index(sym) == i);
     rc_rel_val(sym);

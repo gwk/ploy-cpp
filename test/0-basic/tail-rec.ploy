@@ -4,8 +4,8 @@
 (outRL (f 10000 0))
 
 <fn g [-n -tl]
-  <if (not n) tl (self (idec n) [n tl])>>
+  <if (not n) tl (self (idec n) {:Mem-Int n tl})>>
 
-(outRL (g 8 nil))
+(outRL (g 4 nil))
 
 (g 40000 nil)

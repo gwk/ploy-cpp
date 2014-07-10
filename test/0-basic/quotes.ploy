@@ -9,16 +9,13 @@
   nil
   `nil
   ``nil
-  []
-  `[]
-  ``[]
-  [x 1 nil]
-  [`x `1 `nil]
-  [``x ``1 ``nil]
-  `[x 1 nil]
-  `[`x `1 `nil]
-  `[``x ``1 ``nil]
-  ``[x 1 nil]
-  ``[`x `1 `nil]
-  ``[``x ``1 ``nil]
+  {:Mem-Expr x 1 nil}
+  {:Mem-Expr `x `1 `nil}
+  {:Mem-Expr ``x ``1 ``nil}
+  `{:Mem-Expr x 1 nil}
+  `{:Mem-Expr `x `1 `nil}
+  `{:Mem-Expr ``x ``1 ``nil}
+  ``{:Mem-Expr x 1 nil}
+  ``{:Mem-Expr `x `1 `nil}
+  ``{:Mem-Expr ``x ``1 ``nil}
 )

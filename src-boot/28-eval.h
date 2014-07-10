@@ -11,7 +11,7 @@ static Step eval(Obj env, Obj code) {
   }
   Obj expanded = expand(env, preprocessed); // owns preprocessed.
   Obj compiled = compile(env, expanded); // owns expanded.
-  Step step = run(env, compiled); // borrows compiled.
+  Step step = run(-1, env, compiled); // borrows compiled.
   rc_rel(compiled);
   return step;
 }
@@ -19,7 +19,7 @@ static Step eval(Obj env, Obj code) {
 
 static Step eval_struct(Obj env, Obj s) {
   // top level eval of a series of expressions.
-  // this is quite different than calling eval on a DO structtor;
+  // this is quite different than calling eval on a Do instance;
   // not only does this struct not have a head DO sym,
   // it also does the complete eval cycle on each member in turn.
   Mem m = struct_mem(s);

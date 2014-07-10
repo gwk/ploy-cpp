@@ -1,0 +1,24 @@
+!{:Let `f
+  {:Fn
+    `f
+    true
+    false
+    `[-a]
+    nil
+    {:Do
+      nil
+      `(_boot-err "f: " (iadd a 1))}}}
+
+(f 1)
+
+!{:Let `m
+  {:Fn
+    `m
+    true
+    true
+    `[-a -b]
+    nil
+    `{:Let a b}}}
+
+<m x 2> # equivalent to <let x 2>
+(f x)

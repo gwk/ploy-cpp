@@ -291,19 +291,54 @@ static Obj host_type_of(Obj env, Mem args) {
 }
 
 
+static void write_data(CFile f, Obj d);
+
+static Obj host_boot_err(Obj env, Mem args) {
+  // owns elements of args.
+  assert(args.len == 2);
+  Obj label = args.els[0];
+  Obj expr = args.els[1];
+  exc_check(is(obj_type(label), s_Data), "err-boot expects argument 1 to be Data: %o", label);
+  write_data(stderr, label);
+  write_repr(stderr, expr);
+  err_nl();
+  rc_rel(label);
+  rc_rel(expr);
+  return rc_ret_val(s_void);
+}
+
+
+static Obj host_boot_mk_do(Obj env, Mem args) {
+  // owns elements of args.
+  assert(args.len == 1);
+  Obj body = args.els[0];
+  if (!obj_is_struct(body)) return body;
+  Mem m = struct_mem(body);
+  Obj val;
+  if (m.len == 1) {
+    val = rc_ret(m.els[0]);
+  } else {
+     val = struct_new_M_ret(rc_ret(s_Do), m);
+  }
+  rc_rel(body);
+  return val;
+}
+
+
 typedef Obj(*Func_host_ptr)(Obj, Mem);
 
 
 static Obj host_init_func(Obj env, Int len_pars, Chars name, Func_host_ptr ptr) {
   // owns env.
   Obj sym = sym_new_from_chars(name);
-  Obj pars; // TODO: add real types.
+  Obj pars; // TODO: add real types; unique value for expression default?
   #define PAR(s) \
-  struct_new4(rc_ret(s_Par), rc_ret_val(s_false), rc_ret_val(s), rc_ret_val(s_nil), rc_ret_val(s_INFER))
+  struct_new4(rc_ret(s_Par), rc_ret_val(s_false), rc_ret_val(s), rc_ret_val(s_INFER_PAR), \
+   rc_ret_val(s_void))
   switch (len_pars) {
-    case 1: pars = struct_new1(rc_ret(s_Vec_Par), PAR(s_a)); break;
-    case 2: pars = struct_new2(rc_ret(s_Vec_Par), PAR(s_a), PAR(s_b)); break;
-    case 3: pars = struct_new3(rc_ret(s_Vec_Par), PAR(s_a), PAR(s_b), PAR(s_c)); break;
+    case 1: pars = struct_new1(rc_ret(s_Mem_Par), PAR(s_a)); break;
+    case 2: pars = struct_new2(rc_ret(s_Mem_Par), PAR(s_a), PAR(s_b)); break;
+    case 3: pars = struct_new3(rc_ret(s_Mem_Par), PAR(s_a), PAR(s_b), PAR(s_c)); break;
     default: assert(0);
   }
   #undef PAR
@@ -362,6 +397,8 @@ static Obj host_init(Obj env) {
   DEF_FH(1, "exit", host_exit)
   DEF_FH(1, "error", host_error)
   DEF_FH(1, "type-of", host_type_of)
+  DEF_FH(2, "_boot-err", host_boot_err)
+  DEF_FH(1, "_boot-mk-do", host_boot_mk_do)
 #undef DEF_FH
 
 #define DEF_FILE(n, f, r, w)  \

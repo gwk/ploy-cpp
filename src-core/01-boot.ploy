@@ -8,36 +8,19 @@
 # they provide a layer of abstraction between ploy code and the exact evaluation semantics,
 # as well as increased expressiveness and syntactic consistency.
 
-
-{!Let _errR1L
-  # print a representation of a single object to std-err.
-  # defined early for debugging.
-  {!Fn
-    _errR1L # the name sym of this fn.
-    true # is native.
-    false # not a macro.
-    [-label -obj] # parameter list.
-    nil # unspecified ret type.
-    {!Do # body.
-      # standard files are defined as a [name, file] vec.
-      (raw-write (el std-err 1) label)
-      (raw-write-repr (el std-err 1) obj)
-      (raw-write (el std-err 1) '\n')}}}
-
-{!Let macro
+!{:Let `macro
   # the 'macro' macro defines a new macro in the current environment.
   # instead, we must define it using raw forms.
   # note the structural similarity between the outer Fn form and the inner struct literal.
-  {!Fn # creates both functions and macros.
-    macro # the sym for this macro is `macro;
-    # we do not quote it because this is a raw form, so it is not evaluated.
+  {:Fn # Fn creates both functions and macros.
+    `macro # the sym for this macro is `macro.
     true # is-native.
     true # is-macro.
-    [-sym -pars &body] # the parameter list; also unquoted, as parameter lists always are.
+    `[-sym -pars &body] # the parameter list, which does not get evaluated.
     nil # ret.
-    [Let # the body of the 'macro' macro is a LET form.
+    `{:Let # the body of the 'macro' macro is a Let form.
       sym # the sym parameter that the macro to be created is bound to (not `macro).
-      [ Fn # the value of the binding is created by evaluating the FN form;
+      {:Fn # the value of the binding is created by evaluating the FN form;
         # note that this inner FN is inside a vec literal;
         # when the 'macro' macro is expanded, the literal is evaluated,
         # and a {FN ...} form is the resulting code vector.
@@ -46,31 +29,28 @@
         true
         pars
         nil # unspecified ret type.
-        {!If (ieq (len body) 1)
-          (el body 0)
-          (prepend Do body)}]]}}
+        (_boot-mk-do body)}}}}
+
+# define macros to wrap the special forms.
 
 <macro fn [-sym -pars &body]
   # defines a function in the current environment.
   # TODO: refine environment semantics?
   # this is conceptually the same as macro; see the explanation above.
-  [Let sym
-    [ Fn
+  {:Let
+    sym
+    {:Fn
       sym
       true
       false
       pars
       nil # unspecified ret type.
-      {!If (ieq (len body) 1)
-        (el body 0)
-        (prepend Do body)}]]>
-
-# define macros to wrap the special forms.
+      (_boot-mk-do body)}}>
 
 <macro quo [-expr]
   # absolute quotation of an expression.
   # evaluating a QUO form simply yields the contained expression, unevaluated.
-  [Quo expr]>
+  {:Quo expr}>
 
 <macro qua [-expr]
   # quasiquotation of an expression.
@@ -79,7 +59,7 @@
   # QUA forms themselves do not evaluate; they are converted by the preprocessor.
   # equivalent to `expr syntax.
   # TODO: implement quasiquotation as a macro instead of in the preprocessor?
-  [Qua expr]>
+  {:Qua expr}>
 
 <macro unq [-expr]
   # unquotation of an expression.
@@ -87,11 +67,11 @@
   # this for does not evaluate, and therefore must be inside of a qua,
   # where it will get transformed appropriately.
   # equivalent to ,expr syntax
-  [Unq expr]>
+  {:Unq expr}>
 
 <macro do [&exprs]
-  (prepend Do exprs)>
+  (_boot-mk-do exprs)>
 
 <macro let [-sym -expr]
   # bind the value of expr to sym in the current environment.
-  [Let sym expr]>
+  {:Let sym expr}>

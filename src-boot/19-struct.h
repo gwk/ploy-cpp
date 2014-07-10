@@ -33,7 +33,18 @@ static Obj struct_new_M(Obj type, Mem m) {
 }
 
 
-static Obj struct_new_EM(Obj type, Obj el, Mem m) {
+static Obj struct_new_M_ret(Obj type, Mem m) {
+  // owns type.
+  Obj s = struct_new_raw(type, m.len);
+  Obj* els = struct_els(s);
+  for_in(i, m.len) {
+    els[i] = mem_el_ret(m, i);
+  }
+  return s;
+}
+
+
+UNUSED_FN static Obj struct_new_EM(Obj type, Obj el, Mem m) {
   // owns type, el, elements of m.
   Int len = m.len + 1;
   Obj s = struct_new_raw(type, len);
@@ -107,7 +118,7 @@ static Mem struct_mem(Obj s) {
 
 
 static Obj struct_el(Obj s, Int i) {
-  // assumes the caller knows the size of the structtor.
+  // assumes the caller knows the size of the struct.
   assert(ref_is_struct(s));
   assert(i >= 0 && i < struct_len(s));
   Obj* els = struct_els(s);
@@ -117,7 +128,7 @@ static Obj struct_el(Obj s, Int i) {
 
 UNUSED_FN static void struct_put(Obj s, Int i, Obj el) {
   // owns el.
-  // assumes the caller knows the size of the structtor.
+  // assumes the caller knows the size of the struct.
   assert(ref_is_struct(s));
   assert(i >= 0 && i < struct_len(s));
   Obj* els = struct_els(s);
@@ -151,12 +162,6 @@ static Obj struct_slice(Obj s, Int f, Int t) {
 }
 
 
-static Obj struct_slice_from(Obj s, Int f) {
-  // owns s.
-  return struct_slice(s, f, struct_len(s));
-}
-
-
 static Obj struct_rel_fields(Obj s) {
   Mem m = struct_mem(s);
   if (!m.len) return obj0; // termination sentinel for rc_rel tail loop.
@@ -168,42 +173,11 @@ static Obj struct_rel_fields(Obj s) {
 }
 
 
-typedef enum {
-  ss_struct,
-  ss_quo,
-  ss_qua,
-  ss_unq,
-  ss_label,
-  ss_variad,
-  ss_seq,
-} Struct_shape;
-
-
-static Struct_shape struct_shape(Obj s) {
-  assert(ref_is_struct(s));
-  Int len = struct_len(s);
-  if (!len) return ss_struct;
-  Obj e0 = struct_el(s, 0);
-  if (len == 2) {
-    if (is(e0, s_Quo)) return ss_quo;
-    if (is(e0, s_Qua)) return ss_qua;
-    if (is(e0, s_Unq)) return ss_unq;
-  }
-  if (len == 4 && obj_is_sym(struct_el(s, 1))) {
-    if (is(e0, s_Label)) return ss_label;
-    if (is(e0, s_Variad)) return ss_variad;
-  }
-  if (is(e0, s_Syn_seq)) return ss_seq;
-  return ss_struct;
-}
-
-
 static Bool struct_contains_unquote(Obj s) {
   assert(ref_is_struct(s));
+  if (is(obj_type(s), s_Unq)) return true;
   Mem m = struct_mem(s);
-  if (!m.len) return false;
-  if (m.els[0].u == s_Unq.u) return true; // struct is an unquote form.
-  it_mem_from(it, m, 1) {
+  it_mem(it, m) {
     Obj e = *it;
     if (obj_is_struct(e) && struct_contains_unquote(e)) return true;
   }

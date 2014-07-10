@@ -77,7 +77,7 @@ static Obj mem_el(Mem m, Int i) {
 }
 
 
-UNUSED_FN static Obj mem_el_ret(Mem m, Int i) {
+static Obj mem_el_ret(Mem m, Int i) {
   // retain and return element i in m.
   return rc_ret(mem_el(m, i));
 }

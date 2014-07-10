@@ -1,6 +1,6 @@
 {
   'out' : '''\
 10000
-[1 [2 [3 [4 [5 [6 [7 [8 nil]]]]]]]]
+{:Mem-Int 1 {:Mem-Int 2 {:Mem-Int 3 {:Mem-Int 4 nil}}}}
 '''
 }

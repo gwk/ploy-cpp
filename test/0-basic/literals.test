@@ -2,7 +2,6 @@
   'out' : '''\
 void
 nil
-[]
 false
 true
 Label
