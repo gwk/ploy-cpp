@@ -57,8 +57,7 @@ if (!(condition)) return parse_error(p, fmt, ##__VA_ARGS__)
 #define PC  p->src.chars[p->sp.pos]
 #define PC1 p->src.chars[p->sp.pos + 1]
 
-#define P_ADV(n) { p->sp.pos += n; p->sp.col += n; }
-#define P_ADV1 P_ADV(1)
+#define P_ADV(n, ...) { p->sp.pos += n; p->sp.col += n; if (!PP) {__VA_ARGS__;}; } 
 
 #define P_CHARS (p->src.chars + p->sp.pos)
 
@@ -86,13 +85,13 @@ static Bool parse_space(Parser* p) {
     //parse_err(p); errFL("space? '%c'", c);
     switch (c) {
       case ' ':
-        P_ADV1;
-        continue;
+        P_ADV(1, break);
+       break ;
       case '\n':
         p->sp.pos++;
         p->sp.line++;
         p->sp.col = 0;
-        continue;
+        break;
       case '\t':
         parse_error(p, "illegal tab character");
         return false;
@@ -150,13 +149,14 @@ static U64 parse_U64(Parser* p) {
       case 'x': base = 16;  break;
     }
     if (base) {
-      P_ADV(2);
+      P_ADV(2, parse_error(p, "incomplete number literal"); return 0);
     } else {
       base = 10;
     }
   }
   Chars start = p->src.chars + p->sp.pos;
   Chars end;
+  // TODO: this appears unsafe; what if strtoull runs off the end of the string?
   U64 u = strtoull(start, &end, base);
   int en = errno;
   if (en) {
@@ -165,8 +165,9 @@ static U64 parse_U64(Parser* p) {
   }
   assert(end > start); // strtoull man page is a bit confusing as to the precise semantics.
   Int n = end - start;
-  P_ADV(n);
-  if (PP && !char_is_atom_term(PC)) {
+  assert(p->sp.pos + n <= p->src.len);
+  P_ADV(n, return u);
+  if (!char_is_atom_term(PC)) {
     parse_error(p, "invalid number literal terminator: %c", PC);
     return 0;
   }
@@ -183,7 +184,7 @@ static Obj parse_uns(Parser* p) {
 
 static Obj parse_int(Parser* p, Int sign) {
   assert(PC == '-' || PC == '+');
-  P_ADV1;
+  P_ADV(1, return parse_error(p, "incomplete signed number literal"));
   U64 u = parse_U64(p);
   if (p->e) return obj0;
   parse_check(u <= max_Int, "signed number literal is too large");
@@ -195,8 +196,7 @@ static Obj parse_sym(Parser* p) {
   assert(PC == '_' || isalpha(PC));
   Int pos = p->sp.pos;
   loop {
-    P_ADV1;
-    if (!PP) break;
+    P_ADV(1, break);
     Char c = PC;
     if (!(c == '-' || c == '_' || isalnum(c))) break;
   }
@@ -209,8 +209,9 @@ static Obj parse_sub_expr(Parser* p);
 
 static Obj parse_comment(Parser* p) {
   assert(PC == '#');
-  if (PP1 && PC1 == '#') { // double-hash comments out the following expression.
-    P_ADV(2);
+  P_ADV(1, return parse_error(p, "unterminated comment (add newline)"));
+  if (PC == '#') { // double-hash comments out the following expression.
+    P_ADV(1, return parse_error(p, "expression comment requires sub-expression"));
     Obj expr = parse_sub_expr(p);
     if (p->e) return obj0;
     // the QUO prevents macro expansion of the commented code,
@@ -220,21 +221,13 @@ static Obj parse_comment(Parser* p) {
   }
   // otherwise comment out a single line.
   Src_pos sp_report = p->sp;
-  do {
-    P_ADV1;
-    if (!PP) {
-      p->sp = sp_report; // better error message.
-      return parse_error(p, "unterminated comment (add newline)");
-    }
-  }  while (PC == ' ');
+  while (PC == ' ') {
+    P_ADV(1, p->sp = sp_report; return parse_error(p, "unterminated comment (add newline)"));
+  };
   Int pos_start = p->sp.pos;
-  do {
-    P_ADV1;
-    if (!PP) {
-      p->sp = sp_report; // better error message.
-      return parse_error(p, "unterminated comment (add newline)");
-    }
-  }  while (PC != '\n');
+  while (PC != '\n') {
+    P_ADV(1, p->sp = sp_report; return parse_error(p, "unterminated comment (add newline)"));
+  }
   Str s = str_slice(p->src, pos_start, p->sp.pos);
   Obj d = data_new_from_str(s);
   return struct_new2(rc_ret(s_Comment), rc_ret_val(s_Comment), d);
@@ -246,16 +239,10 @@ static Obj parse_data(Parser* p, Char q) {
   Src_pos sp_open = p->sp; // for error reporting.
   Str s = str_alloc(size_min_alloc);
   Int i = 0;
-
-#define APPEND(c) { i = str_append(&s, i, c); }
-
   Bool escape = false;
+#define APPEND(c) { i = str_append(&s, i, c); }
   loop {
-    P_ADV1;
-    if (!PP) {
-      p->sp = sp_open; // better error message.
-      return parse_error(p, "unterminated string literal");
-    }
+    P_ADV(1, p->sp = sp_open; str_dealloc(s); return parse_error(p, "unterminated string literal"));
     Char c = PC;
     if (escape) {
       escape = false;
@@ -269,13 +256,13 @@ static Obj parse_data(Parser* p, Char q) {
         case 'r': ce = '\r';  break; // carriage return - CR
         case 't': ce = '\t';  break; // horizontal tab - TAB
         case 'v': ce = '\v';  break; // vertical tab - VT
-        case '\\':  break;
+        case '\\':  break; // keep c as is.
         case '\'':  break;
         case '"':   break;
         case 'x': // ordinal escapes not yet implemented. \xx byte value.
         case 'u': // \uuuu unicode.
         case 'U': // \UUUUUU unicode. 6 or 8 chars? utf-8 is restricted to end at U+10FFFF.
-        default: APPEND('\\'); // not a valid escape code.
+        default: APPEND('\\'); // not a valid escape code, so add the leading backslash.
       }
       APPEND(ce);
     } else {
@@ -285,7 +272,7 @@ static Obj parse_data(Parser* p, Char q) {
     }
   }
   #undef APPEND
-  P_ADV1; // past closing quote.
+  P_ADV(1); // past closing quote.
   Obj d = data_new_from_str(str_mk(i, s.chars));
   str_dealloc(s);
   return d;
@@ -297,7 +284,7 @@ static Bool parse_terminator(Parser* p, Char t) {
     parse_error(p, "expected terminator: '%c'", t);
     return false;
   }
-  P_ADV1;
+  P_ADV(1);
   return true;
 }
 
@@ -328,9 +315,9 @@ static Obj parse_struct_boot(Parser* p) {
 
 
 static Obj parse_struct(Parser* p) {
-  P_ADV1;
+  P_ADV(1, return parse_error(p, "unterminated struct"));
   if (PC == '!') {
-    P_ADV1;
+    P_ADV(1);
     return parse_struct_boot(p);
   }
   return parse_struct_simple(p);
@@ -338,7 +325,7 @@ static Obj parse_struct(Parser* p) {
 
 
 static Obj parse_call(Parser* p) {
-  P_ADV1;
+  P_ADV(1, return parse_error(p, "unterminated call"));
   Mem m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR(')');
   Obj s = struct_new_EM(rc_ret(s_Call), rc_ret_val(s_Call), m);
@@ -348,7 +335,7 @@ static Obj parse_call(Parser* p) {
 
 
 static Obj parse_expand(Parser* p) {
-  P_ADV1;
+  P_ADV(1, return parse_error(p, "unterminated expand"));
   Mem m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR('>');
   Obj s = struct_new_EM(rc_ret(s_Expand), rc_ret_val(s_Expand), m);
@@ -367,7 +354,7 @@ static Obj parse_syn_seq(Parser* p) {
 
 
 static Obj parse_syn_chain_simple(Parser* p) {
-  P_ADV1;
+  P_ADV(1, return parse_error(p, "unterminated chain"));
   Mem m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR(']');
   Obj s = struct_new_EM(rc_ret(s_Syn_chain), rc_ret_val(s_Syn_chain), m);
@@ -377,7 +364,7 @@ static Obj parse_syn_chain_simple(Parser* p) {
 
 
 static Obj parse_seq(Parser* p) {
-  P_ADV1;
+  P_ADV(1, return parse_error(p, "unterminated sequence"));
   if (PC == ':') {
     return parse_syn_chain_simple(p);
   }
@@ -390,7 +377,7 @@ static Obj parse_seq(Parser* p) {
 
 static Obj parse_quo(Parser* p) {
   assert(PC == '`');
-  P_ADV1;
+  P_ADV(1);
   Obj o = parse_sub_expr(p);
   if (p->e) return obj0;
   return struct_new2(rc_ret(s_Quo), rc_ret_val(s_Quo), o);
@@ -399,7 +386,7 @@ static Obj parse_quo(Parser* p) {
 
 static Obj parse_qua(Parser* p) {
   assert(PC == '~');
-  P_ADV1;
+  P_ADV(1);
   Obj o = parse_sub_expr(p);
   if (p->e) return obj0;
   return struct_new2(rc_ret(s_Qua), rc_ret_val(s_Qua), o);
@@ -408,7 +395,7 @@ static Obj parse_qua(Parser* p) {
 
 static Obj parse_unq(Parser* p) {
   assert(PC == ',');
-  P_ADV1;
+  P_ADV(1);
   Obj o = parse_sub_expr(p);
   if (p->e) return obj0;
   return struct_new2(rc_ret(s_Unq), rc_ret_val(s_Unq), o);
@@ -417,7 +404,7 @@ static Obj parse_unq(Parser* p) {
 
 static Obj parse_eval(Parser* p) {
   assert(PC == '!');
-  P_ADV1;
+  P_ADV(1);
   Obj o = parse_sub_expr(p);
   if (p->e) return obj0;
   return struct_new2(rc_ret(s_Eval), rc_ret_val(s_Eval), o);
@@ -426,7 +413,7 @@ static Obj parse_eval(Parser* p) {
 
 static Obj parse_par(Parser* p, Obj is_variad, Chars_const par_desc) {
   // owns is_variad.
-  P_ADV1;
+  P_ADV(1, return parse_error(p, "incomplete parameter"));
   Src_pos sp_open = p->sp; // for error reporting.
   Obj name = parse_sub_expr(p);
   if (p->e) return obj0;
@@ -438,7 +425,7 @@ static Obj parse_par(Parser* p, Obj is_variad, Chars_const par_desc) {
   Char c = PC;
   Obj type;
   if (c == ':') {
-    P_ADV1;
+    P_ADV(1, return parse_error(p, "incomplete parameter"));
     type = parse_sub_expr(p);
     if (p->e) {
       rc_rel(name);
@@ -450,7 +437,7 @@ static Obj parse_par(Parser* p, Obj is_variad, Chars_const par_desc) {
   }
   Obj expr;
   if (PC == '=') {
-    P_ADV1;
+    P_ADV(1, return parse_error(p, "incomplete parameter"));
     expr = parse_sub_expr(p);
     if (p->e) {
       rc_rel(name);
