@@ -314,18 +314,18 @@ static Step run_Struct(Int d, Obj env, Obj code) {
   Obj_tag ot = obj_tag(type);
   if (ot == ot_sym) { // TODO: change dispatch to not require that types are syms.
     Int si = sym_index(type); // Int type avoids incomplete enum switch error.
-#define EVAL_FORM(s) case si_##s: return run_##s(d, env, m)
+#define RUN(s) case si_##s: return run_##s(d, env, m)
     switch (si) {
-      EVAL_FORM(Eval);
-      EVAL_FORM(Quo);
-      EVAL_FORM(Do);
-      EVAL_FORM(Scope);
-      EVAL_FORM(Let);
-      EVAL_FORM(If);
-      EVAL_FORM(Fn);
-      EVAL_FORM(Syn_struct_typed);
-      EVAL_FORM(Syn_seq_typed);
-      EVAL_FORM(Call);
+      RUN(Eval);
+      RUN(Quo);
+      RUN(Do);
+      RUN(Scope);
+      RUN(Let);
+      RUN(If);
+      RUN(Fn);
+      RUN(Syn_struct_typed);
+      RUN(Syn_seq_typed);
+      RUN(Call);
     }
 #undef EVAL_FORM
   }
