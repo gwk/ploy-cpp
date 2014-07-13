@@ -280,7 +280,8 @@ static Step run_call_host(Int d, Obj env, Obj func, Mem args) {
   // TODO: check arg types against parameters; use run_bind_args?
   Func_host_ptr f_ptr = cast(Func_host_ptr, ptr_val(body));
   rc_rel(func);
-  Obj arg_vals[args.len]; // requires variable-length-array support from compiler.
+  assert(args.len <= 3);
+  Obj arg_vals[3];
   for_in(i, args.len) {
     Step step = run(d, env, args.els[i]);
     arg_vals[i] = step.val;
