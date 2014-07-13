@@ -235,13 +235,13 @@ static Obj parse_comment(Parser* p) {
 
 static Obj parse_data(Parser* p, Char q) {
   assert(PC == q);
-  Src_pos sp_open = p->sp; // for error reporting.
+  Src_pos sp = p->sp; // for error reporting.
   Str s = str_alloc(size_min_alloc);
   Int i = 0;
   Bool escape = false;
 #define APPEND(c) { i = str_append(&s, i, c); }
   loop {
-    P_ADV(1, p->sp = sp_open; str_dealloc(s); return parse_error(p, "unterminated string literal"));
+    P_ADV(1, p->sp = sp; str_dealloc(s); return parse_error(p, "unterminated string literal"));
     Char c = PC;
     if (escape) {
       escape = false;
@@ -317,12 +317,12 @@ static Obj parse_eval(Parser* p) {
 static Obj parse_par(Parser* p, Obj is_variad, Chars_const par_desc) {
   // owns is_variad.
   P_ADV(1, return parse_error(p, "incomplete parameter"));
-  Src_pos sp_open = p->sp; // for error reporting.
+  Src_pos sp = p->sp; // for error reporting.
   Obj name = parse_sub_expr(p);
   if (p->e) return obj0;
   if (!obj_is_sym(name)) {
     rc_rel(name);
-    p->sp = sp_open;
+    p->sp = sp;
     return parse_error(p, "%s name is not a sym", par_desc);
   }
   Char c = PC;
