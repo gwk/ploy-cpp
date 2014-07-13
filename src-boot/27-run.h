@@ -285,7 +285,7 @@ static Step run_call_host(Int d, Obj env, Obj func, Mem args) {
     Step step = run(d, env, args.els[i]);
     arg_vals[i] = step.val;
   }
-  return mk_step(env, f_ptr(env, mem_mk(args.len, arg_vals))); // TODO: add TCO for host_run?
+  return mk_step(env, f_ptr(env, mem_mk(args.len, arg_vals)));
 }
 
 
