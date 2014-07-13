@@ -278,6 +278,83 @@ static Obj parse_data(Parser* p, Char q) {
 }
 
 
+static Obj parse_quo(Parser* p) {
+  assert(PC == '`');
+  P_ADV(1);
+  Obj o = parse_sub_expr(p);
+  if (p->e) return obj0;
+  return struct_new1(rc_ret(s_Quo), o);
+}
+
+
+static Obj parse_qua(Parser* p) {
+  assert(PC == '~');
+  P_ADV(1);
+  Obj o = parse_sub_expr(p);
+  if (p->e) return obj0;
+  return struct_new1(rc_ret(s_Qua), o);
+}
+
+
+static Obj parse_unq(Parser* p) {
+  assert(PC == ',');
+  P_ADV(1);
+  Obj o = parse_sub_expr(p);
+  if (p->e) return obj0;
+  return struct_new1(rc_ret(s_Unq), o);
+}
+
+
+static Obj parse_eval(Parser* p) {
+  assert(PC == '!');
+  P_ADV(1);
+  Obj o = parse_sub_expr(p);
+  if (p->e) return obj0;
+  return struct_new1(rc_ret(s_Eval), o);
+}
+
+
+static Obj parse_par(Parser* p, Obj is_variad, Chars_const par_desc) {
+  // owns is_variad.
+  P_ADV(1, return parse_error(p, "incomplete parameter"));
+  Src_pos sp_open = p->sp; // for error reporting.
+  Obj name = parse_sub_expr(p);
+  if (p->e) return obj0;
+  if (!obj_is_sym(name)) {
+    rc_rel(name);
+    p->sp = sp_open;
+    return parse_error(p, "%s name is not a sym", par_desc);
+  }
+  Char c = PC;
+  Obj type;
+  if (c == ':') {
+    P_ADV(1, return parse_error(p, "incomplete parameter"));
+    type = parse_sub_expr(p);
+    if (p->e) {
+      rc_rel(name);
+      rc_rel(type);
+      return obj0;
+    }
+  } else {
+    type = rc_ret_val(s_INFER_PAR);
+  }
+  Obj expr;
+  if (PC == '=') {
+    P_ADV(1, return parse_error(p, "incomplete parameter"));
+    expr = parse_sub_expr(p);
+    if (p->e) {
+      rc_rel(name);
+      rc_rel(type);
+      rc_rel(expr);
+      return obj0;
+    }
+  } else {
+    expr = rc_ret_val(s_void);
+  }
+  return struct_new4(rc_ret(s_Par), is_variad, name, type, expr);
+}
+
+
 static Bool parse_terminator(Parser* p, Char t) {
   if (PC != t) {
     parse_error(p, "expected terminator: '%c'", t);
@@ -362,83 +439,6 @@ static Obj parse_seq(Parser* p) {
   }
   mem_dealloc(m);
   return s;
-}
-
-
-static Obj parse_quo(Parser* p) {
-  assert(PC == '`');
-  P_ADV(1);
-  Obj o = parse_sub_expr(p);
-  if (p->e) return obj0;
-  return struct_new1(rc_ret(s_Quo), o);
-}
-
-
-static Obj parse_qua(Parser* p) {
-  assert(PC == '~');
-  P_ADV(1);
-  Obj o = parse_sub_expr(p);
-  if (p->e) return obj0;
-  return struct_new1(rc_ret(s_Qua), o);
-}
-
-
-static Obj parse_unq(Parser* p) {
-  assert(PC == ',');
-  P_ADV(1);
-  Obj o = parse_sub_expr(p);
-  if (p->e) return obj0;
-  return struct_new1(rc_ret(s_Unq), o);
-}
-
-
-static Obj parse_eval(Parser* p) {
-  assert(PC == '!');
-  P_ADV(1);
-  Obj o = parse_sub_expr(p);
-  if (p->e) return obj0;
-  return struct_new1(rc_ret(s_Eval), o);
-}
-
-
-static Obj parse_par(Parser* p, Obj is_variad, Chars_const par_desc) {
-  // owns is_variad.
-  P_ADV(1, return parse_error(p, "incomplete parameter"));
-  Src_pos sp_open = p->sp; // for error reporting.
-  Obj name = parse_sub_expr(p);
-  if (p->e) return obj0;
-  if (!obj_is_sym(name)) {
-    rc_rel(name);
-    p->sp = sp_open;
-    return parse_error(p, "%s name is not a sym", par_desc);
-  }
-  Char c = PC;
-  Obj type;
-  if (c == ':') {
-    P_ADV(1, return parse_error(p, "incomplete parameter"));
-    type = parse_sub_expr(p);
-    if (p->e) {
-      rc_rel(name);
-      rc_rel(type);
-      return obj0;
-    }
-  } else {
-    type = rc_ret_val(s_INFER_PAR);
-  }
-  Obj expr;
-  if (PC == '=') {
-    P_ADV(1, return parse_error(p, "incomplete parameter"));
-    expr = parse_sub_expr(p);
-    if (p->e) {
-      rc_rel(name);
-      rc_rel(type);
-      rc_rel(expr);
-      return obj0;
-    }
-  } else {
-    expr = rc_ret_val(s_void);
-  }
-  return struct_new4(rc_ret(s_Par), is_variad, name, type, expr);
 }
 
 
