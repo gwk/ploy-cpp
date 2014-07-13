@@ -149,6 +149,23 @@ static Obj host_len(Obj env, Mem args) {
 }
 
 
+static Obj host_field(Obj env, Mem args) {
+  // owns elements of args.
+  assert(args.len == 2);
+  Obj s = args.els[0];
+  Obj i = args.els[1];
+  exc_check(obj_is_struct(s), "field requires arg 1 to be a Struct; received: %o", s);
+  exc_check(obj_is_int(i), "field requires arg 2 to be a Int; received: %o", i);
+  Int j = int_val(i);
+  Int l = struct_len(s);
+  exc_check(j >= 0 && j < l, "field index out of range; index: %i; len: %i", j, l);
+  Obj field = struct_el(s, j);
+  rc_rel(s);
+  rc_rel_val(i);
+  return rc_ret(field);
+}
+
+
 static Obj host_el(Obj env, Mem args) {
   // owns elements of args.
   assert(args.len == 2);
@@ -387,6 +404,7 @@ static Obj host_init(Obj env) {
   DEF_FH(2, "sym-eq", host_sym_eq)
   DEF_FH(1, "dlen", host_dlen)
   DEF_FH(1, "len", host_len)
+  DEF_FH(2, "field", host_field)
   DEF_FH(2, "el", host_el)
   DEF_FH(3, "slice", host_slice)
   DEF_FH(2, "prepend", host_prepend)
