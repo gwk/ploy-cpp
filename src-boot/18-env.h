@@ -86,9 +86,7 @@ static void env_trace(Obj env, Bool show_values) {
       err_nl();
     } else { // binding.
       if (show_values) {
-        obj_err(key);
-        err(" : ");
-        obj_errL(env.e->val);
+        errFL("%o : %o", key, env.e->val);
       }
     }
     env = env.e->tl;

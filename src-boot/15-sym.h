@@ -46,7 +46,7 @@ static Obj sym_new(Str s) {
   Obj d = data_new_from_str(s);
   Int i = array_append(&global_sym_names, d);
   Obj sym = sym_with_index(i);
-  //errF("NEW SYM: %ld: ", i); obj_errL(sym);
+  //errFL("NEW SYM: %ld: %o", i, sym);
   return rc_ret_val(sym);
 }
 

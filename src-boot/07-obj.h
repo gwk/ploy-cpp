@@ -72,7 +72,6 @@ static Chars_const ref_tag_names[] = {
   "Struct",
 };
 
-union _Obj;
 typedef struct _Data Data;
 typedef struct _Env Env;
 typedef struct _Struct Struct;
@@ -115,46 +114,6 @@ static Bool is(Obj a, Obj b) {
 static Obj_tag obj_tag(Obj o) {
   return o.u & obj_tag_mask;
 }
-
-
-static void write_repr(CFile f, Obj o);
-
-static void obj_err(Obj o) {
-  write_repr(stderr, o);
-}
-
-static void obj_errL(Obj o) {
-  write_repr(stderr, o);
-  err_nl();
-}
-
-
-static void obj_err_tag(Obj o) {
-  Chars_const otn = obj_tag_names[obj_tag(o)];
-  err(otn);
-}
-
-
-void dbg(Obj o); // not declared static so that it is always available in debugger.
-void dbg(Obj o) {
-  if (obj_tag(o)) {
-    obj_err_tag(o);
-  } else { // ref.
-    errF("%p", o.r);
-  }
-  err(" : ");
-  obj_errL(o);
-  err_flush();
-}
-
-
-static NO_RETURN error_obj(Chars_const msg, Obj o) {
-  errF("ploy error: %s: ", msg);
-  obj_errL(o);
-  exit(1);
-}
-
-#define check_obj(condition, msg, o) { if (!(condition)) error_obj(msg, o); }
 
 
 UNUSED_FN static Bool obj_is_val(Obj o) {
@@ -229,6 +188,73 @@ static Obj obj_type(Obj o) {
     case ot_int: return s_Int;
     case ot_sym: return (obj_is_data_word(o) ? s_Data : s_Sym);
   }
+}
+
+
+static void write_repr(CFile f, Obj o);
+
+static void obj_fmtv(CFile f, Chars_const fmt, Chars_const args_str, va_list args_list) {
+  // the format syntax is similar to printf, but simplified and extended to handle ploy objects.
+  // %o: Obj.
+  // %i: Int.
+  // %s: Chars.
+  // %c: Char. TODO.
+  // for safety and debug convenience, the function takes an additional string argument,
+  // which should be provided by a wrapper macro that passes the format #__VA_ARGS__.
+  // this facilitates a runtime check that the format matches the argument count.
+  Chars_const pa = args_str;
+  Int arg_count = bit(*pa);
+  Int level = 0;
+  while (*pa) {
+    switch (*pa++) {
+      case '(': level++; continue;
+      case ')': level--; continue;
+      case ',': if (!level) arg_count++; continue;
+    }
+  }
+  Int i = 0;
+  Chars_const pf = fmt;
+  Char c;
+  while ((c = *pf++)) {
+    if (c == '%') {
+      check(i < arg_count, "obj_fmt: more than %li items in format: '%s'; args: '%s'",
+        arg_count, fmt, args_str);
+      i++;
+      c = *pf++;
+      Obj arg = va_arg(args_list, Obj);
+      switch (c) {
+        case 'o': write_repr(stderr, arg); break;
+        case 'i': errF("%li", arg.i); break;
+        case 's': errF("%s", arg.c); break;
+        default:
+          fprintf(stderr, "obj_fmt: invalid placeholder: '%c'; %s", c, fmt);
+          exit(1);
+      }
+    } else {
+      fputc(c, stderr);
+    }
+  }
+  check(i == arg_count, "only %li items in exc_raise format: '%s'; %li args: '%s'",
+    i, fmt, arg_count, args_str);
+}
+
+
+static void obj_fmt(CFile f, Chars_const fmt, Chars_const args_str, ...) {
+  va_list args_list;
+  va_start(args_list, args_str);
+  obj_fmtv(f, fmt, args_str, args_list);
+  va_end(args_list);
+}
+
+
+void dbg(Obj o); // not declared static so that it is always available in debugger.
+void dbg(Obj o) {
+  if (obj_is_ref(o)) {
+    errF("%p : %o", o.r, o);
+  } else {
+    errF("%o", o);
+  }
+  err_flush();
 }
 
 

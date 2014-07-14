@@ -4,12 +4,6 @@
 #include "19-struct.h"
 
 
-static NO_RETURN _exc_raise(Obj env, Chars_const fmt, Chars_const args_src, ...);
-// NOTE: the exc macros expect env:Obj to be defined in the current scope.
-#define exc_raise(fmt, ...) _exc_raise(env, fmt, #__VA_ARGS__, ##__VA_ARGS__)
-#define exc_check(condition, ...) if (!(condition)) exc_raise(__VA_ARGS__)
-
-
 static Obj host_identity(Obj env, Mem args) {
   // owns element of args.
   assert(args.len == 1);

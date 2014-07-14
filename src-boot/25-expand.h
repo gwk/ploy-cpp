@@ -16,7 +16,7 @@ static Obj expand_quasiquote(Obj o) {
   Obj type = obj_type(o);
   Mem m = struct_mem(o);
   if (is(type, s_Unq)) { // unquote form.
-    check_obj(m.len == 1, "malformed UNQ form", o);
+    check(m.len == 1, "malformed UNQ form: %o", o);
     Obj e = rc_ret(m.els[0]);
     rc_rel(o);
     return e;
@@ -43,10 +43,10 @@ static Step run_tail(Int d, Step step);
 static Obj expand_macro(Obj env, Mem args) {
   check(args.len > 0, "empty macro expand");
   Obj macro_sym = mem_el(args, 0);
-  check_obj(obj_is_sym(macro_sym), "expand argument 0 must be a Sym; found", macro_sym);
+  check(obj_is_sym(macro_sym), "expand argument 0 must be a Sym; found: %o", macro_sym);
   Obj macro = env_get(env, macro_sym);
   if (is(macro, obj0)) { // lookup failed.
-    error_obj("macro lookup error", macro_sym);
+    error("macro lookup error: %o", macro_sym);
   }
   Step step = run_call_native(0, rc_ret(env), rc_ret(macro), mem_next(args), true);
   step = run_tail(0, step);

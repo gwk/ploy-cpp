@@ -180,7 +180,7 @@ static Call_envs run_bind_args(Int d, Obj env, Obj callee_env, Obj func, Mem par
       } else if (!is(par_expr, s_void)) {
         arg = par_expr;
       } else {
-        error_obj("function received too few arguments", struct_el(func, 0));
+        error("function received too few arguments: %o", struct_el(func, 0));
       }
       Obj val;
       if (is_expand) {
@@ -192,7 +192,7 @@ static Call_envs run_bind_args(Int d, Obj env, Obj callee_env, Obj func, Mem par
       }
       callee_env = env_bind(callee_env, rc_ret_val(par_sym), val);
     } else { // variad.
-      check_obj(!has_variad, "function has multiple variad parameters", struct_el(func, 0));
+      check(!has_variad, "function has multiple variad parameters: %o", struct_el(func, 0));
       has_variad = true;
       Int variad_count = 0;
       for_imn(i, i_args, args.len) {
@@ -214,7 +214,7 @@ static Call_envs run_bind_args(Int d, Obj env, Obj callee_env, Obj func, Mem par
       callee_env = env_bind(callee_env, rc_ret_val(par_sym), variad_val);
     }
   }
-  check_obj(i_args == args.len, "function received too many arguments", struct_el(func, 0));
+  check(i_args == args.len, "function received too many arguments: %o", struct_el(func, 0));
   return (Call_envs){.caller_env=env, .callee_env=callee_env};
 }
 

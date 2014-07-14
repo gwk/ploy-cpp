@@ -107,6 +107,13 @@ static const Uns width_min_alloc = 4; // in mask bits.
 static const Int size_min_alloc = 1 << width_min_alloc; // in bytes.
 
 
+// a few forward declarations for error handling need to be declared very early.
+union _Obj;
+static void obj_fmt(CFile f, Chars_const fmt, Chars_const args_str, ...);
+static NO_RETURN _exc_raise(union _Obj env, Chars_const fmt, Chars_const args_str, ...);
+
+
+
 static void assert_host_basic() {
   // a few sanity checks; called by main.
   assert(size_Word == size_Int);
