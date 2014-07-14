@@ -72,6 +72,9 @@
 <macro do [&exprs]
   (_boot-mk-do exprs)>
 
+<macro scope [&exprs]
+  {:Scope (_boot-mk-do exprs)}>
+
 <macro let [-sym -expr]
   # bind the value of expr to sym in the current environment.
   {:Let sym expr}>

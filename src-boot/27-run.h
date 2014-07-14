@@ -60,8 +60,9 @@ static Step run_Scope(Int d, Obj env, Mem args) {
   // owns env.
   exc_check(args.len == 1, "Scope requires 1 argument; received %i", args.len);
   Obj body = args.els[0];
-  // TODO: create new env frame.
-  return run_step(d, env, body); // TCO.
+  Obj sub_env = env_push_frame(rc_ret(env), data_new_from_chars(cast(Chars, "<scope>")));
+  // caller will own .env and .val, but not .tco_code.
+  return (Step){.env=env, .val=sub_env, .tco_code=body}; // TCO.
 }
 
 
