@@ -70,6 +70,17 @@ static Obj env_push_frame(Obj env, Obj src) {
 static Obj env_bind(Obj env, Obj sym, Obj val) {
   // owns env, sym, val.
   assert(!sym_is_special(sym));
+  Obj e = env;
+  while (!is(e, s_ENV_END_MARKER)) {
+    assert(obj_is_env(e));
+    Obj key = e.e->key;
+    if (is(key, s_ENV_FRAME_MARKER)) { // frame marker.
+      break;
+    } else { // binding.
+      check(!is(key, sym), "symbol is already bound: %o", sym);
+    }
+    e = e.e->tl;
+  }
   return env_new(sym, val, env);
 }
 
