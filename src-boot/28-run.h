@@ -321,6 +321,9 @@ static const Chars_const trace_val_prefix = "◦ ";
 static Step run_step_disp(Int d, Obj env, Obj code) {
   // owns env.
   Obj_tag ot = obj_tag(code);
+  if (ot == ot_ptr) {
+    exc_raise("cannot run object: %o", code);
+  }
   if (ot == ot_int) {
     return mk_step(env, rc_ret_val(code)); // self-evaluating.
   }
@@ -331,20 +334,13 @@ static Step run_step_disp(Int d, Obj env, Obj code) {
       return run_sym(env, code);
     }
   }
-  switch (ref_tag(code)) {
-    case rt_Data:
-      return mk_step(env, rc_ret(code)); // self-evaluating.
-    case rt_Env:
-      exc_raise("cannot run object: %o", code);
-    case rt_Struct:
-      break;
-  }
+  assert(ot == ot_ref);
   Obj type = ref_type(code);
   exc_check(obj_tag(type) == ot_sym, "cannot run object with non-sym type: %o", code);
-  Mem m = struct_mem(code);
   Int si = sym_index(type); // Int type avoids incomplete enum switch error.
-#define RUN(s) case si_##s: return run_##s(d, env, m)
+#define RUN(s) case si_##s: return run_##s(d, env, struct_mem(code))
   switch (si) {
+    case si_Data: return mk_step(env, rc_ret(code)); // self-evaluating.
     RUN(Eval);
     RUN(Quo);
     RUN(Do);
