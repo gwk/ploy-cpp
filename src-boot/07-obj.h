@@ -198,7 +198,7 @@ static void obj_fmtv(CFile f, Chars_const fmt, Chars_const args_str, va_list arg
   // %o: Obj.
   // %i: Int.
   // %s: Chars.
-  // %c: Char. TODO.
+  // %c: Char. NOTE: Char arguments must be cast to Uns in the call to align variadic args.
   // for safety and debug convenience, the function takes an additional string argument,
   // which should be provided by a wrapper macro that passes the format #__VA_ARGS__.
   // this facilitates a runtime check that the format matches the argument count.
@@ -225,8 +225,9 @@ static void obj_fmtv(CFile f, Chars_const fmt, Chars_const args_str, va_list arg
       switch (c) {
         case 'o': write_repr(f, arg); break;
         case 'i': fprintf(f, "%li", arg.i); break;
-        case 's': fprintf(f, "%s", arg.c); break;
-        default: error("obj_fmt: invalid placeholder: '%c'; %s", c, fmt);
+        case 's': fputs(arg.c, f); break;
+        case 'c': fputs(char_repr((Char)arg.u), f); break;
+        default: error("obj_fmt: invalid placeholder: '%c'; %s", (Uns)c, fmt);
       }
     } else {
       fputc(c, f);
