@@ -122,7 +122,7 @@ static Step run_Fn(Int d, Obj env, Mem args) {
 
 static Step run_Syn_struct_typed(Int d, Obj env, Mem args) {
   // owns env.
-  check(args.len > 0, "Syn-struct form is empty");
+  check(args.len > 0, "Syn-struct is empty");
   Step step = run(d, env, args.els[0]); // evaluate the type.
   env = step.env;
   Obj s = struct_new_raw(step.val, args.len - 1);
@@ -138,7 +138,7 @@ static Step run_Syn_struct_typed(Int d, Obj env, Mem args) {
 
 static Step run_Syn_seq_typed(Int d, Obj env, Mem args) {
   // owns env.
-  check(args.len > 0, "Syn-struct form is empty");
+  check(args.len > 0, "Syn-struct is empty");
   Step step = run(d, env, args.els[0]); // evaluate the type.
   env = step.env;
   Obj s = struct_new_raw(step.val, args.len - 1);

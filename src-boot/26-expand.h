@@ -70,11 +70,11 @@ static Obj expand(Obj env, Obj code) {
   Mem m = struct_mem(code);
   Obj type = ref_type(code);
   if (is(type, s_Quo)) {
-    exc_check(m.len == 1, "malformed Quo form: %o", code);
+    exc_check(m.len == 1, "malformed Quo: %o", code);
     return code;
   }
   if (is(type, s_Qua)) {
-    exc_check(m.len == 1, "malformed Qua form: %o", code);
+    exc_check(m.len == 1, "malformed Qua: %o", code);
     Obj expr = rc_ret(m.els[0]);
     rc_rel(code);
     return expand_quasiquote(0, expr);
