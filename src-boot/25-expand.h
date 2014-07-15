@@ -8,25 +8,32 @@ static const Chars_const trace_expand_prefix = "◇ "; // white diamond.
 static const Chars_const trace_expand_val_prefix = "▫ "; // white small square.
 
 
-static Obj expand_quasiquote(Obj o) {
+static Obj expand_quasiquote(Int d, Obj o) {
   // owns o.
   if (!obj_is_struct(o)) { // replace the quasiquote with quote.
     return struct_new1(rc_ret(s_Quo), o);
   }
   Obj type = obj_type(o);
   Mem m = struct_mem(o);
-  if (is(type, s_Unq)) { // unquote form.
-    check(m.len == 1, "malformed UNQ form: %o", o);
+  if (!d && is(type, s_Unq)) { // unquote is only performed at the same (innermost) level.
+    check(m.len == 1, "malformed Unq: %o", o);
     Obj e = rc_ret(m.els[0]);
     rc_rel(o);
     return e;
   }
   if (struct_contains_unquote(o)) { // unquote exists somewhere in the tree.
-    Obj s = struct_new_raw(rc_ret(type), m.len);
+    Int d1 = d; // count Qua nesting level.
+    if (is(type, s_Qua)) {
+      d1++;
+    } else if (is(type, s_Unq)) {
+      d1--;
+    }
+    Obj s = struct_new_raw(rc_ret(s_Syn_struct_typed), m.len + 1);
     Obj* dst = struct_els(s);
+    dst[0] = rc_ret(type);
     for_in(i, m.len) {
       Obj e = m.els[i];
-      dst[i] = expand_quasiquote(rc_ret(e)); // propagate the quotation into the elements.
+      dst[i + 1] = expand_quasiquote(d1, rc_ret(e)); // propagate the quotation.
     }
     rc_rel(o);
     return s;
@@ -70,7 +77,7 @@ static Obj expand(Obj env, Obj code) {
     exc_check(m.len == 1, "malformed Qua form: %o", code);
     Obj expr = rc_ret(m.els[0]);
     rc_rel(code);
-    return expand_quasiquote(expr);
+    return expand_quasiquote(0, expr);
   }
   if (is(type, s_Expand)) {
 #if VERBOSE_EVAL
@@ -81,10 +88,10 @@ static Obj expand(Obj env, Obj code) {
 #if VERBOSE_EVAL
     err(trace_expand_val_prefix); obj_errL(expanded);
 #endif
-    // macro result may contain more expands; recursively expand.
+    // macro result may contain more expands; recursively expand the result.
     return expand(env, expanded);
   } else {
-    // recursively expand struct.
+    // recursively expand the elements of the struct.
     // TODO: collapse comment and VOID nodes or perhaps a special COLLAPSE node?
     // this might allow for us to do away with the preprocess phase,
     // and would also allow a macro to collapse into nothing.

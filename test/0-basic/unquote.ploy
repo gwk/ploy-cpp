@@ -1,9 +1,0 @@
-<let x 0>
-(outRLL
-x
-~x
-~,x
-~`,x
-~{:Expr x ,x}
-~{:Expr `x `,x}
-)
