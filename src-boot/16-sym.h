@@ -89,6 +89,7 @@ S(Unq) \
 S(Qua) \
 S(Expand) \
 S(Comment) \
+S(RUNNABLE_BEGIN) \
 S(Eval) \
 S(Quo) \
 S(Do) \
@@ -96,13 +97,10 @@ S(Scope) \
 S(Let) \
 S(If) \
 S(Fn) \
-S(Syn_struct) \
 S(Syn_struct_typed) \
-S(Syn_seq) \
 S(Syn_seq_typed) \
-S(Syn_chain) \
-S(syn_chain_typed) \
 S(Call) \
+S(RUNNABLE_END) \
 S(Obj) \
 S(Label) \
 S(Variad) \
@@ -111,6 +109,8 @@ S(Func) \
 S(File) \
 S(Src) \
 S(Expr) \
+S(Syn_struct) \
+S(Syn_seq) \
 S(Mem_Obj) \
 S(Mem_Par) \
 S(Mem_Expr) \
@@ -160,7 +160,6 @@ static void sym_init() {
     else if (i == si_Syn_struct_typed) name = "Syn-struct-typed";
     else if (i == si_Syn_seq) name = "Syn-seq";
     else if (i == si_Syn_seq_typed) name = "Syn-seq-typed";
-    else if (i == si_Syn_chain) name = "Syn-chain";
     else if (i == si_Mem_Obj) name = "Mem-Obj";
     else if (i == si_Mem_Par) name = "Mem-Par";
     else if (i == si_Mem_Expr) name = "Mem-Expr";
