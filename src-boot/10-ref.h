@@ -63,20 +63,21 @@ static Obj env_rel_fields(Obj o);
 static Obj struct_rel_fields(Obj s);
 
 static Obj ref_dealloc(Obj r) {
-  Ref_tag rt = ref_tag(r);
   rc_rel(*r.type_ptr);
-  Obj tail = obj0;
-  if (rt == rt_Struct) {
-    tail = struct_rel_fields(r);
-  } else if (rt == rt_Env) {
+  Obj tail;
+  if (ref_is_data(r)) { // no extra action required.
+    tail = obj0;
+  } else if (ref_is_env(r)) {
     tail = env_rel_fields(r);
+  } else {
+    tail = struct_rel_fields(r);
   }
   // ret/rel counter has already been decremented by rc_rel.
 #if !OPT_DEALLOC_PRESERVE
-  raw_dealloc(r.r, rt_counter_index(rt) + 1); // math relies on layout of COUNTER_LIST.
+  raw_dealloc(r.r, rt_counter_index(ref_tag(r)) + 1); // math relies on layout of COUNTER_LIST.
 #elif OPT_ALLOC_COUNT
   // manually count for the missing raw_dealloc.
-  counter_dec(rt_counter_index(rt) + 1); // math relies on layout of COUNTER_LIST.
+  counter_dec(rt_counter_index(ref_tag(r)) + 1); // math relies on layout of COUNTER_LIST.
 #endif
   return tail;
 }
