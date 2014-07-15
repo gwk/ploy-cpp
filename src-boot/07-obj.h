@@ -217,24 +217,22 @@ static void obj_fmtv(CFile f, Chars_const fmt, Chars_const args_str, va_list arg
   Char c;
   while ((c = *pf++)) {
     if (c == '%') {
-      check(i < arg_count, "obj_fmt: more than %li items in format: '%s'; args: '%s'",
+      check(i < arg_count, "obj_fmt: more than %i items in format: '%s'; args: '%s'",
         arg_count, fmt, args_str);
       i++;
       c = *pf++;
       Obj arg = va_arg(args_list, Obj);
       switch (c) {
-        case 'o': write_repr(stderr, arg); break;
-        case 'i': errF("%li", arg.i); break;
-        case 's': errF("%s", arg.c); break;
-        default:
-          fprintf(stderr, "obj_fmt: invalid placeholder: '%c'; %s", c, fmt);
-          exit(1);
+        case 'o': write_repr(f, arg); break;
+        case 'i': fprintf(f, "%li", arg.i); break;
+        case 's': fprintf(f, "%s", arg.c); break;
+        default: error("obj_fmt: invalid placeholder: '%c'; %s", c, fmt);
       }
     } else {
-      fputc(c, stderr);
+      fputc(c, f);
     }
   }
-  check(i == arg_count, "only %li items in exc_raise format: '%s'; %li args: '%s'",
+  check(i == arg_count, "only %i items in exc_raise format: '%s'; %i args: '%s'",
     i, fmt, arg_count, args_str);
 }
 
