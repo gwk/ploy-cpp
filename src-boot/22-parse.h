@@ -82,7 +82,6 @@ static Bool parse_space(Parser* p) {
   // return true if parsing can continue.
   while (PP) {
     Char c = PC;
-    //parse_err(p); errFL("space? '%c'", c);
     switch (c) {
       case ' ':
         P_ADV(1, break);
