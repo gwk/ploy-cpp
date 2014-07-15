@@ -8,6 +8,8 @@
 
 static Ref_tag ref_tag(Obj r);
 
+static const Obj s_Env;
+
 
 static Obj ref_type(Obj r) {
   assert(obj_is_ref(r));
@@ -30,17 +32,17 @@ static Counter_index ref_counter_index(Obj r) {
 
 
 static Bool ref_is_data(Obj d) {
-  return ref_tag(d) == rt_Data;
+  return is(ref_type(d), s_Data);
 }
 
 
 static Bool ref_is_env(Obj r) {
-  return ref_tag(r) == rt_Env;
+  return is(ref_type(r), s_Env);
 }
 
 
 static Bool ref_is_struct(Obj r) {
-  return ref_tag(r) == rt_Struct;
+  return !ref_is_data(r) && !ref_is_env(r);
 }
 
 
