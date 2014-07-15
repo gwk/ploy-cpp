@@ -8,7 +8,6 @@
 
 // counters enum names, structured as an x macro list.
 // the C macro is temporarily defined to generate various lists of expressions.
-// note: starting with 'Data', the order must match that of Ref_tag.
 #define COUNTER_LIST \
 C(Chars) \
 C(Str) \
@@ -17,16 +16,13 @@ C(RC_bucket) \
 C(Mem) \
 C(Hash_bucket) \
 C(Set) \
-C(Int) \
-C(Sym) \
-C(Ptr) \
-C(Data_word) \
-C(Data) \
-C(Data_allocs) \
-C(Struct) \
-C(Struct_allocs) \
-C(Env) \
-C(Env_allocs)
+C(Ptr_rc) \
+C(Int_rc) \
+C(Sym_rc) \
+C(Data_word_rc) \
+C(Ref_rc) \
+C(Ref_alloc) \
+
 
 // index enum for the counters.
 typedef enum {

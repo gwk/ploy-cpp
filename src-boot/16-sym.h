@@ -142,15 +142,6 @@ SYM_LIST
 #undef SYM_LIST
 
 
-static Ref_tag ref_tag(Obj r) {
-  assert(obj_is_ref(r));
-  Int si = sym_index(*r.type_ptr);
-  if (si == si_Data) return rt_Data;
-  if (si == si_Env) return rt_Env;
-  return rt_Struct;
-}
-
-
 static void sym_init() {
   assert(global_sym_names.mem.len == 0);
   for_in(i, si_self + 1) { // NOTE: self is not special, but it is the last hardcoded sym.

@@ -59,19 +59,6 @@ static Chars_const obj_tag_names[] = {
   "Sym",
 };
 
-// all the ref types.
-typedef enum {
-  rt_Data = 0,  // binary data; obj_counter_index assumes that this is the first index.
-  rt_Env,       // an opaque lexical environment.
-  rt_Struct,    // an arbitrary structure: length word followed by fields.
-} Ref_tag;
-
-static Chars_const ref_tag_names[] = {
-  "Data",
-  "Env",
-  "Struct",
-};
-
 typedef struct _Data Data;
 typedef struct _Env Env;
 typedef struct _Struct Struct;
@@ -192,15 +179,14 @@ static Obj obj_type(Obj o) {
 
 
 #if OPT_ALLOC_COUNT
-static Counter_index ref_counter_index(Obj r);
 
 static Counter_index obj_counter_index(Obj o) {
   Obj_tag ot = obj_tag(o);
   switch (ot) {
-    case ot_ref: return ref_counter_index(o);
-    case ot_ptr: return ci_Ptr;
-    case ot_int: return ci_Int;
-    case ot_sym: return obj_is_data_word(o) ? ci_Data_word : ci_Sym;
+    case ot_ref: return ci_Ref_rc;
+    case ot_ptr: return ci_Ptr_rc;
+    case ot_int: return ci_Int_rc;
+    case ot_sym: return obj_is_data_word(o) ? ci_Data_word_rc : ci_Sym_rc;
   }
 }
 #endif

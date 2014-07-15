@@ -6,8 +6,6 @@
 #include "09-rc.h"
 
 
-static Ref_tag ref_tag(Obj r);
-
 static const Obj s_Env;
 
 
@@ -15,20 +13,6 @@ static Obj ref_type(Obj r) {
   assert(obj_is_ref(r));
   return *r.type_ptr;
 }
-
-
-static Counter_index rt_counter_index(Ref_tag rt) {
-  // note: this math relies on the layout of both COUNTER_LIST and ref_tag.
-  return ci_Data + (rt * 2);
-}
-
-
-#if OPT_ALLOC_COUNT
-static Counter_index ref_counter_index(Obj r) {
-  assert(obj_is_ref(r));
-  return rt_counter_index(ref_tag(r));
-}
-#endif
 
 
 static Bool ref_is_data(Obj d) {
@@ -46,13 +30,11 @@ static Bool ref_is_struct(Obj r) {
 }
 
 
-static Obj ref_alloc(Ref_tag rt, Int size) {
+static Obj ref_alloc(Int size) {
   assert(size >= size_Word * 2);
-  Counter_index ci = rt_counter_index(rt);
-  Counter_index ci_alloc = ci + 1; // this math relies on the layout of COUNTER_LIST.
-  counter_inc(ci); // ret/rel counter.
-  Obj r = (Obj){.r=raw_alloc(size, ci_alloc)}; // alloc counter also incremented.
-  assert(!obj_tag(r)); // check that alloc is really aligned to allow tagging.
+  counter_inc(ci_Ref_rc); // ret/rel counter.
+  Obj r = (Obj){.r=raw_alloc(size, ci_Ref_alloc)}; // alloc counter also incremented.
+  assert(!obj_tag(r)); // check that alloc is sufficiently aligned for pointer tagging.
   rc_insert(r);
   //errFL("REF ALLOC: %d; total: %ld rc len: %ld", rt, counters[ci_alloc][0] - counters[ci_alloc][1], rc_table.len);
   return r;
@@ -74,10 +56,10 @@ static Obj ref_dealloc(Obj r) {
   }
   // ret/rel counter has already been decremented by rc_rel.
 #if !OPT_DEALLOC_PRESERVE
-  raw_dealloc(r.r, rt_counter_index(ref_tag(r)) + 1); // math relies on layout of COUNTER_LIST.
+  raw_dealloc(r.r, ci_Ref_alloc);
 #elif OPT_ALLOC_COUNT
   // manually count for the missing raw_dealloc.
-  counter_dec(rt_counter_index(ref_tag(r)) + 1); // math relies on layout of COUNTER_LIST.
+  counter_dec(ci_Ref_alloc);
 #endif
   return tail;
 }
