@@ -3,7 +3,7 @@
 
 // exceptions.
 
-#include "23-parse.h"
+#include "24-parse.h"
 
 
 static NO_RETURN _exc_raise(Obj env, Chars_const fmt, Chars_const args_str, ...) {
