@@ -5,6 +5,7 @@
 
 #include "07-obj.h"
 
+
 static void write_repr(CFile f, Obj o);
 
 static void fmt_list_to_file(CFile f, Chars_const fmt, Chars_const args_str, va_list args_list) {

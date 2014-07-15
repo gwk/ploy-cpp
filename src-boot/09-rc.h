@@ -7,6 +7,7 @@
 
 #include "08-fmt.h"
 
+
 static const Int load_factor_numer = 1;
 static const Int load_factor_denom = 1;
 
