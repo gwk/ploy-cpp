@@ -5,7 +5,7 @@
 // unlike most hash tables, the hash is the full key;
 // this is possible because it is just the object address with low zero bits shifted off.
 
-#include "07-obj.h"
+#include "08-fmt.h"
 
 static const Int load_factor_numer = 1;
 static const Int load_factor_denom = 1;

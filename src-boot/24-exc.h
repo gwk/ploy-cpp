@@ -3,7 +3,7 @@
 
 // exceptions.
 
-#include "22-parse.h"
+#include "23-parse.h"
 
 
 static NO_RETURN _exc_raise(Obj env, Chars_const fmt, Chars_const args_str, ...) {
@@ -11,7 +11,7 @@ static NO_RETURN _exc_raise(Obj env, Chars_const fmt, Chars_const args_str, ...)
   // NOTE: there is not yet any exception unwind mechanism, so this just calls exit.
   va_list args_list;
   va_start(args_list, args_str);
-  obj_fmtv(stderr, fmt, args_str, args_list);
+  fmt_list_to_file(stderr, fmt, args_str, args_list);
   va_end(args_list);
   err_nl();
   env_trace(env, false);

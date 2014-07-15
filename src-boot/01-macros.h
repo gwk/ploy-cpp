@@ -150,7 +150,7 @@ for (Int i = (n) - 1, _end_##i = (m), _step_##i = (s); i >= _end_##i; i -= _step
 
 // note: the final token pasting is between the comma and __VA_ARGS__.
 // this is a gnu extension to elide the comma in the case where __VA_ARGS__ is empty.
-#define errF(fmt, ...) obj_fmt(stderr, fmt, #__VA_ARGS__, ## __VA_ARGS__)
+#define errF(fmt, ...) fmt_to_file(stderr, fmt, #__VA_ARGS__, ## __VA_ARGS__)
 #define errFL(fmt, ...) errF(fmt "\n", ## __VA_ARGS__)
 
 // write an error message and then exit.

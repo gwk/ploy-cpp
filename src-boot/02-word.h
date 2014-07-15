@@ -109,9 +109,8 @@ static const Int size_min_alloc = 1 << width_min_alloc; // in bytes.
 
 // a few forward declarations for error handling need to be declared very early.
 union _Obj;
-static void obj_fmt(CFile f, Chars_const fmt, Chars_const args_str, ...);
+static void fmt_to_file(CFile f, Chars_const fmt, Chars_const args_str, ...);
 static NO_RETURN _exc_raise(union _Obj env, Chars_const fmt, Chars_const args_str, ...);
-
 
 
 static void assert_host_basic() {
