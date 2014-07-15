@@ -309,33 +309,6 @@ static Step run_Call(Int d, Obj env, Mem args) {
 }
 
 
-static Step run_Struct(Int d, Obj env, Obj code) {
-  // owns env.
-  Mem m = struct_mem(code);
-  Obj type = ref_type(code);
-  Obj_tag ot = obj_tag(type);
-  if (ot == ot_sym) { // TODO: change dispatch to not require that types are syms.
-    Int si = sym_index(type); // Int type avoids incomplete enum switch error.
-#define RUN(s) case si_##s: return run_##s(d, env, m)
-    switch (si) {
-      RUN(Eval);
-      RUN(Quo);
-      RUN(Do);
-      RUN(Scope);
-      RUN(Let);
-      RUN(If);
-      RUN(Fn);
-      RUN(Syn_struct_typed);
-      RUN(Syn_seq_typed);
-      RUN(Call);
-    }
-#undef RUN
-  }
-  exc_raise("cannot run object: %o", code);
-}
-
-
-// TODO: use or remove; fix comments.
 // printed before each run step; white_down_pointing_small_triangle.
 static const Chars_const trace_run_prefix = "▿ ";
 
@@ -344,7 +317,6 @@ static const Chars_const trace_tail_prefix  = "▹ ";
 
 // printed after each run step; white_bullet.
 static const Chars_const trace_val_prefix = "◦ ";
-
 
 static Step run_step_disp(Int d, Obj env, Obj code) {
   // owns env.
@@ -365,8 +337,27 @@ static Step run_step_disp(Int d, Obj env, Obj code) {
     case rt_Env:
       exc_raise("cannot run object: %o", code);
     case rt_Struct:
-      return run_Struct(d, env, code);
+      break;
   }
+  Obj type = ref_type(code);
+  exc_check(obj_tag(type) == ot_sym, "cannot run object with non-sym type: %o", code);
+  Mem m = struct_mem(code);
+  Int si = sym_index(type); // Int type avoids incomplete enum switch error.
+#define RUN(s) case si_##s: return run_##s(d, env, m)
+  switch (si) {
+    RUN(Eval);
+    RUN(Quo);
+    RUN(Do);
+    RUN(Scope);
+    RUN(Let);
+    RUN(If);
+    RUN(Fn);
+    RUN(Syn_struct_typed);
+    RUN(Syn_seq_typed);
+    RUN(Call);
+  }
+#undef RUN
+  exc_raise("cannot run object: %o", code);
 }
 
 
