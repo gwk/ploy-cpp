@@ -329,7 +329,7 @@ static Step run_Struct(Int d, Obj env, Obj code) {
       RUN(Syn_seq_typed);
       RUN(Call);
     }
-#undef EVAL_FORM
+#undef RUN
   }
   exc_raise("cannot run object: %o", code);
 }
