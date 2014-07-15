@@ -73,6 +73,7 @@ S(void) \
 S(nil) \
 S(ENV_END_MARKER) \
 S(ENV_FRAME_MARKER) \
+S(UNINIT) \
 S(false) \
 S(true) \
 S(INFER_STRUCT) \

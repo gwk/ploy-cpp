@@ -163,17 +163,37 @@ static Obj host_field(Obj env, Mem args) {
 static Obj host_el(Obj env, Mem args) {
   // owns elements of args.
   assert(args.len == 2);
-  Obj s = args.els[0];
+  Obj m = args.els[0];
   Obj i = args.els[1];
-  exc_check(obj_is_struct(s), "el requires arg 1 to be a Struct; received: %o", s);
+  exc_check(obj_is_struct(m), "el requires arg 1 to be a Mem; received: %o", m);
   exc_check(obj_is_int(i), "el requires arg 2 to be a Int; received: %o", i);
   Int j = int_val(i);
-  Int l = struct_len(s);
+  Int l = struct_len(m);
   exc_check(j >= 0 && j < l, "el index out of range; index: %i; len: %i", j, l);
-  Obj el = struct_el(s, j);
-  rc_rel(s);
+  Obj el = struct_el(m, j);
+  rc_rel(m);
   rc_rel_val(i);
   return rc_ret(el);
+}
+
+
+static Obj host_init_el(Obj env, Mem args) {
+  // owns elements of args.
+  assert(args.len == 3);
+  Obj o = args.els[0];
+  Obj i = args.els[1];
+  Obj e = args.els[2];
+  exc_check(obj_is_struct(o), "init-el requires arg 1 to be a Mem; received: %o", o);
+  exc_check(obj_is_int(i), "init-el requires arg 2 to be an Int; received: %o", i);
+  Int j = int_val(i);
+  Mem m = struct_mem(o);
+  exc_check(j >= 0 && j < m.len, "init-el index out of range; index: %i; len: %i", j, m.len);
+  Obj old = m.els[j];
+  exc_check(is(old, s_UNINIT), "init-el found element %i is already initialized: %o", j, o);
+  rc_rel_val(old);
+  m.els[j] = e;
+  rc_rel_val(i);
+  return o;
 }
 
 
@@ -400,6 +420,7 @@ static Obj host_init(Obj env) {
   DEF_FH(1, "len", host_len)
   DEF_FH(2, "field", host_field)
   DEF_FH(2, "el", host_el)
+  DEF_FH(3, "init-el", host_init_el)
   DEF_FH(3, "slice", host_slice)
   DEF_FH(2, "prepend", host_prepend)
   DEF_FH(2, "append", host_append)

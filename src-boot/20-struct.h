@@ -126,19 +126,6 @@ static Obj struct_el(Obj s, Int i) {
 }
 
 
-UNUSED_FN static void struct_put(Obj s, Int i, Obj el) {
-  // owns el.
-  // assumes the caller knows the size of the struct.
-  assert(ref_is_struct(s));
-  assert(i >= 0 && i < struct_len(s));
-  Obj* els = struct_els(s);
-  // safe to release els[i] first, because even if el is els[i],
-  // it is owned by this function so the release could never cause deallocation.
-  rc_rel(els[i]);
-  els[i] = el;
-}
-
-
 static Obj struct_slice(Obj s, Int f, Int t) {
   // owns s.
   assert(ref_is_struct(s));

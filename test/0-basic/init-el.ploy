@@ -1,0 +1,3 @@
+<let x {:Mem-Int UNINIT UNINIT}>
+(init-el x 0 1)
+(outRL (init-el x 1 2))
