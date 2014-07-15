@@ -38,7 +38,6 @@ static Obj parse_and_eval(Obj env, Obj path, Obj src, Array* sources, Bool out_v
 int main(int argc, Chars_const argv[]) {
   assert_host_basic();
   assert(size_Obj == size_Word);
-  set_process_name(argv[0]);
   rc_init();
   sym_init();
   Int vol_err = VERBOSE;

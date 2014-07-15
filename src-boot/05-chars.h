@@ -25,15 +25,6 @@ static Chars_const chars_path_base(Chars_const path) {
 }
 
 
-// the name of the current process.
-static Chars_const process_name;
-
-// call in main to set process_name.
-static void set_process_name(Chars_const arg0) {
-  process_name = chars_path_base(arg0);
-}
-
-
 static Chars char_repr(Char c) {
   static Char reprs[256][8] = {};
   Chars r = reprs[cast(Int, c)];
