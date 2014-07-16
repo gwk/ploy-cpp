@@ -69,6 +69,7 @@ int main(int argc, Chars_const argv[]) {
 
   Obj env = rc_ret_val(s_ENV_END_MARKER);
   env = env_push_frame(env, data_new_from_chars(cast(Chars, "<host>")));
+  env = type_init_bindings(env);
   env = host_init(env);
 
   // global array of (path, source) objects for error reporting.
