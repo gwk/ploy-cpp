@@ -141,6 +141,7 @@ static Step run_Syn_seq_typed(Int d, Obj env, Mem args) {
   check(args.len > 0, "Syn-struct is empty");
   Step step = run(d, env, args.els[0]); // evaluate the type.
   env = step.env;
+  // TODO: derive the appropriate sequence type from the element type.
   Obj s = struct_new_raw(step.val, args.len - 1);
   Obj* els = struct_els(s);
   for_in(i, args.len - 1) {
