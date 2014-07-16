@@ -194,8 +194,12 @@ static void rc_remove(Obj r) {
   for_in(i, b->len) {
     RC_item* item = b->items + i;
     if (item->h == h) {
-      assert(item->c == 1);
-      rc_bucket_remove(b, i);
+      assert(item->c > 0);
+      if (item->c == 1) { // expected.
+        rc_bucket_remove(b, i);
+      } else { // leak.
+        errFL("rc_remove: detected leaked object: %o", r);
+      }
       return;
     }
   }
