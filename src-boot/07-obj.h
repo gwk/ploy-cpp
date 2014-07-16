@@ -62,6 +62,7 @@ static Chars_const obj_tag_names[] = {
 typedef struct _Data Data;
 typedef struct _Env Env;
 typedef struct _Struct Struct;
+typedef struct _Type Type;
 
 typedef union _Obj {
   Int i;
@@ -72,6 +73,7 @@ typedef union _Obj {
   Data* d;
   Env* e;
   Struct* s;
+  Type* t;
 } Obj;
 DEF_SIZE(Obj);
 

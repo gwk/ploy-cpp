@@ -40,8 +40,9 @@ int main(int argc, Chars_const argv[]) {
   assert(size_Obj == size_Word);
   rc_init();
   sym_init();
+  type_init();
   Int vol_err = VERBOSE;
-
+  
   // parse arguments.
   Chars_const paths[len_buffer];
   Int path_count = 0;
@@ -96,9 +97,11 @@ int main(int argc, Chars_const argv[]) {
   }
 
 #if OPT_ALLOC_COUNT
+  // cleanup in reverse order.
   rc_rel(env);
-  mem_release_dealloc(global_sym_names.mem);
   mem_release_dealloc(sources.mem);
+  type_cleanup();
+  mem_release_dealloc(global_sym_names.mem);
   rc_cleanup();
   counter_stats(vol_err);
 #endif

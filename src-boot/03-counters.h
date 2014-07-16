@@ -16,6 +16,7 @@ C(RC_bucket) \
 C(Mem) \
 C(Hash_bucket) \
 C(Set) \
+C(Type_table) \
 C(Ptr_rc) \
 C(Int_rc) \
 C(Sym_rc) \

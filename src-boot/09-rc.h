@@ -186,6 +186,7 @@ static void rc_insert(Obj r) {
 }
 
 
+#if OPT_ALLOC_COUNT
 static void rc_remove(Obj r) {
   assert(obj_is_ref(r));
   Uns h = rc_hash(r);
@@ -200,6 +201,7 @@ static void rc_remove(Obj r) {
   }
   assert(0); // could not find object.
 }
+#endif
 
 
 UNUSED_FN static Int rc_get(Obj o) {
