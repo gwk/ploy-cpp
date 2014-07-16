@@ -119,6 +119,15 @@ static void rc_bucket_append(RC_bucket* b, Uns h, Uns c) {
 }
 
 
+static void rc_bucket_remove(RC_bucket* b, Int i) {
+  // replace this item with the last item. no-op if len == 1.
+  b->items[i] = b->items[b->len - 1];
+  b->len--; // then simply forget the original last item.
+  assert(rc_table.len > 0);
+  rc_table.len--;
+}
+
+
 static void rc_resize(Int len_buckets) {
   rc_hist_count_empties();
   Int old_len_buckets = rc_table.len_buckets;
@@ -177,12 +186,37 @@ static void rc_insert(Obj r) {
 }
 
 
-static void rc_remove(RC_bucket* b, Int i) {
-  // replace this item with the last item. no-op if len == 1.
-  b->items[i] = b->items[b->len - 1];
-  b->len--; // then simply forget the original last item.
-  assert(rc_table.len > 0);
-  rc_table.len--;
+static void rc_remove(Obj r) {
+  assert(obj_is_ref(r));
+  Uns h = rc_hash(r);
+  RC_bucket* b = rc_bucket_ptr(h);
+  for_in(i, b->len) {
+    RC_item* item = b->items + i;
+    if (item->h == h) {
+      assert(item->c == 1);
+      rc_bucket_remove(b, i);
+      return;
+    }
+  }
+  assert(0); // could not find object.
+}
+
+
+UNUSED_FN static Int rc_get(Obj o) {
+  // increase the object's retain count by one.
+  counter_inc(obj_counter_index(o));
+  if (obj_tag(o)) return -1;
+  Uns h = rc_hash(o);
+  RC_bucket* b = rc_bucket_ptr(h);
+  for_in(i, b->len) {
+    RC_item* item = b->items + i;
+    if (item->h == h) {
+      assert(item->c > 0 && item->c < max_Uns);
+      return (Int)item->c;
+    }
+  }
+  assert(0); // could not find object.
+  return -1;
 }
 
 
@@ -225,7 +259,7 @@ static void rc_rel(Obj o) {
         found = true;
         rc_hist_count_gets(i);
         if (item->c == 1) {
-          rc_remove(b, i);
+          rc_bucket_remove(b, i);
           o = ref_dealloc(o); // returns tail object to be released.
         } else {
           item->c--;
