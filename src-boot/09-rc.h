@@ -12,9 +12,12 @@ static const Int load_factor_numer = 1;
 static const Int load_factor_denom = 1;
 
 
-typedef struct {
+typedef struct _RC_item {
   Uns h; // hash/key.
-  Uns c; // count.
+  union { // if the low bit is set, then it is a count; otherwise, it is an pointer to a count.
+    Uns c; // count.
+    struct _RC_item* p;
+  };
 } RC_item;
 DEF_SIZE(RC_item);
 
@@ -100,6 +103,11 @@ static void rc_hist_count_moves(Int i) {
 #endif
 
 
+DEBUG_FN static Bool rc_item_is_direct(RC_item* item) {
+  return item->c & 1; // check if the low flag bit is set.
+}
+
+
 static RC_bucket* rc_bucket_ptr(Uns h) {
   Uns i = h % cast(Uns, rc_table.len_buckets);
   return rc_table.buckets + i;
@@ -181,7 +189,7 @@ static void rc_insert(Obj r) {
   rc_hist_count_ref_bits(r);
   Uns h = rc_hash(r);
   RC_bucket* b = rc_bucket_ptr(h);
-  rc_bucket_append(b, h, 1);
+  rc_bucket_append(b, h, 1); // start with a direct count of 0 plus flag bit of 1.
   rc_table.len++;
 }
 
@@ -195,6 +203,7 @@ static void rc_remove(Obj r) {
     RC_item* item = b->items + i;
     if (item->h == h) {
       assert(item->c > 0);
+      assert(rc_item_is_direct(item));
       if (item->c == 1) { // expected.
         rc_bucket_remove(b, i);
       } else { // leak.
@@ -209,7 +218,7 @@ static void rc_remove(Obj r) {
 
 
 UNUSED_FN static Int rc_get(Obj o) {
-  // increase the object's retain count by one.
+  // get the object's retain count for debugging purposes.
   counter_inc(obj_counter_index(o));
   if (obj_tag(o)) return -1;
   Uns h = rc_hash(o);
@@ -217,8 +226,10 @@ UNUSED_FN static Int rc_get(Obj o) {
   for_in(i, b->len) {
     RC_item* item = b->items + i;
     if (item->h == h) {
-      assert(item->c > 0 && item->c < max_Uns);
-      return (Int)item->c;
+      assert(item->c > 0);
+      assert(rc_item_is_direct(item));
+      assert(item->c < max_Uns);
+      return (Int)item->c >> 1; // shift off the flag bit.
     }
   }
   assert(0); // could not find object.
@@ -235,8 +246,10 @@ static Obj rc_ret(Obj o) {
   for_in(i, b->len) {
     RC_item* item = b->items + i;
     if (item->h == h) {
-      assert(item->c > 0 && item->c < max_Uns);
-      item->c++;
+      assert(item->c > 0);
+      assert(rc_item_is_direct(item));
+      assert(item->c < max_Uns);
+      item->c += 2; // increment by two to leave the flag bit intact.
       rc_hist_count_gets(i);
       return o;
     }
@@ -262,13 +275,14 @@ static void rc_rel(Obj o) {
       RC_item* item = b->items + i;
       if (item->h == h) {
         assert(item->c > 0);
+        assert(rc_item_is_direct(item));
         found = true;
         rc_hist_count_gets(i);
         if (item->c == 1) {
           rc_bucket_remove(b, i);
           o = ref_dealloc(o); // returns tail object to be released.
         } else {
-          item->c--;
+          item->c -= 2; // decrement by two to leave the flag bit intact.
           o = obj0;
         }
         break;
