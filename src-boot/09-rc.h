@@ -103,7 +103,7 @@ static void rc_hist_count_moves(Int i) {
 #endif
 
 
-DEBUG_FN static Bool rc_item_is_direct(RC_item* item) {
+static Bool rc_item_is_direct(RC_item* item) {
   return item->c & 1; // check if the low flag bit is set.
 }
 
@@ -202,12 +202,14 @@ static void rc_remove(Obj r) {
   for_in(i, b->len) {
     RC_item* item = b->items + i;
     if (item->h == h) {
-      assert(item->c > 0);
-      assert(rc_item_is_direct(item));
-      if (item->c == 1) { // expected.
-        rc_bucket_remove(b, i);
-      } else { // leak.
-        errFL("rc_remove: detected leaked object: %o", r);
+      if (rc_item_is_direct(item)) {
+        if (item->c == 1) { // expected.
+          rc_bucket_remove(b, i);
+        } else { // leak.
+          errFL("rc_remove: detected leaked object: %o", r);
+        }
+      } else {
+        errFL("rc_remove: item has an indirect count: %o", r);
       }
       return;
     }
@@ -226,7 +228,6 @@ UNUSED_FN static Int rc_get(Obj o) {
   for_in(i, b->len) {
     RC_item* item = b->items + i;
     if (item->h == h) {
-      assert(item->c > 0);
       assert(rc_item_is_direct(item));
       assert(item->c < max_Uns);
       return (Int)item->c >> 1; // shift off the flag bit.
@@ -246,11 +247,12 @@ static Obj rc_ret(Obj o) {
   for_in(i, b->len) {
     RC_item* item = b->items + i;
     if (item->h == h) {
-      assert(item->c > 0);
-      assert(rc_item_is_direct(item));
+      rc_hist_count_gets(i);
+      while (!rc_item_is_direct(item)) {
+        item = item->p;
+      }
       assert(item->c < max_Uns);
       item->c += 2; // increment by two to leave the flag bit intact.
-      rc_hist_count_gets(i);
       return o;
     }
   }
@@ -274,15 +276,17 @@ static void rc_rel(Obj o) {
     for_in(i, b->len) {
       RC_item* item = b->items + i;
       if (item->h == h) {
-        assert(item->c > 0);
-        assert(rc_item_is_direct(item));
         found = true;
         rc_hist_count_gets(i);
-        if (item->c == 1) {
-          rc_bucket_remove(b, i);
+        RC_item* item_d = item;
+        while (!rc_item_is_direct(item_d)) {
+          item_d = item_d->p;
+        }
+        if (item_d->c == 1) {
+          rc_bucket_remove(b, i); // removes item, not item_d.
           o = ref_dealloc(o); // returns tail object to be released.
         } else {
-          item->c -= 2; // decrement by two to leave the flag bit intact.
+          item_d->c -= 2; // decrement by two to leave the flag bit intact.
           o = obj0;
         }
         break;
