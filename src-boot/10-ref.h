@@ -7,6 +7,7 @@
 
 
 static const Obj s_Env;
+static Obj t_Type;
 
 
 static Obj ref_type(Obj r) {
@@ -27,6 +28,11 @@ static Bool ref_is_env(Obj r) {
 
 static Bool ref_is_struct(Obj r) {
   return !ref_is_data(r) && !ref_is_env(r);
+}
+
+
+static Bool ref_is_type(Obj r) {
+  return is(ref_type(r), t_Type);
 }
 
 

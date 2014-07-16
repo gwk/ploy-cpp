@@ -145,7 +145,7 @@ static Bool obj_is_data_word(Obj o) {
 static Bool ref_is_data(Obj o);
 static Bool ref_is_env(Obj o);
 static Bool ref_is_struct(Obj o);
-
+static Bool ref_is_type(Obj o);
 
 static Bool obj_is_data_ref(Obj o) {
   return obj_is_ref(o) && ref_is_data(o);
@@ -164,6 +164,11 @@ static Bool obj_is_env(Obj o) {
 
 static Bool obj_is_struct(Obj o) {
   return obj_is_ref(o) && ref_is_struct(o);
+}
+
+
+static Bool obj_is_type(Obj o) {
+  return obj_is_ref(o) && ref_is_type(o);
 }
 
 

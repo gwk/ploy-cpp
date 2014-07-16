@@ -122,7 +122,7 @@ static void write_repr_Par(CFile f, Obj p, Bool is_quoted, Int depth, Set* set) 
 }
 
 
-static void write_repr_seq(CFile f, Obj s, Bool is_quoted, Int depth, Set* set,
+static void write_repr_syn_seq(CFile f, Obj s, Bool is_quoted, Int depth, Set* set,
   Chars_const chars_open, Char char_close) {
 
   assert(ref_is_struct(s));
@@ -143,7 +143,12 @@ static void write_repr_default(CFile f, Obj s, Bool is_quoted, Int depth, Set* s
   assert(ref_is_struct(s));
   if (is_quoted) fputs("???", f);
   fputs("{:", f);
-  write_repr_obj(f, obj_type(s), true, depth, set);
+  Obj t = obj_type(s);
+  if (obj_is_type(t)) {
+    write_repr_obj(f, t.t->name, true, depth, set);
+  } else { // TODO: once legacy typing is replaced, this should print a warning prefix.
+    write_repr_obj(f, t, true, depth, set);
+  }
   Mem m = struct_mem(s);
   for_in(i, m.len) {
     fputc(' ', f);
@@ -169,7 +174,7 @@ static void write_repr_dispatch(CFile f, Obj s, Bool is_quoted, Int depth, Set* 
   #undef DISP
 
   #define DISP_SEQ(t, o, c) \
-  if (is(type, s_##t)) { write_repr_seq(f, s, is_quoted, depth, set, o, c); return; }
+  if (is(type, s_##t)) { write_repr_syn_seq(f, s, is_quoted, depth, set, o, c); return; }
 
   DISP_SEQ(Syn_struct, "{", '}');
   DISP_SEQ(Syn_struct_typed, "{:", '}');
