@@ -314,7 +314,7 @@ static Step run_Call(Int d, Obj env, Mem args) {
 static const Chars_const trace_run_prefix = "▿ ";
 
 // printed before each run tail step; white_right_pointing_small_triangle.
-static const Chars_const trace_tail_prefix  = "▹ "; 
+static const Chars_const trace_tail_prefix  = "▹ ";
 
 // printed after each run step; white_bullet.
 static const Chars_const trace_val_prefix = "◦ ";
@@ -362,7 +362,7 @@ static Step run_step(Int d, Obj env, Obj code) {
   // owns env.
 #if VERBOSE_EVAL
     for_in(i, d) err(i % 4 ? " " : "|");
-    err(trace_run_prefix); obj_errL(code);
+    errFL("%s %o", trace_run_prefix, code);
 #endif
     Step step = run_step_disp(d, env, code);
     return step;
@@ -376,7 +376,7 @@ static Step run_tail(Int d, Step step) {
     Obj tco_env = step.val; // val field is reused in the TCO case to hold the callee env.
 #if VERBOSE_EVAL
     for_in(i, d) err(i % 4 ? " " : "|");
-    err(trace_tail_prefix); obj_errL(step.tco_code);
+    errFL("%s %o", trace_tail_prefix, step.tco_code);
 #endif
     step = run_step_disp(d, tco_env, step.tco_code); // owns tco_env; borrows .tco_code.
     rc_rel(step.env); // the modified tco_env is immediately abandoned since tco_code is in the tail position.
@@ -388,7 +388,7 @@ static Step run_tail(Int d, Step step) {
   assert(is(step.tco_code, obj0));
 #if VERBOSE_EVAL
     for_in(i, d) err(i % 4 ? " " : "|");
-    err(trace_val_prefix); obj_errL(step.val);
+    errFL("%s %o", trace_val_prefix, step.val);
 #endif
   return step;
 }

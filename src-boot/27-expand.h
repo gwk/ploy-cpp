@@ -81,12 +81,12 @@ static Obj expand(Obj env, Obj code) {
   }
   if (is(type, s_Expand)) {
 #if VERBOSE_EVAL
-    err(trace_expand_prefix); obj_errL(code);
+    errFL("%s %o", trace_expand_prefix, code);
 #endif
       Obj expanded = expand_macro(env, m);
       rc_rel(code);
 #if VERBOSE_EVAL
-    err(trace_expand_val_prefix); obj_errL(expanded);
+    errFL("%s %o", trace_expand_val_prefix, code);
 #endif
     // macro result may contain more expands; recursively expand the result.
     return expand(env, expanded);
