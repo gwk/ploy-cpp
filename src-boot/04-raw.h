@@ -17,7 +17,7 @@ static Raw raw_alloc(Int size, Counter_index ci) {
   Raw p = malloc(cast(Uns, size));
   if (!p) {
     fprintf(stderr, "raw_alloc failed; size: %ld", size);
-    exit(1);
+    fail();
   }
 #if OPT_ALLOC_SCRIBBLE
   memset(p, 0xAA, size); // same value as OSX MallocPreScribble.
@@ -43,7 +43,7 @@ static Raw raw_realloc(Raw p, Int size, Counter_index ci) {
     Raw r = realloc(p, cast(Uns, size));
     if (!r) {
       fprintf(stderr, "raw_realloc failed; size: %ld", size);
-      exit(1);
+      fail();
     }
     return r;
   } else {

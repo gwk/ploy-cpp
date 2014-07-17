@@ -152,10 +152,11 @@ for (Int i = (n) - 1, _end_##i = (m), _step_##i = (s); i >= _end_##i; i -= _step
 #define errF(fmt, ...) fmt_to_file(stderr, fmt, #__VA_ARGS__, ## __VA_ARGS__)
 #define errFL(fmt, ...) errF(fmt "\n", ## __VA_ARGS__)
 
+
 // write an error message and then exit.
 #define error(fmt, ...) { \
   errFL("ploy error: " fmt, ## __VA_ARGS__); \
-  exit(1); \
+  fail(); \
 }
 
 // check that a condition is true; otherwise error.
@@ -166,4 +167,8 @@ for (Int i = (n) - 1, _end_##i = (m), _step_##i = (s); i >= _end_##i; i -= _step
 #define exc_check(condition, ...) if (!(condition)) exc_raise(__VA_ARGS__)
 
 
+NO_RETURN fail(void);
+NO_RETURN fail() {
+  exit(1);
+}
 

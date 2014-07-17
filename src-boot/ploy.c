@@ -15,7 +15,7 @@ static Obj parse_and_eval(Obj env, Obj path, Obj src, Array* sources, Bool out_v
     rc_rel(path);
     rc_rel(src);
     assert(is(code, obj0));
-    exit(1);
+    fail();
   }
 #if VERBOSE_PARSE
   errF("parse_and_eval: ");

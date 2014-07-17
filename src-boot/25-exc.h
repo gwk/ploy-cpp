@@ -15,5 +15,5 @@ static NO_RETURN _exc_raise(Obj env, Chars_const fmt, Chars_const args_str, ...)
   va_end(args_list);
   err_nl();
   env_trace(env, false);
-  exit(1);
+  fail();
 }
