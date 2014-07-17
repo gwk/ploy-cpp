@@ -357,17 +357,17 @@ static Obj host_type_of(Obj env, Mem args) {
 
 static void write_data(CFile f, Obj d);
 
-static Obj host_boot_err(Obj env, Mem args) {
+static Obj host_dbg(Obj env, Mem args) {
   // owns elements of args.
   assert(args.len == 2);
   Obj label = args.els[0];
-  Obj expr = args.els[1];
-  exc_check(is(obj_type(label), s_Data), "err-boot expects argument 1 to be Data: %o", label);
+  Obj obj = args.els[1];
+  exc_check(is(obj_type(label), s_Data), "dbg expects argument 1 to be Data: %o", label);
   write_data(stderr, label);
-  write_repr(stderr, expr);
-  err_nl();
+  errFL(": %p rc:%u %o", obj, rc_get(obj), obj);
   rc_rel(label);
-  rc_rel(expr);
+  //return obj;
+  rc_rel(obj);
   return rc_ret_val(s_void);
 }
 
@@ -465,7 +465,7 @@ static Obj host_init(Obj env) {
   DEF_FH(1, "type-of", host_type_of)
   DEF_FH(1, "ref-back", host_ref_back)
   DEF_FH(2, "ref-fwd", host_ref_fwd)
-  DEF_FH(2, "_boot-err", host_boot_err)
+  DEF_FH(2, "dbg", host_dbg)
   DEF_FH(1, "_boot-mk-do", host_boot_mk_do)
 #undef DEF_FH
 
