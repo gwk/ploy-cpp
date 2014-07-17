@@ -52,7 +52,6 @@
 
 // verbose logging to aid in various debugging scenarios.
 #define VERBOSE 0
-#define VERBOSE_RET_REL VERBOSE || 0
 #define VERBOSE_PARSE   VERBOSE || 0
 #define VERBOSE_EVAL    VERBOSE || 0
 
