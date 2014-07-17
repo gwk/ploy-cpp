@@ -261,7 +261,6 @@ static void rc_remove(Obj r) {
 
 static Uns rc_get(Obj o) {
   // get the object's retain count for debugging purposes.
-  counter_inc(obj_counter_index(o));
   if (obj_tag(o)) return max_Uns;
   RC_item* item = rc_resolve_item(rc_get_item(o));
   assert(item);
