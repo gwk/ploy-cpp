@@ -1,0 +1,40 @@
+<scope
+  <let a {:Mem-Obj `a UNINIT}>
+  (init-el a 1 (ref-back a))
+  (outRLL a)>
+
+<scope
+  <let a {:Mem-Obj `a UNINIT}>
+  <let b {:Mem-Obj `b (ref-back a)}>
+  (init-el a 1 (ref-fwd a b))
+  (outRLL a b)>
+
+<scope
+  <let a {:Mem-Obj `a UNINIT}>
+  <let b {:Mem-Obj `b UNINIT}>
+  <let c {:Mem-Obj `c (ref-back a)}>
+  (init-el a 1 (ref-fwd a b))
+  (init-el b 1 (ref-fwd b c))
+  (outRLL a b c)>
+
+<scope
+  <let a {:Mem-Obj `a UNINIT UNINIT}>
+  (init-el a 1 (ref-back a))
+  (init-el a 2 (ref-back a))
+  (outRLL a)>
+
+<scope
+  <let a {:Mem-Obj `a UNINIT UNINIT}>
+  <let b {:Mem-Obj `b (ref-back a) (ref-back a)}>
+  (init-el a 1 (ref-fwd a b))
+  (init-el a 2 (ref-back b))
+  (outRLL a b)>
+
+<scope
+  <let a {:Mem-Obj `a UNINIT UNINIT}>
+  <let b {:Mem-Obj `b (ref-back a) UNINIT}>
+  <let c {:Mem-Obj `c (ref-back b) (ref-back a)}>
+  (init-el a 1 (ref-fwd a c))
+  (init-el a 2 (ref-fwd a b))
+  (init-el b 2 (ref-back c))
+  (outRLL a b c)>

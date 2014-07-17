@@ -194,47 +194,78 @@ static void rc_insert(Obj r) {
 }
 
 
-#if OPT_ALLOC_COUNT
-static void rc_remove(Obj r) {
+static RC_item* rc_resolve_item(RC_item* item) {
+  // requires that the immediate delegate is direct; returns NULL if this is not the case.
+  if (rc_item_is_direct(item)) return item;
+  RC_item* i = item->p;
+  if (rc_item_is_direct(i)) return i;
+  return NULL;
+}
+
+
+typedef struct {
+  RC_bucket* bucket;
+  RC_item* item;
+  Int index;
+} RC_BII;
+
+static RC_BII rc_get_BII(Obj r) {
+  // returns the resolved item but the original bucket and item index.
   assert(obj_is_ref(r));
   Uns h = rc_hash(r);
   RC_bucket* b = rc_bucket_ptr(h);
   for_in(i, b->len) {
     RC_item* item = b->items + i;
     if (item->h == h) {
-      if (rc_item_is_direct(item)) {
-        if (item->c == 1) { // expected.
-          rc_bucket_remove(b, i);
-        } else { // leak.
-          errFL("rc_remove: detected leaked object: %o", r);
-        }
-      } else {
-        errFL("rc_remove: item has an indirect count: %o", r);
-      }
-      return;
+      rc_hist_count_gets(i);
+      return (RC_BII){.bucket=b, .item=item, .index=i};
     }
   }
-  assert(0); // could not find object.
+  // this is a legitimate case only for whene we are releasing a cycle and have looped back around.
+  return (RC_BII){};
+}
+
+
+static RC_item* rc_get_item(Obj r) {
+  return rc_get_BII(r).item;
+}
+
+
+static void rc_delegate_item(RC_item* a, RC_item* b) {
+  // make b indirect by delegating to a.
+  assert(rc_item_is_direct(a));
+  assert(rc_item_is_direct(b));
+  Uns c = b->c - 1; // remove the tag bit, but do not shift.
+  b->p = a;
+  a->c += c;
+  assert(rc_item_is_direct(a));
+  assert(!rc_item_is_direct(b));
+}
+
+
+#if OPT_ALLOC_COUNT
+static void rc_remove(Obj r) {
+  RC_BII bii = rc_get_BII(r);
+  if (rc_item_is_direct(bii.item)) {
+    if (bii.item->c == 1) { // expected.
+      rc_bucket_remove(bii.bucket, bii.index);
+    } else { // leak.
+      errFL("rc_remove: detected leaked object: %o", r);
+    }
+  } else {
+    errFL("rc_remove: item has an indirect count: %o", r);
+  }
 }
 #endif
 
 
-UNUSED_FN static Int rc_get(Obj o) {
+static Uns rc_get(Obj o) {
   // get the object's retain count for debugging purposes.
   counter_inc(obj_counter_index(o));
-  if (obj_tag(o)) return -1;
-  Uns h = rc_hash(o);
-  RC_bucket* b = rc_bucket_ptr(h);
-  for_in(i, b->len) {
-    RC_item* item = b->items + i;
-    if (item->h == h) {
-      assert(rc_item_is_direct(item));
-      assert(item->c < max_Uns);
-      return (Int)item->c >> 1; // shift off the flag bit.
-    }
-  }
-  assert(0); // could not find object.
-  return -1;
+  if (obj_tag(o)) return max_Uns;
+  RC_item* item = rc_resolve_item(rc_get_item(o));
+  assert(item);
+  return item->c >> 1; // shift off the flag bit.
 }
 
 
@@ -242,21 +273,10 @@ static Obj rc_ret(Obj o) {
   // increase the object's retain count by one.
   counter_inc(obj_counter_index(o));
   if (obj_tag(o)) return o;
-  Uns h = rc_hash(o);
-  RC_bucket* b = rc_bucket_ptr(h);
-  for_in(i, b->len) {
-    RC_item* item = b->items + i;
-    if (item->h == h) {
-      rc_hist_count_gets(i);
-      while (!rc_item_is_direct(item)) {
-        item = item->p;
-      }
-      assert(item->c < max_Uns);
-      item->c += 2; // increment by two to leave the flag bit intact.
-      return o;
-    }
-  }
-  assert(0); // could not find object.
+  RC_item* item = rc_resolve_item(rc_get_item(o));
+  assert(item);
+  assert(item->c < max_Uns);
+  item->c += 2; // increment by two to leave the flag bit intact.
   return o;
 }
 
@@ -269,31 +289,18 @@ static void rc_rel(Obj o) {
   do {
     counter_dec(obj_counter_index(o));
     if (obj_tag(o)) return;
-    Int round = 0;
-    Bool found = false;
-    Uns h = rc_hash(o);
-    RC_bucket* b = rc_bucket_ptr(h);
-    for_in(i, b->len) {
-      RC_item* item = b->items + i;
-      if (item->h == h) {
-        found = true;
-        rc_hist_count_gets(i);
-        RC_item* item_d = item;
-        while (!rc_item_is_direct(item_d)) {
-          item_d = item_d->p;
-        }
-        if (item_d->c == 1) {
-          rc_bucket_remove(b, i); // removes item, not item_d.
-          o = ref_dealloc(o); // returns tail object to be released.
-        } else {
-          item_d->c -= 2; // decrement by two to leave the flag bit intact.
-          o = obj0;
-        }
-        break;
-      }
+    RC_BII bii = rc_get_BII(o);
+    if (!bii.item) return; // either cycle deallocation is complete, or a non-cyclic object's item was missing due to a bug.
+    RC_item* item = rc_resolve_item(bii.item);
+    if (item->c == 1) {
+      rc_bucket_remove(bii.bucket, bii.index); // removes original item, not resolved.
+      // the resolved item belongs to a different object in the cycle,
+      // which will be presumably released and dealloced recursively by this call to dealloc.
+      o = ref_dealloc(o); // returns tail object to be released.
+    } else {
+      item->c -= 2; // decrement by two to leave the flag bit intact.
+      o = obj0;
     }
-    assert(found);
-    round++;
   } while (!is(o, obj0));
 }
 

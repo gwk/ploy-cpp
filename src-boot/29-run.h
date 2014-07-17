@@ -277,8 +277,8 @@ static Step run_call_host(Int d, Obj env, Obj func, Mem args) {
   exc_check(is(ret_type, s_nil), "host function %o ret-type is non-nil: %o", name, ret_type);
   exc_check(obj_is_ptr(body), "host function %o body is not a Ptr: %o", name, body);
   Int len_pars = struct_len(pars);
-  exc_check(args.len == len_pars, "host function expects %i argument%s; received %i",
-    len_pars, (len_pars == 1 ? "" : "s"), args.len);
+  exc_check(args.len == len_pars, "host function expects %i argument%s; received %i; %o",
+    len_pars, (len_pars == 1 ? "" : "s"), args.len, name);
   // TODO: check arg types against parameters; use run_bind_args?
   Func_host_ptr f_ptr = cast(Func_host_ptr, ptr_val(body));
   rc_rel(func);

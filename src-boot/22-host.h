@@ -191,9 +191,42 @@ static Obj host_init_el(Obj env, Mem args) {
   Obj old = m.els[j];
   exc_check(is(old, s_UNINIT), "init-el found element %i is already initialized: %o", j, o);
   rc_rel_val(old);
-  m.els[j] = e;
+  m.els[j] = e; // o assumes ownership of e.
   rc_rel_val(i);
   return o;
+}
+
+
+static Obj host_ref_back(Obj env, Mem args) {
+  // owns elements of args.
+  // return the single argument without retaining it.
+  assert(args.len == 1);
+  Obj a = args.els[0];
+  exc_check(rc_get(a) > 0, "ref-back must not have sole ownership of argument: %o", a);
+  rc_rel(a);
+  return a;
+}
+
+
+static Obj host_ref_fwd(Obj env, Mem args) {
+  // owns elements of args.
+  // a is the delegate item (the conceptual root of the cycle);
+  // b is the delegator item (the auxiliary object).
+  // the ref from a to b is described as the 'forward reference';
+  // b -> a is the 'back reference', although both are simple references semantically.
+  assert(args.len == 2);
+  Obj a = args.els[0];
+  Obj b = args.els[1];
+  exc_check(obj_is_struct(a), "cycle-pair requires arg 1 to be a Struct; received: %o", a);
+  exc_check(obj_is_struct(b), "cycle-pair requires arg 2 to be a Struct; received: %o", b);
+
+  RC_item* ai = rc_resolve_item(rc_get_item(a));
+  assert(ai);
+  RC_item* bi = rc_get_item(b);
+  exc_check(rc_item_is_direct(bi), "cycle-pair arg 2 (delegator) has already delegated: %o", b);
+  rc_delegate_item(ai, bi);
+  rc_rel(a);
+  return b;
 }
 
 
@@ -430,6 +463,8 @@ static Obj host_init(Obj env) {
   DEF_FH(1, "exit", host_exit)
   DEF_FH(1, "error", host_error)
   DEF_FH(1, "type-of", host_type_of)
+  DEF_FH(1, "ref-back", host_ref_back)
+  DEF_FH(2, "ref-fwd", host_ref_fwd)
   DEF_FH(2, "_boot-err", host_boot_err)
   DEF_FH(1, "_boot-mk-do", host_boot_mk_do)
 #undef DEF_FH
