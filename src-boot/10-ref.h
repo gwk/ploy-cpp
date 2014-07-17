@@ -51,6 +51,7 @@ static Obj env_rel_fields(Obj o);
 static Obj struct_rel_fields(Obj s);
 
 static Obj ref_dealloc(Obj r) {
+  //errFL("DEALLOC: %p:%o", r, r);
   rc_rel(*r.type_ptr);
   Obj tail;
   if (ref_is_data(r)) { // no extra action required.

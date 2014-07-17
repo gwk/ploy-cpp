@@ -104,6 +104,7 @@ static void rc_hist_count_moves(Int i) {
 
 
 static Bool rc_item_is_direct(RC_item* item) {
+  assert(item);
   return item->c & 1; // check if the low flag bit is set.
 }
 
@@ -189,7 +190,7 @@ static void rc_insert(Obj r) {
   rc_hist_count_ref_bits(r);
   Uns h = rc_hash(r);
   RC_bucket* b = rc_bucket_ptr(h);
-  rc_bucket_append(b, h, 1); // start with a direct count of 0 plus flag bit of 1.
+  rc_bucket_append(b, h, (1<<1) + 1); // start with a direct count of 1 plus flag bit of 1.
   rc_table.len++;
 }
 
@@ -247,7 +248,7 @@ static void rc_delegate_item(RC_item* a, RC_item* b) {
 static void rc_remove(Obj r) {
   RC_BII bii = rc_get_BII(r);
   if (rc_item_is_direct(bii.item)) {
-    if (bii.item->c == 1) { // expected.
+    if (bii.item->c == (1<<1) + 1) { // expected.
       rc_bucket_remove(bii.bucket, bii.index);
     } else { // leak.
       errFL("rc_remove: detected leaked object: %o", r);
@@ -272,7 +273,9 @@ static Obj rc_ret(Obj o) {
   // increase the object's retain count by one.
   counter_inc(obj_counter_index(o));
   if (obj_tag(o)) return o;
-  RC_item* item = rc_resolve_item(rc_get_item(o));
+  RC_item* item = rc_get_item(o);
+  check(item, "object was prematurely deallocated: %p", o);
+  item = rc_resolve_item(item);
   assert(item);
   assert(item->c < max_Uns);
   item->c += 2; // increment by two to leave the flag bit intact.
@@ -289,9 +292,12 @@ static void rc_rel(Obj o) {
     counter_dec(obj_counter_index(o));
     if (obj_tag(o)) return;
     RC_BII bii = rc_get_BII(o);
-    if (!bii.item) return; // either cycle deallocation is complete, or a non-cyclic object's item was missing due to a bug.
+    if (!bii.item) {
+      // cycle deallocation is complete, and we have arrived at an already-deallocated member.
+      return;     
+    }
     RC_item* item = rc_resolve_item(bii.item);
-    if (item->c == 1) {
+    if (item->c == (1<<1) + 1) { // count == 1.
       rc_bucket_remove(bii.bucket, bii.index); // removes original item, not resolved.
       // the resolved item belongs to a different object in the cycle,
       // which will be presumably released and dealloced recursively by this call to dealloc.

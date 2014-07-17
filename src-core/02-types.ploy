@@ -2,3 +2,83 @@
 # Permission to use this file is granted in ploy/license.txt.
 
 # ploy type system.
+##<do
+<macro _boot-mk-type [-name -kind]
+  # type instances are structs of -name:Expr -kind:Type-kind.
+  # note that the type of name is Expr, not Sym,
+  # because the name of a derived type might be the expression used to derive it.
+  # Type-kind is a union of the various Type-kind-*.
+  ~<let ,name {:Type `,name ,kind}>>
+
+<_boot-mk-type Type-kind-unit
+  # unit types have a unique singleton instance, and therefore the kind contains no information.
+  # thus, the Type-kind of Type-kind-unit is Type-kind-unit.
+  `UNINIT> # circular reference.
+<let type-kind-unit {:Type-kind-unit}> # create the singleton instance manually.
+(init-el Type-kind-unit 1 type-kind-unit) # Type-kind-unit is now well-formed.
+
+<_boot-mk-type Type-kind-prim
+  # the primitive types are opaque from the perspective of the type system;
+  # therefore Type-kind-prim is also a unit type.
+  type-kind-unit>
+
+<_boot-mk-type Type-kind-mem `UNINIT>
+<_boot-mk-type Type-kind-struct `UNINIT>
+<_boot-mk-type Type-kind-union `UNINIT>
+
+<_boot-mk-type Type-kind-var
+  # type variables are abstract, used for type parameterization.
+  type-kind-unit>
+
+<_boot-mk-type Type-kind-class
+  # type classes are abstract, synonymous with interfaces.
+  # not yet implemented, so for now define as a unit type.
+  type-kind-unit>
+
+<_boot-mk-type Type-field
+  # Type-field is a struct of -name:Sym -type:Type.
+  `UNINIT>
+
+<_boot-mk-type Mem-Type-field {:Type-kind-mem Type-field}>
+
+(init-el Type-kind-mem 1
+  # mem types are dynamic-length blocks of a single element type;
+  # the type-kind is a struct of one field specifying the element type.
+  {:Type-kind-struct
+    {:Mem-Type-field # -fields
+      {:Type-field `el-type Type}}})
+
+(init-el Type-kind-struct 1
+  # struct types are defined by a list of field names/type pairs.
+  # the type-kind is a struct of one field, 'fields'.
+  {:Type-kind-struct
+    {:Mem-Type-field # -fields
+      {:Type-field `fields Mem-Type-field}}})
+
+(init-el Type-kind-union 1
+  # union types are defined by a list of variant name/type pairs.
+  # the type-kind is a struct of one field, 'variants'.
+  # note that for now at least we reuse the Type-field type to also represent variants.
+  {:Type-kind-struct
+    {:Mem-Type-field # -fields
+      {:Type-field `variants Mem-Type-field}}})
+
+(init-el Type-field 1
+  {:Type-kind-struct
+    {:Mem-Type-field # -fields
+      {:Type-field `name Sym}
+      {:Type-field `type Type}}})
+
+
+<_boot-mk-type Type-kind
+  {:Type-kind-union
+    {:Mem-Type-field # -variants
+      {:Type-field `name Sym}
+      {:Type-field `type Type}}}>
+
+(init-el Type 1
+  {:Type-kind-struct
+    {:Mem-Type-field # -fields
+      {:Type-field `name Expr}
+      {:Type-field `kind Type-kind}}})
+>
