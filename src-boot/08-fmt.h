@@ -12,6 +12,7 @@ static void fmt_list_to_file(CFile f, Chars_const fmt, Chars_const args_str, va_
   // the format syntax is similar to printf, but simplified and extended to handle ploy objects.
   // %o: Obj.
   // %i: Int.
+  // %u: Uns.
   // %p: Raw.
   // %s: Chars.
   // %c: Char. NOTE: Char arguments must be cast to Uns in the call to align variadic args.
@@ -41,6 +42,7 @@ static void fmt_list_to_file(CFile f, Chars_const fmt, Chars_const args_str, va_
       switch (c) {
         case 'o': write_repr(f, arg); break;
         case 'i': fprintf(f, "%li", arg.i); break;
+        case 'u': fprintf(f, "%lu", arg.u); break;
         case 'p': fprintf(f, "%p", arg.r); break;
         case 's': fputs(arg.c, f); break;
         case 'c': fputs(char_repr((Char)arg.u), f); break;
