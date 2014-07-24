@@ -6,9 +6,9 @@
 
 <fn error [-msg]
   # raise an error. for now we can only print the message and exit.
-  (raw-write (field std-err 1) 'error: ')
-  (raw-write (field std-err 1) msg)
-  (raw-write (field std-err 1) '\n')
+  (_host-write (field std-err 1) 'error: ')
+  (_host-write (field std-err 1) msg)
+  (_host-write (field std-err 1) '\n')
   (exit 1)>
 
 # math functions.
@@ -79,11 +79,11 @@
 <fn write1 [-file -str]
   # write a single string.
   # TODO: support other types.
-  (raw-write (field file 1) str)>
+  (_host-write (field file 1) str)>
 
 <fn writeR1 [-file -obj]
   # write a single repr.
-  (raw-write-repr (field file 1) obj)>
+  (_host-write-repr (field file 1) obj)>
 
 # TODO: this is a temporary, halfway solution to the desired printing functions.
 # would be better to use a macro to generate each function with no subcalls.

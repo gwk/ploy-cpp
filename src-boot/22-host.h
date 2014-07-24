@@ -279,13 +279,13 @@ static Obj host_append(Obj env, Mem args) {
 // TODO: host_cat
 
 
-static Obj host_raw_write(Obj env, Mem args) {
+static Obj host_write(Obj env, Mem args) {
   // owns elements of args.
   assert(args.len == 2);
   Obj f = args.els[0];
   Obj d = args.els[1];
-  exc_check(obj_is_ptr(f), "write requires arg 1 to be a File; received: %o", f);
-  exc_check(obj_is_data(d), "write requires arg 2 to be a Data; received: %o", d);
+  exc_check(obj_is_ptr(f), "_host-write requires arg 1 to be a File; received: %o", f);
+  exc_check(obj_is_data(d), "_host-write requires arg 2 to be a Data; received: %o", d);
   CFile file = ptr_val(f);
   // for now, ignore the return value.
   fwrite(data_ptr(d), size_Char, cast(Uns, data_len(d)), file);
@@ -295,12 +295,12 @@ static Obj host_raw_write(Obj env, Mem args) {
 }
 
 
-static Obj host_raw_write_repr(Obj env, Mem args) {
+static Obj host_write_repr(Obj env, Mem args) {
   // owns elements of args.
   assert(args.len == 2);
   Obj f = args.els[0];
   Obj o = args.els[1];
-  exc_check(obj_is_ptr(f), "write requires arg 1 to be a File; received: %o", f);
+  exc_check(obj_is_ptr(f), "_host-write-repr requires arg 1 to be a File; received: %o", f);
   CFile file = ptr_val(f);
   write_repr(file, o);
   rc_rel(f);
@@ -309,11 +309,11 @@ static Obj host_raw_write_repr(Obj env, Mem args) {
 }
 
 
-static Obj host_raw_flush(Obj env, Mem args) {
+static Obj host_flush(Obj env, Mem args) {
   // owns elements of args.
   assert(args.len == 1);
   Obj f = args.els[0];
-  exc_check(obj_is_ptr(f), "write requires arg 1 to be a File; received: %o", f);
+  exc_check(obj_is_ptr(f), "_host-flush requires arg 1 to be a File; received: %o", f);
   CFile file = ptr_val(f);
   fflush(file);
   rc_rel(f);
@@ -325,6 +325,7 @@ static Obj host_exit(Obj env, Mem args) {
   // owns elements of args.
   assert(args.len == 1);
   Obj code = args.els[0];
+  exc_check(obj_is_int(code), "exit requires arg 1 to be an Int; recived: %o", code);
   exit(cast(I32, int_val(code)));
   // TODO: throw exception to unwind, cleanup, and report counts?
 }
@@ -451,9 +452,9 @@ static Obj host_init(Obj env) {
   DEF_FH(3, "slice", host_slice)
   DEF_FH(2, "prepend", host_prepend)
   DEF_FH(2, "append", host_append)
-  DEF_FH(2, "raw-write", host_raw_write)
-  DEF_FH(2, "raw-write-repr", host_raw_write_repr)
-  DEF_FH(1, "raw-flush", host_raw_flush)
+  DEF_FH(2, "_host-write", host_write)
+  DEF_FH(2, "_host-write-repr", host_write_repr)
+  DEF_FH(1, "_host-flush", host_flush)
   DEF_FH(1, "exit", host_exit)
   DEF_FH(1, "error", host_error)
   DEF_FH(1, "type-of", host_type_of)
