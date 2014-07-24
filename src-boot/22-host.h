@@ -344,7 +344,7 @@ static Obj host_type_of(Obj env, Mem args) {
   Obj o = args.els[0];
   Obj s = obj_type(o);
   rc_rel(o);
-  return rc_ret_val(s);
+  return rc_ret(s);
 }
 
 
