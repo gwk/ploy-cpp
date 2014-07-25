@@ -56,7 +56,7 @@ static Obj expand_macro(Obj env, Mem args) {
     error("macro lookup error: %o", macro_sym);
   }
   Step step = run_call_native(0, rc_ret(env), rc_ret(macro), mem_next(args), true);
-  step = run_tail(0, step);
+  step = run_tail(0, step); // handle any TCO steps.
   rc_rel(step.env);
   return step.val;
 }
