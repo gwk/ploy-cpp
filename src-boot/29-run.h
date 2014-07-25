@@ -37,21 +37,23 @@ static Step run_sym(Obj env, Obj code) {
 
 static Step run(Int d, Trace* t, Obj env, Obj code);
 
-static Step run_Eval(Int d, Trace* t, Obj env, Mem args) {
+static Step run_Eval(Int d, Trace* t, Obj env, Obj code) {
   // owns env.
+  Mem args = struct_mem(code);
   exc_check(args.len == 1, "Env requires 1 argument; received %i", args.len);
   Obj expr = args.els[0];
   Step step = run(d, t, env, expr);
   env = step.env;
-  Obj code = step.val;
-  step = run(d, t, env, code);
-  rc_rel(code);
+  Obj dyn_code = step.val;
+  step = run(d, t, env, dyn_code);
+  rc_rel(dyn_code);
   return step;
 }
 
 
-static Step run_Quo(Int d, Trace* t, Obj env, Mem args) {
+static Step run_Quo(Int d, Trace* t, Obj env, Obj code) {
   // owns env.
+  Mem args = struct_mem(code);
   exc_check(args.len == 1, "Quo requires 1 argument; received %i", args.len);
   return mk_step(env, rc_ret(args.els[0]));
 }
@@ -59,8 +61,9 @@ static Step run_Quo(Int d, Trace* t, Obj env, Mem args) {
 
 static Step run_step(Int d, Trace* t, Obj env, Obj code);
 
-static Step run_Do(Int d, Trace* t, Obj env, Mem args) {
+static Step run_Do(Int d, Trace* t, Obj env, Obj code) {
   // owns env.
+  Mem args = struct_mem(code);
   if (!args.len) {
     return mk_step(env, rc_ret_val(s_void));
   }
@@ -74,8 +77,9 @@ static Step run_Do(Int d, Trace* t, Obj env, Mem args) {
 }
 
 
-static Step run_Scope(Int d, Trace* t, Obj env, Mem args) {
+static Step run_Scope(Int d, Trace* t, Obj env, Obj code) {
   // owns env.
+  Mem args = struct_mem(code);
   exc_check(args.len == 1, "Scope requires 1 argument; received %i", args.len);
   Obj body = args.els[0];
   Obj sub_env = env_push_frame(rc_ret(env), data_new_from_chars(cast(Chars, "<scope>")));
@@ -84,8 +88,9 @@ static Step run_Scope(Int d, Trace* t, Obj env, Mem args) {
 }
 
 
-static Step run_Let(Int d, Trace* t, Obj env, Mem args) {
+static Step run_Let(Int d, Trace* t, Obj env, Obj code) {
   // owns env.
+  Mem args = struct_mem(code);
   exc_check(args.len == 2, "Let requires 2 arguments; received %i", args.len);
   Obj sym = args.els[0];
   Obj expr = args.els[1];
@@ -97,8 +102,9 @@ static Step run_Let(Int d, Trace* t, Obj env, Mem args) {
 }
 
 
-static Step run_If(Int d, Trace* t, Obj env, Mem args) {
+static Step run_If(Int d, Trace* t, Obj env, Obj code) {
   // owns env.
+  Mem args = struct_mem(code);
   exc_check(args.len == 3, "If requires 3 arguments; received %i", args.len);
   Obj pred = args.els[0];
   Obj then = args.els[1];
@@ -110,8 +116,9 @@ static Step run_If(Int d, Trace* t, Obj env, Mem args) {
 }
 
 
-static Step run_Fn(Int d, Trace* t, Obj env, Mem args) {
+static Step run_Fn(Int d, Trace* t, Obj env, Obj code) {
   // owns env.
+  Mem args = struct_mem(code);
   exc_check(args.len == 6, "Fn requires 6 arguments; received %i", args.len);
   Obj name      = args.els[0];
   Obj is_native = args.els[1];
@@ -138,8 +145,9 @@ static Step run_Fn(Int d, Trace* t, Obj env, Mem args) {
 }
 
 
-static Step run_Syn_struct_typed(Int d, Trace* t, Obj env, Mem args) {
+static Step run_Syn_struct_typed(Int d, Trace* t, Obj env, Obj code) {
   // owns env.
+  Mem args = struct_mem(code);
   check(args.len > 0, "Syn-struct is empty");
   Step step = run(d, t, env, args.els[0]); // evaluate the type.
   env = step.env;
@@ -154,8 +162,9 @@ static Step run_Syn_struct_typed(Int d, Trace* t, Obj env, Mem args) {
 }
 
 
-static Step run_Syn_seq_typed(Int d, Trace* t, Obj env, Mem args) {
+static Step run_Syn_seq_typed(Int d, Trace* t, Obj env, Obj code) {
   // owns env.
+  Mem args = struct_mem(code);
   check(args.len > 0, "Syn-struct is empty");
   Step step = run(d, t, env, args.els[0]); // evaluate the type.
   env = step.env;
@@ -312,8 +321,9 @@ static Step run_call_host(Int d, Trace* t, Obj env, Obj func, Mem args) {
 }
 
 
-static Step run_Call(Int d, Trace* t, Obj env, Mem args) {
+static Step run_Call(Int d, Trace* t, Obj env, Obj code) {
   // owns env.
+  Mem args = struct_mem(code);
   check(args.len > 0, "call is empty");
   Obj callee = args.els[0];
   Step step = run(d, t, env, callee);
@@ -367,7 +377,7 @@ static Step run_step_disp(Int d, Trace* t, Obj env, Obj code) {
   Obj type = ref_type(code);
   exc_check(obj_tag(type) == ot_sym, "cannot run object with non-sym type: %o", code);
   Int si = sym_index(type); // Int type avoids incomplete enum switch error.
-#define RUN(s) case si_##s: return run_##s(d, t, env, struct_mem(code))
+#define RUN(s) case si_##s: return run_##s(d, t, env, code)
   switch (si) {
     case si_Data: return mk_step(env, rc_ret(code)); // self-evaluating.
     RUN(Eval);
