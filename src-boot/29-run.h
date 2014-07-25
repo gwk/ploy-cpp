@@ -407,14 +407,13 @@ static Step run_tail(Int d, Trace* t, Step step) {
     errFL("%s %o", trace_tail_prefix, step.tco_code);
 #endif
     step = run_step_disp(d, t, tco_env, step.tco_code); // owns tco_env; borrows .tco_code.
-    // the modified tco_env is immediately abandoned since tco_code is in the tail position.
+    // the modified tco env is immediately abandoned since tco_code is in the tail position.
     rc_rel(step.env);
   }
   step.env = env; // replace whatever modified callee env from TCO with the topmost env.
-  // done. if TCO iterations occurred,
-  // then the intermediate step.val objects were really tc_env, consumed by run_step.
-  // the final val is the one we want to return, so we do not have to ret/rel.
-  assert(is(step.tco_code, obj0));
+  // done; if TCO iterations occurred,
+  // then the intermediate step.val objects were really the tco envs, consumed by run_step.
+  // the final step.val is the one we want to return, so we do not have to ret/rel anything.
 #if VERBOSE_EVAL
     for_in(i, d) err(i % 4 ? " " : "|");
     errFL("%s %o", trace_val_prefix, step.val);
