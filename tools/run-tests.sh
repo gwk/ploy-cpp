@@ -7,7 +7,7 @@ set -e
 cd $(dirname "$0")/..
 
 opt=''
-if [[ "$1" == '-dbg' ]]; then
+if [[ "$1" == '-dbg' ]] || [[ "$1" == '-cov' ]]; then
   opt=$1
   shift;
 fi

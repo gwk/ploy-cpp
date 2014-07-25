@@ -20,6 +20,20 @@ _bld/ploy: tools/cc.sh _bld/ploy-core.h src-boot/*
 _bld/ploy-dbg: tools/cc.sh _bld/ploy-core.h src-boot/*
 	tools/cc.sh -dbg src-boot/ploy.c -o $@
 
+_bld/ploy-cov: tools/cc.sh _bld/ploy-core.h src-boot/*
+	tools/cc.sh -dbg src-boot/ploy.c -o $@ --coverage
+	mv ploy.gcno _bld/ploy-cov.gcno
+
+# note: ploy.gcda will accumulate results, so it must not exist when the tests run.
+_bld/ploy-cov.gcda: tools/run-tests.sh _bld/ploy-cov
+	test '!' -r ploy.gcda
+	tools/run-tests.sh -cov test/[0-2]-*
+	mv ploy.gcda $@
+
+_bld/ploy-cov.llvm-cov: _bld/ploy-cov.gcda
+	# coming in llvm 3.5: --all-blocks --branch-probabilities --function-summaries
+	llvm-cov -gcno=_bld/ploy-cov.gcno -gcda=_bld/ploy-cov.gcda -o $@
+
 # preprocess for viewing macro expansions.
 _bld/ploy-post-proc-no-libs.c: tools/cc.sh _bld/ploy-core.h src-boot/* 
 	tools/cc.sh src-boot/ploy.c -o $@ -E -D=SKIP_LIB_INCLUDES
