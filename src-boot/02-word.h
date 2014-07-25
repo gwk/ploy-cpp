@@ -107,17 +107,14 @@ static const Uns width_min_alloc = 4; // in mask bits.
 static const Int size_min_alloc = 1 << width_min_alloc; // in bytes.
 
 
-// a few forward declarations for error handling need to be declared very early.
-union _Obj;
-static void fmt_to_file(CFile f, Chars_const fmt, Chars_const args_str, ...);
-static NO_RETURN _exc_raise(union _Obj env, Chars_const fmt, Chars_const args_str, ...);
-
 // stderr utilities: write info/error/debug messages to the console.
 
 #define err(s) fputs((s), stderr)
 #define err_nl() err("\n")
 #define err_flush() fflush(stderr)
 #define errL(s) { err(s); err_nl(); }
+
+static void fmt_to_file(CFile f, Chars_const fmt, Chars_const args_str, ...);
 
 // note: the final token pasting is between the comma and __VA_ARGS__.
 // this is a gnu extension to elide the comma in the case where __VA_ARGS__ is empty.
@@ -130,6 +127,9 @@ static NO_RETURN _exc_raise(union _Obj env, Chars_const fmt, Chars_const args_st
   errFL("ploy error: " fmt, ## __VA_ARGS__); \
   fail(); \
 }
+
+union _Obj;
+static NO_RETURN _exc_raise(union _Obj env, Chars_const fmt, Chars_const args_str, ...);
 
 // check that a condition is true; otherwise error.
 #define check(condition, fmt, ...) { if (!(condition)) error(fmt, ## __VA_ARGS__); }
