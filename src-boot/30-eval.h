@@ -5,13 +5,14 @@
 
 
 static Step eval(Obj env, Obj code) {
+  Trace* t = NULL;
   Obj preprocessed = preprocess(code); // borrows code.
   if (is(preprocessed, obj0)) {
     return mk_step(env, rc_ret_val(s_void)); // TODO: document why this is necessary.
   }
   Obj expanded = expand(env, preprocessed); // owns preprocessed.
   Obj compiled = compile(env, expanded); // owns expanded.
-  Step step = run(-1, env, compiled); // borrows compiled.
+  Step step = run(-1, t, env, compiled); // borrows compiled.
   rc_rel(compiled);
   return step;
 }
