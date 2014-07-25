@@ -319,6 +319,14 @@ static const Chars_const trace_tail_prefix  = "▹ ";
 // printed after each run step; white_bullet.
 static const Chars_const trace_val_prefix = "◦ ";
 
+// printed before each macro expand step; white_diamond.
+static const Chars_const trace_expand_prefix = "◇ ";
+
+// printed after each macro expand step; white_small_square.
+static const Chars_const trace_expand_val_prefix = "▫ ";
+
+
+
 static Step run_step_disp(Int d, Obj env, Obj code) {
   // owns env.
   Obj_tag ot = obj_tag(code);
@@ -400,4 +408,27 @@ static Step run(Int depth, Obj env, Obj code) {
   Step step = run_step(d, env, code);
   return run_tail(d, step);
 }
+
+
+static Obj run_macro(Obj env, Obj code) {
+#if VERBOSE_EVAL
+  errFL("%s %o", trace_expand_prefix, code);
+#endif
+  Mem args = struct_mem(code);
+  check(args.len > 0, "empty macro expand");
+  Obj macro_sym = mem_el(args, 0);
+  check(obj_is_sym(macro_sym), "expand argument 0 must be a Sym; found: %o", macro_sym);
+  Obj macro = env_get(env, macro_sym);
+  if (is(macro, obj0)) { // lookup failed.
+    error("macro lookup error: %o", macro_sym);
+  }
+  Step step = run_call_native(0, rc_ret(env), rc_ret(macro), mem_next(args), true);
+  step = run_tail(0, step); // handle any TCO steps.
+  rc_rel(step.env);
+#if VERBOSE_EVAL
+    errFL("%s %o", trace_expand_val_prefix, step.val);
+#endif
+  return step.val;
+}
+
 

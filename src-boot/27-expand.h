@@ -4,10 +4,6 @@
 #include "26-pre.h"
 
 
-static const Chars_const trace_expand_prefix = "◇ "; // white diamond.
-static const Chars_const trace_expand_val_prefix = "▫ "; // white small square.
-
-
 static Obj expand_quasiquote(Int d, Obj o) {
   // owns o.
   if (!obj_is_struct(o)) { // replace the quasiquote with quote.
@@ -43,30 +39,7 @@ static Obj expand_quasiquote(Int d, Obj o) {
 }
 
 
-static Step run_call_native(Int d, Obj env, Obj func, Mem args, Bool is_expand); // owns func.
-static Step run_tail(Int d, Step step);
-
-static Obj expand_macro(Obj env, Obj code) {
-#if VERBOSE_EVAL
-  errFL("%s %o", trace_expand_prefix, code);
-#endif
-  Mem args = struct_mem(code);
-  check(args.len > 0, "empty macro expand");
-  Obj macro_sym = mem_el(args, 0);
-  check(obj_is_sym(macro_sym), "expand argument 0 must be a Sym; found: %o", macro_sym);
-  Obj macro = env_get(env, macro_sym);
-  if (is(macro, obj0)) { // lookup failed.
-    error("macro lookup error: %o", macro_sym);
-  }
-  Step step = run_call_native(0, rc_ret(env), rc_ret(macro), mem_next(args), true);
-  step = run_tail(0, step); // handle any TCO steps.
-  rc_rel(step.env);
-#if VERBOSE_EVAL
-    errFL("%s %o", trace_expand_val_prefix, step.val);
-#endif
-  return step.val;
-}
-
+static Obj run_macro(Obj env, Obj code);
 
 static Obj expand(Obj env, Obj code) {
   // owns code.
@@ -86,7 +59,7 @@ static Obj expand(Obj env, Obj code) {
     return expand_quasiquote(0, expr);
   }
   if (is(type, s_Expand)) {
-    Obj expanded = expand_macro(env, code);
+    Obj expanded = run_macro(env, code);
     rc_rel(code);
     // macro result may contain more expands; recursively expand the result.
     return expand(env, expanded);
