@@ -64,17 +64,17 @@ typedef struct _Env Env;
 typedef struct _Struct Struct;
 typedef struct _Type Type;
 
-typedef union _Obj {
+union _Obj {
   Int i;
   Uns u;
   Raw r;
   Chars c; // no valid object can be interpreted as Chars; this for the exc_raise formatter.
-  union _Obj* type_ptr; // common to all ref types.
+  Obj* type_ptr; // common to all ref types.
   Data* d;
   Env* e;
   Struct* s;
   Type* t;
-} Obj;
+};
 DEF_SIZE(Obj);
 
 

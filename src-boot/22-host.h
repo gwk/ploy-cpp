@@ -4,14 +4,14 @@
 #include "21-type.h"
 
 
-static Obj host_identity(Obj env, Mem args) {
+static Obj host_identity(Trace* trace, Obj env, Mem args) {
   // owns element of args.
   assert(args.len == 1);
   return args.els[0];
 }
 
 
-static Obj host_is_true(Obj env, Mem args) {
+static Obj host_is_true(Trace* trace, Obj env, Mem args) {
   // owns elements of args.
   assert(args.len == 1);
   Obj o = args.els[0];
@@ -21,7 +21,7 @@ static Obj host_is_true(Obj env, Mem args) {
 }
 
 
-static Obj host_not(Obj env, Mem args) {
+static Obj host_not(Trace* trace, Obj env, Mem args) {
   // owns elements of args.
   assert(args.len == 1);
   Obj arg = args.els[0];
@@ -31,7 +31,7 @@ static Obj host_not(Obj env, Mem args) {
 }
 
 
-static Obj host_ineg(Obj env, Mem args) {
+static Obj host_ineg(Trace* trace, Obj env, Mem args) {
   // owns elements of args.
   assert(args.len == 1);
   Obj n = args.els[0];
@@ -42,7 +42,7 @@ static Obj host_ineg(Obj env, Mem args) {
 }
 
 
-static Obj host_iabs(Obj env, Mem args) {
+static Obj host_iabs(Trace* trace, Obj env, Mem args) {
   // owns elements of args.
   assert(args.len == 1);
   Obj n = args.els[0];
@@ -56,7 +56,7 @@ static Obj host_iabs(Obj env, Mem args) {
 // TODO: check for overflow. currently we rely on clang to insert overflow traps.
 // owns elements of args.
 #define HOST_BIN_OP(name) \
-static Obj host_##name(Obj env, Mem args) { \
+static Obj host_##name(Trace* trace, Obj env, Mem args) { \
   assert(args.len == 2); \
   Obj n0 = args.els[0]; \
   Obj n1 = args.els[1]; \
@@ -102,7 +102,7 @@ HOST_BIN_OP(ile)
 HOST_BIN_OP(ige)
 
 
-static Obj host_sym_eq(Obj env, Mem args) {
+static Obj host_sym_eq(Trace* trace, Obj env, Mem args) {
   // owns elements of args.
   assert(args.len == 2);
   Obj a = args.els[0];
@@ -116,7 +116,7 @@ static Obj host_sym_eq(Obj env, Mem args) {
 }
 
 
-static Obj host_dlen(Obj env, Mem args) {
+static Obj host_dlen(Trace* trace, Obj env, Mem args) {
   // owns elements of args.
   assert(args.len == 1);
   Obj o = args.els[0];
@@ -132,7 +132,7 @@ static Obj host_dlen(Obj env, Mem args) {
 }
 
 
-static Obj host_mlen(Obj env, Mem args) {
+static Obj host_mlen(Trace* trace, Obj env, Mem args) {
   // owns elements of args.
   assert(args.len == 1);
   Obj o = args.els[0];
@@ -143,7 +143,7 @@ static Obj host_mlen(Obj env, Mem args) {
 }
 
 
-static Obj host_field(Obj env, Mem args) {
+static Obj host_field(Trace* trace, Obj env, Mem args) {
   // owns elements of args.
   assert(args.len == 2);
   Obj s = args.els[0];
@@ -160,7 +160,7 @@ static Obj host_field(Obj env, Mem args) {
 }
 
 
-static Obj host_el(Obj env, Mem args) {
+static Obj host_el(Trace* trace, Obj env, Mem args) {
   // owns elements of args.
   assert(args.len == 2);
   Obj m = args.els[0];
@@ -177,7 +177,7 @@ static Obj host_el(Obj env, Mem args) {
 }
 
 
-static Obj host_init_el(Obj env, Mem args) {
+static Obj host_init_el(Trace* trace, Obj env, Mem args) {
   // owns elements of args.
   assert(args.len == 3);
   Obj o = args.els[0];
@@ -200,7 +200,7 @@ static Obj host_init_el(Obj env, Mem args) {
 }
 
 
-static Obj host_cycle_pair(Obj env, Mem args) {
+static Obj host_cycle_pair(Trace* trace, Obj env, Mem args) {
   // owns elements of args.
   // a is the delegate item (the conceptual root of the cycle);
   // b is the delegator item (the auxiliary object).
@@ -223,7 +223,7 @@ static Obj host_cycle_pair(Obj env, Mem args) {
 }
 
 
-static Obj host_slice(Obj env, Mem args) {
+static Obj host_slice(Trace* trace, Obj env, Mem args) {
   // owns elements of args.
   assert(args.len == 3);
   Obj s = args.els[0];
@@ -240,7 +240,7 @@ static Obj host_slice(Obj env, Mem args) {
 }
 
 
-static Obj host_prepend(Obj env, Mem args) {
+static Obj host_prepend(Trace* trace, Obj env, Mem args) {
   // owns elements of args.
   assert(args.len == 2);
   Obj el = args.els[0];
@@ -258,7 +258,7 @@ static Obj host_prepend(Obj env, Mem args) {
 }
 
 
-static Obj host_append(Obj env, Mem args) {
+static Obj host_append(Trace* trace, Obj env, Mem args) {
   // owns elements of args.
   assert(args.len == 2);
   Obj s = args.els[0];
@@ -279,7 +279,7 @@ static Obj host_append(Obj env, Mem args) {
 // TODO: host_cat
 
 
-static Obj host_write(Obj env, Mem args) {
+static Obj host_write(Trace* trace, Obj env, Mem args) {
   // owns elements of args.
   assert(args.len == 2);
   Obj f = args.els[0];
@@ -295,7 +295,7 @@ static Obj host_write(Obj env, Mem args) {
 }
 
 
-static Obj host_write_repr(Obj env, Mem args) {
+static Obj host_write_repr(Trace* trace, Obj env, Mem args) {
   // owns elements of args.
   assert(args.len == 2);
   Obj f = args.els[0];
@@ -309,7 +309,7 @@ static Obj host_write_repr(Obj env, Mem args) {
 }
 
 
-static Obj host_flush(Obj env, Mem args) {
+static Obj host_flush(Trace* trace, Obj env, Mem args) {
   // owns elements of args.
   assert(args.len == 1);
   Obj f = args.els[0];
@@ -321,7 +321,7 @@ static Obj host_flush(Obj env, Mem args) {
 }
 
 
-static Obj host_exit(Obj env, Mem args) {
+static Obj host_exit(Trace* trace, Obj env, Mem args) {
   // owns elements of args.
   assert(args.len == 1);
   Obj code = args.els[0];
@@ -331,7 +331,7 @@ static Obj host_exit(Obj env, Mem args) {
 }
 
 
-static Obj host_error(Obj env, Mem args) {
+static Obj host_error(Trace* trace, Obj env, Mem args) {
   // owns elements of args.
   assert(args.len == 1);
   Obj msg = args.els[0];
@@ -339,7 +339,7 @@ static Obj host_error(Obj env, Mem args) {
 }
 
 
-static Obj host_type_of(Obj env, Mem args) {
+static Obj host_type_of(Trace* trace, Obj env, Mem args) {
   // owns elements of args.
   assert(args.len == 1);
   Obj o = args.els[0];
@@ -351,7 +351,7 @@ static Obj host_type_of(Obj env, Mem args) {
 
 static void write_data(CFile f, Obj d);
 
-static Obj host_dbg(Obj env, Mem args) {
+static Obj host_dbg(Trace* trace, Obj env, Mem args) {
   // owns elements of args.
   assert(args.len == 2);
   Obj label = args.els[0];
@@ -366,7 +366,7 @@ static Obj host_dbg(Obj env, Mem args) {
 }
 
 
-static Obj host_boot_mk_do(Obj env, Mem args) {
+static Obj host_boot_mk_do(Trace* trace, Obj env, Mem args) {
   // owns elements of args.
   assert(args.len == 1);
   Obj body = args.els[0];
@@ -383,7 +383,7 @@ static Obj host_boot_mk_do(Obj env, Mem args) {
 }
 
 
-typedef Obj(*Func_host_ptr)(Obj, Mem);
+typedef Obj(*Func_host_ptr)(Trace*, Obj, Mem);
 
 
 static Obj host_init_func(Obj env, Int len_pars, Chars name, Func_host_ptr ptr) {

@@ -4,12 +4,6 @@
 #include "28-compile.h"
 
 
-typedef struct _Trace {
-  Obj src_loc;
-  struct _Trace* next;
-} Trace;
-
-
 // struct representing a step of the interpreted computation.
 // in the normal case, it contains the environment and value resulting from the previous step.
 // in the tail-call optimization (TCO) case, it contains the tail step to perform.
@@ -23,7 +17,7 @@ typedef struct {
 #define mk_step(e, v) (Step){.env=(e), .val=(v), .tco_call=obj0, .tco_code=obj0}
 
 
-static Step run_sym(Obj env, Obj code) {
+static Step run_sym(Trace* trace, Obj env, Obj code) {
   // owns env.
   assert(obj_is_sym(code));
   assert(!is(code, s_ILLEGAL)); // anything that returns s_ILLEGAL should have raised an error.
@@ -36,23 +30,23 @@ static Step run_sym(Obj env, Obj code) {
 }
 
 
-static Step run(Int d, Trace* t, Obj env, Obj code);
+static Step run(Int d, Trace* trace, Obj env, Obj code);
 
-static Step run_Eval(Int d, Trace* t, Obj env, Obj code) {
+static Step run_Eval(Int d, Trace* trace, Obj env, Obj code) {
   // owns env.
   Mem args = struct_mem(code);
   exc_check(args.len == 1, "Env requires 1 argument; received %i", args.len);
   Obj expr = args.els[0];
-  Step step = run(d, t, env, expr);
+  Step step = run(d, trace, env, expr);
   env = step.env;
   Obj dyn_code = step.val;
-  step = run(d, t, env, dyn_code);
+  step = run(d, trace, env, dyn_code);
   rc_rel(dyn_code);
   return step;
 }
 
 
-static Step run_Quo(Int d, Trace* t, Obj env, Obj code) {
+static Step run_Quo(Int d, Trace* trace, Obj env, Obj code) {
   // owns env.
   Mem args = struct_mem(code);
   exc_check(args.len == 1, "Quo requires 1 argument; received %i", args.len);
@@ -60,9 +54,9 @@ static Step run_Quo(Int d, Trace* t, Obj env, Obj code) {
 }
 
 
-static Step run_step(Int d, Trace* t, Obj env, Obj code);
+static Step run_step(Int d, Trace* trace, Obj env, Obj code);
 
-static Step run_Do(Int d, Trace* t, Obj env, Obj code) {
+static Step run_Do(Int d, Trace* trace, Obj env, Obj code) {
   // owns env.
   Mem args = struct_mem(code);
   if (!args.len) {
@@ -70,15 +64,15 @@ static Step run_Do(Int d, Trace* t, Obj env, Obj code) {
   }
   Int last = args.len - 1;
   it_mem_to(it, args, last) {
-    Step step = run(d, t, env, *it);
+    Step step = run(d, trace, env, *it);
     env = step.env;
     rc_rel(step.val); // value ignored.
   };
-  return run_step(d, t, env, args.els[last]); // TCO.
+  return run_step(d, trace, env, args.els[last]); // TCO.
 }
 
 
-static Step run_Scope(Int d, Trace* t, Obj env, Obj code) {
+static Step run_Scope(Int d, Trace* trace, Obj env, Obj code) {
   // owns env.
   Mem args = struct_mem(code);
   exc_check(args.len == 1, "Scope requires 1 argument; received %i", args.len);
@@ -90,7 +84,7 @@ static Step run_Scope(Int d, Trace* t, Obj env, Obj code) {
 }
 
 
-static Step run_Let(Int d, Trace* t, Obj env, Obj code) {
+static Step run_Let(Int d, Trace* trace, Obj env, Obj code) {
   // owns env.
   Mem args = struct_mem(code);
   exc_check(args.len == 2, "Let requires 2 arguments; received %i", args.len);
@@ -98,27 +92,27 @@ static Step run_Let(Int d, Trace* t, Obj env, Obj code) {
   Obj expr = args.els[1];
   exc_check(obj_is_sym(sym), "Let requires argument 1 to be a bindable sym; received: %o", sym);
   exc_check(!sym_is_special(sym), "Let cannot bind to special sym: %o", sym);
-  Step step = run(d, t, env, expr);
+  Step step = run(d, trace, env, expr);
   Obj env1 = env_bind(step.env, rc_ret_val(sym), rc_ret(step.val)); // owns env, sym, val.
   return mk_step(env1, step.val);
 }
 
 
-static Step run_If(Int d, Trace* t, Obj env, Obj code) {
+static Step run_If(Int d, Trace* trace, Obj env, Obj code) {
   // owns env.
   Mem args = struct_mem(code);
   exc_check(args.len == 3, "If requires 3 arguments; received %i", args.len);
   Obj pred = args.els[0];
   Obj then = args.els[1];
   Obj else_ = args.els[2];
-  Step step = run(d, t, env, pred);
+  Step step = run(d, trace, env, pred);
   Obj branch = is_true(step.val) ? then : else_;
   rc_rel(step.val);
-  return run_step(d, t, step.env, branch); // TCO.
+  return run_step(d, trace, step.env, branch); // TCO.
 }
 
 
-static Step run_Fn(Int d, Trace* t, Obj env, Obj code) {
+static Step run_Fn(Int d, Trace* trace, Obj env, Obj code) {
   // owns env.
   Mem args = struct_mem(code);
   exc_check(args.len == 6, "Fn requires 6 arguments; received %i", args.len);
@@ -147,16 +141,16 @@ static Step run_Fn(Int d, Trace* t, Obj env, Obj code) {
 }
 
 
-static Step run_Syn_struct_typed(Int d, Trace* t, Obj env, Obj code) {
+static Step run_Syn_struct_typed(Int d, Trace* trace, Obj env, Obj code) {
   // owns env.
   Mem args = struct_mem(code);
   check(args.len > 0, "Syn-struct is empty");
-  Step step = run(d, t, env, args.els[0]); // evaluate the type.
+  Step step = run(d, trace, env, args.els[0]); // evaluate the type.
   env = step.env;
   Obj s = struct_new_raw(step.val, args.len - 1);
   Obj* els = struct_els(s);
   for_in(i, args.len - 1) {
-    step = run(d, t, env, args.els[i + 1]);
+    step = run(d, trace, env, args.els[i + 1]);
     env = step.env;
     els[i] = step.val;
   }
@@ -164,17 +158,17 @@ static Step run_Syn_struct_typed(Int d, Trace* t, Obj env, Obj code) {
 }
 
 
-static Step run_Syn_seq_typed(Int d, Trace* t, Obj env, Obj code) {
+static Step run_Syn_seq_typed(Int d, Trace* trace, Obj env, Obj code) {
   // owns env.
   Mem args = struct_mem(code);
   check(args.len > 0, "Syn-struct is empty");
-  Step step = run(d, t, env, args.els[0]); // evaluate the type.
+  Step step = run(d, trace, env, args.els[0]); // evaluate the type.
   env = step.env;
   // TODO: derive the appropriate sequence type from the element type.
   Obj s = struct_new_raw(step.val, args.len - 1);
   Obj* els = struct_els(s);
   for_in(i, args.len - 1) {
-    step = run(d, t, env, args.els[i + 1]);
+    step = run(d, trace, env, args.els[i + 1]);
     env = step.env;
     els[i] = step.val;
   }
@@ -188,7 +182,7 @@ typedef struct {
 } Call_envs;
 
 
-static Call_envs run_bind_args(Int d, Trace* t, Obj env, Obj callee_env,
+static Call_envs run_bind_args(Int d, Trace* trace, Obj env, Obj callee_env,
   Obj func, Mem pars, Mem args, Bool is_expand) {
   // owns env, callee_env.
   // NOTE: env is the caller env.
@@ -217,7 +211,7 @@ static Call_envs run_bind_args(Int d, Trace* t, Obj env, Obj callee_env,
       if (is_expand) {
         val = rc_ret(arg);
       } else {
-        Step step = run(d, t, env, arg);
+        Step step = run(d, trace, env, arg);
         env = step.env;
         val = step.val;
       }
@@ -237,7 +231,7 @@ static Call_envs run_bind_args(Int d, Trace* t, Obj env, Obj callee_env,
         if (is_expand) {
           *it = rc_ret(arg);
         } else {
-          Step step = run(d, t, env, arg);
+          Step step = run(d, trace, env, arg);
           env = step.env;
           *it = step.val;
         }
@@ -250,7 +244,7 @@ static Call_envs run_bind_args(Int d, Trace* t, Obj env, Obj callee_env,
 }
 
 
-static Step run_call_native(Int d, Trace* t, Obj env, Obj call, Obj func, Bool is_expand) {
+static Step run_call_native(Int d, Trace* trace, Obj env, Obj call, Obj func, Bool is_expand) {
   // owns env, func.
   Mem args = mem_next(struct_mem(call));
   Mem m = struct_mem(func);
@@ -276,7 +270,7 @@ static Step run_call_native(Int d, Trace* t, Obj env, Obj call, Obj func, Bool i
   callee_env = env_bind(callee_env, rc_ret_val(s_self), rc_ret(func)); // bind self.
   // owns env, callee_env.
   Call_envs envs =
-  run_bind_args(d, t, env, callee_env, func, struct_mem(pars), args, is_expand);
+  run_bind_args(d, trace, env, callee_env, func, struct_mem(pars), args, is_expand);
   // NOTE: because func is bound to self in callee_env, and func contains body,
   // we can release func now and still safely return the unretained body as .tco_code.
   rc_rel(func);
@@ -284,14 +278,14 @@ static Step run_call_native(Int d, Trace* t, Obj env, Obj call, Obj func, Bool i
   // caller will own .env and .val, but not .tco_code.
   return (Step){.env=envs.caller_env, .val=envs.callee_env, .tco_call=call, .tco_code=body};
 #else // NO TCO.
-  Step step = run(d, t, envs.callee_env, body); // owns callee_env.
+  Step step = run(d, trace, envs.callee_env, body); // owns callee_env.
   rc_rel(step.env);
   return mk_step(envs.caller_env, step.val); // NO TCO.
 #endif
 }
 
 
-static Step run_call_host(Int d, Trace* t, Obj env, Obj func, Mem args) {
+static Step run_call_host(Int d, Trace* trace, Obj env, Obj func, Mem args) {
   // owns env, func.
   Mem m = struct_mem(func);
   assert(m.len == 7);
@@ -317,28 +311,28 @@ static Step run_call_host(Int d, Trace* t, Obj env, Obj func, Mem args) {
   assert(args.len <= 3);
   Obj arg_vals[3];
   for_in(i, args.len) {
-    Step step = run(d, t, env, args.els[i]);
+    Step step = run(d, trace, env, args.els[i]);
     arg_vals[i] = step.val;
   }
-  return mk_step(env, f_ptr(env, mem_mk(args.len, arg_vals)));
+  return mk_step(env, f_ptr(trace, env, mem_mk(args.len, arg_vals)));
 }
 
 
-static Step run_Call(Int d, Trace* t, Obj env, Obj code) {
+static Step run_Call(Int d, Trace* trace, Obj env, Obj code) {
   // owns env.
   Mem args = struct_mem(code);
   check(args.len > 0, "call is empty");
   Obj callee_expr = args.els[0];
-  Step step = run(d, t, env, callee_expr);
+  Step step = run(d, trace, env, callee_expr);
   Obj func = step.val;
   exc_check(obj_is_struct(func), "object is not callable: %o", func);
   Mem m = struct_mem(func);
   exc_check(m.len == 7, "function is malformed (length is not 7): %o", func);
   Obj is_native = m.els[1];
   if (bool_is_true(is_native)) {
-    return run_call_native(d, t, env, code, func, false); // TCO.
+    return run_call_native(d, trace, env, code, func, false); // TCO.
   } else {
-    return run_call_host(d, t, env, func, mem_next(args)); // TODO: make TCO?
+    return run_call_host(d, trace, env, func, mem_next(args)); // TODO: make TCO?
   }
 }
 
@@ -360,7 +354,7 @@ static const Chars_const trace_expand_val_prefix = "▫ ";
 
 
 
-static Step run_step_disp(Int d, Trace* t, Obj env, Obj code) {
+static Step run_step_disp(Int d, Trace* trace, Obj env, Obj code) {
   // owns env.
   Obj_tag ot = obj_tag(code);
   if (ot == ot_ptr) {
@@ -373,14 +367,14 @@ static Step run_step_disp(Int d, Trace* t, Obj env, Obj code) {
     if (obj_is_data_word(code)) {
       return mk_step(env, rc_ret_val(code)); // self-evaluating.
     } else {
-      return run_sym(env, code);
+      return run_sym(trace, env, code);
     }
   }
   assert(ot == ot_ref);
   Obj type = ref_type(code);
   exc_check(obj_tag(type) == ot_sym, "cannot run object with non-sym type: %o", code);
   Int si = sym_index(type); // Int type avoids incomplete enum switch error.
-#define RUN(s) case si_##s: return run_##s(d, t, env, code)
+#define RUN(s) case si_##s: return run_##s(d, trace, env, code)
   switch (si) {
     case si_Data: return mk_step(env, rc_ret(code)); // self-evaluating.
     RUN(Eval);
@@ -399,18 +393,18 @@ static Step run_step_disp(Int d, Trace* t, Obj env, Obj code) {
 }
 
 
-static Step run_step(Int d, Trace* t, Obj env, Obj code) {
+static Step run_step(Int d, Trace* trace, Obj env, Obj code) {
   // owns env.
 #if VERBOSE_EVAL
     for_in(i, d) err(i % 4 ? " " : "|");
     errFL("%s %o", trace_run_prefix, code);
 #endif
-    Step step = run_step_disp(d, t, env, code);
+    Step step = run_step_disp(d, trace, env, code);
     return step;
 }
 
 
-static Step run_tail(Int d, Trace* t, Step step) {
+static Step run_tail(Int d, Trace* trace, Step step) {
   // owns .env and .val; borrows .tco_code.
   Obj env = step.env; // hold onto the original 'next' environment for the topmost caller.
   while (!is(step.tco_code, obj0)) {
@@ -419,7 +413,7 @@ static Step run_tail(Int d, Trace* t, Step step) {
     for_in(i, d) err(i % 4 ? " " : "|");
     errFL("%s %o", trace_tail_prefix, step.tco_code);
 #endif
-    step = run_step_disp(d, t, tco_env, step.tco_code); // owns tco_env; borrows .tco_code.
+    step = run_step_disp(d, trace, tco_env, step.tco_code); // owns tco_env; borrows .tco_code.
     // the modified tco env is immediately abandoned since tco_code is in the tail position.
     rc_rel(step.env);
   }
@@ -435,16 +429,15 @@ static Step run_tail(Int d, Trace* t, Step step) {
 }
 
 
-static Step run(Int depth, Trace* t, Obj env, Obj code) {
+static Step run(Int depth, Trace* trace, Obj env, Obj code) {
   Int d = depth + 1;
   // owns env.
-  Step step = run_step(d, t, env, code);
-  return run_tail(d, t, step);
+  Step step = run_step(d, trace, env, code);
+  return run_tail(d, trace, step);
 }
 
 
-static Obj run_macro(Obj env, Obj code) {
-  Trace* t = NULL;
+static Obj run_macro(Trace* trace, Obj env, Obj code) {
 #if VERBOSE_EVAL
   errFL("%s %o", trace_expand_prefix, code);
 #endif
@@ -456,8 +449,8 @@ static Obj run_macro(Obj env, Obj code) {
   if (is(macro, obj0)) { // lookup failed.
     error("macro lookup error: %o", macro_sym);
   }
-  Step step = run_call_native(0, t, rc_ret(env), code, rc_ret(macro), true);
-  step = run_tail(0, t, step); // handle any TCO steps.
+  Step step = run_call_native(0, trace, rc_ret(env), code, rc_ret(macro), true);
+  step = run_tail(0, trace, step); // handle any TCO steps.
   rc_rel(step.env);
 #if VERBOSE_EVAL
     errFL("%s %o", trace_expand_val_prefix, step.val);

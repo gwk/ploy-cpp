@@ -39,10 +39,11 @@ static Obj expand_quasiquote(Int d, Obj o) {
 }
 
 
-static Obj run_macro(Obj env, Obj code);
+static Obj run_macro(Trace* trace, Obj env, Obj code);
 
 static Obj expand(Obj env, Obj code) {
   // owns code.
+  Trace* trace = NULL;
   if (!obj_is_struct(code)) {
     return code;
   }
@@ -59,7 +60,7 @@ static Obj expand(Obj env, Obj code) {
     return expand_quasiquote(0, expr);
   }
   if (is(type, s_Expand)) {
-    Obj expanded = run_macro(env, code);
+    Obj expanded = run_macro(trace, env, code);
     rc_rel(code);
     // macro result may contain more expands; recursively expand the result.
     return expand(env, expanded);

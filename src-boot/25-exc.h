@@ -6,7 +6,13 @@
 #include "24-parse.h"
 
 
-static NO_RETURN _exc_raise(Obj env, Chars_const fmt, Chars_const args_str, ...) {
+typedef struct _Trace {
+  Obj src_loc;
+  struct _Trace* next;
+} Trace;
+
+
+static NO_RETURN _exc_raise(Trace* trace, Obj env, Chars_const fmt, Chars_const args_str, ...) {
   // raise an exception.
   // NOTE: there is not yet any exception unwind mechanism, so this just calls exit.
   va_list args_list;
@@ -15,5 +21,9 @@ static NO_RETURN _exc_raise(Obj env, Chars_const fmt, Chars_const args_str, ...)
   va_end(args_list);
   err_nl();
   env_trace(env, false);
+  while (trace) {
+    errFL("  %o", trace->src_loc);
+    trace = trace->next;
+  }
   fail();
 }
