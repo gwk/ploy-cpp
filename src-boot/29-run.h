@@ -16,10 +16,11 @@ typedef struct _Trace {
 typedef struct {
   Obj env; // the env to be passed to the next step, after any TCO steps; the new caller env.
   Obj val; // the result from the previous step, or the env to be passed to the TCO step.
+  Obj tco_call; // call site code for TCO Trace.
   Obj tco_code; // code for the TCO step.
 } Step;
 
-#define mk_step(e, v) (Step){.env=(e), .val=(v), .tco_code=obj0}
+#define mk_step(e, v) (Step){.env=(e), .val=(v), .tco_call=obj0, .tco_code=obj0}
 
 
 static Step run_sym(Obj env, Obj code) {
@@ -83,8 +84,9 @@ static Step run_Scope(Int d, Trace* t, Obj env, Obj code) {
   exc_check(args.len == 1, "Scope requires 1 argument; received %i", args.len);
   Obj body = args.els[0];
   Obj sub_env = env_push_frame(rc_ret(env), data_new_from_chars(cast(Chars, "<scope>")));
-  // caller will own .env and .val, but not .tco_code.
-  return (Step){.env=env, .val=sub_env, .tco_code=body}; // TCO.
+  // caller will own .env and .val, but not .tco_call or .tco_code.
+  // note: we pass the scope expr as 'call', which is innacurate but at least somewhat helpful??
+  return (Step){.env=env, .val=sub_env, .tco_call=code, .tco_code=body}; // TCO.
 }
 
 
@@ -248,8 +250,9 @@ static Call_envs run_bind_args(Int d, Trace* t, Obj env, Obj callee_env,
 }
 
 
-static Step run_call_native(Int d, Trace* t, Obj env, Obj func, Mem args, Bool is_expand) {
+static Step run_call_native(Int d, Trace* t, Obj env, Obj call, Obj func, Bool is_expand) {
   // owns env, func.
+  Mem args = mem_next(struct_mem(call));
   Mem m = struct_mem(func);
   assert(m.len == 7);
   Obj name      = m.els[0];
@@ -279,7 +282,7 @@ static Step run_call_native(Int d, Trace* t, Obj env, Obj func, Mem args, Bool i
   rc_rel(func);
 #if 1 // TCO.
   // caller will own .env and .val, but not .tco_code.
-  return (Step){.env=envs.caller_env, .val=envs.callee_env, .tco_code=body}; // TCO.
+  return (Step){.env=envs.caller_env, .val=envs.callee_env, .tco_call=call, .tco_code=body};
 #else // NO TCO.
   Step step = run(d, t, envs.callee_env, body); // owns callee_env.
   rc_rel(step.env);
@@ -325,15 +328,15 @@ static Step run_Call(Int d, Trace* t, Obj env, Obj code) {
   // owns env.
   Mem args = struct_mem(code);
   check(args.len > 0, "call is empty");
-  Obj callee = args.els[0];
-  Step step = run(d, t, env, callee);
+  Obj callee_expr = args.els[0];
+  Step step = run(d, t, env, callee_expr);
   Obj func = step.val;
   exc_check(obj_is_struct(func), "object is not callable: %o", func);
   Mem m = struct_mem(func);
   exc_check(m.len == 7, "function is malformed (length is not 7): %o", func);
   Obj is_native = m.els[1];
   if (bool_is_true(is_native)) {
-    return run_call_native(d, t, env, func, mem_next(args), false); // TCO.
+    return run_call_native(d, t, env, code, func, false); // TCO.
   } else {
     return run_call_host(d, t, env, func, mem_next(args)); // TODO: make TCO?
   }
@@ -453,7 +456,7 @@ static Obj run_macro(Obj env, Obj code) {
   if (is(macro, obj0)) { // lookup failed.
     error("macro lookup error: %o", macro_sym);
   }
-  Step step = run_call_native(0, t, rc_ret(env), rc_ret(macro), mem_next(args), true);
+  Step step = run_call_native(0, t, rc_ret(env), code, rc_ret(macro), true);
   step = run_tail(0, t, step); // handle any TCO steps.
   rc_rel(step.env);
 #if VERBOSE_EVAL
