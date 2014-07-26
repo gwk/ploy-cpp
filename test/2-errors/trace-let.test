@@ -3,9 +3,11 @@
   'err' : '''\
 lookup error: `missing-sym
 trace:
-  `f
-  'trace-let.ploy'
-  '<core>'
-  '<host>'
+  `(self (isub n 1))
+  `(self (isub n 1))
+  `(self (isub n 1))
+  `(self (isub n 1))
+  `(self (isub n 1))
+  `(f 5)
 '''
 }

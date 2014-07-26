@@ -1,0 +1,8 @@
+{
+  'code' : 1,
+  'err' : '''\
+lookup error: `missing-sym
+trace:
+  `(self (isub n 1))
+'''
+}

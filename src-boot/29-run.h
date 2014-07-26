@@ -409,11 +409,12 @@ static Step run_tail(Int d, Trace* trace, Step step) {
   Obj env = step.env; // hold onto the original 'next' environment for the topmost caller.
   while (!is(step.tco_code, obj0)) {
     Obj tco_env = step.val; // val field is reused in the TCO case to hold the callee env.
+    Trace t = (Trace){.call=step.tco_call, .next=trace};
 #if VERBOSE_EVAL
     for_in(i, d) err(i % 4 ? " " : "|");
     errFL("%s %o", trace_tail_prefix, step.tco_code);
 #endif
-    step = run_step_disp(d, trace, tco_env, step.tco_code); // owns tco_env; borrows .tco_code.
+    step = run_step_disp(d, &t, tco_env, step.tco_code); // owns tco_env; borrows .tco_code.
     // the modified tco env is immediately abandoned since tco_code is in the tail position.
     rc_rel(step.env);
   }

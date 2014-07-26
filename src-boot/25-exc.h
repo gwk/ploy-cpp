@@ -7,7 +7,7 @@
 
 
 typedef struct _Trace {
-  Obj src_loc;
+  Obj call;
   struct _Trace* next;
 } Trace;
 
@@ -19,10 +19,9 @@ static NO_RETURN _exc_raise(Trace* trace, Obj env, Chars_const fmt, Chars_const 
   va_start(args_list, args_str);
   fmt_list_to_file(stderr, fmt, args_str, args_list);
   va_end(args_list);
-  err_nl();
-  env_trace(env, false);
+  errL("\ntrace:");
   while (trace) {
-    errFL("  %o", trace->src_loc);
+    errFL("  %o", trace->call);
     trace = trace->next;
   }
   fail();

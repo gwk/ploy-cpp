@@ -1,8 +1,6 @@
 <fn f [-n]
   <if (igt n 0)
-    <do
-      (self (isub n 1))
-      void>
+    (self (isub n 1))
     missing-sym>>
 
 (f 5)

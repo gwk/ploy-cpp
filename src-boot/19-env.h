@@ -85,7 +85,7 @@ static Obj env_bind(Obj env, Obj sym, Obj val) {
 }
 
 
-static void env_trace(Obj env, Bool show_values) {
+UNUSED_FN static void env_trace(Obj env, Bool show_values) {
   errL("trace:");
   while (!is(env, s_ENV_END_MARKER)) {
     assert(obj_is_env(env));
