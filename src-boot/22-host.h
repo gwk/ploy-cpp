@@ -11,6 +11,18 @@ static Obj host_identity(Trace* trace, Obj env, Mem args) {
 }
 
 
+static Obj host_is(Trace* trace, Obj env, Mem args) {
+  // owns elements of args.
+  assert(args.len == 2);
+  Obj a0 = args.els[0];
+  Obj a1 = args.els[1];
+  Bool b = is(a0, a1);
+  rc_rel(a0);
+  rc_rel(a1);
+  return bool_new(b);
+}
+
+
 static Obj host_is_true(Trace* trace, Obj env, Mem args) {
   // owns elements of args.
   assert(args.len == 1);
@@ -55,14 +67,14 @@ static Obj host_iabs(Trace* trace, Obj env, Mem args) {
 
 // TODO: check for overflow. currently we rely on clang to insert overflow traps.
 // owns elements of args.
-#define HOST_BIN_OP(name) \
-static Obj host_##name(Trace* trace, Obj env, Mem args) { \
+#define HOST_BIN_OP(op) \
+static Obj host_##op(Trace* trace, Obj env, Mem args) { \
   assert(args.len == 2); \
   Obj n0 = args.els[0]; \
   Obj n1 = args.els[1]; \
-  exc_check(obj_is_int(n0), #name " requires arg 1 to be a Int; received: %o", n0); \
-  exc_check(obj_is_int(n1), #name " requires arg 2 to be a Int; received: %o", n1); \
-  Int i = name(int_val(n0), int_val(n1)); \
+  exc_check(obj_is_int(n0), #op " requires arg 1 to be a Int; received: %o", n0); \
+  exc_check(obj_is_int(n1), #op " requires arg 2 to be a Int; received: %o", n1); \
+  Int i = op(int_val(n0), int_val(n1)); \
   rc_rel_val(n0); \
   rc_rel_val(n1); \
   return int_new(i); \
@@ -100,20 +112,6 @@ HOST_BIN_OP(ilt)
 HOST_BIN_OP(igt)
 HOST_BIN_OP(ile)
 HOST_BIN_OP(ige)
-
-
-static Obj host_sym_eq(Trace* trace, Obj env, Mem args) {
-  // owns elements of args.
-  assert(args.len == 2);
-  Obj a = args.els[0];
-  Obj b = args.els[1];
-  exc_check(obj_is_sym(a), "sym-eq requires argument 1 to be a Sym; received: %o", a);
-  exc_check(obj_is_sym(b), "sym-eq requires argument 2 to be a Sym; received: %o", b);
-  Bool res = (is(a, b));
-  rc_rel_val(a);
-  rc_rel_val(b);
-  return bool_new(res);
-}
 
 
 static Obj host_dlen(Trace* trace, Obj env, Mem args) {
@@ -356,7 +354,7 @@ static Obj host_dbg(Trace* trace, Obj env, Mem args) {
   assert(args.len == 2);
   Obj label = args.els[0];
   Obj obj = args.els[1];
-  exc_check(is(obj_type(label), s_Data), "dbg expects argument 1 to be Data: %o", label);
+  exc_check(is(obj_type(label), t_Data), "dbg expects argument 1 to be Data: %o", label);
   write_data(stderr, label);
   errFL(": %p rc:%u %o", obj, rc_get(obj), obj);
   rc_rel(label);
@@ -376,7 +374,7 @@ static Obj host_boot_mk_do(Trace* trace, Obj env, Mem args) {
   if (m.len == 1) {
     val = rc_ret(m.els[0]);
   } else {
-     val = struct_new_M_ret(rc_ret(s_Do), m);
+     val = struct_new_M_ret(rc_ret(t_Do), m);
   }
   rc_rel(body);
   return val;
@@ -391,16 +389,16 @@ static Obj host_init_func(Obj env, Int len_pars, Chars name, Func_host_ptr ptr) 
   Obj sym = sym_new_from_chars(name);
   Obj pars; // TODO: add real types; unique value for expression default?
   #define PAR(s) \
-  struct_new4(rc_ret(s_Par), rc_ret_val(s_false), rc_ret_val(s), rc_ret_val(s_INFER_PAR), \
+  struct_new4(rc_ret(t_Par), rc_ret_val(s_false), rc_ret_val(s), rc_ret_val(s_INFER_PAR), \
    rc_ret_val(s_void))
   switch (len_pars) {
-    case 1: pars = struct_new1(rc_ret(s_Mem_Par), PAR(s_a)); break;
-    case 2: pars = struct_new2(rc_ret(s_Mem_Par), PAR(s_a), PAR(s_b)); break;
-    case 3: pars = struct_new3(rc_ret(s_Mem_Par), PAR(s_a), PAR(s_b), PAR(s_c)); break;
+    case 1: pars = struct_new1(rc_ret(t_Mem_Par), PAR(s_a)); break;
+    case 2: pars = struct_new2(rc_ret(t_Mem_Par), PAR(s_a), PAR(s_b)); break;
+    case 3: pars = struct_new3(rc_ret(t_Mem_Par), PAR(s_a), PAR(s_b), PAR(s_c)); break;
     default: assert(0);
   }
   #undef PAR
-  Obj f = struct_new_raw(rc_ret(s_Func), 7);
+  Obj f = struct_new_raw(rc_ret(t_Func), 7);
   Obj* els = struct_els(f);
   els[0] = rc_ret_val(sym);
   els[1] = bool_new(false);
@@ -413,10 +411,11 @@ static Obj host_init_func(Obj env, Int len_pars, Chars name, Func_host_ptr ptr) 
 }
 
 
-static Obj host_init_file(Obj env, Chars s_name, Chars name, CFile f, Bool r, Bool w) {
+static Obj host_init_file(Obj env, Chars sym_name, Chars name, CFile f, Bool r, Bool w) {
   // owns env.
-  Obj sym = sym_new_from_chars(s_name);
-  Obj val = struct_new4(rc_ret(s_File), data_new_from_chars(name), ptr_new(f), bool_new(r), bool_new(w));
+  Obj sym = sym_new_from_chars(sym_name);
+  Obj val = struct_new4(rc_ret(t_File), data_new_from_chars(name), ptr_new(f), bool_new(r),
+    bool_new(w));
   return env_bind(env, sym, val);
 }
 
@@ -424,6 +423,7 @@ static Obj host_init_file(Obj env, Chars s_name, Chars name, CFile f, Bool r, Bo
 static Obj host_init(Obj env) {
 #define DEF_FH(len_pars, n, f) env = host_init_func(env, len_pars, cast(Chars, n), f);
   DEF_FH(1, "identity", host_identity)
+  DEF_FH(2, "is", host_is)
   DEF_FH(1, "is-true", host_is_true)
   DEF_FH(1, "not", host_not)
   DEF_FH(1, "ineg", host_ineg)
@@ -442,7 +442,6 @@ static Obj host_init(Obj env) {
   DEF_FH(2, "ile", host_ile)
   DEF_FH(2, "igt", host_igt)
   DEF_FH(2, "ige", host_ige)
-  DEF_FH(2, "sym-eq", host_sym_eq)
   DEF_FH(1, "dlen", host_dlen)
   DEF_FH(1, "mlen", host_mlen)
   DEF_FH(2, "field", host_field)

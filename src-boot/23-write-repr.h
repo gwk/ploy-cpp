@@ -141,13 +141,16 @@ static void write_repr_syn_seq(CFile f, Obj s, Bool is_quoted, Int depth, Set* s
 
 static void write_repr_default(CFile f, Obj s, Bool is_quoted, Int depth, Set* set) {
   assert(ref_is_struct(s));
-  if (is_quoted) fputs("???", f);
+  if (is_quoted) fputs("¿Q?", f);
   fputs("{:", f);
   Obj t = obj_type(s);
   if (obj_is_type(t)) {
+    assert(obj_is_sym(t.t->name));
     write_repr_obj(f, t.t->name, true, depth, set);
-  } else { // TODO: once legacy typing is replaced, this should print a warning prefix.
+  } else {
+    fputs("¿T?", f);
     write_repr_obj(f, t, true, depth, set);
+    fputs("¿?", f);
   }
   Mem m = struct_mem(s);
   for_in(i, m.len) {
@@ -155,6 +158,7 @@ static void write_repr_default(CFile f, Obj s, Bool is_quoted, Int depth, Set* s
     write_repr_obj(f, m.els[i], is_quoted, depth, set);
   }
   fputc('}', f);
+  if (is_quoted) fputs("¿?", f);
 }
 
 
@@ -162,7 +166,7 @@ static void write_repr_dispatch(CFile f, Obj s, Bool is_quoted, Int depth, Set* 
   Obj type = obj_type(s);
 
   #define DISP(t) \
-  if (is(type, s_##t)) { write_repr_##t(f, s, is_quoted, depth, set); return; }
+  if (is(type, t_##t)) { write_repr_##t(f, s, is_quoted, depth, set); return; }
 
   DISP(Data);
   DISP(Env);
@@ -174,7 +178,7 @@ static void write_repr_dispatch(CFile f, Obj s, Bool is_quoted, Int depth, Set* 
   #undef DISP
 
   #define DISP_SEQ(t, o, c) \
-  if (is(type, s_##t)) { write_repr_syn_seq(f, s, is_quoted, depth, set, o, c); return; }
+  if (is(type, t_##t)) { write_repr_syn_seq(f, s, is_quoted, depth, set, o, c); return; }
 
   DISP_SEQ(Syn_struct, "{", '}');
   DISP_SEQ(Syn_struct_typed, "{:", '}');
@@ -208,8 +212,8 @@ static void write_repr_obj(CFile f, Obj o, Bool is_quoted, Int depth, Set* set) 
     depth++;
     if (depth > 8) {
       fputs("…", f);
-    } else if (set_contains(set, o)) { // recursed
-      fputs("↺", f); // anticlockwise gapped circle arrow
+    } else if (set_contains(set, o)) { // cyclic object recursed.
+      fputs("↺", f); // anticlockwise gapped circle arrow.
     } else {
       set_insert(set, o);
       write_repr_dispatch(f, o, is_quoted, depth, set);

@@ -12,7 +12,7 @@ static Obj preprocess(Obj code) {
     return rc_ret(code);
   }
   Mem src = struct_mem(code);
-  if (is(ref_type(code), s_Comment)) {
+  if (is(ref_type(code), t_Comment)) {
     return obj0;
   }
   Array dst = array0;

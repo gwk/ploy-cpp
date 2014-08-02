@@ -215,7 +215,7 @@ static Obj parse_comment(Parser* p) {
     if (p->e) return obj0;
     // the QUO prevents macro expansion of the commented code,
     // and also differentiates it from line comments.
-    return struct_new2(rc_ret(s_Comment), rc_ret_val(s_true), struct_new1(rc_ret(s_Quo), expr));
+    return struct_new2(rc_ret(t_Comment), rc_ret_val(s_true), struct_new1(rc_ret(t_Quo), expr));
   }
   // otherwise comment out a single line.
   Src_pos sp_report = p->sp;
@@ -228,7 +228,7 @@ static Obj parse_comment(Parser* p) {
   }
   Str s = str_slice(p->src, pos_start, p->sp.pos);
   Obj d = data_new_from_str(s);
-  return struct_new2(rc_ret(s_Comment), rc_ret_val(s_false), d);
+  return struct_new2(rc_ret(t_Comment), rc_ret_val(s_false), d);
 }
 
 
@@ -282,7 +282,7 @@ static Obj parse_quo(Parser* p) {
   P_ADV(1);
   Obj o = parse_sub_expr(p);
   if (p->e) return obj0;
-  return struct_new1(rc_ret(s_Quo), o);
+  return struct_new1(rc_ret(t_Quo), o);
 }
 
 
@@ -291,7 +291,7 @@ static Obj parse_qua(Parser* p) {
   P_ADV(1);
   Obj o = parse_sub_expr(p);
   if (p->e) return obj0;
-  return struct_new1(rc_ret(s_Qua), o);
+  return struct_new1(rc_ret(t_Qua), o);
 }
 
 
@@ -300,7 +300,7 @@ static Obj parse_unq(Parser* p) {
   P_ADV(1);
   Obj o = parse_sub_expr(p);
   if (p->e) return obj0;
-  return struct_new1(rc_ret(s_Unq), o);
+  return struct_new1(rc_ret(t_Unq), o);
 }
 
 
@@ -309,7 +309,7 @@ static Obj parse_eval(Parser* p) {
   P_ADV(1);
   Obj o = parse_sub_expr(p);
   if (p->e) return obj0;
-  return struct_new1(rc_ret(s_Eval), o);
+  return struct_new1(rc_ret(t_Eval), o);
 }
 
 
@@ -350,7 +350,7 @@ static Obj parse_par(Parser* p, Obj is_variad, Chars_const par_desc) {
   } else {
     expr = rc_ret_val(s_void);
   }
-  return struct_new4(rc_ret(s_Par), is_variad, name, type, expr);
+  return struct_new4(rc_ret(t_Par), is_variad, name, type, expr);
 }
 
 
@@ -375,7 +375,7 @@ static Obj parse_expand(Parser* p) {
   P_ADV(1, return parse_error(p, "unterminated expand"));
   Mem m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR('>');
-  Obj s = struct_new_M(rc_ret(s_Expand), m);
+  Obj s = struct_new_M(rc_ret(t_Expand), m);
   mem_dealloc(m);
   return s;
 }
@@ -385,7 +385,7 @@ static Obj parse_call(Parser* p) {
   P_ADV(1, return parse_error(p, "unterminated call"));
   Mem m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR(')');
-  Obj s = struct_new_M(rc_ret(s_Call), m);
+  Obj s = struct_new_M(rc_ret(t_Call), m);
   mem_dealloc(m);
   return s;
 }
@@ -407,9 +407,9 @@ static Obj parse_struct(Parser* p) {
   }
   Obj s;
   if (typed) {
-    s = struct_new_M(rc_ret(s_Syn_struct_typed), m);
+    s = struct_new_M(rc_ret(t_Syn_struct_typed), m);
   } else {
-    s = struct_new_M(rc_ret(s_Syn_struct), m);
+    s = struct_new_M(rc_ret(t_Syn_struct), m);
   }
   mem_dealloc(m);
   return s;
@@ -432,9 +432,9 @@ static Obj parse_seq(Parser* p) {
   }
   Obj s;
   if (typed) {
-    s = struct_new_M(rc_ret(s_Syn_seq_typed), m);
+    s = struct_new_M(rc_ret(t_Syn_seq_typed), m);
   } else {
-    s = struct_new_M(rc_ret(s_Syn_seq), m);
+    s = struct_new_M(rc_ret(t_Syn_seq), m);
   }
   mem_dealloc(m);
   return s;
@@ -507,7 +507,7 @@ static Obj parse_src(Str path, Str src, Chars* e) {
     o = parse_error(&p, "parsing terminated early");
     mem_release_dealloc(m);
   } else {
-    o = struct_new_M(rc_ret(s_Mem_Expr), m);
+    o = struct_new_M(rc_ret(t_Mem_Expr), m);
     mem_dealloc(m);
   }
   *e = p.e;

@@ -182,7 +182,7 @@ static Uns rc_hash(Obj r) {
 
 
 
-static void rc_insert(Obj r) {
+static Obj rc_insert(Obj r) {
   // load factor == (numer / denom) == (num_items / num_buckets).
   if (rc_table.len * load_factor_denom >= rc_table.len_buckets * load_factor_numer) {
     rc_resize(rc_table.len_buckets * 2);
@@ -192,6 +192,7 @@ static void rc_insert(Obj r) {
   RC_bucket* b = rc_bucket_ptr(h);
   rc_bucket_append(b, h, (1<<1) + 1); // start with a direct count of 1 plus flag bit of 1.
   rc_table.len++;
+  return r;
 }
 
 
@@ -251,10 +252,11 @@ static void rc_remove(Obj r) {
     if (bii.item->c == (1<<1) + 1) { // expected.
       rc_bucket_remove(bii.bucket, bii.index);
     } else { // leak.
-      errFL("rc_remove: detected leaked object: %o", r);
+      errFL("rc_remove: detected leaked object: %p", r);
+      fail();
     }
   } else {
-    errFL("rc_remove: item has an indirect count: %o", r);
+    errFL("rc_remove: item has an indirect count: %p", r);
   }
 }
 #endif

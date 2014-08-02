@@ -160,9 +160,11 @@ static Obj struct_rel_fields(Obj s) {
 }
 
 
+static Obj t_Unq;
+
 static Bool struct_contains_unquote(Obj s) {
   assert(ref_is_struct(s));
-  if (is(obj_type(s), s_Unq)) return true;
+  if (is(obj_type(s), t_Unq)) return true;
   Mem m = struct_mem(s);
   it_mem(it, m) {
     Obj e = *it;

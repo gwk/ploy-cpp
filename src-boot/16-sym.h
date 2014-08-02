@@ -80,41 +80,6 @@ S(INFER_STRUCT) \
 S(INFER_SEQ) \
 S(INFER_PAR) \
 S(INFER_EXPR) \
-S(Ptr) \
-S(Int) \
-S(Sym) \
-S(Data) \
-S(Env) \
-S(Unq) \
-S(Qua) \
-S(Expand) \
-S(Comment) \
-S(RUNNABLE_BEGIN) \
-S(Eval) \
-S(Quo) \
-S(Do) \
-S(Scope) \
-S(Let) \
-S(If) \
-S(Fn) \
-S(Syn_struct_typed) \
-S(Syn_seq_typed) \
-S(Call) \
-S(RUNNABLE_END) \
-S(Obj) \
-S(Label) \
-S(Variad) \
-S(Par) \
-S(Func) \
-S(File) \
-S(Src) \
-S(Expr) \
-S(Syn_struct) \
-S(Syn_seq) \
-S(Mem_Obj) \
-S(Mem_Par) \
-S(Mem_Expr) \
-S(Mem_Int) \
 S(END_SPECIAL_SYMS) \
 S(self) \
 S(a) \
@@ -125,6 +90,7 @@ S(c) \
 #define S(s) si_##s,
 typedef enum {
   SYM_LIST
+  si_END,
 } Sym_index;
 #undef S
 
@@ -144,27 +110,12 @@ SYM_LIST
 
 static void sym_init() {
   assert(global_sym_names.mem.len == 0);
-  for_in(i, si_self + 1) { // NOTE: self is not special, but it is the last hardcoded sym.
+  for_in(i, si_END) {
     Chars_const name = sym_index_names[i];
-    // special name cases.
-    if (i == si_Syn_struct) name = "Syn-struct";
-    else if (i == si_Syn_struct_typed) name = "Syn-struct-typed";
-    else if (i == si_Syn_seq) name = "Syn-seq";
-    else if (i == si_Syn_seq_typed) name = "Syn-seq-typed";
-    else if (i == si_Mem_Obj) name = "Mem-Obj";
-    else if (i == si_Mem_Par) name = "Mem-Par";
-    else if (i == si_Mem_Expr) name = "Mem-Expr";
-    else if (i == si_Mem_Int) name = "Mem-Int";
     Obj sym = sym_new_from_chars(cast(Chars, name));
     assert(sym_index(sym) == i);
     rc_rel_val(sym);
   }
-}
-
-
-UNUSED_FN static Bool sym_is_form(Obj s) {
-  Int si = sym_index(s);
-  return si >= si_Comment && si <= si_Fn;
 }
 
 

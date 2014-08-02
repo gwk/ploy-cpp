@@ -125,16 +125,16 @@ static Step run_Fn(Int d, Trace* trace, Obj env, Obj code) {
   exc_check(obj_is_sym(name),  "Fn: name is not a Sym: %o", name);
   exc_check(obj_is_bool(is_macro), "Fn: is-macro is not a Bool: %o", is_macro);
   exc_check(obj_is_struct(pars), "Fn: parameters is not a Struct: %o", pars);
-  exc_check(is(obj_type(pars), s_Syn_seq),
+  exc_check(is(obj_type(pars), t_Syn_seq),
     "Fn: parameters is not a sequence literal: %o", pars);
   // TODO: check all pars.
-  Obj f = struct_new_raw(rc_ret(s_Func), 7);
+  Obj f = struct_new_raw(rc_ret(t_Func), 7);
   Obj* els = struct_els(f);
   els[0] = rc_ret_val(name);
   els[1] = rc_ret_val(is_native);
   els[2] = rc_ret_val(is_macro);
   els[3] = rc_ret(env);
-  els[4] = struct_new_M_ret(rc_ret(s_Mem_Par), struct_mem(pars)); // replace the syntax type.
+  els[4] = struct_new_M_ret(rc_ret(t_Mem_Par), struct_mem(pars)); // replace the syntax type.
   els[5] = rc_ret(ret_type);
   els[6] = rc_ret(body);
   return mk_step(env, f);
@@ -190,7 +190,7 @@ static Call_envs run_bind_args(Int d, Trace* trace, Obj env, Obj callee_env,
   Bool has_variad = false;
   for_in(i_pars, pars.len) {
     Obj par = pars.els[i_pars];
-    exc_check(obj_type(par).u == s_Par.u, "function %o parameter %i is malformed: %o (%o)",
+    exc_check(obj_type(par).u == t_Par.u, "function %o parameter %i is malformed: %o (%o)",
       struct_el(func, 0), i_pars, par, obj_type(par));
     Obj* par_els = struct_els(par);
     Obj par_is_variad = par_els[0];
@@ -222,10 +222,10 @@ static Call_envs run_bind_args(Int d, Trace* trace, Obj env, Obj callee_env,
       Int variad_count = 0;
       for_imn(i, i_args, args.len) {
         Obj arg = args.els[i];
-        if (obj_type(arg).u == s_Par.u) break;
+        if (obj_type(arg).u == t_Par.u) break;
         variad_count++;
       }
-      Obj variad_val = struct_new_raw(rc_ret(s_Mem_Obj), variad_count);
+      Obj variad_val = struct_new_raw(rc_ret(t_Mem_Obj), variad_count);
       it_struct(it, variad_val) {
         Obj arg = args.els[i_args++];
         if (is_expand) {
@@ -372,11 +372,10 @@ static Step run_step_disp(Int d, Trace* trace, Obj env, Obj code) {
   }
   assert(ot == ot_ref);
   Obj type = ref_type(code);
-  exc_check(obj_tag(type) == ot_sym, "cannot run object with non-sym type: %o", code);
-  Int si = sym_index(type); // Int type avoids incomplete enum switch error.
-#define RUN(s) case si_##s: return run_##s(d, trace, env, code)
-  switch (si) {
-    case si_Data: return mk_step(env, rc_ret(code)); // self-evaluating.
+  Int ti = type_index(type); // cast to Int c type avoids incomplete enum switch error.
+#define RUN(t) case ti_##t: return run_##t(d, trace, env, code)
+  switch (ti) {
+    case ti_Data: return mk_step(env, rc_ret(code)); // self-evaluating.
     RUN(Eval);
     RUN(Quo);
     RUN(Do);

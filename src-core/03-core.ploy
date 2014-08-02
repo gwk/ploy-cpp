@@ -19,12 +19,12 @@
 
 # type functions.
 
-<fn is-ptr [-o] (sym-eq (type-of o) `Ptr)>
-<fn is-int [-o] (sym-eq (type-of o) `Int)>
-<fn is-sym [-o] (sym-eq (type-of o) `Sym)>
-<fn is-data [-o] (sym-eq (type-of o) `Data)>
-<fn is-env [-o] (sym-eq (type-of o) `Env)>
-
+<fn is-ptr  [-o] (is (type-of o) Ptr)>
+<fn is-int  [-o] (is (type-of o) Int)>
+<fn is-sym  [-o] (is (type-of o) Sym)>
+<fn is-data [-o] (is (type-of o) Data)>
+<fn is-env  [-o] (is (type-of o) Env)>
+<fn is-type [-o] (is (type-of o) Type)>
 
 # mem functions.
 

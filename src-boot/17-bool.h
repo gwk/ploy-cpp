@@ -23,8 +23,8 @@ static Bool is_true(Obj o) {
   switch (obj_tag(o)) {
     case ot_ref: {
       Obj t = ref_type(o);
-      if (is(t, s_Data)) return !is(o, blank);
-      if (is(t, s_Env)) return true;
+      if (is(t, t_Data)) return !is(o, blank);
+      if (is(t, t_Env)) return true;
       return !!struct_len(o);
     }
     case ot_ptr:

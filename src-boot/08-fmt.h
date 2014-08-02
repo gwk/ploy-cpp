@@ -65,13 +65,14 @@ static void fmt_to_file(CFile f, Chars_const fmt, Chars_const args_str, ...) {
 }
 
 
-void dbg(Obj o); // not declared static so that it is always available in debugger.
-void dbg(Obj o) {
+Obj dbg(Obj o); // not declared static so that it is always available in debugger.
+Obj dbg(Obj o) {
   if (obj_is_ref(o)) {
     errFL("%p : %o", o.r, o);
   } else {
     errFL("%o", o);
   }
   err_flush();
+  return o;
 }
 

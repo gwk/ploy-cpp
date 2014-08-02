@@ -23,7 +23,7 @@ static Obj parse_and_eval(Obj env, Obj path, Obj src, Array* sources, Bool out_v
   err_nl();
   obj_errL(code);
 #endif
-  array_append(sources, struct_new2(rc_ret(s_Src), path, src));
+  array_append(sources, struct_new2(rc_ret(t_Src), path, src));
   Step step = eval_struct(env, code);
   if (out_val && !is(step.val, s_void)) {
     write_repr(stdout, step.val);
@@ -39,8 +39,9 @@ int main(int argc, Chars_const argv[]) {
   assert_host_basic();
   assert(size_Obj == size_Word);
   rc_init();
-  sym_init();
-  type_init();
+  type_init_table();
+  sym_init(); // requires type_init_table.
+  type_init_values(); // requires sym_init.
   Int vol_err = VERBOSE;
   
   // parse arguments.
@@ -101,8 +102,8 @@ int main(int argc, Chars_const argv[]) {
   // cleanup in reverse order.
   rc_rel(env);
   mem_release_dealloc(sources.mem);
-  type_cleanup();
   mem_release_dealloc(global_sym_names.mem);
+  type_cleanup();
   rc_cleanup();
   counter_stats(vol_err);
 #endif
