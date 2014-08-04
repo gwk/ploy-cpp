@@ -2,11 +2,10 @@
 # Permission to use this file is granted in ploy/license.txt.
 
 # macros and functions that must be bootstrapped using special syntax.
-# the 'struct-boot' syntax {!...} is used to construct special form code vectors directly,
+# the !{:...} idiom is used to construct and run special forms directly,
 # before the idiomatic form macros are defined.
-# once available, the form macros should be used instead of the raw forms;
-# they provide a layer of abstraction between ploy code and the exact evaluation semantics,
-# as well as increased expressiveness and syntactic consistency.
+# once available, the form macros should be used instead of this idiom;
+# they provide a layer of abstraction between ploy code and the exact evaluation semantics.
 
 !{:Let `macro
   # the 'macro' macro defines a new macro in the current environment.
