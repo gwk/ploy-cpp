@@ -213,9 +213,8 @@ static Obj parse_comment(Parser* p) {
     P_ADV(1, return parse_error(p, "expression comment requires sub-expression"));
     Obj expr = parse_sub_expr(p);
     if (p->e) return obj0;
-    // the QUO prevents macro expansion of the commented code,
-    // and also differentiates it from line comments.
-    return struct_new2(rc_ret(t_Comment), rc_ret_val(s_true), struct_new1(rc_ret(t_Quo), expr));
+    // first field indicates expression comment.
+    return struct_new2(rc_ret(t_Comment), rc_ret_val(s_true), expr);
   }
   // otherwise comment out a single line.
   Src_pos sp_report = p->sp;
