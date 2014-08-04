@@ -9,7 +9,7 @@
 typedef struct _Trace {
   Obj call;
   struct _Trace* next;
-} Trace;
+} Trace; // Trace objects are live on the stack only.
 
 
 static NO_RETURN _exc_raise(Trace* trace, Obj env, Chars_const fmt, Chars_const args_str, ...) {
