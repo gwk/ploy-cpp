@@ -321,7 +321,7 @@ static Step run_call_host(Int d, Trace* trace, Obj env, Obj code, Obj func, Mem 
     Step step = run(d, trace, env, args.els[i]);
     arg_vals[i] = step.val;
   }
-  Trace t = (Trace){.call=code, .next=trace};
+  Trace t = (Trace){.code=code, .next=trace};
   return mk_step(env, f_ptr(&t, env, mem_mk(args.len, arg_vals)));
 }
 
@@ -416,7 +416,7 @@ static Step run_tail(Int d, Trace* trace, Step step) {
   Obj env = step.env; // hold onto the original 'next' environment for the topmost caller.
   while (!is(step.tco_code, obj0)) {
     Obj tco_env = step.val; // val field is reused in the TCO case to hold the callee env.
-    Trace t = (Trace){.call=step.tco_call, .next=trace};
+    Trace t = (Trace){.code=step.tco_call, .next=trace};
 #if VERBOSE_EVAL
     for_in(i, d) err(i % 4 ? " " : "|");
     errFL("%s %o", trace_tail_prefix, step.tco_code);

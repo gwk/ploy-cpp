@@ -7,7 +7,7 @@
 
 
 typedef struct _Trace {
-  Obj call;
+  Obj code;
   struct _Trace* next;
 } Trace; // Trace objects are live on the stack only.
 
@@ -21,7 +21,7 @@ static NO_RETURN _exc_raise(Trace* trace, Obj env, Chars_const fmt, Chars_const 
   va_end(args_list);
   errL("\ntrace:");
   while (trace) {
-    errFL("  %o", trace->call);
+    errFL("  %o", trace->code);
     trace = trace->next;
   }
   fail();
