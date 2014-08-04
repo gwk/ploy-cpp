@@ -17,7 +17,6 @@ DEF_SIZE(Type);
 
 #define TYPE_LIST \
 T(Type, NULL) \
-T(Obj, NULL) \
 T(Ptr, NULL) \
 T(Int, NULL) \
 T(Sym, NULL) \
@@ -37,19 +36,16 @@ T(Fn, NULL) \
 T(Syn_struct_typed, "Syn-struct-typed") \
 T(Syn_seq_typed, "Syn-seq-typed") \
 T(Call, NULL) \
-T(Label, NULL) \
-T(Variad, NULL) \
 T(Par, NULL) \
 T(Func, NULL) \
 T(File, NULL) \
 T(Src, NULL) \
 T(Expr, NULL) \
-T(Syn_struct, "syn-struct") \
+T(Syn_struct, "Syn-struct") \
 T(Syn_seq, "Syn-seq") \
 T(Mem_Obj, "Mem-Obj") \
 T(Mem_Par, "Mem-Par") \
 T(Mem_Expr, "Mem-Expr") \
-T(Mem_Int, "Mem-Int") \
 
 
 // sym indices.

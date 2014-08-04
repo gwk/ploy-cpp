@@ -2,83 +2,192 @@
 # Permission to use this file is granted in ploy/license.txt.
 
 # ploy type system.
-##<do
-<macro _boot-mk-type [-name -kind]
+
+<macro mk-type [-name -kind]
   # type instances are structs of -name:Expr -kind:Type-kind.
   # note that the type of name is Expr, not Sym,
   # because the name of a derived type might be the expression used to derive it.
   # Type-kind is a union of the various Type-kind-*.
   ~<let ,name {:Type `,name ,kind}>>
 
-<_boot-mk-type Type-kind-unit
+<fn init-kind [-type -kind]
+  (init-el type 1 kind)>
+
+<mk-type Type-kind-unit
   # unit types have a unique singleton instance, and therefore the kind contains no information.
   # thus, the Type-kind of Type-kind-unit is Type-kind-unit.
   `UNINIT> # circular reference.
 <let type-kind-unit {:Type-kind-unit}> # create the singleton instance manually.
-(init-el Type-kind-unit 1 type-kind-unit) # Type-kind-unit is now well-formed.
+(init-kind Type-kind-unit type-kind-unit) # Type-kind-unit is now well-formed.
 
-<_boot-mk-type Type-kind-prim
+<mk-type Type-kind-prim
   # the primitive types are opaque from the perspective of the type system;
   # therefore Type-kind-prim is also a unit type.
   type-kind-unit>
+<let type-kind-prim {:Type-kind-prim}> # create the singleton instance manually.
 
-<_boot-mk-type Type-kind-mem `UNINIT>
-<_boot-mk-type Type-kind-struct `UNINIT>
-<_boot-mk-type Type-kind-union `UNINIT>
+<mk-type Type-kind-mem `UNINIT>
+<mk-type Type-kind-struct `UNINIT>
+<mk-type Type-kind-union `UNINIT>
 
-<_boot-mk-type Type-kind-var
-  # type variables are abstract, used for type parameterization.
-  type-kind-unit>
-
-<_boot-mk-type Type-kind-class
+<mk-type Type-kind-class
   # type classes are abstract, synonymous with interfaces.
   # not yet implemented, so for now define as a unit type.
   type-kind-unit>
+<let type-kind-class {:Type-kind-class}>
 
-<_boot-mk-type Type-field
+<mk-type Type-kind-var
+  # type variables are placeholders, used for type parameterization.
+  # they are 'abstract' in the sense that no instance ever has such a type.
+  type-kind-unit>
+<let type-kind-var {:Type-kind-var}>
+
+<mk-type Type-field
   # Type-field is a struct of -name:Sym -type:Type.
   `UNINIT>
 
-<_boot-mk-type Mem-Type-field {:Type-kind-mem Type-field}>
+<mk-type Mem-Type {:Type-kind-mem Type}>
 
-(init-el Type-kind-mem 1
+<mk-type Mem-Type-field {:Type-kind-mem Type-field}>
+
+(init-kind Type-kind-mem
   # mem types are dynamic-length blocks of a single element type;
   # the type-kind is a struct of one field specifying the element type.
   {:Type-kind-struct
     {:Mem-Type-field # -fields
       {:Type-field `el-type Type}}})
 
-(init-el Type-kind-struct 1
+(init-kind Type-kind-struct
   # struct types are defined by a list of field names/type pairs.
   # the type-kind is a struct of one field, 'fields'.
   {:Type-kind-struct
     {:Mem-Type-field # -fields
       {:Type-field `fields Mem-Type-field}}})
 
-(init-el Type-kind-union 1
-  # union types are defined by a list of variant name/type pairs.
+(init-kind Type-kind-union
+  # union types are defined by a list of variant types.
   # the type-kind is a struct of one field, 'variants'.
-  # note that for now at least we reuse the Type-field type to also represent variants.
   {:Type-kind-struct
     {:Mem-Type-field # -fields
-      {:Type-field `variants Mem-Type-field}}})
+      {:Type-field `variants Mem-Type}}})
 
-(init-el Type-field 1
+(init-kind Type-field
   {:Type-kind-struct
     {:Mem-Type-field # -fields
       {:Type-field `name Sym}
       {:Type-field `type Type}}})
 
-
-<_boot-mk-type Type-kind
+<mk-type Type-kind
   {:Type-kind-union
-    {:Mem-Type-field # -variants
-      {:Type-field `name Sym}
-      {:Type-field `type Type}}}>
+    {:Mem-Type # -variants
+      Type-kind-unit
+      Type-kind-prim
+      Type-kind-mem
+      Type-kind-struct
+      Type-kind-union
+      Type-kind-class
+      Type-kind-var}}>
 
-(init-el Type 1
+<mk-type Bool type-kind-prim>
+<mk-type Obj type-kind-class>
+
+# now that the metatypes have been defined, we can finish defining the builtin types.
+
+(init-kind Type
   {:Type-kind-struct
     {:Mem-Type-field # -fields
       {:Type-field `name Expr}
       {:Type-field `kind Type-kind}}})
->
+
+(init-kind Ptr type-kind-prim)
+(init-kind Int type-kind-prim)
+(init-kind Sym type-kind-prim)
+(init-kind Data type-kind-prim)
+(init-kind Env type-kind-prim)
+
+<fn init-kind-struct1 [-type -field-name -field-type]
+  (init-kind type {:Type-kind-struct {:Mem-Type-field {:Type-field field-name field-type}}})>
+
+<fn init-kind-struct2 [-type -field-name0 -field-type0 -field-name1 -field-type1]
+  (init-kind type {:Type-kind-struct {:Mem-Type-field
+    {:Type-field field-name0 field-type0}
+    {:Type-field field-name1 field-type1}}})>
+
+<fn init-kind-struct3
+  [-type -field-name0 -field-type0 -field-name1 -field-type1 -field-name2 -field-type2]
+  (init-kind type {:Type-kind-struct {:Mem-Type-field
+    {:Type-field field-name0 field-type0}
+    {:Type-field field-name1 field-type1}
+    {:Type-field field-name2 field-type2}}})>
+
+(init-kind-struct1 Unq `expr Expr)
+(init-kind-struct1 Qua `expr Expr)
+(init-kind-struct1 Quo `expr Expr)
+(init-kind-struct1 Eval `expr Expr)
+
+# TODO: should these be type aliases of Mem-Expr?
+(init-kind Expand nil)
+(init-kind Do nil)
+(init-kind Scope nil)
+(init-kind Syn-struct-typed nil)
+(init-kind Syn-seq-typed nil)
+(init-kind Call nil)
+(init-kind Syn-struct nil)
+(init-kind Syn-seq nil)
+
+(init-kind-struct2 Comment `is-expr-comment Bool `expr Expr)
+
+(init-kind-struct2 Let `name Sym `expr Expr)
+(init-kind-struct3 If `pred Expr `then Expr `else Expr)
+
+(init-kind Fn {:Type-kind-struct {:Mem-Type-field
+  {:Type-field `name Sym}
+  {:Type-field `is-native Bool}
+  {:Type-field `is-macro Bool}
+  {:Type-field `pars Syn-seq}
+  {:Type-field `ret-type Type}
+  {:Type-field `body Expr}}})
+
+(init-kind Par {:Type-kind-struct {:Mem-Type-field
+  {:Type-field `is-variad Bool}
+  {:Type-field `name Sym}
+  {:Type-field `type Type}
+  {:Type-field `expr Expr}}})
+
+(init-kind Func {:Type-kind-struct {:Mem-Type-field
+  {:Type-field `name Sym}
+  {:Type-field `is-native Bool}
+  {:Type-field `is-macro Bool}
+  {:Type-field `env Env}
+  {:Type-field `pars Mem-Par}
+  {:Type-field `ret-type Type}
+  {:Type-field `body Expr}}})
+
+(init-kind File nil)
+
+(init-kind-struct2 Src `path Data `src Data)
+
+(init-kind Expr
+  {:Type-kind-union
+    {:Mem-Type # -variants; this list matches the implementation of run_step_disp.
+      Int
+      Sym
+      Data
+      Eval
+      Quo
+      Do
+      Scope
+      Let
+      If
+      Fn
+      Syn-struct-typed
+      Syn-seq-typed
+      Call}})
+
+(init-kind Mem-Obj {:Type-kind-mem Obj})
+(init-kind Mem-Par {:Type-kind-mem Obj})
+(init-kind Mem-Expr {:Type-kind-mem Obj})
+
+# builtin types complete. now define additional core types.
+
+<mk-type Mem-Int {:Type-kind-mem Int}>
