@@ -3,22 +3,17 @@
   'err' : '''\
 lookup error: `unbound
 trace:
-  {:If `(igt n 0) {:Do `(self (isub n 1)) void} `unbound}
+  {:If `n {:Scope {:Do `(self (isub n 1)) void}} `unbound}
   `(self (isub n 1))
   {:Do `(self (isub n 1)) void}
-  {:If `(igt n 0) {:Do `(self (isub n 1)) void} `unbound}
-  `(self (isub n 1))
+  {:Scope {:Do `(self (isub n 1)) void}}
   {:Do `(self (isub n 1)) void}
-  {:If `(igt n 0) {:Do `(self (isub n 1)) void} `unbound}
-  `(self (isub n 1))
+  {:Scope {:Do `(self (isub n 1)) void}}
   {:Do `(self (isub n 1)) void}
-  {:If `(igt n 0) {:Do `(self (isub n 1)) void} `unbound}
-  `(self (isub n 1))
+  {:Scope {:Do `(self (isub n 1)) void}}
   {:Do `(self (isub n 1)) void}
-  {:If `(igt n 0) {:Do `(self (isub n 1)) void} `unbound}
-  `(self (isub n 1))
+  {:Scope {:Do `(self (isub n 1)) void}}
   {:Do `(self (isub n 1)) void}
-  {:If `(igt n 0) {:Do `(self (isub n 1)) void} `unbound}
-  `(f 5)
+  {:Scope {:Do `(self (isub n 1)) void}}
 '''
 }

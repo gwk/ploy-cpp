@@ -1,8 +1,9 @@
 <fn f [-n]
-  <if (igt n 0)
-    <do
-      (self (isub n 1))
-      void>
+  <if n
+    <scope
+      <do
+        (self (isub n 1))
+        void>>
     unbound>>
 
 (f 5)

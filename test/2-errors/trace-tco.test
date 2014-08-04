@@ -3,7 +3,7 @@
   'err' : '''\
 lookup error: `unbound
 trace:
-  {:If `(igt n 0) `(self (isub n 1)) `unbound}
+  {:If `n {:Scope {:Do void `(self (isub n 1))}} `unbound}
   `(self (isub n 1))
 '''
 }
