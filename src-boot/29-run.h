@@ -78,6 +78,10 @@ static Step run_Scope(Int d, Trace* trace, Obj env, Obj code) {
   exc_check(args.len == 1, "Scope requires 1 argument; received %i", args.len);
   Obj body = args.els[0];
   Obj sub_env = env_push_frame(rc_ret(env));
+  // unlike Do and the other TCO-aware forms,
+  // Scope must return an actual TCO step in order to return both env and sub_env.
+  // this is less desirable;
+  // we want to leave as many run_* calls on the c stack as possible for clarity.
   // caller will own .env and .val, but not .tco_call or .tco_code.
   // note: we pass the scope expr as 'call', which is innacurate but at least somewhat helpful??
   return (Step){.env=env, .val=sub_env, .tco_call=code, .tco_code=body}; // TCO.
@@ -282,7 +286,7 @@ static Step run_call_native(Int d, Trace* trace, Obj env, Obj call, Obj func, Bo
   // we can release func now and still safely return the unretained body as .tco_code.
   rc_rel(func);
 #if 1 // TCO.
-  // caller will own .env and .val, but not .tco_code.
+  // caller will own .env and .val, but not .tco_call or .tco_code.
   return (Step){.env=envs.caller_env, .val=envs.callee_env, .tco_call=call, .tco_code=body};
 #else // NO TCO.
   Step step = run(d, trace, envs.callee_env, body); // owns callee_env.
@@ -414,11 +418,11 @@ static Step run_step(Int d, Trace* trace, Obj env, Obj code) {
 
 
 static Step run_tail(Int d, Trace* trace, Step step) {
-  // owns .env and .val; borrows .tco_code.
+  // owns .env and .val; borrows .tco_call and .tco_code.
   Obj env = step.env; // hold onto the original 'next' environment for the topmost caller.
-  while (!is(step.tco_code, obj0)) {
+  while (!is(step.tco_code, obj0)) { // TCO step.
     Obj tco_env = step.val; // val field is reused in the TCO case to hold the callee env.
-    Trace t = (Trace){.code=step.tco_call, .next=trace};
+    Trace t = {.code=step.tco_call, .next=trace};
 #if VERBOSE_EVAL
     for_in(i, d) err(i % 4 ? " " : "|");
     errFL("%s %o", trace_tail_prefix, step.tco_code);
