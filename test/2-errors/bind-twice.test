@@ -1,4 +1,7 @@
 {
   'code' : 1,
-  'err' : 'ploy error: symbol is already bound: `x\n'
+  'err' : '''\
+symbol is already bound: `x
+trace:
+'''
 }

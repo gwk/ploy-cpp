@@ -84,6 +84,14 @@ static Step run_Scope(Int d, Trace* trace, Obj env, Obj code) {
 }
 
 
+static Obj run_env_bind(Trace* trace, Obj env, Obj key, Obj val) {
+  // owns env, key, val.
+  Obj env1 = env_bind(env, key, val);
+  exc_check(!is(env, env1), "symbol is already bound: %o", key);
+  return env1;
+}
+
+
 static Step run_Let(Int d, Trace* trace, Obj env, Obj code) {
   // owns env.
   Mem args = struct_mem(code);
@@ -93,7 +101,7 @@ static Step run_Let(Int d, Trace* trace, Obj env, Obj code) {
   exc_check(obj_is_sym(sym), "Let requires argument 1 to be a bindable sym; received: %o", sym);
   exc_check(!sym_is_special(sym), "Let cannot bind to special sym: %o", sym);
   Step step = run(d, trace, env, expr);
-  Obj env1 = env_bind(step.env, rc_ret_val(sym), rc_ret(step.val)); // owns env, sym, val.
+  Obj env1 = run_env_bind(trace, step.env, rc_ret_val(sym), rc_ret(step.val));
   return mk_step(env1, step.val);
 }
 
@@ -215,7 +223,7 @@ static Call_envs run_bind_args(Int d, Trace* trace, Obj env, Obj callee_env,
         env = step.env;
         val = step.val;
       }
-      callee_env = env_bind(callee_env, rc_ret_val(par_sym), val);
+      callee_env = run_env_bind(trace, callee_env, rc_ret_val(par_sym), val);
     } else { // variad.
       check(!has_variad, "function has multiple variad parameters: %o", struct_el(func, 0));
       has_variad = true;
@@ -236,7 +244,7 @@ static Call_envs run_bind_args(Int d, Trace* trace, Obj env, Obj callee_env,
           *it = step.val;
         }
       }
-      callee_env = env_bind(callee_env, rc_ret_val(par_sym), variad_val);
+      callee_env = run_env_bind(trace, callee_env, rc_ret_val(par_sym), variad_val);
     }
   }
   check(i_args == args.len, "function received too many arguments: %o", struct_el(func, 0));
@@ -266,7 +274,7 @@ static Step run_call_native(Int d, Trace* trace, Obj env, Obj call, Obj func, Bo
   exc_check(obj_is_struct(pars), "function %o pars is not a Struct: %o", name, pars);
   exc_check(is(ret_type, s_nil), "function %o ret-type is non-nil: %o", name, ret_type);
   Obj callee_env = env_push_frame(rc_ret(lex_env));
-  callee_env = env_bind(callee_env, rc_ret_val(s_self), rc_ret(func)); // bind self.
+  callee_env = run_env_bind(trace, callee_env, rc_ret_val(s_self), rc_ret(func)); // bind self.
   // owns env, callee_env.
   Call_envs envs =
   run_bind_args(d, trace, env, callee_env, func, struct_mem(pars), args, is_expand);

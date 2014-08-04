@@ -27,7 +27,7 @@ static Obj env_rel_fields(Obj o) {
 
 
 static Obj env_new(Obj key, Obj val, Obj tl) {
-  // owns sym, val, tl.
+  // owns key, val, tl.
   assert(obj_is_sym(key));
   assert(is(tl, s_ENV_END) || obj_is_env(tl));
   Obj o = ref_alloc(size_Env);
@@ -39,12 +39,11 @@ static Obj env_new(Obj key, Obj val, Obj tl) {
 }
 
 
-static Obj env_get(Obj env, Obj sym) {
-  assert(!sym_is_special(sym));
+static Obj env_get(Obj env, Obj key) {
+  assert(!sym_is_special(key));
   while (!is(env, s_ENV_END)) {
     assert(obj_is_env(env));
-    Obj key = env.e->key;
-    if (is(key, sym)) { // key is never ENV_FRAME_KEY, since marker is special.
+    if (is(env.e->key, key)) { // key is never ENV_FRAME_KEY, since marker is special.
       return env.e->val;
     }
     env = env.e->tl;
@@ -59,20 +58,23 @@ static Obj env_push_frame(Obj env) {
 }
 
 
-static Obj env_bind(Obj env, Obj sym, Obj val) {
-  // owns env, sym, val.
-  assert(!sym_is_special(sym));
+static Obj env_bind(Obj env, Obj key, Obj val) {
+  // owns env, key, val.
+  // returns env unmodified if symbol is already bound.
+  assert(!sym_is_special(key));
   Obj e = env;
   while (!is(e, s_ENV_END)) { // check that symbol is not already bound.
     assert(obj_is_env(e));
-    Obj key = e.e->key;
-    if (is(key, s_ENV_FRAME_KEY)) { // frame boundary; check is complete.
+    Obj k = e.e->key;
+    if (is(k, s_ENV_FRAME_KEY)) { // frame boundary; check is complete.
       break;
-    } else { // binding.
-      check(!is(key, sym), "symbol is already bound: %o", sym);
+    } else if (is(k, key)) { // symbol is already bound.
+      rc_rel(key);
+      rc_rel(val);
+      return env;
     }
     e = e.e->tl;
   }
-  return env_new(sym, val, env);
+  return env_new(key, val, env);
 }
 
