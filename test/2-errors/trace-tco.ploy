@@ -1,6 +1,6 @@
 <fn f [-n]
   <if (igt n 0)
     (self (isub n 1))
-    missing-sym>>
+    unbound>>
 
 (f 5)

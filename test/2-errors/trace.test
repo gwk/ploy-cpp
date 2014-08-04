@@ -1,24 +1,24 @@
 {
   'code' : 1,
   'err' : '''\
-lookup error: `missing-sym
+lookup error: `unbound
 trace:
-  {:If `(igt n 0) {:Do `(self (isub n 1)) void} `missing-sym}
+  {:If `(igt n 0) {:Do `(self (isub n 1)) void} `unbound}
   `(self (isub n 1))
   {:Do `(self (isub n 1)) void}
-  {:If `(igt n 0) {:Do `(self (isub n 1)) void} `missing-sym}
+  {:If `(igt n 0) {:Do `(self (isub n 1)) void} `unbound}
   `(self (isub n 1))
   {:Do `(self (isub n 1)) void}
-  {:If `(igt n 0) {:Do `(self (isub n 1)) void} `missing-sym}
+  {:If `(igt n 0) {:Do `(self (isub n 1)) void} `unbound}
   `(self (isub n 1))
   {:Do `(self (isub n 1)) void}
-  {:If `(igt n 0) {:Do `(self (isub n 1)) void} `missing-sym}
+  {:If `(igt n 0) {:Do `(self (isub n 1)) void} `unbound}
   `(self (isub n 1))
   {:Do `(self (isub n 1)) void}
-  {:If `(igt n 0) {:Do `(self (isub n 1)) void} `missing-sym}
+  {:If `(igt n 0) {:Do `(self (isub n 1)) void} `unbound}
   `(self (isub n 1))
   {:Do `(self (isub n 1)) void}
-  {:If `(igt n 0) {:Do `(self (isub n 1)) void} `missing-sym}
+  {:If `(igt n 0) {:Do `(self (isub n 1)) void} `unbound}
   `(f 5)
 '''
 }

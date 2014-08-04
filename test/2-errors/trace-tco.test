@@ -1,9 +1,9 @@
 {
   'code' : 1,
   'err' : '''\
-lookup error: `missing-sym
+lookup error: `unbound
 trace:
-  {:If `(igt n 0) `(self (isub n 1)) `missing-sym}
+  {:If `(igt n 0) `(self (isub n 1)) `unbound}
   `(self (isub n 1))
 '''
 }
