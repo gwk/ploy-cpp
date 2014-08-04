@@ -1,0 +1,11 @@
+<fn f [-a -b]
+  (iadd a b)> # host call in tail position.
+
+<fn g []
+  (f 0 'a')> # native call in tail position.
+
+<fn h []
+  (g) # native call in non-tail position.
+  void>
+
+(h)

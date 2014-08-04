@@ -292,7 +292,7 @@ static Step run_call_native(Int d, Trace* trace, Obj env, Obj call, Obj func, Bo
 }
 
 
-static Step run_call_host(Int d, Trace* trace, Obj env, Obj func, Mem args) {
+static Step run_call_host(Int d, Trace* trace, Obj env, Obj code, Obj func, Mem args) {
   // owns env, func.
   Mem m = struct_mem(func);
   assert(m.len == 7);
@@ -321,7 +321,8 @@ static Step run_call_host(Int d, Trace* trace, Obj env, Obj func, Mem args) {
     Step step = run(d, trace, env, args.els[i]);
     arg_vals[i] = step.val;
   }
-  return mk_step(env, f_ptr(trace, env, mem_mk(args.len, arg_vals)));
+  Trace t = (Trace){.call=code, .next=trace};
+  return mk_step(env, f_ptr(&t, env, mem_mk(args.len, arg_vals)));
 }
 
 
@@ -339,7 +340,7 @@ static Step run_Call(Int d, Trace* trace, Obj env, Obj code) {
   if (bool_is_true(is_native)) {
     return run_call_native(d, trace, env, code, func, false); // TCO.
   } else {
-    return run_call_host(d, trace, env, func, mem_next(args)); // TODO: make TCO?
+    return run_call_host(d, trace, env, code, func, mem_next(args)); // TODO: make TCO?
   }
 }
 
