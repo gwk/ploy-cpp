@@ -20,7 +20,7 @@ typedef struct {
 static Step run_sym(Trace* trace, Obj env, Obj code) {
   // owns env.
   assert(obj_is_sym(code));
-  assert(!is(code, s_ILLEGAL)); // anything that returns s_ILLEGAL should have raised an error.
+  assert(!is(code, s_ILLEGAL)); // anything that returns ILLEGAL should have raised an error.
   if (code.u <= s_END_SPECIAL_SYMS.u) {
     return mk_step(env, rc_ret_val(code)); // special syms are self-evaluating.
   }
@@ -77,7 +77,7 @@ static Step run_Scope(Int d, Trace* trace, Obj env, Obj code) {
   Mem args = struct_mem(code);
   exc_check(args.len == 1, "Scope requires 1 argument; received %i", args.len);
   Obj body = args.els[0];
-  Obj sub_env = env_push_frame(rc_ret(env), data_new_from_chars(cast(Chars, "<scope>")));
+  Obj sub_env = env_push_frame(rc_ret(env));
   // caller will own .env and .val, but not .tco_call or .tco_code.
   // note: we pass the scope expr as 'call', which is innacurate but at least somewhat helpful??
   return (Step){.env=env, .val=sub_env, .tco_call=code, .tco_code=body}; // TCO.
@@ -265,8 +265,7 @@ static Step run_call_native(Int d, Trace* trace, Obj env, Obj call, Obj func, Bo
   exc_check(obj_is_env(lex_env), "function %o env is not an Env: %o", name, lex_env);
   exc_check(obj_is_struct(pars), "function %o pars is not a Struct: %o", name, pars);
   exc_check(is(ret_type, s_nil), "function %o ret-type is non-nil: %o", name, ret_type);
-  Obj callee_env = env_push_frame(rc_ret(lex_env), rc_ret(name));
-  // TODO: change env_push_frame src from name to whole func?
+  Obj callee_env = env_push_frame(rc_ret(lex_env));
   callee_env = env_bind(callee_env, rc_ret_val(s_self), rc_ret(func)); // bind self.
   // owns env, callee_env.
   Call_envs envs =

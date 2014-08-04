@@ -13,7 +13,7 @@ static Bool chars_eq(Chars_const a, Chars_const b) {
 
 
 // get the base name of the path argument.
-static Chars_const chars_path_base(Chars_const path) {
+UNUSED_FN static Chars_const chars_path_base(Chars_const path) {
   Int offset = 0;
   Int i = 0;
   loop {

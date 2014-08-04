@@ -38,18 +38,18 @@ static void write_repr_Data(CFile f, Obj d, Bool is_quoted, Int depth, Set* set)
 
 static void write_repr_Env(CFile f, Obj env, Bool is_quoted, Int depth, Set* set) {
   fputs(NO_REPR_PO "Env ", f);
-  Int i = 0;
-  while (!is(env, s_ENV_END_MARKER)) {
+  Int frame_binding_count = 0;
+  while (!is(env, s_ENV_END)) {
     assert(obj_is_env(env));
     Obj key = env.e->key;
-    if (is(key, s_ENV_FRAME_MARKER)) { // frame marker.
+    if (is(key, s_ENV_FRAME_KEY)) { // frame marker.
       Obj src = env.e->val;
       fputc(' ', f);
       write_repr(f, src);
-      fprintf(f, " %ld" NO_REPR_PC, i);
+      fprintf(f, " %ld" NO_REPR_PC, frame_binding_count);
       return;
     } else { // binding.
-      i++;
+      frame_binding_count++;
     }
     env = env.e->tl;
   }

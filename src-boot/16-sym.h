@@ -71,8 +71,9 @@ static Obj sym_new_from_chars(Chars b) {
 S(ILLEGAL) \
 S(void) \
 S(nil) \
-S(ENV_END_MARKER) \
-S(ENV_FRAME_MARKER) \
+S(ENV_END) \
+S(ENV_FRAME_KEY) \
+S(ENV_FRAME_VAL) \
 S(UNINIT) \
 S(false) \
 S(true) \
