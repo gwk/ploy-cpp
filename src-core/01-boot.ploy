@@ -32,6 +32,16 @@
 
 # define macros to wrap the special forms.
 
+<macro fna [-pars &body]
+  # the 'fna' macro defines an anonymous function.
+  {:Fn
+    `anon
+    true
+    false
+    pars
+    nil # unspecified ret type.
+    (_boot-mk-do body)}>
+
 <macro fn [-sym -pars &body]
   # the 'fn' macro defines a function in the current environment.
   {:Let
