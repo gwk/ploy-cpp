@@ -3,11 +3,22 @@
   'err' : '''\
 lookup error: `missing-sym
 trace:
+  {:If `(igt n 0) {:Do `(self (isub n 1)) void} `missing-sym}
   `(self (isub n 1))
+  {:Do `(self (isub n 1)) void}
+  {:If `(igt n 0) {:Do `(self (isub n 1)) void} `missing-sym}
   `(self (isub n 1))
+  {:Do `(self (isub n 1)) void}
+  {:If `(igt n 0) {:Do `(self (isub n 1)) void} `missing-sym}
   `(self (isub n 1))
+  {:Do `(self (isub n 1)) void}
+  {:If `(igt n 0) {:Do `(self (isub n 1)) void} `missing-sym}
   `(self (isub n 1))
+  {:Do `(self (isub n 1)) void}
+  {:If `(igt n 0) {:Do `(self (isub n 1)) void} `missing-sym}
   `(self (isub n 1))
+  {:Do `(self (isub n 1)) void}
+  {:If `(igt n 0) {:Do `(self (isub n 1)) void} `missing-sym}
   `(f 5)
 '''
 }

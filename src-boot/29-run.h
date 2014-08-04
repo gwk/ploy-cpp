@@ -42,7 +42,7 @@ static Step run_Eval(Int d, Trace* trace, Obj env, Obj code) {
   Obj dyn_code = step.val;
   step = run(d, trace, env, dyn_code);
   rc_rel(dyn_code);
-  return step;
+  return step; // TODO: TCO?
 }
 
 
@@ -321,8 +321,8 @@ static Step run_call_host(Int d, Trace* trace, Obj env, Obj code, Obj func, Mem 
     Step step = run(d, trace, env, args.els[i]);
     arg_vals[i] = step.val;
   }
-  Trace t = (Trace){.code=code, .next=trace};
-  return mk_step(env, f_ptr(&t, env, mem_mk(args.len, arg_vals)));
+  Obj res = f_ptr(trace, env, mem_mk(args.len, arg_vals));
+  return mk_step(env, res);
 }
 
 
@@ -379,6 +379,8 @@ static Step run_step_disp(Int d, Trace* trace, Obj env, Obj code) {
     }
   }
   assert(ot == ot_ref);
+  Trace t = {.code=code, .next=trace};
+  trace = &t;
   Obj type = ref_type(code);
   Int ti = type_index(type); // cast to Int c type avoids incomplete enum switch error.
 #define RUN(t) case ti_##t: return run_##t(d, trace, env, code)

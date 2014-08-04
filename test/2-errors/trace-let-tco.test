@@ -3,6 +3,7 @@
   'err' : '''\
 lookup error: `missing-sym
 trace:
+  {:If `(igt n 0) `(self (isub n 1)) `missing-sym}
   `(self (isub n 1))
 '''
 }
