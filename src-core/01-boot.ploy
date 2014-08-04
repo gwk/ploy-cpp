@@ -9,7 +9,7 @@
 
 !{:Let `macro
   # the 'macro' macro defines a new macro in the current environment.
-  # instead, we must define it using raw forms.
+  # because we cannot use macro to define itself, we must define it using raw forms.
   # note the structural similarity between the outer Fn form and the inner struct literal.
   {:Fn # Fn creates both functions and macros.
     `macro # the sym for this macro is `macro.
@@ -33,9 +33,7 @@
 # define macros to wrap the special forms.
 
 <macro fn [-sym -pars &body]
-  # defines a function in the current environment.
-  # TODO: refine environment semantics?
-  # this is conceptually the same as macro; see the explanation above.
+  # the 'fn' macro defines a function in the current environment.
   {:Let
     sym
     {:Fn
