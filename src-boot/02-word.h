@@ -102,7 +102,7 @@ DEF_SIZE(CFile);
 // the assumed heap pointer alignment is based on the OSX malloc man page,
 // which guarantees 16-byte-aligned malloc.
 // TODO: values for other platforms.
-// terminology: width_ prefix should always refer to a number of bits.
+// terminology: width_* should always refer to a number of bits.
 static const Uns width_min_alloc = 4; // in mask bits.
 static const Int size_min_alloc = 1 << width_min_alloc; // in bytes.
 
