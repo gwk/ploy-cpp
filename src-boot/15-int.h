@@ -18,6 +18,7 @@ static Obj int_new_from_uns(Uns u) {
 
 
 static const Obj int0 = (Obj){.i=ot_int};
+static const Obj int1 = (Obj){.i=ot_int + shift_factor_Int * 1};
 
 static Int int_val(Obj o) {
   assert(obj_tag(o) == ot_int);
