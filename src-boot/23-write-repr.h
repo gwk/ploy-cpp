@@ -208,14 +208,17 @@ static void write_repr_obj(CFile f, Obj o, Bool is_quoted, Int depth, Set* set) 
     }
   } else {
     assert(ot == ot_ref);
-    depth++;
+    if (is(o, obj0)) {
+      fputs(NO_REPR_PO "obj0" NO_REPR_PC, f);
+      return;
+    }
     if (depth > 8) {
       fputs("…", f);
     } else if (set_contains(set, o)) { // cyclic object recursed.
       fputs("↺", f); // anticlockwise gapped circle arrow.
     } else {
       set_insert(set, o);
-      write_repr_dispatch(f, o, is_quoted, depth, set);
+      write_repr_dispatch(f, o, is_quoted, depth + 1, set);
       set_remove(set, o);
     }
   }
