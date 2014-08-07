@@ -37,15 +37,14 @@ static void write_repr_Data(CFile f, Obj d, Bool is_quoted, Int depth, Set* set)
 #define NO_REPR_PC "⟯" // U+27EF Mathematical right flattened parenthesis.
 
 static void write_repr_Env(CFile f, Obj env, Bool is_quoted, Int depth, Set* set) {
+  Obj top_key = env.e->key;
   fputs(NO_REPR_PO "Env ", f);
+  write_repr(f, top_key);
   Int frame_binding_count = 0;
   while (!is(env, s_ENV_END)) {
     assert(obj_is_env(env));
     Obj key = env.e->key;
     if (is(key, s_ENV_FRAME_KEY)) { // frame marker.
-      Obj src = env.e->val;
-      fputc(' ', f);
-      write_repr(f, src);
       fprintf(f, " %ld" NO_REPR_PC, frame_binding_count);
       return;
     } else { // binding.
