@@ -7,7 +7,7 @@
 
 
 static Obj ref_type(Obj r) {
-  assert(obj_is_ref(r));
+  assert(obj_is_valid_ref(r));
   return *r.type_ptr;
 }
 

@@ -213,7 +213,7 @@ typedef struct {
 
 static RC_BII rc_get_BII(Obj r) {
   // returns the resolved item but the original bucket and item index.
-  assert(obj_is_ref(r));
+  assert(obj_is_valid_ref(r));
   Uns h = rc_hash(r);
   RC_bucket* b = rc_bucket_ptr(h);
   for_in(i, b->len) {
@@ -253,7 +253,6 @@ static void rc_remove(Obj r) {
       rc_bucket_remove(bii.bucket, bii.index);
     } else { // leak.
       errFL("rc_remove: detected leaked object: %p", r);
-      fail();
     }
   } else {
     errFL("rc_remove: item has an indirect count: %p", r);
