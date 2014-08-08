@@ -16,6 +16,8 @@ typedef struct {
 
 #define mk_step(e, v) (Step){.env=(e), .val=(v), .tco_call=obj0, .tco_code=obj0}
 
+#define is_step_complete(step) is(step.tco_code, obj0)
+
 
 static Step run_sym(Trace* trace, Obj env, Obj code) {
   // owns env.
@@ -82,9 +84,8 @@ static Step run_Scope(Int d, Trace* trace, Obj env, Obj code) {
   // Scope must return an actual TCO step in order to return both env and sub_env.
   // this is less desirable;
   // we want to leave as many run_* calls on the c stack as possible for clarity.
-  // caller will own .env and .val, but not .tco_call or .tco_code.
-  // note: we pass the scope expr as 'call', which is innacurate but at least somewhat helpful??
-  return (Step){.env=env, .val=sub_env, .tco_call=code, .tco_code=body}; // TCO.
+  // caller will own .env and .val, .tco_call, but not .tco_code.
+  return (Step){.env=env, .val=sub_env, .tco_call=rc_ret(code), .tco_code=body}; // TCO.
 }
 
 
@@ -286,8 +287,9 @@ static Step run_call_native(Int d, Trace* trace, Obj env, Obj call, Obj func, Bo
   // we can release func now and still safely return the unretained body as .tco_code.
   rc_rel(func);
 #if 1 // TCO.
-  // caller will own .env and .val, but not .tco_call or .tco_code.
-  return (Step){.env=envs.caller_env, .val=envs.callee_env, .tco_call=call, .tco_code=body};
+  // caller will own .env, .val, .tco_call, but not .tco_code.
+  return (Step){.env=envs.caller_env, .val=envs.callee_env, .tco_call=rc_ret(call),
+   .tco_code=body};
 #else // NO TCO.
   Step step = run(d, trace, envs.callee_env, body); // owns callee_env.
   rc_rel(step.env);
@@ -383,7 +385,7 @@ static Step run_step_disp(Int d, Trace* trace, Obj env, Obj code) {
     }
   }
   assert(ot == ot_ref);
-  Trace t = {.code=code, .next=trace};
+  Trace t = {.code=code, .elided_step_count=0, .next=trace};
   trace = &t;
   Obj type = ref_type(code);
   Int ti = type_index(type); // cast to Int c type avoids incomplete enum switch error.
@@ -406,39 +408,54 @@ static Step run_step_disp(Int d, Trace* trace, Obj env, Obj code) {
 }
 
 
-static Step run_step(Int d, Trace* trace, Obj env, Obj code) {
-  // owns env.
+static void run_err_trace(Int d, Chars_const p, Obj o) {
 #if VERBOSE_EVAL
     for_in(i, d) err(i % 4 ? " " : "|");
-    errFL("%s %o", trace_run_prefix, code);
+    errFL("%s %o", p, o);
 #endif
-    Step step = run_step_disp(d, trace, env, code);
-    return step;
 }
 
 
-static Step run_tail(Int d, Trace* trace, Step step) {
-  // owns .env and .val; borrows .tco_call and .tco_code.
-  Obj env = step.env; // hold onto the original 'next' environment for the topmost caller.
-  while (!is(step.tco_code, obj0)) { // TCO step.
+static Step run_step(Int d, Trace* trace, Obj env, Obj code) {
+  // owns env.
+  run_err_trace(d, trace_run_prefix, code);
+  Step step = run_step_disp(d, trace, env, code);
+  return step;
+}
+
+
+static Step run_tail(Int d, Trace* parent, Step step) {
+  // owns step.env, .val, .tco_call; borrows .tco_code.
+  if (is_step_complete(step)) {
+    assert(is(step.tco_call, obj0));
+    run_err_trace(d, trace_val_prefix, step.val);
+    return step;
+  }
+  Obj base_env = step.env; // hold onto the original 'next' environment for the topmost caller.
+  Trace base_trace = {.code=step.tco_call, .elided_step_count=0, .next=parent};
+  Trace* t = &base_trace;
+  // top_trace is used after the first step; we count steps to show elisions in the backtrace.
+  Trace top_trace = {.code=rc_ret_val(s_ILLEGAL), .elided_step_count=-1, .next=&base_trace};
+  loop { // TCO step.
     Obj tco_env = step.val; // val field is reused in the TCO case to hold the callee env.
-    Trace t = {.code=step.tco_call, .next=trace};
-#if VERBOSE_EVAL
-    for_in(i, d) err(i % 4 ? " " : "|");
-    errFL("%s %o", trace_tail_prefix, step.tco_code);
-#endif
-    step = run_step_disp(d, &t, tco_env, step.tco_code); // owns tco_env; borrows .tco_code.
+    step = run_step_disp(d, t, tco_env, step.tco_code); // owns tco_env; borrows .tco_code.
+    run_err_trace(d, trace_val_prefix, step.val);
     // the modified tco env is immediately abandoned since tco_code is in the tail position.
     rc_rel(step.env);
+    if (is_step_complete(step)) break;
+    // after first step, use top_trace.
+    rc_rel(top_trace.code);
+    top_trace.code = step.tco_call;
+    top_trace.elided_step_count++; // starts at -1, so first legitimate value is 0.
+    t = &top_trace;
+    run_err_trace(d, trace_tail_prefix, step.tco_code);
   }
-  step.env = env; // replace whatever modified callee env from TCO with the topmost env.
+  rc_rel(base_trace.code);
+  rc_rel(top_trace.code);
+  step.env = base_env; // replace whatever modified callee env from TCO with the topmost env.
   // done; if TCO iterations occurred,
   // then the intermediate step.val objects were really the tco envs, consumed by run_step.
   // the final step.val is the one we want to return, so we do not have to ret/rel anything.
-#if VERBOSE_EVAL
-    for_in(i, d) err(i % 4 ? " " : "|");
-    errFL("%s %o", trace_val_prefix, step.val);
-#endif
   return step;
 }
 
@@ -448,6 +465,11 @@ static Step run(Int depth, Trace* trace, Obj env, Obj code) {
   // owns env.
   Step step = run_step(d, trace, env, code);
   return run_tail(d, trace, step);
+}
+
+
+static Step run_code(Obj env, Obj code) {
+  return run(-1, NULL, env, code);
 }
 
 

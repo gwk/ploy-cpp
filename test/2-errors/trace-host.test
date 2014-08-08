@@ -5,7 +5,9 @@ iadd requires arg 2 to be a Int; received: 'a'
 trace:
   `(iadd a b)
   `(f 0 'a')
-  {:Do `(g) void}
+  … 1
   `(h)
+  {:Do `(h) void}
+  `(i)
 '''
 }

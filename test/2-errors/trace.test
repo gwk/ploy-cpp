@@ -7,13 +7,18 @@ trace:
   `(self (isub n 1))
   {:Do `(self (isub n 1)) void}
   {:Scope {:Do `(self (isub n 1)) void}}
+  `(self (isub n 1))
   {:Do `(self (isub n 1)) void}
   {:Scope {:Do `(self (isub n 1)) void}}
+  `(self (isub n 1))
   {:Do `(self (isub n 1)) void}
   {:Scope {:Do `(self (isub n 1)) void}}
+  `(self (isub n 1))
   {:Do `(self (isub n 1)) void}
   {:Scope {:Do `(self (isub n 1)) void}}
+  `(self (isub n 1))
   {:Do `(self (isub n 1)) void}
   {:Scope {:Do `(self (isub n 1)) void}}
+  `(f 5)
 '''
 }

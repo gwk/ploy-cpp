@@ -5,7 +5,10 @@
   (f 0 'a')> # native call in tail position.
 
 <fn h []
-  (g) # native call in non-tail position.
+  (g)> # native call in tail position.
+
+<fn i []
+  (h) # native call in non-tail position.
   void>
 
-(h)
+(i)

@@ -8,6 +8,7 @@
 
 typedef struct _Trace {
   Obj code;
+  Int elided_step_count;
   struct _Trace* next;
 } Trace; // Trace objects are live on the stack only.
 
@@ -22,6 +23,9 @@ static NO_RETURN _exc_raise(Trace* trace, Obj env, Chars_const fmt, Chars_const 
   errL("\ntrace:");
   while (trace) {
     errFL("  %o", trace->code);
+    if (trace->elided_step_count > 0) { // tail 
+      errFL("  … %i", trace->elided_step_count);
+    }
     trace = trace->next;
   }
   fail();

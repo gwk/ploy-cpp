@@ -12,7 +12,7 @@ static Step eval(Obj env, Obj code) {
   }
   Obj expanded = expand(env, preprocessed); // owns preprocessed.
   Obj compiled = compile(env, expanded); // owns expanded.
-  Step step = run(-1, NULL, env, compiled); // borrows compiled.
+  Step step = run_code(env, compiled); // borrows compiled.
   rc_rel(compiled);
   return step;
 }
