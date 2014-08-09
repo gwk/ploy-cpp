@@ -213,7 +213,7 @@ static void write_repr_obj(CFile f, Obj o, Bool is_quoted, Int depth, Set* set) 
       return;
     }
     if (depth > 8) {
-      fputs("…", f);
+      fputs("…", f); // ellipsis.
     } else if (set_contains(set, o)) { // cyclic object recursed.
       fputs("↺", f); // anticlockwise gapped circle arrow.
     } else {
