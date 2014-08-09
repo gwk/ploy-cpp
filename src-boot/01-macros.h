@@ -53,7 +53,6 @@
 // verbose logging to aid in various debugging scenarios.
 #define VERBOSE 0
 #define VERBOSE_PARSE   VERBOSE || 0
-#define VERBOSE_EVAL    VERBOSE || 0
 
 // wherever possible, we use types that are the natural word size.
 #if __SIZEOF_POINTER__ == 4

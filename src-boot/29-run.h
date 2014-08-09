@@ -408,11 +408,13 @@ static Step run_step_disp(Int d, Trace* trace, Obj env, Obj code) {
 }
 
 
+static Bool trace_eval = false;
+
 static void run_err_trace(Int d, Chars_const p, Obj o) {
-#if VERBOSE_EVAL
+  if (trace_eval) {
     for_in(i, d) err(i % 4 ? " " : "|");
     errFL("%s %o", p, o);
-#endif
+  }
 }
 
 
@@ -474,9 +476,7 @@ static Step run_code(Obj env, Obj code) {
 
 
 static Obj run_macro(Trace* trace, Obj env, Obj code) {
-#if VERBOSE_EVAL
-  errFL("%s %o", trace_expand_prefix, code);
-#endif
+  run_err_trace(0, trace_expand_prefix, code);
   Mem args = struct_mem(code);
   check(args.len > 0, "empty macro expand");
   Obj macro_sym = mem_el(args, 0);
@@ -488,9 +488,7 @@ static Obj run_macro(Trace* trace, Obj env, Obj code) {
   Step step = run_call_native(0, trace, rc_ret(env), code, rc_ret(macro), true);
   step = run_tail(0, trace, step); // handle any TCO steps.
   rc_rel(step.env);
-#if VERBOSE_EVAL
-    errFL("%s %o", trace_expand_val_prefix, step.val);
-#endif
+  run_err_trace(0, trace_expand_val_prefix, step.val);
   return step.val;
 }
 

@@ -42,7 +42,6 @@ int main(int argc, Chars_const argv[]) {
   type_init_table();
   sym_init(); // requires type_init_table.
   type_init_values(); // requires sym_init.
-  Int vol_err = VERBOSE;
   
   // parse arguments.
   Chars_const paths[len_buffer];
@@ -50,10 +49,14 @@ int main(int argc, Chars_const argv[]) {
   Chars_const expr = NULL;
   Bool should_output_val = false;
   Bool should_load_core = true;
+  Bool should_log_stats = false;
   for_imn(i, 1, argc) {
     Chars_const arg = argv[i];
-    if (chars_eq(arg, "-v")) { // verbose.
-      vol_err = 1;
+    check(arg[0], "empty argument");
+    if (chars_eq(arg, "-t")) { // verbose eval.
+      trace_eval = true;
+    } else if (chars_eq(arg, "-s")) { // stats.
+      should_log_stats = true;
     } else if (chars_eq(arg, "-e") || chars_eq(arg, "-E")) { // expression.
       check(!expr, "multiple expression arguments");
       i++;
@@ -63,6 +66,7 @@ int main(int argc, Chars_const argv[]) {
     } else if (chars_eq(arg, "-b")) { // bare (do not load core.ploy).
       should_load_core = false;
     } else {
+      check(arg[0] != '-', "unknown option: %s", arg);
       check(path_count < len_buffer, "exceeded max paths: %d", len_buffer);
       paths[path_count++] = arg;
     }
@@ -104,7 +108,7 @@ int main(int argc, Chars_const argv[]) {
   mem_release_dealloc(global_sym_names.mem);
   type_cleanup();
   rc_cleanup();
-  counter_stats(vol_err);
+  counter_stats(should_log_stats);
 #endif
 
 #if OPT_RC_TABLE_STATS
