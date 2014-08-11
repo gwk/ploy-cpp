@@ -13,7 +13,7 @@ static const Int load_factor_denom = 1;
 
 
 typedef struct _RC_item {
-  Uns h; // hash/key.
+  Obj r;
   union { // if the low bit is set, then it is a count; otherwise, it is an pointer to a count.
     Uns c; // count.
     struct _RC_item* p;
@@ -103,19 +103,26 @@ static void rc_hist_count_moves(Int i) {
 #endif
 
 
+static Uns rc_hash(Obj r) {
+  // pointer hash simply shifts off the bits that are guaranteed to be zero.
+  return r.u >> width_min_alloc;
+}
+
+
 static Bool rc_item_is_direct(RC_item* item) {
   assert(item);
   return item->c & 1; // check if the low flag bit is set.
 }
 
 
-static RC_bucket* rc_bucket_ptr(Uns h) {
+static RC_bucket* rc_bucket_ptr(Obj r) {
+  Uns h = rc_hash(r);
   Uns i = h % cast(Uns, rc_table.len_buckets);
   return rc_table.buckets + i;
 }
 
 
-static void rc_bucket_append(RC_bucket* b, Uns h, Uns c) {
+static void rc_bucket_append(RC_bucket* b, Obj r, Uns c) {
   assert(b->len <= b->cap);
   if (b->len == b->cap) { // grow.
     b->cap = (b->cap ? b->cap * 2 : min_rc_len_bucket);
@@ -124,7 +131,7 @@ static void rc_bucket_append(RC_bucket* b, Uns h, Uns c) {
   }
   check(b->len < max_U32, "RC_bucket overflowed");
   rc_hist_count_moves(b->len);
-  b->items[b->len++] = (RC_item){.h=h, .c=c};
+  b->items[b->len++] = (RC_item){.r=r, .c=c};
 }
 
 
@@ -150,7 +157,7 @@ static void rc_resize(Int len_buckets) {
     RC_bucket src = old_buckets[i];
     for_in(j, src.len) {
       RC_item item = src.items[j];
-      rc_bucket_append(rc_bucket_ptr(item.h), item.h, item.c);
+      rc_bucket_append(rc_bucket_ptr(item.r), item.r, item.c);
     }
     raw_dealloc(src.items, ci_RC_bucket);
   }
@@ -175,22 +182,14 @@ static void rc_cleanup() {
 #endif
 
 
-static Uns rc_hash(Obj r) {
-  // pointer hash simply shifts of the bits that are guaranteed to be zero.
-  return r.u >> width_min_alloc;
-}
-
-
-
 static Obj rc_insert(Obj r) {
   // load factor == (numer / denom) == (num_items / num_buckets).
   if (rc_table.len * load_factor_denom >= rc_table.len_buckets * load_factor_numer) {
     rc_resize(rc_table.len_buckets * 2);
   }
   rc_hist_count_ref_bits(r);
-  Uns h = rc_hash(r);
-  RC_bucket* b = rc_bucket_ptr(h);
-  rc_bucket_append(b, h, (1<<1) + 1); // start with a direct count of 1 plus flag bit of 1.
+  RC_bucket* b = rc_bucket_ptr(r);
+  rc_bucket_append(b, r, (1<<1) + 1); // start with a direct count of 1 plus flag bit of 1.
   rc_table.len++;
   return r;
 }
@@ -214,11 +213,10 @@ typedef struct {
 static RC_BII rc_get_BII(Obj r) {
   // returns the resolved item but the original bucket and item index.
   assert(obj_is_valid_ref(r));
-  Uns h = rc_hash(r);
-  RC_bucket* b = rc_bucket_ptr(h);
+  RC_bucket* b = rc_bucket_ptr(r);
   for_in(i, b->len) {
     RC_item* item = b->items + i;
-    if (item->h == h) {
+    if (is(item->r, r)) {
       rc_hist_count_gets(i);
       return (RC_BII){.bucket=b, .item=item, .index=i};
     }
