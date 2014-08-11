@@ -43,7 +43,8 @@ static Obj run_macro(Trace* trace, Obj env, Obj code);
 
 static Obj expand(Obj env, Obj code) {
   // owns code.
-  Trace* trace = NULL;
+  Trace t = {.code=code, .elided_step_count=0, .next=NULL};
+  Trace* trace = &t;
   if (!obj_is_struct(code)) {
     return code;
   }
@@ -60,7 +61,7 @@ static Obj expand(Obj env, Obj code) {
     return expand_quasiquote(0, expr);
   }
   if (is(type, t_Expand)) {
-    Obj expanded = run_macro(trace, env, code);
+    Obj expanded = run_macro(trace, rc_ret(env), code); // owns env.
     rc_rel(code);
     // macro result may contain more expands; recursively expand the result.
     Obj final = expand(env, expanded);

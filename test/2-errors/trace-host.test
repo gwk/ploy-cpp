@@ -4,8 +4,7 @@
 iadd requires arg 2 to be a Int; received: 'a'
 trace:
   `(iadd a b)
-  `(f 0 'a')
-  … 1
+  … 3
   `(h)
   {:Do `(h) void}
   `(i)

@@ -3,9 +3,8 @@
   'err' : '''\
 lookup error: `unbound
 trace:
-  {:If `n {:Scope {:Do void `(self (isub n 1))}} `unbound}
-  `(self (isub n 1))
-  … 9
+  `unbound
+  … 21
   `(f 5)
 '''
 }

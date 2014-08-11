@@ -2,6 +2,7 @@
   (iadd a b)> # host call in tail position.
 
 <fn g []
+  void # non-tail  steps introduces an implicit do, increasing step count.
   (f 0 'a')> # native call in tail position.
 
 <fn h []

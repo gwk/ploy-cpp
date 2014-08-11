@@ -8,7 +8,7 @@ static Step eval(Obj env, Obj code) {
   //Trace t = (Trace){.call=code, .next=NULL};
   Obj preprocessed = preprocess(code); // borrows code.
   if (is(preprocessed, obj0)) {
-    return mk_step(env, rc_ret_val(s_void)); // TODO: document why this is necessary.
+    return mk_res(env, rc_ret_val(s_void)); // TODO: document why this is necessary.
   }
   Obj expanded = expand(env, preprocessed); // owns preprocessed.
   Obj compiled = compile(env, expanded); // owns expanded.
@@ -18,20 +18,21 @@ static Step eval(Obj env, Obj code) {
 }
 
 
-static Step eval_struct(Obj env, Obj s) {
+static Step eval_mem_expr(Obj env, Obj s) {
   // top level eval of a series of expressions.
   // this is quite different than calling eval on a Do instance;
-  // not only does this struct not have a head DO sym,
-  // it also does the complete eval cycle on each member in turn.
+  // besides evaluating a different, non-Expr type,
+  // it also does the complete eval cycle on each item in turn.
+  assert(is(obj_type(s), t_Mem_Expr));
   Mem m = struct_mem(s);
   if (m.len == 0) {
-    return mk_step(env, rc_ret_val(s_void));
+    return mk_res(env, rc_ret_val(s_void));
   }
   Int last = m.len - 1;
   it_mem_to(it, m, last) {
     Step step = eval(env, *it);
-    env = step.env;
-    rc_rel(step.val);
+    env = step.res.env;
+    rc_rel(step.res.val);
   }
   Step step = eval(env, m.els[last]);
   return step;
