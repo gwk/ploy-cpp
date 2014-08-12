@@ -18,10 +18,7 @@ static Obj parse_and_eval(Obj env, Obj path, Obj src, Array* sources, Bool out_v
     fail();
   }
 #if VERBOSE_PARSE
-  errF("parse_and_eval: ");
-  obj_err(path);
-  err_nl();
-  obj_errL(code);
+  errFL("parse_and_eval: %o\n%o", path, code);
 #endif
   array_append(sources, struct_new2(rc_ret(t_Src), path, src));
   Step step = eval_mem_expr(env, code);

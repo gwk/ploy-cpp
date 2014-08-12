@@ -20,7 +20,8 @@ typedef struct {
 
 
 static void parse_err(Parser* p) {
-  errF("%.*s:%ld:%ld (%ld): ", FMT_STR(p->path), p->sp.line + 1, p->sp.col + 1, p->sp.pos);
+  fprintf(stderr, "%.*s:%ld:%ld (%ld): ",
+    FMT_STR(p->path), p->sp.line + 1, p->sp.col + 1, p->sp.pos);
   if (p->e) errF("\nerror: %s\nobj:  ", p->e);
 }
 
@@ -477,7 +478,8 @@ static Obj parse_expr_dispatch(Parser* p) {
 static Obj parse_expr(Parser* p) {
   Obj o = parse_expr_dispatch(p);
 #if VERBOSE_PARSE
-  parse_err(p); obj_errL(o);
+  parse_err(p);
+  errFL("%o", o);
 #endif
   return o;
 }
