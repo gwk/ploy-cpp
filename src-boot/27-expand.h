@@ -63,7 +63,8 @@ static Obj expand(Obj env, Obj code) {
     Obj expanded = run_macro(trace, env, code);
     rc_rel(code);
     // macro result may contain more expands; recursively expand the result.
-    return expand(env, expanded);
+    Obj final = expand(env, expanded);
+    return final;
   } else {
     // recursively expand the elements of the struct.
     // TODO: collapse comment and VOID nodes or perhaps a special COLLAPSE node?
