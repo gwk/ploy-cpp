@@ -283,13 +283,12 @@ static Step run_call_native(Int d, Trace* trace, Obj env, Obj call, Obj func, Bo
   exc_check(obj_is_struct(pars), "function %o pars is not a Struct: %o", name, pars);
   exc_check(is(ret_type, s_nil), "function %o ret-type is non-nil: %o", name, ret_type);
   Obj callee_env = env_push_frame(rc_ret(lex_env));
-  callee_env = run_env_bind(trace, callee_env, rc_ret_val(s_self), rc_ret(func)); // bind self.
+  // NOTE: because func is bound to self in callee_env, and func contains body,
+  // we can give func to callee_env and still safely return the unretained body as tail.code.
+  callee_env = run_env_bind(trace, callee_env, rc_ret_val(s_self), func);
   // owns env, callee_env.
   Call_envs envs =
   run_bind_args(d, trace, env, callee_env, func, struct_mem(pars), args, is_expand);
-  // NOTE: because func is bound to self in callee_env, and func contains body,
-  // we can release func now and still safely return the unretained body as .tco_code.
-  rc_rel(func);
 #if 1 // TCO.
   // caller will own .env, .callee_env, but not .code.
   return mk_tail(.env=envs.caller_env, .callee_env=envs.callee_env, .code=body);
