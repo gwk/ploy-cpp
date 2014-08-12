@@ -40,19 +40,7 @@ static void write_repr_Env(CFile f, Obj env, Bool is_quoted, Int depth, Set* set
   Obj top_key = env.e->key;
   fputs(NO_REPR_PO "Env ", f);
   write_repr(f, top_key);
-  Int frame_binding_count = 0;
-  while (!is(env, s_ENV_END)) {
-    assert(obj_is_env(env));
-    Obj key = env.e->key;
-    if (is(key, s_ENV_FRAME_KEY)) { // frame marker.
-      fprintf(f, " %ld" NO_REPR_PC, frame_binding_count);
-      return;
-    } else { // binding.
-      frame_binding_count++;
-    }
-    env = env.e->tl;
-  }
-  assert(0);
+  fputs(NO_REPR_PC, f);
 }
 
 
