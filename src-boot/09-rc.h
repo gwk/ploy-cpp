@@ -221,7 +221,7 @@ static RC_BII rc_get_BII(Obj r) {
       return (RC_BII){.bucket=b, .item=item, .index=i};
     }
   }
-  // this is a legitimate case only for whene we are releasing a cycle and have looped back around.
+  // this is a legitimate case when we are releasing a cycle and have looped back around.
   return (RC_BII){};
 }
 
@@ -322,6 +322,20 @@ static Obj rc_rel_val(Obj o) {
   assert(obj_tag(o));
   counter_dec(obj_counter_index(o));
   return o;
+}
+
+
+UNUSED_FN static void rc_dump(Chars_const identifier) {
+  errFL("**** RC DUMP %s ****", identifier);
+  for_in(i, rc_table.len_buckets) {
+    for_in(j, rc_table.buckets[i].len) {
+      RC_item* item = rc_table.buckets[i].items + j;
+      Int id = rc_item_is_direct(item);
+      errFL("  ref:%o direct:%i count:%i %s",
+        item->r, id, (rc_resolve_item(item)->c >> 1), identifier);
+    }
+  }
+  err_nl();
 }
 
 
