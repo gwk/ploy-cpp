@@ -5,7 +5,7 @@
 
 
 struct _Struct {
-  Obj type;
+  Ref_head head;
   Int len;
 } ALIGNED_TO_WORD;
 DEF_SIZE(Struct);
@@ -13,8 +13,7 @@ DEF_SIZE(Struct);
 
 static Obj struct_new_raw(Obj type, Int len) {
   // owns type.
-  Obj s = ref_alloc(size_Struct + (size_Obj * len));
-  s.s->type = type;
+  Obj s = ref_new(size_Struct + (size_Obj * len), type, false);
   s.s->len = len;
   return s;
 }

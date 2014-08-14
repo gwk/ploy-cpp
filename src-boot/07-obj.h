@@ -59,6 +59,7 @@ static Chars_const obj_tag_names[] = {
   "Sym",
 };
 
+typedef struct _Ref_head Ref_head;
 typedef struct _Data Data;
 typedef struct _Env Env;
 typedef struct _Struct Struct;
@@ -69,7 +70,7 @@ union _Obj {
   Uns u;
   Raw r;
   Chars c; // no valid object can be interpreted as Chars; this for the exc_raise formatter.
-  Obj* type_ptr; // common to all ref types.
+  Ref_head* h; // common to all ref types.
   Data* d;
   Env* e;
   Struct* s;
@@ -106,6 +107,9 @@ static Bool obj_is_ref(Obj o) {
 DEBUG_FN static Bool obj_is_valid_ref(Obj o) {
   return obj_tag(o) == ot_ref && !is(o, obj0);
 }
+
+
+#define assert_valid_ref(r) assert(obj_is_valid_ref(r))
 
 
 static Bool obj_is_ptr(Obj o) {

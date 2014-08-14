@@ -212,7 +212,7 @@ typedef struct {
 
 static RC_BII rc_get_BII(Obj r) {
   // returns the resolved item but the original bucket and item index.
-  assert(obj_is_valid_ref(r));
+  assert_valid_ref(r);
   RC_bucket* b = rc_bucket_ptr(r);
   for_in(i, b->len) {
     RC_item* item = b->items + i;

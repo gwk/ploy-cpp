@@ -10,7 +10,7 @@
 
 
 struct _Env {
-  Obj type;
+  Ref_head head;
   Obj key; // ENV_FRAME_KEY for frame.
   Obj val; // ENV_FRAME_VAL for frame.
   Obj tl;
@@ -26,12 +26,11 @@ static Obj env_rel_fields(Obj o) {
 }
 
 
-static Obj env_new(Obj key, Obj val, Obj tl) {
+static Obj env_new(Bool is_mutable, Obj key, Obj val, Obj tl) {
   // owns key, val, tl.
   assert(obj_is_sym(key));
   assert(is(tl, s_ENV_END) || obj_is_env(tl));
-  Obj o = ref_alloc(size_Env);
-  o.e->type = rc_ret(t_Env);
+  Obj o = ref_new(size_Env, rc_ret(t_Env), is_mutable);
   o.e->key = key;
   o.e->val = val;
   o.e->tl = tl;
@@ -54,7 +53,7 @@ static Obj env_get(Obj env, Obj key) {
 
 static Obj env_push_frame(Obj env) {
   // owns env.
-  return env_new(rc_ret_val(s_ENV_FRAME_KEY), rc_ret_val(s_ENV_FRAME_VAL), env);
+  return env_new(false, rc_ret_val(s_ENV_FRAME_KEY), rc_ret_val(s_ENV_FRAME_VAL), env);
 }
 
 
@@ -75,6 +74,6 @@ static Obj env_bind(Obj env, Obj key, Obj val) {
     }
     e = e.e->tl;
   }
-  return env_new(key, val, env);
+  return env_new(false, key, val, env);
 }
 

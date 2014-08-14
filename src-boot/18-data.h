@@ -5,14 +5,14 @@
 
 
 struct _Data {
-  Obj type;
+  Ref_head head;
   Int len;
 } ALIGNED_TO_WORD;
 DEF_SIZE(Data);
 
 
 // zero length data word.
-static const Obj blank = (Obj){.u = ot_sym | data_word_bit };
+static const Obj blank = (Obj){.u = ot_sym | data_word_bit};
 
 
 static Int data_ref_len(Obj d) {
@@ -45,9 +45,8 @@ static Str data_str(Obj d) {
 }
 
 
-static Obj data_empty(Int len) {
-  Obj d = ref_alloc(size_Data + len);
-  d.d->type = rc_ret(t_Data);
+static Obj data_new_empty(Int len) {
+  Obj d = ref_new(size_Data + len, rc_ret(t_Data), false);
   d.d->len = len;
   return d; // borrowed.
 }
@@ -55,7 +54,7 @@ static Obj data_empty(Int len) {
 
 static Obj data_new_from_str(Str s) {
   if (!s.len) return rc_ret_val(blank);
-  Obj d = data_empty(s.len);
+  Obj d = data_new_empty(s.len);
   memcpy(data_ptr(d), s.chars, s.len);
   return d;
 }
@@ -72,7 +71,7 @@ static Obj data_new_from_path(Chars_const path) {
   fseek(f, 0, SEEK_END);
   Int len = ftell(f);
   if (!len) return rc_ret_val(blank);
-  Obj d = data_empty(len);
+  Obj d = data_new_empty(len);
   fseek(f, 0, SEEK_SET);
   Uns items_read = fread(data_ptr(d), size_Char, cast(Uns, len), f);
   check(cast(Int, items_read) == len,
