@@ -57,9 +57,9 @@ static Obj env_push_frame(Obj env) {
 }
 
 
-static Obj env_bind(Obj env, Obj key, Obj val) {
+static Obj env_bind(Obj env, Bool is_mutable, Obj key, Obj val) {
   // owns env, key, val.
-  // returns env unmodified if symbol is already bound.
+  // returns obj0 on failure.
   assert(!sym_is_special(key));
   Obj e = env;
   while (!is(e, s_ENV_END)) { // check that symbol is not already bound.
@@ -68,12 +68,20 @@ static Obj env_bind(Obj env, Obj key, Obj val) {
     if (is(k, s_ENV_FRAME_KEY)) { // frame boundary; check is complete.
       break;
     } else if (is(k, key)) { // symbol is already bound.
-      rc_rel(key);
-      rc_rel(val);
-      return env;
+      if (is_mutable && ref_is_mutable(e)) { // mutate the mutable binding.
+        rc_rel(key);
+        rc_rel(e.e->val);
+        e.e->val = val;
+        return env;
+      } else { // immutable; cannot rebind.
+        rc_rel(env);
+        rc_rel(key);
+        rc_rel(val);
+        return obj0;
+      }
     }
     e = e.e->tl;
   }
-  return env_new(false, key, val, env);
+  return env_new(is_mutable, key, val, env);
 }
 

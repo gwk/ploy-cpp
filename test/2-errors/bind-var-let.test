@@ -1,0 +1,8 @@
+{
+  'code' : 1,
+  'err' : '''\
+symbol is already bound: `x
+trace:
+  {:Bind false `x 1}
+'''
+}

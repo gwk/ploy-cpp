@@ -407,7 +407,7 @@ static Obj host_init_func(Obj env, Int len_pars, Chars name, Func_host_ptr ptr) 
   els[4] = pars;
   els[5] = rc_ret_val(s_nil); // TODO: specify actual return type?
   els[6] = ptr_new(cast(Raw, ptr));
-  return env_bind(env, sym, f);
+  return env_bind(env, false, sym, f);
 }
 
 
@@ -416,7 +416,7 @@ static Obj host_init_file(Obj env, Chars sym_name, Chars name, CFile f, Bool r, 
   Obj sym = sym_new_from_chars(sym_name);
   Obj val = struct_new4(rc_ret(t_File), data_new_from_chars(name), ptr_new(f), bool_new(r),
     bool_new(w));
-  return env_bind(env, sym, val);
+  return env_bind(env, false, sym, val);
 }
 
 

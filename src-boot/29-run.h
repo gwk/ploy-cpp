@@ -93,24 +93,29 @@ static Step run_Scope(Int d, Trace* trace, Obj env, Obj code) {
 }
 
 
-static Obj run_env_bind(Trace* trace, Obj env, Obj key, Obj val) {
+static Obj run_env_bind(Trace* trace, Bool is_mutable, Obj env, Obj key, Obj val) {
   // owns env, key, val.
-  Obj env1 = env_bind(env, key, val);
-  exc_check(!is(env, env1), "symbol is already bound: %o", key);
+  Obj env1 = env_bind(env, is_mutable, key, val);
+  exc_check(!is(env1, obj0), "symbol is already bound: %o", key);
   return env1;
 }
 
 
-static Step run_Let(Int d, Trace* trace, Obj env, Obj code) {
+static Step run_Bind(Int d, Trace* trace, Obj env, Obj code) {
   // owns env.
   Mem args = struct_mem(code);
-  exc_check(args.len == 2, "Let requires 2 arguments; received %i", args.len);
-  Obj sym = args.els[0];
-  Obj expr = args.els[1];
-  exc_check(obj_is_sym(sym), "Let requires argument 1 to be a bindable sym; received: %o", sym);
-  exc_check(!sym_is_special(sym), "Let cannot bind to special sym: %o", sym);
+  exc_check(args.len == 3, "Bind requires 3 arguments; received %i", args.len);
+  Obj is_mutable = args.els[0];
+  Obj sym = args.els[1];
+  Obj expr = args.els[2];
+  exc_check(obj_is_bool(is_mutable), "Bind requires argument 1 to be a Bool; received: %o",
+    is_mutable);
+  exc_check(obj_is_sym(sym), "Bind requires argument 1 to be a bindable sym; received: %o",
+    sym);
+  exc_check(!sym_is_special(sym), "Bind cannot bind to special sym: %o", sym);
   Step step = run(d, trace, env, expr);
-  Obj env1 = run_env_bind(trace, step.res.env, rc_ret_val(sym), rc_ret(step.res.val));
+  Obj env1 = run_env_bind(trace, bool_is_true(is_mutable), step.res.env, rc_ret_val(sym),
+    rc_ret(step.res.val));
   return mk_res(env1, step.res.val);
 }
 
@@ -232,7 +237,7 @@ static Call_envs run_bind_args(Int d, Trace* trace, Obj env, Obj callee_env,
         env = step.res.env;
         val = step.res.val;
       }
-      callee_env = run_env_bind(trace, callee_env, rc_ret_val(par_sym), val);
+      callee_env = run_env_bind(trace, false, callee_env, rc_ret_val(par_sym), val);
     } else { // variad.
       check(!has_variad, "function has multiple variad parameters: %o", struct_el(func, 0));
       has_variad = true;
@@ -253,7 +258,7 @@ static Call_envs run_bind_args(Int d, Trace* trace, Obj env, Obj callee_env,
           *it = step.res.val;
         }
       }
-      callee_env = run_env_bind(trace, callee_env, rc_ret_val(par_sym), variad_val);
+      callee_env = run_env_bind(trace, false, callee_env, rc_ret_val(par_sym), variad_val);
     }
   }
   check(i_args == args.len, "function received too many arguments: %o", struct_el(func, 0));
@@ -285,7 +290,7 @@ static Step run_call_native(Int d, Trace* trace, Obj env, Obj call, Obj func, Bo
   Obj callee_env = env_push_frame(rc_ret(lex_env));
   // NOTE: because func is bound to self in callee_env, and func contains body,
   // we can give func to callee_env and still safely return the unretained body as tail.code.
-  callee_env = run_env_bind(trace, callee_env, rc_ret_val(s_self), func);
+  callee_env = run_env_bind(trace, false, callee_env, rc_ret_val(s_self), func);
   // owns env, callee_env.
   Call_envs envs =
   run_bind_args(d, trace, env, callee_env, func, struct_mem(pars), args, is_expand);
@@ -398,7 +403,7 @@ static Step run_step_disp(Int d, Trace* trace, Obj env, Obj code) {
     RUN(Quo);
     RUN(Do);
     RUN(Scope);
-    RUN(Let);
+    RUN(Bind);
     RUN(If);
     RUN(Fn);
     RUN(Syn_struct_typed);

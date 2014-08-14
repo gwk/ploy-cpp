@@ -7,7 +7,9 @@
 # once available, the form macros should be used instead of this idiom;
 # they provide a layer of abstraction between ploy code and the exact evaluation semantics.
 
-!{:Let `macro
+!{:Bind
+  false # immutable binding.
+  `macro # symbol to bind.
   # the 'macro' macro defines a new macro in the current environment.
   # because we cannot use macro to define itself, we must define it using raw forms.
   # note the structural similarity between the outer Fn form and the inner struct literal.
@@ -17,7 +19,8 @@
     true # is-macro.
     `[-sym -pars &body] # the parameter list, which does not get evaluated.
     nil # ret.
-    `{:Let # the body of the 'macro' macro is a Let form.
+    `{:Bind # the body of the 'macro' macro is a Bind form.
+      false # immutable.
       sym # the sym parameter that the macro to be created is bound to (not `macro).
       {:Fn # the value of the binding is created by evaluating the FN form;
         # note that this inner FN is inside a vec literal;
@@ -44,7 +47,8 @@
 
 <macro fn [-sym -pars &body]
   # the 'fn' macro defines a function in the current environment.
-  {:Let
+  {:Bind
+    false # immutable binding.
     sym
     {:Fn
       sym
@@ -84,4 +88,8 @@
 
 <macro let [-sym -expr]
   # bind the value of expr to sym in the current environment.
-  {:Let sym expr}>
+  {:Bind false sym expr}>
+
+<macro var [-sym -expr]
+  # bind the value of expr to sym in the current environment, but allow the binding to mutate.
+  {:Bind true sym expr}>

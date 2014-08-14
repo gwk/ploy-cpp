@@ -30,7 +30,7 @@ T(Eval, NULL) \
 T(Quo, NULL) \
 T(Do, NULL) \
 T(Scope, NULL) \
-T(Let, NULL) \
+T(Bind, NULL) \
 T(If, NULL) \
 T(Fn, NULL) \
 T(Syn_struct_typed, "Syn-struct-typed") \
@@ -112,7 +112,7 @@ static void type_init_values() {
 static Obj type_init_bindings(Obj env) {
   for_in(i, ti_END) {
     Obj o = type_for_index((Type_index)i);
-    env = env_bind(env, rc_ret(o.t->name), rc_ret(o));
+    env = env_bind(env, false, rc_ret(o.t->name), rc_ret(o));
   }
   return env;
 }

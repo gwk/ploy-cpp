@@ -24,7 +24,7 @@ static Obj ref_type(Obj r) {
 }
 
 
-UNUSED_FN static Bool ref_is_mutable(Obj r) {
+static Bool ref_is_mutable(Obj r) {
   assert_valid_ref(r);
   Obj type = r.h->tagged_type;
   return type.u & rt_mutable_bit; // get the mutable bit.
