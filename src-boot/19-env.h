@@ -65,7 +65,7 @@ static Obj env_bind(Obj env, Bool is_mutable, Obj key, Obj val) {
   while (!is(e, s_ENV_END)) { // check that symbol is not already bound.
     assert(obj_is_env(e));
     Obj k = e.e->key;
-    if (is(k, s_ENV_FRAME_KEY)) { // frame boundary; check is complete.
+    if (!is_mutable && is(k, s_ENV_FRAME_KEY)) { // frame boundary; check is complete.
       break;
     } else if (is(k, key)) { // symbol is already bound.
       if (is_mutable && ref_is_mutable(e)) { // mutate the mutable binding.
