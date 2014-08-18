@@ -389,8 +389,7 @@ static Obj host_init_func(Obj env, Int len_pars, Chars name, Func_host_ptr ptr) 
   Obj sym = sym_new_from_chars(name);
   Obj pars; // TODO: add real types; unique value for expression default?
   #define PAR(s) \
-  struct_new4(rc_ret(t_Par), rc_ret_val(s_false), rc_ret_val(s), rc_ret_val(s_INFER_PAR), \
-   rc_ret_val(s_void))
+  struct_new3(rc_ret(t_Label), rc_ret_val(s), rc_ret_val(s_INFER_PAR), rc_ret_val(s_void))
   switch (len_pars) {
     case 1: pars = struct_new1(rc_ret(t_Mem_Par), PAR(s_a)); break;
     case 2: pars = struct_new2(rc_ret(t_Mem_Par), PAR(s_a), PAR(s_b)); break;

@@ -212,14 +212,12 @@ static Call_envs run_bind_args(Int d, Trace* trace, Obj env, Obj callee_env,
   Bool has_variad = false;
   for_in(i_pars, pars.len) {
     Obj par = pars.els[i_pars];
-    exc_check(obj_type(par).u == t_Par.u, "function %o parameter %i is malformed: %o (%o)",
-      struct_el(func, 0), i_pars, par, obj_type(par));
-    Obj* par_els = struct_els(par);
-    Obj par_is_variad = par_els[0];
-    Obj par_sym = par_els[1];
-    //Obj par_type = par_els[2];
-    Obj par_expr = par_els[3];
-    if (!bool_is_true(par_is_variad)) { // label.
+    Obj par_type = obj_type(par);
+    if (is(par_type, t_Label)) {
+      Obj* par_els = struct_els(par);
+      Obj par_name = par_els[0];
+      //Obj par_type = par_els[1];
+      Obj par_expr = par_els[2];
       Obj arg;
       if (i_args < args.len) {
         arg = args.els[i_args];
@@ -237,10 +235,13 @@ static Call_envs run_bind_args(Int d, Trace* trace, Obj env, Obj callee_env,
         env = step.res.env;
         val = step.res.val;
       }
-      callee_env = run_env_bind(trace, false, callee_env, rc_ret_val(par_sym), val);
-    } else { // variad.
+      callee_env = run_env_bind(trace, false, callee_env, rc_ret_val(par_name), val);
+    } else if (is(par_type, t_Variad)) { // variad.
       check(!has_variad, "function has multiple variad parameters: %o", struct_el(func, 0));
       has_variad = true;
+      Obj* par_els = struct_els(par);
+      Obj par_expr = par_els[0];
+      //Obj par_type = par_els[1];
       Int variad_count = 0;
       for_imn(i, i_args, args.len) {
         Obj arg = args.els[i];
@@ -258,7 +259,10 @@ static Call_envs run_bind_args(Int d, Trace* trace, Obj env, Obj callee_env,
           *it = step.res.val;
         }
       }
-      callee_env = run_env_bind(trace, false, callee_env, rc_ret_val(par_sym), variad_val);
+      callee_env = run_env_bind(trace, false, callee_env, rc_ret_val(par_expr), variad_val);
+    } else {
+      exc_raise("function %o parameter %i is malformed: %o (%o)",
+        struct_el(func, 0), i_pars, par, par_type);
     }
   }
   check(i_args == args.len, "function received too many arguments: %o", struct_el(func, 0));

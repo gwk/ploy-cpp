@@ -36,11 +36,13 @@ T(Fn, NULL) \
 T(Syn_struct_typed, "Syn-struct-typed") \
 T(Syn_seq_typed, "Syn-seq-typed") \
 T(Call, NULL) \
-T(Par, NULL) \
 T(Func, NULL) \
 T(File, NULL) \
+T(Label, NULL) \
+T(Variad, NULL) \
 T(Src, NULL) \
 T(Expr, NULL) \
+T(Par, NULL) \
 T(Syn_struct, "Syn-struct") \
 T(Syn_seq, "Syn-seq") \
 T(Mem_Obj, "Mem-Obj") \

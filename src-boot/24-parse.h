@@ -313,8 +313,7 @@ static Obj parse_eval(Parser* p) {
 }
 
 
-static Obj parse_par(Parser* p, Obj is_variad, Chars_const par_desc) {
-  // owns is_variad.
+static Obj parse_label(Parser* p) {
   P_ADV(1, return parse_error(p, "incomplete parameter"));
   Src_pos sp = p->sp; // for error reporting.
   Obj name = parse_sub_expr(p);
@@ -322,7 +321,7 @@ static Obj parse_par(Parser* p, Obj is_variad, Chars_const par_desc) {
   if (!obj_is_sym(name)) {
     rc_rel(name);
     p->sp = sp;
-    return parse_error(p, "%s name is not a sym", par_desc);
+    return parse_error(p, "label name is not a sym");
   }
   Char c = PC;
   Obj type;
@@ -350,7 +349,28 @@ static Obj parse_par(Parser* p, Obj is_variad, Chars_const par_desc) {
   } else {
     expr = rc_ret_val(s_void);
   }
-  return struct_new4(rc_ret(t_Par), is_variad, name, type, expr);
+  return struct_new3(rc_ret(t_Label), name, type, expr);
+}
+
+
+static Obj parse_variad(Parser* p) {
+  P_ADV(1, return parse_error(p, "incomplete parameter"));
+  Obj expr = parse_sub_expr(p);
+  if (p->e) return obj0;
+  Char c = PC;
+  Obj type;
+  if (c == ':') {
+    P_ADV(1, return parse_error(p, "incomplete parameter"));
+    type = parse_sub_expr(p);
+    if (p->e) {
+      rc_rel(expr);
+      rc_rel(type);
+      return obj0;
+    }
+  } else {
+    type = rc_ret_val(s_INFER_PAR);
+  }
+  return struct_new2(rc_ret(t_Variad), expr, type);
 }
 
 
@@ -456,13 +476,13 @@ static Obj parse_expr_dispatch(Parser* p) {
     case '\'':  return parse_data(p, '\'');
     case '"':   return parse_data(p, '"');
     case '#':   return parse_comment(p);
-    case '&':   return parse_par(p, rc_ret_val(s_true), "variad");
+    case '&':   return parse_variad(p);
     case '+':
       if (isdigit(PC1)) return parse_int(p, 1);
       break;
     case '-':
       if (isdigit(PC1)) return parse_int(p, -1);
-      return parse_par(p, rc_ret_val(s_false), "label");
+      return parse_label(p);
 
   }
   if (isdigit(c)) {

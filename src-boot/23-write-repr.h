@@ -86,17 +86,16 @@ static void write_repr_Unq(CFile f, Obj q, Bool is_quoted, Int depth, Set* set) 
 }
 
 
-static void write_repr_Par(CFile f, Obj p, Bool is_quoted, Int depth, Set* set) {
-  assert(struct_len(p) == 4);
+static void write_repr_Label(CFile f, Obj p, Bool is_quoted, Int depth, Set* set) {
+  assert(struct_len(p) == 3);
   if (!is_quoted) {
     fputc('`', f);
   }
   Obj* els = struct_els(p);
-  Obj is_variad = els[0];
-  Obj name = els[1];
-  Obj type = els[2];
-  Obj expr = els[3];
-  fputc(bool_is_true(is_variad) ? '&' : '-', f);
+  Obj name = els[0];
+  Obj type = els[1];
+  Obj expr = els[2];
+  fputc('-', f);
   write_repr_obj(f, name, true, depth, set);
   if (!is(type, s_INFER_PAR)) {
     fputc(':', f);
@@ -105,6 +104,23 @@ static void write_repr_Par(CFile f, Obj p, Bool is_quoted, Int depth, Set* set) 
   if (!is(expr, s_void)) {
     fputc('=', f);
     write_repr_obj(f, expr, true, depth, set);
+  }
+}
+
+
+static void write_repr_Variad(CFile f, Obj p, Bool is_quoted, Int depth, Set* set) {
+  assert(struct_len(p) == 2);
+  if (!is_quoted) {
+    fputc('`', f);
+  }
+  Obj* els = struct_els(p);
+  Obj expr = els[0];
+  Obj type = els[1];
+  fputc('&', f);
+  write_repr_obj(f, expr, true, depth, set);
+  if (!is(type, s_INFER_PAR)) {
+    fputc(':', f);
+    write_repr_obj(f, type, true, depth, set);
   }
 }
 
@@ -161,7 +177,8 @@ static void write_repr_dispatch(CFile f, Obj s, Bool is_quoted, Int depth, Set* 
   DISP(Quo);
   DISP(Qua);
   DISP(Unq);
-  DISP(Par);
+  DISP(Label);
+  DISP(Variad);
   #undef DISP
 
   #define DISP_SEQ(t, o, c) \

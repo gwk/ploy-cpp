@@ -140,6 +140,9 @@
 (init-kind-struct3 Bind `is-mutable Bool `name Sym `expr Expr)
 (init-kind-struct3 If `pred Expr `then Expr `else Expr)
 
+(init-kind-struct3 Label `name Sym `type Type `expr Expr)
+(init-kind-struct2 Variad `expr Expr `type Type)
+
 (init-kind Fn {:Type-kind-struct {:Mem-Type-field
   {:Type-field `name Sym}
   {:Type-field `is-native Bool}
@@ -147,12 +150,6 @@
   {:Type-field `pars Syn-seq}
   {:Type-field `ret-type Type}
   {:Type-field `body Expr}}})
-
-(init-kind Par {:Type-kind-struct {:Mem-Type-field
-  {:Type-field `is-variad Bool}
-  {:Type-field `name Sym}
-  {:Type-field `type Type}
-  {:Type-field `expr Expr}}})
 
 (init-kind Func {:Type-kind-struct {:Mem-Type-field
   {:Type-field `name Sym}
@@ -166,6 +163,13 @@
 (init-kind File nil)
 
 (init-kind-struct2 Src `path Data `src Data)
+
+(init-kind Par
+  {:Type-kind-union
+    {:Mem-Type # -variants.
+      #Sym # TODO: allow bare syms as parameters?
+      Label
+      Variad}})
 
 (init-kind Expr
   {:Type-kind-union
