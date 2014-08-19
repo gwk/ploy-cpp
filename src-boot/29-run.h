@@ -205,6 +205,103 @@ typedef struct {
 } Call_envs;
 
 
+#define UNPACK_LABEL(l) \
+Obj* l##_els = struct_els(l); \
+Obj l##_el_name = l##_els[0]; \
+Obj l##_el_type = l##_els[1]; \
+Obj l##_el_expr = l##_els[2]
+
+#define UNPACK_VARIAD(v) \
+Obj* v##_els = struct_els(v); \
+Obj v##_el_expr = v##_els[0]; \
+Obj v##_el_type = v##_els[1]
+
+
+static Call_envs run_bind_arg(Int d, Trace* trace, Obj env, Obj callee_env, Bool is_expand,
+  Obj par_name, Obj arg_expr) {
+  // owns env (the caller env), callee_env.
+  // bind an argument expression to a name.
+  Obj val;
+  if (is_expand) {
+    val = rc_ret(arg_expr);
+  } else {
+    Step step = run(d, trace, env, arg_expr);
+    env = step.res.env;
+    val = step.res.val;
+  }
+  callee_env = run_env_bind(trace, false, callee_env, rc_ret_val(par_name), val);
+  return (Call_envs){.caller_env=env, .callee_env=callee_env};
+}
+
+
+static Call_envs run_bind_label(Int d, Trace* trace, Obj env, Obj callee_env, Bool is_expand,
+  Obj par, Mem args, Int* i_args, Obj func) {
+  UNPACK_LABEL(par); UNUSED_VAR(par_el_type);
+  Obj arg_expr;
+  if (*i_args < args.len) {
+    Obj arg = args.els[*i_args];
+    *i_args += 1;
+    Obj arg_type = obj_type(arg);
+    if (is(arg_type, t_Label)) {
+      UNPACK_LABEL(arg); UNUSED_VAR(arg_el_type);
+      exc_check(is(par_el_name, arg_el_name), "parameter %o does not match argument: %o",
+        par_el_name, arg_el_name);
+      // TODO: check type.
+      arg_expr = arg_el_expr;
+    } else if (is(arg_type, t_Variad)) {
+      exc_raise("splat not implemented: %o", arg);
+    } else { // simple arg expr.
+      arg_expr = arg;
+    }
+  } else if (!is(par_el_expr, s_void)) { // use parameter default expression.
+    arg_expr = par_el_expr;
+  } else {
+    error("function %o received too few arguments", struct_el(func, 0));
+  }
+  return run_bind_arg(d, trace, env, callee_env, is_expand, par_el_name, arg_expr);
+}
+
+
+static Call_envs run_bind_variad(Int d, Trace* trace, Obj env, Obj callee_env, Bool is_expand,
+  Obj par, Mem args, Int* i_args) {
+  // owns env (the caller env), callee_env.
+  // bind args to a variad parameter.
+  // note: it would be nice to implement this without allocating a temporary array;
+  // however i can't see how to do so while still maintaining evaluation order of arguments,
+  // because we cannot count the values in a splat argument until it has been evaluated.
+  UNPACK_VARIAD(par); UNUSED_VAR(par_el_type);
+  Array vals = array0;
+  while (*i_args < args.len) {
+    Obj arg = args.els[*i_args];
+    if (is(obj_type(arg), t_Label)) {
+      break; // terminate variad.
+    } else if (is(obj_type(arg), t_Variad)) { // splat variad argument into variad parameter.
+      UNPACK_VARIAD(arg);
+      exc_check(is(arg_el_type, s_void), "splat argument %i has extraneous type: %o",
+        *i_args, arg);
+      exc_raise("variadic splat not implemented: %o", arg_el_expr);
+    } else { // arg is simple (not label or variad).
+      if (is_expand) {
+        array_append(&vals, rc_ret(arg));
+      } else {
+        Step step = run(d, trace, env, arg);
+        env = step.res.env;
+        array_append(&vals, step.res.val);
+      }
+    }
+    *i_args += 1;
+  }
+  Obj variad_val = struct_new_raw(rc_ret(t_Mem_Obj), vals.mem.len); // TODO: set correct type.
+  Obj* els = struct_els(variad_val);
+  for_in(i, vals.mem.len) {
+    els[i] = mem_el_move(vals.mem, i);
+  }
+  mem_dealloc(vals.mem);
+  callee_env = run_env_bind(trace, false, callee_env, rc_ret_val(par_el_expr), variad_val);
+  return (Call_envs){.caller_env=env, .callee_env=callee_env};
+}
+
+
 static Call_envs run_bind_args(Int d, Trace* trace, Obj env, Obj callee_env,
   Obj func, Mem pars, Mem args, Bool is_expand) {
   // owns env (the caller env), callee_env.
@@ -214,58 +311,23 @@ static Call_envs run_bind_args(Int d, Trace* trace, Obj env, Obj callee_env,
     Obj par = pars.els[i_pars];
     Obj par_type = obj_type(par);
     if (is(par_type, t_Label)) {
-      Obj* par_els = struct_els(par);
-      Obj par_name = par_els[0];
-      //Obj par_type = par_els[1];
-      Obj par_expr = par_els[2];
-      Obj arg;
-      if (i_args < args.len) {
-        arg = args.els[i_args];
-        i_args++;
-      } else if (!is(par_expr, s_void)) {
-        arg = par_expr;
-      } else {
-        error("function received too few arguments: %o", struct_el(func, 0));
-      }
-      Obj val;
-      if (is_expand) {
-        val = rc_ret(arg);
-      } else {
-        Step step = run(d, trace, env, arg);
-        env = step.res.env;
-        val = step.res.val;
-      }
-      callee_env = run_env_bind(trace, false, callee_env, rc_ret_val(par_name), val);
-    } else if (is(par_type, t_Variad)) { // variad.
-      check(!has_variad, "function has multiple variad parameters: %o", struct_el(func, 0));
+      Call_envs envs =
+      run_bind_label(d, trace, env, callee_env, is_expand, par, args, &i_args, func);
+      env = envs.caller_env;
+      callee_env = envs.callee_env;
+    } else if (is(par_type, t_Variad)) {
+      exc_check(!has_variad, "function has multiple variad parameters: %o", struct_el(func, 0));
       has_variad = true;
-      Obj* par_els = struct_els(par);
-      Obj par_expr = par_els[0];
-      //Obj par_type = par_els[1];
-      Int variad_count = 0;
-      for_imn(i, i_args, args.len) {
-        Obj arg = args.els[i];
-        if (obj_type(arg).u == t_Par.u) break;
-        variad_count++;
-      }
-      Obj variad_val = struct_new_raw(rc_ret(t_Mem_Obj), variad_count);
-      it_struct(it, variad_val) {
-        Obj arg = args.els[i_args++];
-        if (is_expand) {
-          *it = rc_ret(arg);
-        } else {
-          Step step = run(d, trace, env, arg);
-          env = step.res.env;
-          *it = step.res.val;
-        }
-      }
-      callee_env = run_env_bind(trace, false, callee_env, rc_ret_val(par_expr), variad_val);
+      Call_envs envs =
+      run_bind_variad(d, trace, env, callee_env, is_expand, par, args, &i_args);
+      env = envs.caller_env;
+      callee_env = envs.callee_env;
     } else {
       exc_raise("function %o parameter %i is malformed: %o (%o)",
         struct_el(func, 0), i_pars, par, par_type);
     }
   }
-  check(i_args == args.len, "function received too many arguments: %o", struct_el(func, 0));
+  check(i_args == args.len, "function %o received too many arguments", struct_el(func, 0));
   return (Call_envs){.caller_env=env, .callee_env=callee_env};
 }
 
