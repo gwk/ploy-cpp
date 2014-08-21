@@ -4,7 +4,7 @@
 # macros and functions that must be bootstrapped using special syntax.
 # the !{:...} idiom is used to construct and run special forms directly,
 # before the idiomatic form macros are defined.
-# once available, the form macros should be used instead of this idiom;
+# once available, the form macros are used;
 # they provide a layer of abstraction between ploy code and the exact evaluation semantics.
 
 !{:Bind
