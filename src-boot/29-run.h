@@ -45,9 +45,9 @@ static Step run(Int d, Trace* trace, Obj env, Obj code);
 
 static Step run_Eval(Int d, Trace* trace, Obj env, Obj code) {
   // owns env.
-  Mem args = struct_mem(code);
-  exc_check(args.len == 1, "Env requires 1 argument; received %i", args.len);
-  Obj expr = args.els[0];
+  Mem m = struct_mem(code);
+  exc_check(m.len == 1, "Env requires 1 field; received %i", m.len);
+  Obj expr = m.els[0];
   Step step = run(d, trace, env, expr);
   env = step.res.env;
   Obj dyn_code = step.res.val;
@@ -61,9 +61,9 @@ static Step run_Eval(Int d, Trace* trace, Obj env, Obj code) {
 
 static Step run_Quo(Int d, Trace* trace, Obj env, Obj code) {
   // owns env.
-  Mem args = struct_mem(code);
-  exc_check(args.len == 1, "Quo requires 1 argument; received %i", args.len);
-  return mk_res(env, rc_ret(args.els[0]));
+  Mem m = struct_mem(code);
+  exc_check(m.len == 1, "Quo requires 1 field; received %i", m.len);
+  return mk_res(env, rc_ret(m.els[0]));
 }
 
 
@@ -85,9 +85,9 @@ static Step run_Do(Int d, Trace* trace, Obj env, Obj code) {
 
 static Step run_Scope(Int d, Trace* trace, Obj env, Obj code) {
   // owns env.
-  Mem args = struct_mem(code);
-  exc_check(args.len == 1, "Scope requires 1 argument; received %i", args.len);
-  Obj expr = args.els[0];
+  Mem m = struct_mem(code);
+  exc_check(m.len == 1, "Scope requires 1 field; received %i", m.len);
+  Obj expr = m.els[0];
   Obj sub_env = env_push_frame(rc_ret(env));
   return mk_tail(.env=env, .callee_env=sub_env, .code=expr);
 }
@@ -103,11 +103,11 @@ static Obj run_env_bind(Trace* trace, Bool is_mutable, Obj env, Obj key, Obj val
 
 static Step run_Bind(Int d, Trace* trace, Obj env, Obj code) {
   // owns env.
-  Mem args = struct_mem(code);
-  exc_check(args.len == 3, "Bind requires 3 arguments; received %i", args.len);
-  Obj is_mutable = args.els[0];
-  Obj sym = args.els[1];
-  Obj expr = args.els[2];
+  Mem m = struct_mem(code);
+  exc_check(m.len == 3, "Bind requires 3 fields; received %i", m.len);
+  Obj is_mutable = m.els[0];
+  Obj sym = m.els[1];
+  Obj expr = m.els[2];
   exc_check(obj_is_bool(is_mutable), "Bind requires argument 1 to be a Bool; received: %o",
     is_mutable);
   exc_check(obj_is_sym(sym), "Bind requires argument 1 to be a bindable sym; received: %o",
@@ -122,11 +122,11 @@ static Step run_Bind(Int d, Trace* trace, Obj env, Obj code) {
 
 static Step run_If(Int d, Trace* trace, Obj env, Obj code) {
   // owns env.
-  Mem args = struct_mem(code);
-  exc_check(args.len == 3, "If requires 3 arguments; received %i", args.len);
-  Obj pred = args.els[0];
-  Obj then = args.els[1];
-  Obj else_ = args.els[2];
+  Mem m = struct_mem(code);
+  exc_check(m.len == 3, "If requires 3 fields; received %i", m.len);
+  Obj pred = m.els[0];
+  Obj then = m.els[1];
+  Obj else_ = m.els[2];
   Step step = run(d, trace, env, pred);
   env = step.res.env;
   Obj branch = is_true(step.res.val) ? then : else_;
@@ -137,14 +137,14 @@ static Step run_If(Int d, Trace* trace, Obj env, Obj code) {
 
 static Step run_Fn(Int d, Trace* trace, Obj env, Obj code) {
   // owns env.
-  Mem args = struct_mem(code);
-  exc_check(args.len == 6, "Fn requires 6 arguments; received %i", args.len);
-  Obj name      = args.els[0];
-  Obj is_native = args.els[1];
-  Obj is_macro  = args.els[2];
-  Obj pars      = args.els[3];
-  Obj ret_type  = args.els[4];
-  Obj body      = args.els[5];
+  Mem m = struct_mem(code);
+  exc_check(m.len == 6, "Fn requires 6 fields; received %i", m.len);
+  Obj name      = m.els[0];
+  Obj is_native = m.els[1];
+  Obj is_macro  = m.els[2];
+  Obj pars      = m.els[3];
+  Obj ret_type  = m.els[4];
+  Obj body      = m.els[5];
   exc_check(obj_is_sym(name),  "Fn: name is not a Sym: %o", name);
   exc_check(obj_is_bool(is_macro), "Fn: is-macro is not a Bool: %o", is_macro);
   exc_check(obj_is_struct(pars), "Fn: parameters is not a Struct: %o", pars);
@@ -166,14 +166,14 @@ static Step run_Fn(Int d, Trace* trace, Obj env, Obj code) {
 
 static Step run_Syn_struct_typed(Int d, Trace* trace, Obj env, Obj code) {
   // owns env.
-  Mem args = struct_mem(code);
-  check(args.len > 0, "Syn-struct-typed is empty");
-  Step step = run(d, trace, env, args.els[0]); // evaluate the type.
+  Mem m = struct_mem(code);
+  check(m.len > 0, "Syn-struct-typed is empty");
+  Step step = run(d, trace, env, m.els[0]); // evaluate the type.
   env = step.res.env;
-  Obj s = struct_new_raw(step.res.val, args.len - 1);
+  Obj s = struct_new_raw(step.res.val, m.len - 1);
   Obj* els = struct_els(s);
-  for_in(i, args.len - 1) {
-    step = run(d, trace, env, args.els[i + 1]);
+  for_in(i, m.len - 1) {
+    step = run(d, trace, env, m.els[i + 1]);
     env = step.res.env;
     els[i] = step.res.val;
   }
@@ -183,15 +183,15 @@ static Step run_Syn_struct_typed(Int d, Trace* trace, Obj env, Obj code) {
 
 static Step run_Syn_seq_typed(Int d, Trace* trace, Obj env, Obj code) {
   // owns env.
-  Mem args = struct_mem(code);
-  check(args.len > 0, "Syn-seq-typed is empty");
-  Step step = run(d, trace, env, args.els[0]); // evaluate the type.
+  Mem m = struct_mem(code);
+  check(m.len > 0, "Syn-seq-typed is empty");
+  Step step = run(d, trace, env, m.els[0]); // evaluate the type.
   env = step.res.env;
   // TODO: derive the appropriate sequence type from the element type.
-  Obj s = struct_new_raw(step.res.val, args.len - 1);
+  Obj s = struct_new_raw(step.res.val, m.len - 1);
   Obj* els = struct_els(s);
-  for_in(i, args.len - 1) {
-    step = run(d, trace, env, args.els[i + 1]);
+  for_in(i, m.len - 1) {
+    step = run(d, trace, env, m.els[i + 1]);
     env = step.res.env;
     els[i] = step.res.val;
   }
@@ -408,20 +408,20 @@ static Step run_call_host(Int d, Trace* trace, Obj env, Obj code, Obj func, Mem 
 
 static Step run_Call(Int d, Trace* trace, Obj env, Obj code) {
   // owns env.
-  Mem args = struct_mem(code);
-  check(args.len > 0, "call is empty");
-  Obj callee_expr = args.els[0];
+  Mem m = struct_mem(code);
+  check(m.len > 0, "call is empty");
+  Obj callee_expr = m.els[0];
   Step step = run(d, trace, env, callee_expr);
   env = step.res.env;
   Obj func = step.res.val;
   exc_check(obj_is_struct(func), "object is not callable: %o", func);
-  Mem m = struct_mem(func);
-  exc_check(m.len == 7, "function is malformed (length is not 7): %o", func);
-  Obj is_native = m.els[1];
+  Mem fm = struct_mem(func);
+  exc_check(fm.len == 7, "function is malformed: %o", func);
+  Obj is_native = fm.els[1];
   if (bool_is_true(is_native)) {
     return run_call_native(d, trace, env, code, func, false); // TCO.
   } else {
-    return run_call_host(d, trace, env, code, func, mem_next(args)); // TODO: make TCO?
+    return run_call_host(d, trace, env, code, func, mem_next(m)); // TODO: make TCO?
   }
 }
 
@@ -562,9 +562,9 @@ static Step run_code(Obj env, Obj code) {
 static Obj run_macro(Trace* trace, Obj env, Obj code) {
   // owns env.
   run_err_trace(0, trace_expand_prefix, code);
-  Mem args = struct_mem(code);
-  check(args.len > 0, "empty macro expand");
-  Obj macro_sym = mem_el(args, 0);
+  Mem m = struct_mem(code);
+  check(m.len > 0, "empty macro expand");
+  Obj macro_sym = mem_el(m, 0);
   check(obj_is_sym(macro_sym), "expand argument 0 must be a Sym; found: %o", macro_sym);
   Obj macro = env_get(env, macro_sym);
   if (is(macro, obj0)) { // lookup failed.
