@@ -128,7 +128,6 @@
 # TODO: should these be type aliases of Mem-Expr?
 (init-kind Expand nil)
 (init-kind Do nil)
-(init-kind Scope nil)
 (init-kind Syn-struct-typed nil)
 (init-kind Syn-seq-typed nil)
 (init-kind Call nil)
@@ -136,6 +135,8 @@
 (init-kind Syn-seq nil)
 
 (init-kind-struct2 Comment `is-expr-comment Bool `expr Expr)
+
+(init-kind-struct1 Scope `expr Expr)
 
 (init-kind-struct3 Bind `is-mutable Bool `name Sym `expr Expr)
 (init-kind-struct3 If `pred Expr `then Expr `else Expr)
