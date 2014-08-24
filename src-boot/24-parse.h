@@ -75,7 +75,7 @@ static Bool char_is_seq_term(Char c) {
 
 static Bool char_is_atom_term(Char c) {
   // character terminates an atom.
-  return c == '|' || isspace(c) || char_is_seq_term(c);
+  return c == '|' || c == ':' || c == '=' || isspace(c) || char_is_seq_term(c);
 }
 
 
@@ -314,23 +314,20 @@ static Obj parse_eval(Parser* p) {
 
 
 static Obj parse_label(Parser* p) {
-  P_ADV(1, return parse_error(p, "incomplete parameter"));
-  Src_pos sp = p->sp; // for error reporting.
+  P_ADV(1, return parse_error(p, "incomplete label name"));
   Obj name = parse_sub_expr(p);
-  if (p->e) return obj0;
-  if (!obj_is_sym(name)) {
-    rc_rel(name);
-    p->sp = sp;
-    return parse_error(p, "label name is not a sym");
+  if (p->e) {
+    assert(is(name, obj0));
+    return obj0;
   }
   Char c = PC;
   Obj type;
   if (c == ':') {
-    P_ADV(1, return parse_error(p, "incomplete parameter"));
+    P_ADV(1, return parse_error(p, "incomplete label type"));
     type = parse_sub_expr(p);
     if (p->e) {
       rc_rel(name);
-      rc_rel(type);
+      assert(is(type, obj0));
       return obj0;
     }
   } else {
@@ -338,12 +335,12 @@ static Obj parse_label(Parser* p) {
   }
   Obj expr;
   if (PC == '=') {
-    P_ADV(1, return parse_error(p, "incomplete parameter"));
+    P_ADV(1, return parse_error(p, "incomplete label default"));
     expr = parse_sub_expr(p);
     if (p->e) {
       rc_rel(name);
       rc_rel(type);
-      rc_rel(expr);
+      assert(is(expr, obj0));
       return obj0;
     }
   } else {
@@ -354,17 +351,20 @@ static Obj parse_label(Parser* p) {
 
 
 static Obj parse_variad(Parser* p) {
-  P_ADV(1, return parse_error(p, "incomplete parameter"));
+  P_ADV(1, return parse_error(p, "incomplete variad expression"));
   Obj expr = parse_sub_expr(p);
-  if (p->e) return obj0;
+  if (p->e) {
+    assert(is(expr, obj0));
+    return obj0;
+  }
   Char c = PC;
   Obj type;
   if (c == ':') {
-    P_ADV(1, return parse_error(p, "incomplete parameter"));
+    P_ADV(1, return parse_error(p, "incomplete variad type"));
     type = parse_sub_expr(p);
     if (p->e) {
       rc_rel(expr);
-      rc_rel(type);
+      assert(is(type, obj0));
       return obj0;
     }
   } else {
