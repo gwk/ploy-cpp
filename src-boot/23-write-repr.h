@@ -165,6 +165,32 @@ static void write_repr_default(CFile f, Obj s, Bool is_quoted, Int depth, Set* s
 }
 
 
+static Bool write_repr_is_quotable(Obj o) {
+  if (!obj_is_valid_ref(o)) return true; // Ptr and obj0 do not have true repr.
+  Obj type = ref_type(o);
+  if (is(type, t_Data) || is(type, t_Env)) return true; // env does not have true repr.
+  assert(ref_is_struct(o));
+  if (!(is(type, t_Eval)
+    || is(type, t_Quo)
+    || is(type, t_Qua)
+    || is(type, t_Unq)
+    || is(type, t_Label)
+    || is(type, t_Variad)
+    || is(type, t_Syn_struct)
+    || is(type, t_Syn_struct_typed)
+    || is(type, t_Syn_seq)
+    || is(type, t_Syn_seq_typed)
+    || is(type, t_Expand)
+    || is(type, t_Call))) {
+    return false; // non-syntax struct.
+  }
+  it_struct(it, o) {
+    if (!write_repr_is_quotable(*it)) return false;
+  }
+  return true;
+}
+
+
 static void write_repr_dispatch(CFile f, Obj s, Bool is_quoted, Int depth, Set* set) {
   Obj type = obj_type(s);
 
@@ -173,6 +199,11 @@ static void write_repr_dispatch(CFile f, Obj s, Bool is_quoted, Int depth, Set* 
 
   DISP(Data);
   DISP(Env);
+  if (!write_repr_is_quotable(s)) {
+    assert(!is_quoted);
+    write_repr_default(f, s, is_quoted, depth, set);
+    return;
+  }
   DISP(Eval);
   DISP(Quo);
   DISP(Qua);

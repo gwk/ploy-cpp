@@ -104,8 +104,8 @@ static Bool obj_is_ref(Obj o) {
 }
 
 
-DEBUG_FN static Bool obj_is_valid_ref(Obj o) {
-  return obj_tag(o) == ot_ref && !is(o, obj0);
+static Bool obj_is_valid_ref(Obj o) {
+  return obj_is_ref(o) && !is(o, obj0);
 }
 
 
