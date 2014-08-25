@@ -147,14 +147,9 @@ static void write_repr_default(CFile f, Obj s, Bool is_quoted, Int depth, Set* s
   if (is_quoted) fputs("¿Q?", f);
   fputs("{:", f);
   Obj t = obj_type(s);
-  if (obj_is_type(t)) {
-    assert(obj_is_sym(t.t->name));
-    write_repr_obj(f, t.t->name, true, depth, set);
-  } else {
-    fputs("¿T?", f);
-    write_repr_obj(f, t, true, depth, set);
-    fputs("¿?", f);
-  }
+  assert(obj_is_type(t));
+  assert(obj_is_sym(t.t->name));
+  write_repr_obj(f, t.t->name, true, depth, set);
   Mem m = struct_mem(s);
   for_in(i, m.len) {
     fputc(' ', f);
