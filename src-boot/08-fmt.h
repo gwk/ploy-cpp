@@ -52,7 +52,7 @@ static void fmt_list_to_file(CFile f, Chars_const fmt, Chars_const args_str, va_
       fputc(c, f);
     }
   }
-  check(i == arg_count, "only %i items in exc_raise format: '%s'; %i args: '%s'",
+  check(i == arg_count, "only %i items in format: '%s'; %i args: '%s'",
     i, fmt, arg_count, args_str);
 }
 
