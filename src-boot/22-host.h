@@ -84,7 +84,7 @@ static Obj host_##op(Trace* trace, Obj env, Mem args) { \
 static Int iadd(Int a, Int b)  { return a + b; }
 static Int isub(Int a, Int b)  { return a - b; }
 static Int imul(Int a, Int b)  { return a * b; }
-static Int idiv(Int a, Int b) { return a / b; }
+static Int idiv(Int a, Int b)  { return a / b; }
 static Int imod(Int a, Int b)  { return a % b; }
 static Int ipow(Int a, Int b)  { return cast(Int, pow(a, b)); } // TODO: check for overflow.
 static Int ishl(Int a, Int b)  { return a << b; }
