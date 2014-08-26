@@ -389,7 +389,7 @@ static Obj host_init_func(Obj env, Int len_pars, Chars name, Func_host_ptr ptr) 
   Obj sym = sym_new_from_chars(name);
   Obj pars; // TODO: add real types; unique value for expression default?
   #define PAR(s) \
-  struct_new3(rc_ret(t_Label), rc_ret_val(s), rc_ret_val(s_INFER_PAR), rc_ret_val(s_void))
+  struct_new3(rc_ret(t_Par), rc_ret_val(s), rc_ret_val(s_INFER_PAR), rc_ret_val(s_void))
   switch (len_pars) {
     case 1: pars = struct_new1(rc_ret(t_Mem_Par), PAR(s_a)); break;
     case 2: pars = struct_new2(rc_ret(t_Mem_Par), PAR(s_a), PAR(s_b)); break;
@@ -397,15 +397,16 @@ static Obj host_init_func(Obj env, Int len_pars, Chars name, Func_host_ptr ptr) 
     default: assert(0);
   }
   #undef PAR
-  Obj f = struct_new_raw(rc_ret(t_Func), 7);
+  Obj f = struct_new_raw(rc_ret(t_Func), 8);
   Obj* els = struct_els(f);
   els[0] = rc_ret_val(sym);
   els[1] = bool_new(false);
   els[2] = bool_new(false);
   els[3] = rc_ret(env);
-  els[4] = pars;
-  els[5] = rc_ret_val(s_nil); // TODO: specify actual return type?
-  els[6] = ptr_new(cast(Raw, ptr));
+  els[4] = rc_ret(s_void);
+  els[5] = pars;
+  els[6] = rc_ret_val(s_nil); // TODO: specify actual return type?
+  els[7] = ptr_new(cast(Raw, ptr));
   return env_bind(env, false, sym, f);
 }
 

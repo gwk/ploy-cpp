@@ -165,12 +165,7 @@
 
 (init-kind-struct2 Src `path Data `src Data)
 
-(init-kind Par
-  {:Type-kind-union
-    {:Mem-Type # -variants.
-      #Sym # TODO: allow bare syms as parameters?
-      Label
-      Variad}})
+(init-kind-struct3 Par `name Sym `type Type `dflt Expr)
 
 (init-kind Expr
   {:Type-kind-union

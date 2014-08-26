@@ -142,24 +142,54 @@ static Step run_Fn(Int d, Trace* trace, Obj env, Obj code) {
   Obj name      = m.els[0];
   Obj is_native = m.els[1];
   Obj is_macro  = m.els[2];
-  Obj pars      = m.els[3];
+  Obj pars_syn  = m.els[3];
   Obj ret_type  = m.els[4];
   Obj body      = m.els[5];
   exc_check(obj_is_sym(name),  "Fn: name is not a Sym: %o", name);
   exc_check(obj_is_bool(is_macro), "Fn: is-macro is not a Bool: %o", is_macro);
-  exc_check(obj_is_struct(pars), "Fn: parameters is not a Struct: %o", pars);
-  exc_check(is(obj_type(pars), t_Syn_seq),
-    "Fn: parameters is not a sequence literal: %o", pars);
-  // TODO: check all pars.
-  Obj f = struct_new_raw(rc_ret(t_Func), 7);
+  exc_check(is(obj_type(pars_syn), t_Syn_seq),
+    "Fn: pars is not a sequence literal: %o", pars_syn);
+  Mem m_pars_syn = struct_mem(pars_syn);
+  Obj pars = struct_new_raw(rc_ret(t_Mem_Par), m_pars_syn.len);
+  Mem m_pars = struct_mem(pars);
+  Obj variad = rc_ret(s_void);
+  for_in(i, m_pars.len) {
+    Obj syn = m_pars_syn.els[i];
+    Obj syn_type = obj_type(syn);
+    Obj par_name;
+    Obj par_type;
+    Obj par_dflt;
+    Bool is_variad = false;
+    if (is(syn_type, t_Label)) {
+      par_name = rc_ret(struct_el(syn, 0));
+      par_type = rc_ret(struct_el(syn, 1));
+      par_dflt = rc_ret(struct_el(syn, 2));
+    } else if (is(syn_type, t_Variad)) {
+      is_variad = true;
+      par_name = rc_ret(struct_el(syn, 0));
+      par_type = rc_ret(struct_el(syn, 1));
+      par_dflt = rc_ret_val(s_void); // TODO: ? struct_new1(rc_ret(t_Syn_seq_typed), rc_ret(par_type));
+    } else {
+      exc_raise("Fn: parameter %i is malformed: %o", i, syn);
+    }
+    Obj par =  struct_new3(rc_ret(t_Par), par_name, par_type, par_dflt);
+    m_pars.els[i] = par;
+    if (is_variad) {
+      exc_check(is(variad, s_void), "Fn: multiple variadic parameters: %o", syn);
+      rc_rel(variad);
+      variad = rc_ret(par);
+    }
+  }
+  Obj f = struct_new_raw(rc_ret(t_Func), 8);
   Obj* els = struct_els(f);
   els[0] = rc_ret_val(name);
   els[1] = rc_ret_val(is_native);
   els[2] = rc_ret_val(is_macro);
   els[3] = rc_ret(env);
-  els[4] = struct_new_M_ret(rc_ret(t_Mem_Par), struct_mem(pars)); // replace the syntax type.
-  els[5] = rc_ret(ret_type);
-  els[6] = rc_ret(body);
+  els[4] = variad;
+  els[5] = pars;
+  els[6] = rc_ret(ret_type);
+  els[7] = rc_ret(body);
   return mk_res(env, f);
 }
 
@@ -209,12 +239,18 @@ typedef struct {
 Obj* l##_els = struct_els(l); \
 Obj l##_el_name = l##_els[0]; \
 Obj l##_el_type = l##_els[1]; \
-Obj l##_el_expr = l##_els[2]
+Obj l##_el_dflt = l##_els[2]
 
 #define UNPACK_VARIAD(v) \
 Obj* v##_els = struct_els(v); \
 Obj v##_el_expr = v##_els[0]; \
 Obj v##_el_type = v##_els[1]
+
+#define UNPACK_PAR(p) \
+Obj* p##_els = struct_els(p); \
+Obj p##_el_name = p##_els[0]; \
+Obj p##_el_type = p##_els[1]; \
+Obj p##_el_dflt = p##_els[2]
 
 
 static Call_envs run_bind_arg(Int d, Trace* trace, Obj env, Obj callee_env, Bool is_expand,
@@ -234,9 +270,9 @@ static Call_envs run_bind_arg(Int d, Trace* trace, Obj env, Obj callee_env, Bool
 }
 
 
-static Call_envs run_bind_label(Int d, Trace* trace, Obj env, Obj callee_env, Bool is_expand,
+static Call_envs run_bind_par(Int d, Trace* trace, Obj env, Obj callee_env, Bool is_expand,
   Obj par, Mem args, Int* i_args, Obj func) {
-  UNPACK_LABEL(par); UNUSED_VAR(par_el_type);
+  UNPACK_PAR(par); UNUSED_VAR(par_el_type);
   Obj arg_expr;
   if (*i_args < args.len) {
     Obj arg = args.els[*i_args];
@@ -247,14 +283,14 @@ static Call_envs run_bind_label(Int d, Trace* trace, Obj env, Obj callee_env, Bo
       exc_check(is(par_el_name, arg_el_name), "parameter %o does not match argument: %o",
         par_el_name, arg_el_name);
       // TODO: check type.
-      arg_expr = arg_el_expr;
+      arg_expr = arg_el_dflt;
     } else if (is(arg_type, t_Variad)) {
       exc_raise("splat not implemented: %o", arg);
     } else { // simple arg expr.
       arg_expr = arg;
     }
-  } else if (!is(par_el_expr, s_void)) { // use parameter default expression.
-    arg_expr = par_el_expr;
+  } else if (!is(par_el_dflt, s_void)) { // use parameter default expression.
+    arg_expr = par_el_dflt;
   } else {
     error("function %o received too few arguments", struct_el(func, 0));
   }
@@ -269,7 +305,7 @@ static Call_envs run_bind_variad(Int d, Trace* trace, Obj env, Obj callee_env, B
   // note: it would be nice to implement this without allocating a temporary array;
   // however i can't see how to do so while still maintaining evaluation order of arguments,
   // because we cannot count the values in a splat argument until it has been evaluated.
-  UNPACK_VARIAD(par); UNUSED_VAR(par_el_type);
+  UNPACK_PAR(par); UNUSED_VAR(par_el_type); UNUSED_VAR(par_el_dflt);
   Array vals = array0;
   while (*i_args < args.len) {
     Obj arg = args.els[*i_args];
@@ -297,25 +333,21 @@ static Call_envs run_bind_variad(Int d, Trace* trace, Obj env, Obj callee_env, B
     els[i] = mem_el_move(vals.mem, i);
   }
   mem_dealloc(vals.mem);
-  callee_env = run_env_bind(trace, false, callee_env, rc_ret_val(par_el_expr), variad_val);
+  callee_env = run_env_bind(trace, false, callee_env, rc_ret_val(par_el_name), variad_val);
   return (Call_envs){.caller_env=env, .callee_env=callee_env};
 }
 
 
 static Call_envs run_bind_args(Int d, Trace* trace, Obj env, Obj callee_env,
-  Obj func, Mem pars, Mem args, Bool is_expand) {
+  Obj func, Obj variad, Mem pars, Mem args, Bool is_expand) {
   // owns env (the caller env), callee_env.
   Int i_args = 0;
   Bool has_variad = false;
   for_in(i_pars, pars.len) {
     Obj par = pars.els[i_pars];
-    Obj par_type = obj_type(par);
-    if (is(par_type, t_Label)) {
-      Call_envs envs =
-      run_bind_label(d, trace, env, callee_env, is_expand, par, args, &i_args, func);
-      env = envs.caller_env;
-      callee_env = envs.callee_env;
-    } else if (is(par_type, t_Variad)) {
+    exc_check(is(obj_type(par), t_Par), "function %o parameter %i is malformed: %o",
+      struct_el(func, 0), i_pars, par);
+    if (is(par, variad)) {
       exc_check(!has_variad, "function has multiple variad parameters: %o", struct_el(func, 0));
       has_variad = true;
       Call_envs envs =
@@ -323,8 +355,10 @@ static Call_envs run_bind_args(Int d, Trace* trace, Obj env, Obj callee_env,
       env = envs.caller_env;
       callee_env = envs.callee_env;
     } else {
-      exc_raise("function %o parameter %i is malformed: %o (%o)",
-        struct_el(func, 0), i_pars, par, par_type);
+      Call_envs envs =
+      run_bind_par(d, trace, env, callee_env, is_expand, par, args, &i_args, func);
+      env = envs.caller_env;
+      callee_env = envs.callee_env;
     }
   }
   check(i_args == args.len, "function %o received too many arguments", struct_el(func, 0));
@@ -336,14 +370,15 @@ static Step run_call_native(Int d, Trace* trace, Obj env, Obj call, Obj func, Bo
   // owns env, func.
   Mem args = mem_next(struct_mem(call));
   Mem m = struct_mem(func);
-  assert(m.len == 7);
+  assert(m.len == 8);
   Obj name      = m.els[0];
   //Obj is_native = m.els[1];
   Obj is_macro  = m.els[2];
   Obj lex_env   = m.els[3];
-  Obj pars      = m.els[4];
-  Obj ret_type  = m.els[5];
-  Obj body      = m.els[6];
+  Obj variad    = m.els[4];
+  Obj pars      = m.els[5];
+  Obj ret_type  = m.els[6];
+  Obj body      = m.els[7];
   if (is_expand) {
     exc_check(bool_is_true(is_macro), "cannot expand function: %o", name);
   } else {
@@ -359,7 +394,7 @@ static Step run_call_native(Int d, Trace* trace, Obj env, Obj call, Obj func, Bo
   callee_env = run_env_bind(trace, false, callee_env, rc_ret_val(s_self), func);
   // owns env, callee_env.
   Call_envs envs =
-  run_bind_args(d, trace, env, callee_env, func, struct_mem(pars), args, is_expand);
+  run_bind_args(d, trace, env, callee_env, func, variad, struct_mem(pars), args, is_expand);
 #if 1 // TCO.
   // caller will own .env, .callee_env, but not .code.
   return mk_tail(.env=envs.caller_env, .callee_env=envs.callee_env, .code=body);
@@ -374,14 +409,15 @@ static Step run_call_native(Int d, Trace* trace, Obj env, Obj call, Obj func, Bo
 static Step run_call_host(Int d, Trace* trace, Obj env, Obj code, Obj func, Mem args) {
   // owns env, func.
   Mem m = struct_mem(func);
-  assert(m.len == 7);
+  assert(m.len == 8);
   Obj name      = m.els[0];
   //Obj is_native = m.els[1];
   Obj is_macro  = m.els[2];
   Obj lex_env   = m.els[3];
-  Obj pars      = m.els[4];
-  Obj ret_type  = m.els[5];
-  Obj body      = m.els[6];
+  //Obj variad    = m.els[4];
+  Obj pars      = m.els[5];
+  Obj ret_type  = m.els[6];
+  Obj body      = m.els[7];
   exc_check(!bool_is_true(is_macro), "host function appears to be a macro: %o", func);
   exc_check(obj_is_sym(name), "host function name is not a Sym: %o", name);
   exc_check(obj_is_env(lex_env), "host function %o env is not an Env: %o", name, lex_env);
@@ -416,7 +452,7 @@ static Step run_Call(Int d, Trace* trace, Obj env, Obj code) {
   Obj func = step.res.val;
   exc_check(obj_is_struct(func), "object is not callable: %o", func);
   Mem fm = struct_mem(func);
-  exc_check(fm.len == 7, "function is malformed: %o", func);
+  exc_check(fm.len == 8, "function is malformed: %o", func);
   Obj is_native = fm.els[1];
   if (bool_is_true(is_native)) {
     return run_call_native(d, trace, env, code, func, false); // TCO.
