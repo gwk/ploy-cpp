@@ -6,13 +6,9 @@
 set -e
 cd $(dirname "$0")/..
 
-opt=''
-if [[ "$1" == '-dbg' ]] || [[ "$1" == '-cov' ]]; then
-  opt=$1
-  shift;
-fi
+interpreter=$1; shift
 
 # make sure that ploy can parse an empty file.
-_bld/ploy$opt 'test/0-basic/empty.ploy'
+"$interpreter" 'test/0-basic/empty.ploy'
 
-tools/test.py -interpreters '.ploy' _bld/ploy$opt - "$@"
+tools/test.py -interpreters '.ploy' "$interpreter" - "$@"

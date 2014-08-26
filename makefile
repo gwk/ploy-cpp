@@ -22,17 +22,21 @@ _bld/ploy-dbg: tools/cc.sh _bld/ploy-core.h src-boot/*
 
 _bld/ploy-cov: tools/cc.sh _bld/ploy-core.h src-boot/*
 	tools/cc.sh -dbg src-boot/ploy.c --coverage -o $@
+	# compiling ploy-cov also produces the .gcno file.
 	mv ploy.gcno _bld/ploy-cov.gcno
 
-# note: ploy.gcda will accumulate results, so it must not exist when the tests run.
 _bld/ploy-cov.gcda: tools/run-tests.sh _bld/ploy-cov
-	test '!' -r ploy.gcda
-	tools/run-tests.sh -cov test/[0-2]-*
+	# ploy.gcda accumulates results, so it must not exist when the tests run.
+	rm -f ploy.gcda
+	$^ test/[0-2]-*
 	mv ploy.gcda $@
 
-_bld/ploy-cov.llvm-cov: _bld/ploy-cov.gcda
-	# coming in llvm 3.5: --all-blocks --branch-probabilities --function-summaries
-	llvm-cov -gcno=_bld/ploy-cov.gcno -gcda=_bld/ploy-cov.gcda -o $@
+_bld/ploy-cov-summary-raw.txt: _bld/ploy-cov _bld/ploy-cov.gcda
+	llvm-cov -a -b -f $< > $@
+	mv *.gcov _bld/
+
+_bld/ploy-cov-summary.txt: tools/gen-cov-summary.py _bld/ploy-cov-summary-raw.txt
+	$^ > $@
 
 # preprocess for viewing macro expansions.
 _bld/ploy-post-proc-no-libs.c: tools/cc.sh _bld/ploy-core.h src-boot/* 
@@ -76,6 +80,9 @@ preprocess: _bld/ploy-post-proc-no-libs.c _bld/ploy-dbg-post-proc-no-libs.c
 
 ast: _bld/ploy-ast-list.txt _bld/ploy-ast-print.txt _bld/ploy-ast-dump.txt
 
+cov: _bld/ploy-cov-summary.txt
+	cat $^
+
 # output the useless plist to /dev/null.
 analyze: tools/cc.sh src-boot/*
 	tools/cc.sh -dbg src-boot/ploy.c --analyze -o /dev/null
@@ -86,11 +93,11 @@ callgraph: _bld/ploy-callgraph.svg
 # omit perf tests, which take too long in debug mode.
 test-dbg: tools/run-tests.sh _bld/ploy-dbg
 	@echo "\ntest-dbg:"
-	tools/run-tests.sh -dbg test/[0-2]-*
+	$^ test/[0-2]-*
 
 test-rel: tools/run-tests.sh _bld/ploy
 	@echo "\ntest-rel:"
-	tools/run-tests.sh test
+	$^ test/*
 
 test: test-dbg test-rel
 
