@@ -52,10 +52,10 @@ _bld/compile_commands.json: tools/cc.sh tools/cdb.sh
 	tools/cdb.sh
 
 _bld/ploy-callgraph.txt: tools/gen-callgraph-txt.sh _bld/ploy-dbg.llvm
-	tools/gen-callgraph-txt.sh -print-callgraph _bld/ploy-dbg.llvm $@
+	$^ $@
 
-_bld/ploy-call-sccs.txt: tools/gen-callgraph-txt.sh _bld/ploy-dbg.llvm
-	tools/gen-callgraph-txt.sh -print-callgraph-sccs _bld/ploy-dbg.llvm $@
+_bld/ploy-call-sccs.txt: tools/gen-call-sccs-txt.sh _bld/ploy-dbg.llvm
+	$^ $@
 
 _bld/ploy-callgraph.dot: tools/gen-callgraph-dot.py _bld/ploy-callgraph.txt _bld/ploy-call-sccs.txt
 	$^ $@

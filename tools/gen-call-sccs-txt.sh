@@ -8,5 +8,5 @@
 src=$1
 dst=$2
 
-opt -analyze -print-callgraph "$1" >/dev/null 2>"$2".raw
+opt -analyze -print-callgraph-sccs "$1" >/dev/null 2>"$2".raw
 cat -v "$2".raw > "$2"
