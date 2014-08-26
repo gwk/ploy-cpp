@@ -76,6 +76,13 @@ static Type_index type_index(Obj t) {
 }
 
 
+static Obj type_name(Obj t) {
+  Obj name = struct_el(t, 0);
+  assert(obj_is_sym(name));
+  return name;
+}
+
+
 static void type_add(Obj type, Chars_const name_custom, Chars_const name_default) {
   Obj name = sym_new_from_chars(cast(Chars, (name_custom ?: name_default)));
   *type.t = (Type){

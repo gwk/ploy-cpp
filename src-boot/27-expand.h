@@ -26,7 +26,7 @@ static Obj expand_quasiquote(Int d, Obj o) {
     }
     Obj s = struct_new_raw(rc_ret(t_Syn_struct_typed), m.len + 1);
     Obj* dst = struct_els(s);
-    dst[0] = struct_new1(rc_ret(t_Quo), rc_ret(type));
+    dst[0] = rc_ret(type_name(type));
     for_in(i, m.len) {
       Obj e = m.els[i];
       dst[i + 1] = expand_quasiquote(d1, rc_ret(e)); // propagate the quotation.
