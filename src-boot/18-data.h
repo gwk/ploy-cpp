@@ -75,7 +75,7 @@ static Obj data_new_from_path(Chars_const path) {
   fseek(f, 0, SEEK_SET);
   Uns items_read = fread(data_ptr(d), size_Char, cast(Uns, len), f);
   check(cast(Int, items_read) == len,
-        "read failed; expected len: %ld; actual bytes: %lu", len, items_read);
+        "read failed; expected len: %i; actual: %u; path: %s", len, items_read, path);
   fclose(f);
   return d;
 }
