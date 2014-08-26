@@ -63,9 +63,6 @@ _bld/ploy-callgraph.dot: tools/gen-callgraph-dot.py _bld/ploy-callgraph.txt _bld
 _bld/ploy-callgraph.svg: tools/gen-callgraph-svg.sh _bld/ploy-callgraph.dot
 	$^ $@
 
-_bld/ploy-call-scc-names.txt: tools/gen-call-sccs-dot.py _bld/ploy-call-sccs.txt
-	$^ $@
-
 _bld/ploy-ast-list.txt: _bld/compile_commands.json src-boot/*
 	clang-check -p _bld/compile_commands.json -ast-list src-boot/ploy.c > _bld/ploy-ast-list.txt
 
