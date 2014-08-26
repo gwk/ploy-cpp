@@ -5,13 +5,16 @@
 
 cd $(dirname "$0")/..
 
-cat <<EOF > _bld/compile_commands.json
+cc=$1
+out=$2
+
+cat <<EOF > "$out"
 [ { "directory": "$(pwd)",
-    "command": "$(tools/cc.sh -cmd src/ploy.c -o _bld/ploy)",
-    "file": "src/ploy.c" },
+    "command": "$("$cc" -cmd src-boot/ploy.c -o _bld/ploy)",
+    "file": "src-boot/ploy.c" },
 
   { "directory": "$(pwd)",
-    "command": "$(tools/cc.sh -cmd -dbg src/ploy.c -o _bld/ploy-dbg)",
-    "file": "src/ploy.c" }
+    "command": "$("$cc" -cmd -dbg src-boot/ploy.c -o _bld/ploy-dbg)",
+    "file": "src-boot/ploy.c" }
 ]
 EOF
