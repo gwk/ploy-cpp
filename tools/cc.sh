@@ -12,7 +12,7 @@ cd $(dirname "$0")/..
 cmd_prefix=''
 if [[ "$1" == "-cmd" ]]; then
   shift
-  cmd_prefix=echo # just print the entire complie command instead of actually running it.
+  cmd_prefix=echo # just print the entire compile command instead of actually running it.
 fi
 
 if [[ "$1" == "-dbg" ]]; then
