@@ -50,6 +50,10 @@
 #define OPT_ALLOC_SCRIBBLE DEBUG
 #endif
 
+#ifndef OPT_BLANK_PTR_REPR
+#define OPT_BLANK_PTR_REPR 0
+#endif
+
 // verbose logging to aid debugging.
 #define VERBOSE_PARSE 0
 
