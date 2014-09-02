@@ -133,6 +133,8 @@ for (Int i = (n) - 1, _end_##i = (m), _step_##i = (s); i >= _end_##i; i -= _step
 
 #if DEBUG
 #define DEBUG_FN
+#define DBG_VAR(x)
 #else
 #define DEBUG_FN UNUSED_FN
+#define DBG_VAR(x) UNUSED_VAR(x)
 #endif
