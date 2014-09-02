@@ -374,6 +374,28 @@ static Obj parse_variad(Parser* p) {
 }
 
 
+static Obj parse_accessor(Parser* p) {
+  P_ADV(1, return parse_error(p, "incomplete accessor"));
+  Obj expr = parse_sub_expr(p);
+  if (p->e) {
+    assert(is(expr, obj0));
+    return obj0;
+  }
+  return struct_new1(rc_ret(t_Accessor), expr);
+}
+
+
+static Obj parse_mutator(Parser* p) {
+  P_ADV(2, return parse_error(p, "incomplete mutator"));
+  Obj expr = parse_sub_expr(p);
+  if (p->e) {
+    assert(is(expr, obj0));
+    return obj0;
+  }
+  return struct_new1(rc_ret(t_Mutator), expr);
+}
+
+
 static Bool parse_terminator(Parser* p, Char t) {
   if (PC != t) {
     parse_error(p, "expected terminator: '%c'", t);
@@ -477,11 +499,14 @@ static Obj parse_expr_dispatch(Parser* p) {
     case '"':   return parse_data(p, '"');
     case '#':   return parse_comment(p);
     case '&':   return parse_variad(p);
+    case '.':
+      if (PP1 && PC1 == '=') return parse_mutator(p);
+      return parse_accessor(p);
     case '+':
-      if (isdigit(PC1)) return parse_int(p, 1);
+      if (PP1 && isdigit(PC1)) return parse_int(p, 1);
       break;
     case '-':
-      if (isdigit(PC1)) return parse_int(p, -1);
+      if (PP1 && isdigit(PC1)) return parse_int(p, -1);
       return parse_label(p);
 
   }

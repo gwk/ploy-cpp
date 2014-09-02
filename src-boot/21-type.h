@@ -21,6 +21,8 @@ T(Ptr, NULL) \
 T(Int, NULL) \
 T(Sym, NULL) \
 T(Data, NULL) \
+T(Accessor, NULL) \
+T(Mutator, NULL) \
 T(Env, NULL) \
 T(Unq, NULL) \
 T(Qua, NULL) \

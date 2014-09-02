@@ -500,7 +500,10 @@ static Step run_step_disp(Int d, Trace* trace, Obj env, Obj code) {
   Int ti = type_index(type); // cast to Int c type avoids incomplete enum switch error.
 #define RUN(t) case ti_##t: return run_##t(d, trace, env, code)
   switch (ti) {
-    case ti_Data: return mk_res(env, rc_ret(code)); // self-evaluating.
+    case ti_Data:
+    case ti_Accessor:
+    case ti_Mutator:
+      return mk_res(env, rc_ret(code)); // self-evaluating.
     RUN(Eval);
     RUN(Quo);
     RUN(Do);
