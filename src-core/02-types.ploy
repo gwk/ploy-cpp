@@ -42,40 +42,28 @@
   type-kind-unit>
 <let type-kind-var {:Type-kind-var}>
 
-<mk-type Type-field
-  # Type-field is a struct of -name:Sym -type:Type.
-  `UNINIT>
-
 <mk-type Mem-Type {:Type-kind-mem Type}>
-
-<mk-type Mem-Type-field {:Type-kind-mem Type-field}>
 
 (init-kind Type-kind-mem
   # mem types are dynamic-length blocks of a single element type;
   # the type-kind is a struct of one field specifying the element type.
   {:Type-kind-struct
-    {:Mem-Type-field # -fields
-      {:Type-field `el-type Type}}})
+    {:Mem-Par # -fields
+      {:Par `el-type Type `void}}})
 
 (init-kind Type-kind-struct
   # struct types are defined by a list of field names/type pairs.
   # the type-kind is a struct of one field, 'fields'.
   {:Type-kind-struct
-    {:Mem-Type-field # -fields
-      {:Type-field `fields Mem-Type-field}}})
+    {:Mem-Par # -fields
+      {:Par `fields Mem-Par `void}}})
 
 (init-kind Type-kind-union
   # union types are defined by a list of variant types.
   # the type-kind is a struct of one field, 'variants'.
   {:Type-kind-struct
-    {:Mem-Type-field # -fields
-      {:Type-field `variants Mem-Type}}})
-
-(init-kind Type-field
-  {:Type-kind-struct
-    {:Mem-Type-field # -fields
-      {:Type-field `name Sym}
-      {:Type-field `type Type}}})
+    {:Mem-Par # -fields
+      {:Par `variants Mem-Type `void}}})
 
 <mk-type Type-kind
   {:Type-kind-union
@@ -95,9 +83,9 @@
 
 (init-kind Type
   {:Type-kind-struct
-    {:Mem-Type-field # -fields
-      {:Type-field `name Expr}
-      {:Type-field `kind Type-kind}}})
+    {:Mem-Par # -fields
+      {:Par `name Expr `void}
+      {:Par `kind Type-kind `void}}})
 
 (init-kind Ptr type-kind-prim)
 (init-kind Int type-kind-prim)
@@ -106,19 +94,21 @@
 (init-kind Env type-kind-prim)
 
 <fn init-kind-struct1 [-type -field-name -field-type]
-  (init-kind type {:Type-kind-struct {:Mem-Type-field {:Type-field field-name field-type}}})>
+  (init-kind type {:Type-kind-struct {:Mem-Par {:Par field-name field-type `void}}})>
 
 <fn init-kind-struct2 [-type -field-name0 -field-type0 -field-name1 -field-type1]
-  (init-kind type {:Type-kind-struct {:Mem-Type-field
-    {:Type-field field-name0 field-type0}
-    {:Type-field field-name1 field-type1}}})>
+  (init-kind type {:Type-kind-struct {:Mem-Par
+    {:Par field-name0 field-type0 `void}
+    {:Par field-name1 field-type1 `void}}})>
 
 <fn init-kind-struct3
   [-type -field-name0 -field-type0 -field-name1 -field-type1 -field-name2 -field-type2]
-  (init-kind type {:Type-kind-struct {:Mem-Type-field
-    {:Type-field field-name0 field-type0}
-    {:Type-field field-name1 field-type1}
-    {:Type-field field-name2 field-type2}}})>
+  (init-kind type {:Type-kind-struct {:Mem-Par
+    {:Par field-name0 field-type0 `void}
+    {:Par field-name1 field-type1 `void}
+    {:Par field-name2 field-type2 `void}}})>
+
+(init-kind-struct3 Par `name Sym `type Type `dflt Expr)
 
 (init-kind-struct1 Unq `expr Expr)
 (init-kind-struct1 Qua `expr Expr)
@@ -144,32 +134,26 @@
 (init-kind-struct3 Label `name Sym `type Type `expr Expr)
 (init-kind-struct2 Variad `expr Expr `type Type)
 
-(init-kind Fn {:Type-kind-struct {:Mem-Type-field
-  {:Type-field `name Sym}
-  {:Type-field `is-native Bool}
-  {:Type-field `is-macro Bool}
-  {:Type-field `pars Syn-seq}
-  {:Type-field `ret-type Type}
-  {:Type-field `body Expr}}})
+(init-kind Fn {:Type-kind-struct {:Mem-Par
+  {:Par `name Sym `void}
+  {:Par `is-native Bool `void}
+  {:Par `is-macro Bool `void}
+  {:Par `pars Syn-seq `void}
+  {:Par `ret-type Type `void}
+  {:Par `body Expr `void}}})
 
-(init-kind Func {:Type-kind-struct {:Mem-Type-field
-  {:Type-field `name Sym}
-  {:Type-field `is-native Bool}
-  {:Type-field `is-macro Bool}
-  {:Type-field `env Env}
-  {:Type-field `pars Mem-Par}
-  {:Type-field `ret-type Type}
-  {:Type-field `body Expr}}})
-
-(init-kind File nil)
-
-(init-kind-struct2 Src `path Data `src Data)
-
-(init-kind-struct3 Par `name Sym `type Type `dflt Expr)
+(init-kind Func {:Type-kind-struct {:Mem-Par
+  {:Par `name Sym `void}
+  {:Par `is-native Bool `void}
+  {:Par `is-macro Bool `void}
+  {:Par `env Env `void}
+  {:Par `pars Mem-Par `void}
+  {:Par `ret-type Type `void}
+  {:Par `body Expr `void}}})
 
 (init-kind Expr
   {:Type-kind-union
-    {:Mem-Type # -variants; this list matches the implementation of run_step_disp.
+    {:Mem-Type # -variants.
       Int
       Sym
       Data
@@ -182,11 +166,15 @@
       Fn
       Syn-struct-typed
       Syn-seq-typed
-      Call}})
+      Call
+      Expand}})
 
 (init-kind Mem-Obj {:Type-kind-mem Obj})
 (init-kind Mem-Par {:Type-kind-mem Obj})
 (init-kind Mem-Expr {:Type-kind-mem Obj})
+
+(init-kind File nil)
+(init-kind-struct2 Src `path Data `src Data)
 
 # builtin types complete. now define additional core types.
 
