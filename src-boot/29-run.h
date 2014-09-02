@@ -372,22 +372,26 @@ static Step run_call_native(Int d, Trace* trace, Obj env, Obj call, Obj func, Bo
   Mem m = struct_mem(func);
   assert(m.len == 8);
   Obj name      = m.els[0];
-  //Obj is_native = m.els[1];
+  Obj is_native = m.els[1];
   Obj is_macro  = m.els[2];
   Obj lex_env   = m.els[3];
   Obj variad    = m.els[4];
   Obj pars      = m.els[5];
   Obj ret_type  = m.els[6];
   Obj body      = m.els[7];
+  exc_check(obj_is_sym(name), "function name is not a Sym: %o", name);
+  exc_check(obj_is_bool(is_native), "function is-native is not a Bool: %o", is_native);
+  exc_check(obj_is_bool(is_macro), "function is-macro is not a Bool: %o", is_macro);
+  // TODO: check that variad is an Expr.
+  exc_check(obj_is_env(lex_env), "function %o env is not an Env: %o", name, lex_env);
+  exc_check(obj_is_struct(pars), "function %o pars is not a Struct: %o", name, pars);
+  // TODO: check that ret-type is a Type.
+  exc_check(is(ret_type, s_nil), "function %o ret-type is non-nil: %o", name, ret_type);
   if (is_expand) {
     exc_check(bool_is_true(is_macro), "cannot expand function: %o", name);
   } else {
     exc_check(!bool_is_true(is_macro), "cannot call macro: %o", name);
   }
-  exc_check(obj_is_sym(name), "function name is not a Sym: %o", name);
-  exc_check(obj_is_env(lex_env), "function %o env is not an Env: %o", name, lex_env);
-  exc_check(obj_is_struct(pars), "function %o pars is not a Struct: %o", name, pars);
-  exc_check(is(ret_type, s_nil), "function %o ret-type is non-nil: %o", name, ret_type);
   Obj callee_env = env_push_frame(rc_ret(lex_env));
   // NOTE: because func is bound to self in callee_env, and func contains body,
   // we can give func to callee_env and still safely return the unretained body as tail.code.
