@@ -126,7 +126,6 @@ static Obj struct_el(Obj s, Int i) {
 
 
 static Obj struct_slice(Obj s, Int f, Int t) {
-  // owns s.
   assert(ref_is_struct(s));
   Int l = struct_len(s);
   if (f < 0) f += l;
@@ -143,7 +142,6 @@ static Obj struct_slice(Obj s, Int f, Int t) {
   for_in(i, ls) {
     dst[i] = rc_ret(src[i + f]);
   }
-  rc_rel(s);
   return slice;
 }
 

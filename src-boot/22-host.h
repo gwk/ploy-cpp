@@ -3,80 +3,58 @@
 
 #include "21-type.h"
 
+#define GET_VAL(v) Obj v = env_get(env, s_##v)
+#define GET_A GET_VAL(a)
+#define GET_AB GET_A; GET_VAL(b)
+#define GET_ABC GET_AB; GET_VAL(c)
 
-static Obj host_identity(Trace* trace, Obj env, Mem args) {
-  // owns element of args.
-  assert(args.len == 1);
-  return args.els[0];
+static Obj host_identity(Trace* trace, Obj env) {
+  GET_A;
+  return rc_ret(a);
 }
 
 
-static Obj host_is(Trace* trace, Obj env, Mem args) {
-  // owns elements of args.
-  assert(args.len == 2);
-  Obj a0 = args.els[0];
-  Obj a1 = args.els[1];
-  Bool b = is(a0, a1);
-  rc_rel(a0);
-  rc_rel(a1);
-  return bool_new(b);
+static Obj host_is(Trace* trace, Obj env) {
+  GET_AB;
+  return bool_new(is(a, b));
 }
 
 
-static Obj host_is_true(Trace* trace, Obj env, Mem args) {
-  // owns elements of args.
-  assert(args.len == 1);
-  Obj o = args.els[0];
-  Bool b = is_true(o);
-  rc_rel(o);
-  return bool_new(b);
+static Obj host_is_true(Trace* trace, Obj env) {
+  GET_A;
+  return bool_new(is_true(a));
 }
 
 
-static Obj host_not(Trace* trace, Obj env, Mem args) {
-  // owns elements of args.
-  assert(args.len == 1);
-  Obj arg = args.els[0];
-  Bool b = is_true(arg);
-  rc_rel(arg);
-  return bool_new(!b);
+static Obj host_not(Trace* trace, Obj env) {
+  GET_A;
+  return bool_new(!is_true(a));
 }
 
 
-static Obj host_ineg(Trace* trace, Obj env, Mem args) {
-  // owns elements of args.
-  assert(args.len == 1);
-  Obj n = args.els[0];
-  exc_check(obj_is_int(n), "neg requires Int; received: %o", n);
-  Int i = int_val(n);
-  rc_rel_val(n);
+static Obj host_ineg(Trace* trace, Obj env) {
+  GET_A;
+  exc_check(obj_is_int(a), "neg requires Int; received: %o", a);
+  Int i = int_val(a);
   return int_new(-i);
 }
 
 
-static Obj host_iabs(Trace* trace, Obj env, Mem args) {
-  // owns elements of args.
-  assert(args.len == 1);
-  Obj n = args.els[0];
-  exc_check(obj_is_int(n), "abs requires Int; received: %o", n);
-  Int i = int_val(n);
-  rc_rel_val(n);
+static Obj host_iabs(Trace* trace, Obj env) {
+  GET_A;
+  exc_check(obj_is_int(a), "abs requires Int; received: %o", a);
+  Int i = int_val(a);
   return int_new(i < 0 ? -i : i);
 }
 
 
 // TODO: check for overflow. currently we rely on clang to insert overflow traps.
-// owns elements of args.
 #define HOST_BIN_OP(op) \
-static Obj host_##op(Trace* trace, Obj env, Mem args) { \
-  assert(args.len == 2); \
-  Obj n0 = args.els[0]; \
-  Obj n1 = args.els[1]; \
-  exc_check(obj_is_int(n0), #op " requires arg 1 to be a Int; received: %o", n0); \
-  exc_check(obj_is_int(n1), #op " requires arg 2 to be a Int; received: %o", n1); \
-  Int i = op(int_val(n0), int_val(n1)); \
-  rc_rel_val(n0); \
-  rc_rel_val(n1); \
+static Obj host_##op(Trace* trace, Obj env) { \
+  GET_AB; \
+  exc_check(obj_is_int(a), #op " requires arg 1 to be a Int; received: %o", a); \
+  exc_check(obj_is_int(b), #op " requires arg 2 to be a Int; received: %o", b); \
+  Int i = op(int_val(a), int_val(b)); \
   return int_new(i); \
 }
 
@@ -114,100 +92,76 @@ HOST_BIN_OP(ile)
 HOST_BIN_OP(ige)
 
 
-static Obj host_dlen(Trace* trace, Obj env, Mem args) {
-  // owns elements of args.
-  assert(args.len == 1);
-  Obj o = args.els[0];
+static Obj host_dlen(Trace* trace, Obj env) {
+  GET_A;
   Int l;
-  if (is(o, blank)) {
+  if (is(a, blank)) {
     l = 0;
   } else {
-    exc_check(obj_is_data(o), "data-len requires Data; received: %o", o);
-    l = o.d->len;
+    exc_check(obj_is_data(a), "data-len requires Data; received: %o", a);
+    l = a.d->len;
   }
-  rc_rel(o);
   return int_new(l);
 }
 
 
-static Obj host_mlen(Trace* trace, Obj env, Mem args) {
-  // owns elements of args.
-  assert(args.len == 1);
-  Obj o = args.els[0];
-  exc_check(obj_is_struct(o), "vlen requires Struct; received: %o", o);
-  Int l = o.s->len;
-  rc_rel(o);
+static Obj host_mlen(Trace* trace, Obj env) {
+  GET_A;
+  exc_check(obj_is_struct(a), "mlen requires Struct; received: %o", a);
+  Int l = a.s->len;
   return int_new(l);
 }
 
 
-static Obj host_field(Trace* trace, Obj env, Mem args) {
-  // owns elements of args.
-  assert(args.len == 2);
-  Obj s = args.els[0];
-  Obj i = args.els[1];
-  exc_check(obj_is_struct(s), "field requires arg 1 to be a Struct; received: %o", s);
-  exc_check(obj_is_int(i), "field requires arg 2 to be a Int; received: %o", i);
-  Int j = int_val(i);
-  Int l = struct_len(s);
-  exc_check(j >= 0 && j < l, "field index out of range; index: %i; len: %i", j, l);
-  Obj field = struct_el(s, j);
-  rc_rel(s);
-  rc_rel_val(i);
+static Obj host_field(Trace* trace, Obj env) {
+  GET_AB;
+  exc_check(obj_is_struct(a), "field requires arg 1 to be a Struct; received: %o", a);
+  exc_check(obj_is_int(b), "field requires arg 2 to be a Int; received: %o", b);
+  Int l = struct_len(a);
+  Int i = int_val(b);
+  exc_check(i >= 0 && i < l, "field index out of range; index: %i; len: %i", i, l);
+  Obj field = struct_el(a, i);
   return rc_ret(field);
 }
 
 
-static Obj host_el(Trace* trace, Obj env, Mem args) {
-  // owns elements of args.
-  assert(args.len == 2);
-  Obj m = args.els[0];
-  Obj i = args.els[1];
-  exc_check(obj_is_struct(m), "el requires arg 1 to be a Mem; received: %o", m);
-  exc_check(obj_is_int(i), "el requires arg 2 to be a Int; received: %o", i);
-  Int j = int_val(i);
-  Int l = struct_len(m);
-  exc_check(j >= 0 && j < l, "el index out of range; index: %i; len: %i", j, l);
-  Obj el = struct_el(m, j);
-  rc_rel(m);
-  rc_rel_val(i);
+static Obj host_el(Trace* trace, Obj env) {
+  GET_AB;
+  exc_check(obj_is_struct(a), "el requires arg 1 to be a Mem; received: %o", a);
+  exc_check(obj_is_int(b), "el requires arg 2 to be a Int; received: %o", b);
+  Int l = struct_len(a);
+  Int i = int_val(b);
+  exc_check(i >= 0 && i < l, "el index out of range; index: %i; len: %i", i, l);
+  Obj el = struct_el(a, i);
   return rc_ret(el);
 }
 
 
-static Obj host_init_el(Trace* trace, Obj env, Mem args) {
-  // owns elements of args.
-  assert(args.len == 3);
-  Obj o = args.els[0];
-  Obj i = args.els[1];
-  Obj e = args.els[2];
-  exc_check(obj_is_struct(o), "init-el requires arg 1 to be a Mem; received: %o", o);
-  exc_check(obj_is_int(i), "init-el requires arg 2 to be an Int; received: %o", i);
-  Int j = int_val(i);
-  Mem m = struct_mem(o);
-  exc_check(j >= 0 && j < m.len, "init-el index out of range; index: %i; len: %i", j, m.len);
-  Obj old = m.els[j];
-  exc_check(is(old, s_UNINIT), "init-el found element %i is already initialized: %o", j, o);
+static Obj host_init_el(Trace* trace, Obj env) {
+  GET_ABC;
+  exc_check(obj_is_struct(a), "init-el requires arg 1 to be a Mem; received: %o", a);
+  exc_check(obj_is_int(b), "init-el requires arg 2 to be an Int; received: %o", b);
+  Int i = int_val(b);
+  Mem m = struct_mem(a);
+  exc_check(i >= 0 && i < m.len, "init-el index out of range; index: %i; len: %i", i, m.len);
+  Obj old = m.els[i];
+  exc_check(is(old, s_UNINIT), "init-el found element %i is already initialized: %o", i, a);
   rc_rel_val(old);
-  exc_check(rc_get(e) > 0, "init-el must not have sole ownership of argument: %o", e);
-  rc_rel(e); // this release creates the 'weak' reference.
-  m.els[j] = e; // o acquires e without assuming ownership.
-  counter_inc(obj_counter_index(e)); // for the purpose of balancing counters.
-  rc_rel_val(i);
-  return o;
+  exc_check(rc_get(c) > 0, "init-el must not have sole ownership of argument: %o", c);
+  m.els[i] = c; // a acquires c without calling rc_rel, thereby creating a 'weak' ref.
+  counter_inc(obj_counter_index(c)); // for the purpose of balancing counters.
+  return rc_ret(a);
 }
 
 
-static Obj host_cycle_pair(Trace* trace, Obj env, Mem args) {
+static Obj host_cycle_pair(Trace* trace, Obj env) {
   // owns elements of args.
   // a is the delegate item (the conceptual root of the cycle);
   // b is the delegator item (the auxiliary object).
   // the ref from a to b is described as the 'forward reference';
   // b -> a is the 'back reference', although both are simple references semantically.
   // b -> a MUST be formed using init-el.
-  assert(args.len == 2);
-  Obj a = args.els[0];
-  Obj b = args.els[1];
+  GET_AB;
   exc_check(obj_is_struct(a), "cycle-pair requires arg 1 to be a Struct; received: %o", a);
   exc_check(obj_is_struct(b), "cycle-pair requires arg 2 to be a Struct; received: %o", b);
 
@@ -216,60 +170,45 @@ static Obj host_cycle_pair(Trace* trace, Obj env, Mem args) {
   RC_item* bi = rc_get_item(b);
   exc_check(rc_item_is_direct(bi), "cycle-pair arg 2 (delegator) has already delegated: %o", b);
   rc_delegate_item(ai, bi);
-  rc_rel(b);
-  return a;
+  return rc_ret(a);
 }
 
 
-static Obj host_slice(Trace* trace, Obj env, Mem args) {
-  // owns elements of args.
-  assert(args.len == 3);
-  Obj s = args.els[0];
-  Obj from = args.els[1];
-  Obj to = args.els[2];
-  exc_check(obj_is_struct(s), "el requires arg 1 to be a Struct; received: %o", s);
-  exc_check(obj_is_int(from), "el requires arg 2 to be a Int; received: %o", from);
-  exc_check(obj_is_int(to), "el requires arg 3 to be a Int; received: %o", to);
-  Int f = int_val(from);
-  Int t = int_val(to);
-  rc_rel_val(from);
-  rc_rel_val(to);
-  return struct_slice(s, f, t);
+static Obj host_slice(Trace* trace, Obj env) {
+  GET_ABC;
+  exc_check(obj_is_struct(a), "el requires arg 1 to be a Struct; received: %o", a);
+  exc_check(obj_is_int(b), "el requires arg 2 to be a Int; received: %o", b);
+  exc_check(obj_is_int(c), "el requires arg 3 to be a Int; received: %o", c);
+  Int f = int_val(b);
+  Int t = int_val(c);
+  return struct_slice(a, f, t);
 }
 
 
-static Obj host_prepend(Trace* trace, Obj env, Mem args) {
-  // owns elements of args.
-  assert(args.len == 2);
-  Obj el = args.els[0];
-  Obj s = args.els[1];
-  exc_check(obj_is_struct(s), "prepend requires arg 2 to be a Struct; received: %o", s);
-  Mem  m = struct_mem(s);
-  Obj res = struct_new_raw(rc_ret(ref_type(s)), m.len + 1);
+static Obj host_prepend(Trace* trace, Obj env) {
+  GET_AB;
+  exc_check(obj_is_struct(b), "prepend requires arg 2 to be a Struct; received: %o", b);
+  Mem  m = struct_mem(b);
+  Obj res = struct_new_raw(rc_ret(ref_type(b)), m.len + 1);
   Obj* els = struct_els(res);
-  els[0] = el;
+  els[0] = rc_ret(a);
   for_in(i, m.len) {
     els[1 + i] = rc_ret(m.els[i]);
   }
-  rc_rel(s);
   return res;
 }
 
 
-static Obj host_append(Trace* trace, Obj env, Mem args) {
-  // owns elements of args.
-  assert(args.len == 2);
-  Obj s = args.els[0];
-  Obj el = args.els[1];
-  exc_check(obj_is_struct(s), "append requires arg 1 to be a Struct; received: %o", s);
-  Mem  m = struct_mem(s);
-  Obj res = struct_new_raw(rc_ret(ref_type(s)), m.len + 1);
+static Obj host_append(Trace* trace, Obj env) {
+  GET_AB;
+  exc_check(obj_is_struct(a), "append requires arg 1 to be a Struct; received: %o", a);
+  Mem  m = struct_mem(a);
+  Obj res = struct_new_raw(rc_ret(ref_type(a)), m.len + 1);
   Obj* els = struct_els(res);
   for_in(i, m.len) {
     els[i] = rc_ret(m.els[i]);
   }
-  els[m.len] = el;
-  rc_rel(s);
+  els[m.len] = rc_ret(b);
   return res;
 }
 
@@ -277,111 +216,83 @@ static Obj host_append(Trace* trace, Obj env, Mem args) {
 // TODO: host_cat
 
 
-static Obj host_write(Trace* trace, Obj env, Mem args) {
-  // owns elements of args.
-  assert(args.len == 2);
-  Obj f = args.els[0];
-  Obj d = args.els[1];
-  exc_check(obj_is_ptr(f), "_host-write requires arg 1 to be a File; received: %o", f);
-  exc_check(obj_is_data(d), "_host-write requires arg 2 to be a Data; received: %o", d);
-  CFile file = ptr_val(f);
+static Obj host_write(Trace* trace, Obj env) {
+  GET_AB;
+  exc_check(obj_is_ptr(a), "_host-write requires arg 1 to be a File; received: %o", a);
+  exc_check(obj_is_data(b), "_host-write requires arg 2 to be a Data; received: %o", b);
+  CFile file = ptr_val(a);
   // for now, ignore the return value.
-  fwrite(data_ptr(d), size_Char, cast(Uns, data_len(d)), file);
-  rc_rel(f);
-  rc_rel(d);
+  fwrite(data_ptr(b), size_Char, cast(Uns, data_len(b)), file);
   return rc_ret_val(s_void);
 }
 
 
-static Obj host_write_repr(Trace* trace, Obj env, Mem args) {
-  // owns elements of args.
-  assert(args.len == 2);
-  Obj f = args.els[0];
-  Obj o = args.els[1];
-  exc_check(obj_is_ptr(f), "_host-write-repr requires arg 1 to be a File; received: %o", f);
-  CFile file = ptr_val(f);
-  write_repr(file, o);
-  rc_rel(f);
-  rc_rel(o);
+static Obj host_write_repr(Trace* trace, Obj env) {
+  GET_AB;
+  exc_check(obj_is_ptr(a), "_host-write-repr requires arg 1 to be a File; received: %o", a);
+  CFile file = ptr_val(a);
+  write_repr(file, b);
   return rc_ret_val(s_void);
 }
 
 
-static Obj host_flush(Trace* trace, Obj env, Mem args) {
-  // owns elements of args.
-  assert(args.len == 1);
-  Obj f = args.els[0];
-  exc_check(obj_is_ptr(f), "_host-flush requires arg 1 to be a File; received: %o", f);
-  CFile file = ptr_val(f);
+static Obj host_flush(Trace* trace, Obj env) {
+  GET_A;
+  exc_check(obj_is_ptr(a), "_host-flush requires arg 1 to be a File; received: %o", a);
+  CFile file = ptr_val(a);
   fflush(file);
-  rc_rel(f);
   return rc_ret_val(s_void);
 }
 
 
-static Obj host_exit(Trace* trace, Obj env, Mem args) {
-  // owns elements of args.
-  assert(args.len == 1);
-  Obj code = args.els[0];
-  exc_check(obj_is_int(code), "exit requires arg 1 to be an Int; recived: %o", code);
-  exit(cast(I32, int_val(code)));
+static Obj host_exit(Trace* trace, Obj env) {
+  GET_A;
+  exc_check(obj_is_int(a), "exit requires arg 1 to be an Int; recived: %o", a);
+  exit(cast(I32, int_val(a)));
   // TODO: throw exception to unwind, cleanup, and report counts?
 }
 
 
-static Obj host_error(Trace* trace, Obj env, Mem args) {
-  // owns elements of args.
-  assert(args.len == 1);
-  Obj msg = args.els[0];
-  exc_raise("error: %o", msg);
+static Obj host_error(Trace* trace, Obj env) {
+  GET_A;
+  exc_raise("error: %o", a);
 }
 
 
-static Obj host_type_of(Trace* trace, Obj env, Mem args) {
-  // owns elements of args.
-  assert(args.len == 1);
-  Obj o = args.els[0];
-  Obj s = obj_type(o);
-  rc_rel(o);
+static Obj host_type_of(Trace* trace, Obj env) {
+  GET_A;
+  Obj s = obj_type(a);
   return rc_ret(s);
 }
 
 
 static void write_data(CFile f, Obj d);
 
-static Obj host_dbg(Trace* trace, Obj env, Mem args) {
+static Obj host_dbg(Trace* trace, Obj env) {
   // owns elements of args.
-  assert(args.len == 2);
-  Obj label = args.els[0];
-  Obj obj = args.els[1];
-  exc_check(is(obj_type(label), t_Data), "dbg expects argument 1 to be Data: %o", label);
-  write_data(stderr, label);
-  errFL(": %p rc:%u %o", obj, rc_get(obj), obj);
-  rc_rel(label);
-  //return obj;
-  rc_rel(obj);
+  GET_AB; // label, obj.
+  exc_check(is(obj_type(a), t_Data), "dbg expects argument 1 to be Data: %o", a);
+  write_data(stderr, a);
+  errFL(": %p rc:%u %o", b, rc_get(b), b);
   return rc_ret_val(s_void);
 }
 
 
-static Obj host_boot_mk_do(Trace* trace, Obj env, Mem args) {
-  // owns elements of args.
-  assert(args.len == 1);
-  Obj body = args.els[0];
-  if (!obj_is_struct(body)) return body;
-  Mem m = struct_mem(body);
+static Obj host_boot_mk_do(Trace* trace, Obj env) {
+  GET_A;
+  if (!obj_is_struct(a)) return a;
+  Mem m = struct_mem(a);
   Obj val;
   if (m.len == 1) {
     val = rc_ret(m.els[0]);
   } else {
      val = struct_new_M_ret(rc_ret(t_Do), m);
   }
-  rc_rel(body);
   return val;
 }
 
 
-typedef Obj(*Func_host_ptr)(Trace*, Obj, Mem);
+typedef Obj(*Func_host_ptr)(Trace*, Obj);
 
 
 static Obj host_init_func(Obj env, Int len_pars, Chars_const name, Func_host_ptr ptr) {

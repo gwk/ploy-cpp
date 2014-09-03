@@ -413,15 +413,8 @@ static Step run_call_func(Int d, Trace* trace, Obj env, Obj call, Obj func, Bool
   } else { // host function.
     exc_check(obj_is_ptr(body), "host function %o body is not a Ptr: %o", name, body);
     Func_host_ptr f_ptr = cast(Func_host_ptr, ptr_val(body));
-    //rc_rel(func);
-    assert(args.len <= 3);
-    Obj arg_vals[3];
-    // TEMP.
-    if (args.len > 0) { Obj o = arg_vals[0] = rc_ret(env_get(callee_env, s_a)); assert(!is(o, obj0)); DBG_VAR(o); }
-    if (args.len > 1) { Obj o = arg_vals[1] = rc_ret(env_get(callee_env, s_b)); assert(!is(o, obj0)); DBG_VAR(o); }
-    if (args.len > 2) { Obj o = arg_vals[2] = rc_ret(env_get(callee_env, s_c)); assert(!is(o, obj0)); DBG_VAR(o); }
-    Obj res = f_ptr(trace, callee_env, mem_mk(args.len, arg_vals));
-    rc_rel(callee_env); // TEMP.
+    Obj res = f_ptr(trace, callee_env);
+    rc_rel(callee_env);
     return mk_res(envs.caller_env, res);
   }
 }
