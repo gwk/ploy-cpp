@@ -366,7 +366,7 @@ static Call_envs run_bind_args(Int d, Trace* trace, Obj env, Obj callee_env,
 }
 
 
-static Step run_call_native(Int d, Trace* trace, Obj env, Obj call, Obj func, Bool is_expand) {
+static Step run_call_func(Int d, Trace* trace, Obj env, Obj call, Obj func, Bool is_expand) {
   // owns env, func.
   Mem args = mem_next(struct_mem(call));
   Mem m = struct_mem(func);
@@ -399,50 +399,31 @@ static Step run_call_native(Int d, Trace* trace, Obj env, Obj call, Obj func, Bo
   // owns env, callee_env.
   Call_envs envs =
   run_bind_args(d, trace, env, callee_env, func, variad, struct_mem(pars), args, is_expand);
+  env = envs.caller_env;
+  callee_env = envs.callee_env;
+  if (bool_is_true(is_native)) {
 #if 1 // TCO.
   // caller will own .env, .callee_env, but not .code.
-  return mk_tail(.env=envs.caller_env, .callee_env=envs.callee_env, .code=body);
+  return mk_tail(.env=env, .callee_env=callee_env, .code=body);
 #else // NO TCO.
-  Step step = run(d, trace, envs.callee_env, body); // owns callee_env.
+  Step step = run(d, trace, callee_env, body); // owns callee_env.
   rc_rel(step.res.env);
-  return mk_res(envs.caller_env, step.res.val); // NO TCO.
+  return mk_res(env, step.res.val); // NO TCO.
 #endif
-}
-
-
-static Step run_call_host(Int d, Trace* trace, Obj env, Obj code, Obj func, Mem args) {
-  // owns env, func.
-  Mem m = struct_mem(func);
-  assert(m.len == 8);
-  Obj name      = m.els[0];
-  //Obj is_native = m.els[1];
-  Obj is_macro  = m.els[2];
-  Obj lex_env   = m.els[3];
-  //Obj variad    = m.els[4];
-  Obj pars      = m.els[5];
-  Obj ret_type  = m.els[6];
-  Obj body      = m.els[7];
-  exc_check(!bool_is_true(is_macro), "host function appears to be a macro: %o", func);
-  exc_check(obj_is_sym(name), "host function name is not a Sym: %o", name);
-  exc_check(obj_is_env(lex_env), "host function %o env is not an Env: %o", name, lex_env);
-  exc_check(obj_is_struct(pars), "host function %o pars is not a Struct: %o", name, pars);
-  exc_check(is(ret_type, s_nil), "host function %o ret-type is non-nil: %o", name, ret_type);
-  exc_check(obj_is_ptr(body), "host function %o body is not a Ptr: %o", name, body);
-  Int len_pars = struct_len(pars);
-  exc_check(args.len == len_pars, "host function expects %i argument%s; received %i; %o",
-    len_pars, (len_pars == 1 ? "" : "s"), args.len, name);
-  // TODO: check arg types against parameters; use run_bind_args?
-  Func_host_ptr f_ptr = cast(Func_host_ptr, ptr_val(body));
-  rc_rel(func);
-  assert(args.len <= 3);
-  Obj arg_vals[3];
-  for_in(i, args.len) {
-    Step step = run(d, trace, env, args.els[i]);
-    env = step.res.env;
-    arg_vals[i] = step.res.val;
+  } else { // host function.
+    exc_check(obj_is_ptr(body), "host function %o body is not a Ptr: %o", name, body);
+    Func_host_ptr f_ptr = cast(Func_host_ptr, ptr_val(body));
+    //rc_rel(func);
+    assert(args.len <= 3);
+    Obj arg_vals[3];
+    // TEMP.
+    if (args.len > 0) { Obj o = arg_vals[0] = rc_ret(env_get(callee_env, s_a)); assert(!is(o, obj0)); DBG_VAR(o); }
+    if (args.len > 1) { Obj o = arg_vals[1] = rc_ret(env_get(callee_env, s_b)); assert(!is(o, obj0)); DBG_VAR(o); }
+    if (args.len > 2) { Obj o = arg_vals[2] = rc_ret(env_get(callee_env, s_c)); assert(!is(o, obj0)); DBG_VAR(o); }
+    Obj res = f_ptr(trace, callee_env, mem_mk(args.len, arg_vals));
+    rc_rel(callee_env); // TEMP.
+    return mk_res(envs.caller_env, res);
   }
-  Obj res = f_ptr(trace, env, mem_mk(args.len, arg_vals));
-  return mk_res(env, res);
 }
 
 
@@ -457,12 +438,7 @@ static Step run_Call(Int d, Trace* trace, Obj env, Obj code) {
   exc_check(obj_is_struct(func), "object is not callable: %o", func);
   Mem fm = struct_mem(func);
   exc_check(fm.len == 8, "function is malformed: %o", func);
-  Obj is_native = fm.els[1];
-  if (bool_is_true(is_native)) {
-    return run_call_native(d, trace, env, code, func, false); // TCO.
-  } else {
-    return run_call_host(d, trace, env, code, func, mem_next(m)); // TODO: make TCO?
-  }
+  return run_call_func(d, trace, env, code, func, false); // TCO.
 }
 
 
@@ -613,7 +589,7 @@ static Obj run_macro(Trace* trace, Obj env, Obj code) {
   if (is(macro, obj0)) { // lookup failed.
     error("macro lookup error: %o", macro_sym);
   }
-  Step step = run_call_native(0, trace, env, code, rc_ret(macro), true); // owns env, macro.
+  Step step = run_call_func(0, trace, env, code, rc_ret(macro), true); // owns env, macro.
   step = run_tail(0, trace, step); // handle any TCO steps.
   rc_rel(step.res.env);
   run_err_trace(0, trace_expand_val_prefix, step.res.val);
