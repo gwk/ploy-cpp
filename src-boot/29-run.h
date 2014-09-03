@@ -270,8 +270,8 @@ static Call_envs run_bind_arg(Int d, Trace* trace, Obj env, Obj callee_env, Bool
 }
 
 
-static Call_envs run_bind_par(Int d, Trace* trace, Obj env, Obj callee_env, Bool is_expand,
-  Obj par, Mem args, Int* i_args, Obj func) {
+static Call_envs run_bind_par(Int d, Trace* trace, Obj env, Obj callee_env, Obj call,
+  Bool is_expand, Obj par, Mem args, Int* i_args) {
   UNPACK_PAR(par); UNUSED_VAR(par_el_type);
   Obj arg_expr;
   if (*i_args < args.len) {
@@ -280,26 +280,27 @@ static Call_envs run_bind_par(Int d, Trace* trace, Obj env, Obj callee_env, Bool
     Obj arg_type = obj_type(arg);
     if (is(arg_type, t_Label)) {
       UNPACK_LABEL(arg); UNUSED_VAR(arg_el_type);
-      exc_check(is(par_el_name, arg_el_name), "parameter %o does not match argument: %o",
-        par_el_name, arg_el_name);
+      exc_check(is(par_el_name, arg_el_name),
+        "call: %o\nparameter %o does not match argument: %o",
+        call, par_el_name, arg_el_name);
       // TODO: check type.
       arg_expr = arg_el_dflt;
     } else if (is(arg_type, t_Variad)) {
-      exc_raise("splat not implemented: %o", arg);
+      exc_raise("call: %o\nsplat not implemented: %o", call, arg);
     } else { // simple arg expr.
       arg_expr = arg;
     }
   } else if (!is(par_el_dflt, s_void)) { // use parameter default expression.
     arg_expr = par_el_dflt;
   } else {
-    error("function %o received too few arguments", struct_el(func, 0));
+    error("call: %o\nreceived too few arguments", call);
   }
   return run_bind_arg(d, trace, env, callee_env, is_expand, par_el_name, arg_expr);
 }
 
 
-static Call_envs run_bind_variad(Int d, Trace* trace, Obj env, Obj callee_env, Bool is_expand,
-  Obj par, Mem args, Int* i_args) {
+static Call_envs run_bind_variad(Int d, Trace* trace, Obj env, Obj callee_env, Obj call,
+  Bool is_expand, Obj par, Mem args, Int* i_args) {
   // owns env (the caller env), callee_env.
   // bind args to a variad parameter.
   // note: it would be nice to implement this without allocating a temporary array;
@@ -313,9 +314,9 @@ static Call_envs run_bind_variad(Int d, Trace* trace, Obj env, Obj callee_env, B
       break; // terminate variad.
     } else if (is(obj_type(arg), t_Variad)) { // splat variad argument into variad parameter.
       UNPACK_VARIAD(arg);
-      exc_check(is(arg_el_type, s_void), "splat argument %i has extraneous type: %o",
-        *i_args, arg);
-      exc_raise("variadic splat not implemented: %o", arg_el_expr);
+      exc_check(is(arg_el_type, s_void), "call: %o\nsplat argument %i has extraneous type: %o",
+        call, *i_args, arg);
+      exc_raise("call: %o\nvariadic splat not implemented: %o", call, arg_el_expr);
     } else { // arg is simple (not label or variad).
       if (is_expand) {
         array_append(&vals, rc_ret(arg));
@@ -339,29 +340,30 @@ static Call_envs run_bind_variad(Int d, Trace* trace, Obj env, Obj callee_env, B
 
 
 static Call_envs run_bind_args(Int d, Trace* trace, Obj env, Obj callee_env,
-  Obj func, Obj variad, Mem pars, Mem args, Bool is_expand) {
+  Obj call, Obj variad, Obj pars, Mem args, Bool is_expand) {
   // owns env (the caller env), callee_env.
+  Mem mp = struct_mem(pars);
   Int i_args = 0;
   Bool has_variad = false;
-  for_in(i_pars, pars.len) {
-    Obj par = pars.els[i_pars];
-    exc_check(is(obj_type(par), t_Par), "function %o parameter %i is malformed: %o",
-      struct_el(func, 0), i_pars, par);
+  for_in(i_pars, mp.len) {
+    Obj par = mp.els[i_pars];
+    exc_check(is(obj_type(par), t_Par), "call: %o\nparameter %i is malformed: %o",
+      call, i_pars, par);
     if (is(par, variad)) {
-      exc_check(!has_variad, "function has multiple variad parameters: %o", struct_el(func, 0));
+      exc_check(!has_variad, "call: %o\nmultiple variad parameters", call);
       has_variad = true;
       Call_envs envs =
-      run_bind_variad(d, trace, env, callee_env, is_expand, par, args, &i_args);
+      run_bind_variad(d, trace, env, callee_env, call, is_expand, par, args, &i_args);
       env = envs.caller_env;
       callee_env = envs.callee_env;
     } else {
       Call_envs envs =
-      run_bind_par(d, trace, env, callee_env, is_expand, par, args, &i_args, func);
+      run_bind_par(d, trace, env, callee_env, call, is_expand, par, args, &i_args);
       env = envs.caller_env;
       callee_env = envs.callee_env;
     }
   }
-  check(i_args == args.len, "function %o received too many arguments", struct_el(func, 0));
+  check(i_args == args.len, "call: %o\nreceived too many arguments", call);
   return (Call_envs){.caller_env=env, .callee_env=callee_env};
 }
 
@@ -384,7 +386,7 @@ static Step run_call_func(Int d, Trace* trace, Obj env, Obj call, Obj func, Bool
   exc_check(obj_is_bool(is_macro), "function is-macro is not a Bool: %o", is_macro);
   // TODO: check that variad is an Expr.
   exc_check(obj_is_env(lex_env), "function %o env is not an Env: %o", name, lex_env);
-  exc_check(is(obj_type(pars), t_Mem_Par), "function %o pars is not Mem-Par: %o", name, pars);
+  exc_check(is(obj_type(pars), t_Mem_Par), "function %o pars is not a Mem-Par: %o", name, pars);
   // TODO: check that ret-type is a Type.
   exc_check(is(ret_type, s_nil), "function %o ret-type is non-nil: %o", name, ret_type);
   if (is_expand) {
@@ -398,7 +400,7 @@ static Step run_call_func(Int d, Trace* trace, Obj env, Obj call, Obj func, Bool
   callee_env = run_env_bind(trace, false, callee_env, rc_ret_val(s_self), func);
   // owns env, callee_env.
   Call_envs envs =
-  run_bind_args(d, trace, env, callee_env, func, variad, struct_mem(pars), args, is_expand);
+  run_bind_args(d, trace, env, callee_env, call, variad, pars, args, is_expand);
   env = envs.caller_env;
   callee_env = envs.callee_env;
   if (bool_is_true(is_native)) {
