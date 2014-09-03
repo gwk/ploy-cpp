@@ -333,44 +333,44 @@ static Obj host_init_file(Obj env, Chars_const sym_name, Chars_const name, CFile
 
 
 static Obj host_init(Obj env) {
-#define DEF_FH(len_pars, n, f) env = host_init_func(env, len_pars, n, f);
-  DEF_FH(1, "identity", host_identity)
-  DEF_FH(2, "is", host_is)
-  DEF_FH(1, "is-true", host_is_true)
-  DEF_FH(1, "not", host_not)
-  DEF_FH(1, "ineg", host_ineg)
-  DEF_FH(1, "iabs", host_iabs)
-  DEF_FH(2, "iadd", host_iadd)
-  DEF_FH(2, "isub", host_isub)
-  DEF_FH(2, "imul", host_imul)
-  DEF_FH(2, "idiv", host_idiv)
-  DEF_FH(2, "imod", host_imod)
-  DEF_FH(2, "ipow", host_ipow)
-  DEF_FH(2, "ishl", host_ishl)
-  DEF_FH(2, "ishr", host_ishr)
-  DEF_FH(2, "ieq", host_ieq)
-  DEF_FH(2, "ine", host_ine)
-  DEF_FH(2, "ilt", host_ilt)
-  DEF_FH(2, "ile", host_ile)
-  DEF_FH(2, "igt", host_igt)
-  DEF_FH(2, "ige", host_ige)
-  DEF_FH(1, "dlen", host_dlen)
-  DEF_FH(1, "mlen", host_mlen)
-  DEF_FH(2, "field", host_field)
-  DEF_FH(2, "el", host_el)
-  DEF_FH(3, "init-el", host_init_el)
-  DEF_FH(2, "cycle-pair", host_cycle_pair)
-  DEF_FH(3, "slice", host_slice)
-  DEF_FH(2, "prepend", host_prepend)
-  DEF_FH(2, "append", host_append)
-  DEF_FH(2, "_host-write", host_write)
-  DEF_FH(2, "_host-write-repr", host_write_repr)
-  DEF_FH(1, "_host-flush", host_flush)
-  DEF_FH(1, "exit", host_exit)
-  DEF_FH(1, "error", host_error)
-  DEF_FH(1, "type-of", host_type_of)
-  DEF_FH(2, "dbg", host_dbg)
-  DEF_FH(1, "_boot-mk-do", host_boot_mk_do)
+#define DEF_FH(len_pars, n, f) env = host_init_func(env, len_pars, n, f)
+  DEF_FH(1, "identity", host_identity);
+  DEF_FH(2, "is", host_is);
+  DEF_FH(1, "is-true", host_is_true);
+  DEF_FH(1, "not", host_not);
+  DEF_FH(1, "ineg", host_ineg);
+  DEF_FH(1, "iabs", host_iabs);
+  DEF_FH(2, "iadd", host_iadd);
+  DEF_FH(2, "isub", host_isub);
+  DEF_FH(2, "imul", host_imul);
+  DEF_FH(2, "idiv", host_idiv);
+  DEF_FH(2, "imod", host_imod);
+  DEF_FH(2, "ipow", host_ipow);
+  DEF_FH(2, "ishl", host_ishl);
+  DEF_FH(2, "ishr", host_ishr);
+  DEF_FH(2, "ieq", host_ieq);
+  DEF_FH(2, "ine", host_ine);
+  DEF_FH(2, "ilt", host_ilt);
+  DEF_FH(2, "ile", host_ile);
+  DEF_FH(2, "igt", host_igt);
+  DEF_FH(2, "ige", host_ige);
+  DEF_FH(1, "dlen", host_dlen);
+  DEF_FH(1, "mlen", host_mlen);
+  DEF_FH(2, "field", host_field);
+  DEF_FH(2, "el", host_el);
+  DEF_FH(3, "init-el", host_init_el);
+  DEF_FH(2, "cycle-pair", host_cycle_pair);
+  DEF_FH(3, "slice", host_slice);
+  DEF_FH(2, "prepend", host_prepend);
+  DEF_FH(2, "append", host_append);
+  DEF_FH(2, "_host-write", host_write);
+  DEF_FH(2, "_host-write-repr", host_write_repr);
+  DEF_FH(1, "_host-flush", host_flush);
+  DEF_FH(1, "exit", host_exit);
+  DEF_FH(1, "error", host_error);
+  DEF_FH(1, "type-of", host_type_of);
+  DEF_FH(2, "dbg", host_dbg);
+  DEF_FH(1, "_boot-mk-do", host_boot_mk_do);
 #undef DEF_FH
 
 #define DEF_FILE(n, f, r, w) env = host_init_file(env, n, "<" n ">", f, r, w);
