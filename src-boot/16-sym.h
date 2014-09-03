@@ -51,8 +51,8 @@ static Obj sym_new(Str s) {
 }
 
 
-static Obj sym_new_from_chars(Chars b) {
-  return sym_new(str_from_chars(b));
+static Obj sym_new_from_chars(Chars_const c) {
+  return sym_new(str_from_chars(c));
 }
 
 
@@ -113,7 +113,7 @@ static void sym_init() {
   assert(global_sym_names.mem.len == 0);
   for_in(i, si_END) {
     Chars_const name = sym_index_names[i];
-    Obj sym = sym_new_from_chars(cast(Chars, name));
+    Obj sym = sym_new_from_chars(name);
     assert(sym_index(sym) == i);
     rc_rel_val(sym);
   }

@@ -384,7 +384,7 @@ static Obj host_boot_mk_do(Trace* trace, Obj env, Mem args) {
 typedef Obj(*Func_host_ptr)(Trace*, Obj, Mem);
 
 
-static Obj host_init_func(Obj env, Int len_pars, Chars name, Func_host_ptr ptr) {
+static Obj host_init_func(Obj env, Int len_pars, Chars_const name, Func_host_ptr ptr) {
   // owns env.
   Obj sym = sym_new_from_chars(name);
   Obj pars; // TODO: add real types; unique value for expression default?
@@ -411,17 +411,18 @@ static Obj host_init_func(Obj env, Int len_pars, Chars name, Func_host_ptr ptr) 
 }
 
 
-static Obj host_init_file(Obj env, Chars sym_name, Chars name, CFile f, Bool r, Bool w) {
+static Obj host_init_file(Obj env, Chars_const sym_name, Chars_const name, CFile f, Bool r,
+  Bool w) {
   // owns env.
   Obj sym = sym_new_from_chars(sym_name);
-  Obj val = struct_new4(rc_ret(t_File), data_new_from_chars(name), ptr_new(f), bool_new(r),
-    bool_new(w));
+  Obj val = struct_new4(rc_ret(t_File), data_new_from_chars(name), ptr_new(f),
+    bool_new(r), bool_new(w));
   return env_bind(env, false, sym, val);
 }
 
 
 static Obj host_init(Obj env) {
-#define DEF_FH(len_pars, n, f) env = host_init_func(env, len_pars, cast(Chars, n), f);
+#define DEF_FH(len_pars, n, f) env = host_init_func(env, len_pars, n, f);
   DEF_FH(1, "identity", host_identity)
   DEF_FH(2, "is", host_is)
   DEF_FH(1, "is-true", host_is_true)
@@ -461,8 +462,7 @@ static Obj host_init(Obj env) {
   DEF_FH(1, "_boot-mk-do", host_boot_mk_do)
 #undef DEF_FH
 
-#define DEF_FILE(n, f, r, w)  \
-  env = host_init_file(env, cast(Chars, n), cast(Chars, "<" n ">"), f, r, w);
+#define DEF_FILE(n, f, r, w) env = host_init_file(env, n, "<" n ">", f, r, w);
   
   DEF_FILE("std-in", stdin, true, false)
   DEF_FILE("std-out", stdout, false, true)

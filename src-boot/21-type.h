@@ -86,7 +86,7 @@ static Obj type_name(Obj t) {
 
 
 static void type_add(Obj type, Chars_const name_custom, Chars_const name_default) {
-  Obj name = sym_new_from_chars(cast(Chars, (name_custom ?: name_default)));
+  Obj name = sym_new_from_chars(name_custom ?: name_default);
   *type.t = (Type){
     .type=rc_ret(t_Type),
     .len=2,

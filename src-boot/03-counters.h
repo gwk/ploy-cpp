@@ -10,7 +10,6 @@
 // the C macro is temporarily defined to generate various lists of expressions.
 #define COUNTER_LIST \
 C(Chars) \
-C(Str) \
 C(RC_table) \
 C(RC_bucket) \
 C(Mem) \

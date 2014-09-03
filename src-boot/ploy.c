@@ -80,21 +80,21 @@ int main(int argc, Chars_const argv[]) {
 
   if (should_load_core) { // run embedded core.ploy file.
     env = env_push_frame(env);
-    path = data_new_from_chars(cast(Chars, "<core>"));
-    src = data_new_from_chars(cast(Chars, core_src)); // TODO: breaks const correctness?
+    path = data_new_from_chars("<core>");
+    src = data_new_from_chars(core_src);
     env = parse_and_eval(env, path, src, &sources, false);
   }
   // handle arguments.
   for_in(i, path_count) {
     env = env_push_frame(env);
-    path = data_new_from_chars(cast(Chars, paths[i])); // TODO: breaks const correctness?
+    path = data_new_from_chars(paths[i]);
     src = data_new_from_path(paths[i]);
     env = parse_and_eval(env, path, src, &sources, false);
   }
   if (expr) {
     env = env_push_frame(env);
-    path = data_new_from_chars(cast(Chars, "<expr>"));
-    src = data_new_from_chars(cast(Chars, expr)); // TODO: breaks const correctness?
+    path = data_new_from_chars("<expr>");
+    src = data_new_from_chars(expr);
     env = parse_and_eval(env, path, src, &sources, should_output_val);
   }
 

@@ -10,7 +10,7 @@
 
 typedef struct {
   Int len;
-  Chars chars;
+  Chars_const chars;
 } Str;
 
 #define str0 (Str){.len=0, .chars=NULL}
@@ -19,57 +19,20 @@ typedef struct {
 #define FMT_STR(str) cast(I32, (str).len), (str).chars
 
 
-static Str str_mk(Int len, Chars chars) {
+static Str str_mk(Int len, Chars_const chars) {
   return (Str){.len=len, .chars=chars};
 }
 
 
-static Str str_from_chars(Chars p) {
-  Uns len = strnlen(p, max_Int);
+static Str str_from_chars(Chars_const c) {
+  Uns len = strnlen(c, max_Int);
   check(len <= max_Int, "str_from_chars: string exceeded max length");
-  return str_mk(cast(Int, len), p);
+  return str_mk(cast(Int, len), c);
 }
 
 
 static void assert_str_is_valid(Str s) {
   assert((!s.chars && !s.len) || (s.chars && s.len > 0));
-}
-
-
-static void str_dealloc(Str s) {
-  assert_str_is_valid(s);
-  raw_dealloc(s.chars, ci_Str);
-}
-
-
-static Str str_alloc(Int len) {
-  // add null terminator to the allocation for easier debugging; this does not affect len.
-  Chars c = raw_alloc(len + 1, ci_Str);
-  c[len] = 0;
-  return str_mk(len, c);
-}
-
-
-static void str_realloc(Str* s, Int len) {
-  assert_str_is_valid(*s);
-  s->chars = raw_realloc(s->chars, len, ci_Str);
-  s->len = len;
-}
-
-
-static void str_grow(Str* s) {
-  assert(s->len > 0);
-  str_realloc(s, s->len * 2);
-}
-
-
-static Int str_append(Str* s, Int i, Char c) {
-  // returns updated index.
-  // unlike Mem, the string capacity is stored in s.len, and the current position in i.
-  assert(i <= s->len);
-  if (i == s->len) str_grow(s);
-  s->chars[i] = c;
-  return i + 1;
 }
 
 

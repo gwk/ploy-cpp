@@ -154,7 +154,7 @@ static U64 parse_U64(Parser* p) {
       base = 10;
     }
   }
-  Chars start = p->src.chars + p->sp.pos;
+  Chars_const start = p->src.chars + p->sp.pos;
   Chars end;
   // TODO: this appears unsafe; what if strtoull runs off the end of the string?
   U64 u = strtoull(start, &end, base);
@@ -235,12 +235,13 @@ static Obj parse_comment(Parser* p) {
 static Obj parse_data(Parser* p, Char q) {
   assert(PC == q);
   Src_pos sp = p->sp; // for error reporting.
-  Str s = str_alloc(size_min_alloc);
-  Int i = 0;
+  Int cap = size_min_alloc;
+  Chars chars = chars_alloc(cap);
+  Int len = 0;
   Bool escape = false;
-#define APPEND(c) { i = str_append(&s, i, c); }
+#define APPEND(c) { len = chars_append(&chars, &cap, len, c); }
   loop {
-    P_ADV(1, p->sp = sp; str_dealloc(s); return parse_error(p, "unterminated string literal"));
+    P_ADV(1, p->sp = sp; chars_dealloc(chars); return parse_error(p, "unterminated string literal"));
     Char c = PC;
     if (escape) {
       escape = false;
@@ -271,8 +272,8 @@ static Obj parse_data(Parser* p, Char q) {
   }
   #undef APPEND
   P_ADV(1); // past closing quote.
-  Obj d = data_new_from_str(str_mk(i, s.chars));
-  str_dealloc(s);
+  Obj d = data_new_from_str(str_mk(len, chars));
+  chars_dealloc(chars);
   return d;
 }
 

@@ -60,18 +60,9 @@ static Obj data_new_from_str(Str s) {
 }
 
 
-static Obj data_new_from_chars(Chars c) {
+static Obj data_new_from_chars(Chars_const c) {
   Uns len = strnlen(c, max_Int);
   check(len <= max_Int, "data_new_from_chars: string exceeded max length");
-  Obj d = data_new_empty(cast(Int, len));
-  memcpy(data_ptr(d), c, len);
-  return d;
-}
-
-
-UNUSED_FN static Obj data_new_from_chars_const(Chars_const c) {
-  Uns len = strnlen(c, max_Int);
-  check(len <= max_Int, "data_new_from_chars_const: string exceeded max length");
   Obj d = data_new_empty(cast(Int, len));
   memcpy(data_ptr(d), c, len);
   return d;
