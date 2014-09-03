@@ -253,23 +253,6 @@ Obj p##_el_type = p##_els[1]; \
 Obj p##_el_dflt = p##_els[2]
 
 
-static Call_envs run_bind_arg(Int d, Trace* trace, Obj env, Obj callee_env, Bool is_expand,
-  Obj par_name, Obj arg_expr) {
-  // owns env (the caller env), callee_env.
-  // bind an argument expression to a name.
-  Obj val;
-  if (is_expand) {
-    val = rc_ret(arg_expr);
-  } else {
-    Step step = run(d, trace, env, arg_expr);
-    env = step.res.env;
-    val = step.res.val;
-  }
-  callee_env = run_env_bind(trace, false, callee_env, rc_ret_val(par_name), val);
-  return (Call_envs){.caller_env=env, .callee_env=callee_env};
-}
-
-
 static Call_envs run_bind_par(Int d, Trace* trace, Obj env, Obj callee_env, Obj call,
   Bool is_expand, Obj par, Mem args, Int* i_args) {
   UNPACK_PAR(par); UNUSED_VAR(par_el_type);
@@ -295,7 +278,16 @@ static Call_envs run_bind_par(Int d, Trace* trace, Obj env, Obj callee_env, Obj 
   } else {
     error("call: %o\nreceived too few arguments", call);
   }
-  return run_bind_arg(d, trace, env, callee_env, is_expand, par_el_name, arg_expr);
+  Obj val;
+  if (is_expand) {
+    val = rc_ret(arg_expr);
+  } else {
+    Step step = run(d, trace, env, arg_expr);
+    env = step.res.env;
+    val = step.res.val;
+  }
+  callee_env = run_env_bind(trace, false, callee_env, rc_ret_val(par_el_name), val);
+  return (Call_envs){.caller_env=env, .callee_env=callee_env};
 }
 
 
