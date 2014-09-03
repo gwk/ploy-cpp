@@ -26,7 +26,7 @@ static Str str_mk(Int len, Chars chars) {
 
 static Str str_from_chars(Chars p) {
   Uns len = strnlen(p, max_Int);
-  check(len <= max_Int, "string exceeded max length");
+  check(len <= max_Int, "str_from_chars: string exceeded max length");
   return str_mk(cast(Int, len), p);
 }
 
