@@ -384,7 +384,7 @@ static Step run_call_func(Int d, Trace* trace, Obj env, Obj call, Obj func, Bool
   exc_check(obj_is_bool(is_macro), "function is-macro is not a Bool: %o", is_macro);
   // TODO: check that variad is an Expr.
   exc_check(obj_is_env(lex_env), "function %o env is not an Env: %o", name, lex_env);
-  exc_check(obj_is_struct(pars), "function %o pars is not a Struct: %o", name, pars);
+  exc_check(is(obj_type(pars), t_Mem_Par), "function %o pars is not Mem-Par: %o", name, pars);
   // TODO: check that ret-type is a Type.
   exc_check(is(ret_type, s_nil), "function %o ret-type is non-nil: %o", name, ret_type);
   if (is_expand) {
@@ -428,10 +428,11 @@ static Step run_Call(Int d, Trace* trace, Obj env, Obj code) {
   Step step = run(d, trace, env, callee_expr);
   env = step.res.env;
   Obj func = step.res.val;
-  exc_check(obj_is_struct(func), "object is not callable: %o", func);
-  Mem fm = struct_mem(func);
-  exc_check(fm.len == 8, "function is malformed: %o", func);
-  return run_call_func(d, trace, env, code, func, false); // TCO.
+  Obj type = obj_type(func);
+  if (is(type, t_Func)) {
+    return run_call_func(d, trace, env, code, func, false); // TCO.
+  }
+  exc_raise("object is not callable: %o", func);
 }
 
 
