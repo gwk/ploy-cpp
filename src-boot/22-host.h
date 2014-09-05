@@ -148,7 +148,7 @@ static Obj host_init_el(Trace* trace, Obj env) {
   exc_check(is(old, s_UNINIT), "init-el found element %i is already initialized: %o", i, a);
   rc_rel_val(old);
   exc_check(rc_get(c) > 1, "init-el must not have sole ownership of argument 3: %o", c);
-  m.els[i] = c; // a acquires c without calling rc_rel, thereby creating a 'weak' ref.
+  m.els[i] = c; // a acquires c without calling rc_ret, thereby creating a 'weak' ref.
   counter_inc(obj_counter_index(c)); // for the purpose of balancing counters.
   return rc_ret(a);
 }

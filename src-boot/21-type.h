@@ -52,7 +52,8 @@ T(Mem_Par, "Mem-Par") \
 T(Mem_Expr, "Mem-Expr") \
 
 
-// sym indices.
+// type indices for the basic types allow us to dispatch on type using a single index value,
+// rather than multiple pointer comparisons.
 #define T(t, n) ti_##t,
 typedef enum {
   TYPE_LIST
@@ -60,21 +61,28 @@ typedef enum {
 } Type_index;
 #undef T
 
+// the basic types are prefixed with t_.
 #define T(t, n) static Obj t_##t;
 TYPE_LIST
 #undef T
 
 
+// in order for type indices to work, the known types must be allocated in a single slab.
 static Type* type_table;
 
 
+#define assert_valid_type_index(ti) assert((ti) >= 0 && (ti) < ti_END)
+
 static Obj type_for_index(Type_index ti) {
+  assert_valid_type_index(ti);
   return (Obj){.t=type_table + ti};
 }
 
 
 static Type_index type_index(Obj t) {
-  return cast(Type_index, t.t - type_table);
+  Int ti = t.t - type_table;
+  assert_valid_type_index(ti);
+  return cast(Type_index, ti);
 }
 
 
@@ -97,14 +105,13 @@ static void type_add(Obj type, Chars_const name_custom, Chars_const name_default
 
 
 static void type_init_table() {
-  // the first step is to create the table, a single memory block of the basic types.
+  // the first step is to create the table, a single memory slab of the basic types.
   // this allows us to map between type pointers and Type_index indices.
   type_table = raw_alloc(ti_END * size_Type, ci_Type_table);
   // even though the contents of the table are not yet initialized,
   // we can now set all of the core type t_<T> c pointer variables,
-  // which are necessary for initialization of all other ploy objects,
-  // including the name symbols for the core types.
-  // we must also insert these objects into the table using the special rc_insert function.
+  // which are necessary for initialization of all other basic ploy objects.
+  // we must also insert these objects into the rc table using the special rc_insert function.
 #define T(type, n) t_##type = rc_insert((Obj){.t=(type_table + ti_##type)});
   TYPE_LIST
 #undef T
@@ -112,7 +119,7 @@ static void type_init_table() {
 
 
 static void type_init_values() {
-  // this must be called after sym_init, because it creates symbols for the core types.
+  // this must be called after sym_init, because this adds symbols for the core types.
   assert(global_sym_names.mem.len);
   #define T(t, n) type_add(t_##t, n, #t);
   TYPE_LIST
@@ -132,7 +139,8 @@ static Obj type_init_bindings(Obj env) {
 #if OPT_ALLOC_COUNT
 static void type_cleanup() {
   // run cleanup in reverse so that Type is cleaned up last.
-  // the type slot is released first, and then rc_remove is called, so that the count is zero.  
+  // the type slot is released first, and then rc_remove is called,
+  // so that Type releases itself first and then verifies that its rc count is zero.  
   for_in_rev(i, ti_END) {
     Obj o = type_for_index(cast(Type_index, i));
     rc_rel(o.t->type);
