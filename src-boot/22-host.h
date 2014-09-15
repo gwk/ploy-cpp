@@ -308,16 +308,15 @@ static Obj host_init_func(Obj env, Int len_pars, Chars_const name, Func_host_ptr
     default: assert(0);
   }
   #undef PAR
-  Obj f = struct_new_raw(rc_ret(t_Func), 8);
-  Obj* els = struct_els(f);
-  els[0] = rc_ret_val(sym);
-  els[1] = bool_new(false);
-  els[2] = bool_new(false);
-  els[3] = rc_ret(env);
-  els[4] = rc_ret(s_void);
-  els[5] = pars;
-  els[6] = rc_ret_val(s_nil); // TODO: specify actual return type?
-  els[7] = ptr_new(cast(Raw, ptr));
+  Obj f = struct_new8(rc_ret(t_Func),
+    rc_ret_val(sym),
+    bool_new(false),
+    bool_new(false),
+    rc_ret(env),
+    rc_ret(s_void),
+    pars,
+    rc_ret_val(s_nil), // TODO: specify actual return type?
+    ptr_new(cast(Raw, ptr)));
   return env_bind(env, false, sym, f);
 }
 

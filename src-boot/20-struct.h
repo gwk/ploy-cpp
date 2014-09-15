@@ -98,6 +98,22 @@ static Obj struct_new4(Obj type, Obj a, Obj b, Obj c, Obj d) {
 }
 
 
+static Obj struct_new8(Obj type, Obj a, Obj b, Obj c, Obj d, Obj e, Obj f, Obj g, Obj h) {
+  // owns all arguments.
+  Obj s = struct_new_raw(type, 8);
+  Obj* els = struct_els(s);
+  els[0] = a;
+  els[1] = b;
+  els[2] = c;
+  els[3] = d;
+  els[4] = e;
+  els[5] = f;
+  els[6] = g;
+  els[7] = h;
+  return s;
+}
+
+
 static Int struct_len(Obj s) {
   assert(ref_is_struct(s));
   assert(s.s->len >= 0);

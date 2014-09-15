@@ -180,16 +180,15 @@ static Step run_Fn(Int d, Trace* trace, Obj env, Obj code) {
       variad = rc_ret(par);
     }
   }
-  Obj f = struct_new_raw(rc_ret(t_Func), 8);
-  Obj* els = struct_els(f);
-  els[0] = rc_ret_val(name);
-  els[1] = rc_ret_val(is_native);
-  els[2] = rc_ret_val(is_macro);
-  els[3] = rc_ret(env);
-  els[4] = variad;
-  els[5] = pars;
-  els[6] = rc_ret(ret_type);
-  els[7] = rc_ret(body);
+  Obj f = struct_new8(rc_ret(t_Func),
+    rc_ret_val(name),
+    rc_ret_val(is_native),
+    rc_ret_val(is_macro),
+    rc_ret(env),
+    variad,
+    pars,
+    rc_ret(ret_type),
+    rc_ret(body));
   return mk_res(env, f);
 }
 
