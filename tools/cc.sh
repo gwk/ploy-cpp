@@ -20,17 +20,25 @@ if [[ "$1" == "-dbg" ]]; then
   opts="\
 -DDEBUG=1 \
 -fstack-protector \
--fsanitize=undefined-trap \
--fsanitize-undefined-trap-on-error \
+-fsanitize=local-bounds \
+-fsanitize=undefined \
 -fno-limit-debug-info \
 -O0
 "
-#-fsanitize=local-bounds
+#-fsanitize=address # fails on clang 3.5: linker error for libclang_rt.asan_osx_dynamic.dylib.
+
 else
   opts="\
 -DDEBUG=0 \
 -Ofast \
 "
+#-freg-struct-return        Override the default ABI to return small structs in registers
+#-funroll-loops             Turn on loop unroller
+#-freroll-loops             Turn on loop reroller
+#-fvectorize                Enable the loop vectorization passes
+#-fslp-vectorize            Enable the superword-level parallelism vectorization passes
+#-fslp-vectorize-aggressive Enable the BB vectorization passes
+#-fstrict-enums             Enable optimizations based on the strict definition of an enum's value range
 fi
 
 if [[ "$#" == 0 ]]; then
@@ -42,7 +50,7 @@ set -e
 
 mkdir -p _bld
 
-$cmd_prefix clang \
+$cmd_prefix /usr/local/llvm/bin/clang \
 -std=c11 \
 -Werror \
 -Weverything \
@@ -59,19 +67,14 @@ $opts \
 -I _bld \
 "$@"
 
+#-fstandalone-debug      Emit full debug info for all types used by the program
 
-#-ftrapv                    Trap on integer overflow
-#-ftrapv-handler=func-name  Specify the function to be called on overflow
-
+#-fstack-protector-strong   Use a strong heuristic to apply stack protectors to functions
+#-fstack-protector-all      Force the usage of stack protectors for all functions
 #-fsanitize-memory-track-origins  Enable origins tracking in MemorySanitizer
 
-#-fstrict-enums             Enable optimizations based on the strict definition of an enum's value range
-#-fvectorize                Enable the loop vectorization passes
-#-fslp-vectorize            Enable the superword-level parallelism vectorization passes
-#-funroll-loops             Turn on loop unroller
-#-freroll-loops             Turn on loop reroller
+#-ftrapv-handler=func-name  Specify the function to be called on overflow
 
 #-foptimize-sibling-calls   tail call elimination
 #-mllvm -tailcallelim       tail calls?
 
-#-freg-struct-return        Override the default ABI to return small structs in registers
