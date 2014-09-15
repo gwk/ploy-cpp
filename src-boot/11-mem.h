@@ -112,7 +112,7 @@ static void mem_realloc(Mem* m, Int len) {
 #if OPT_ALLOC_SCRIBBLE
   if (m->len < len) {
     // zero all new, uninitialized els to catch illegal derefernces.
-    memset(m->els + m->len, 0, (len - m->len) * size_Obj);
+    memset(m->els + m->len, 0, cast(Uns, (len - m->len) * size_Obj));
   }
 #endif
 }

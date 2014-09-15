@@ -66,7 +66,7 @@ static void set_insert(Set* s, Obj r) {
     s->len_buckets = min_set_len_buckets;
     Int size = s->len_buckets * size_Hash_bucket;
     s->buckets = raw_alloc(size, ci_Set);
-    memset(s->buckets, 0, size);
+    memset(s->buckets, 0, cast(Uns, size));
   } else if (s->len + 1 == s->len_buckets) { // load factor == 1.0.
     // TODO: assess resize criteria.
     Int len_buckets = s->len_buckets * 2;
@@ -76,7 +76,7 @@ static void set_insert(Set* s, Obj r) {
       .len_buckets = len_buckets,
       .buckets = raw_alloc(size, ci_Set),
     };
-    memset(t.buckets, 0, size);
+    memset(t.buckets, 0, cast(Uns, size));
     // copy existing elements.
     for_in(i, s->len_buckets) {
       Hash_bucket src = s->buckets[i];

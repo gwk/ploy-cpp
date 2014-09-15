@@ -55,7 +55,7 @@ static Obj data_new_empty(Int len) {
 static Obj data_new_from_str(Str s) {
   if (!s.len) return rc_ret_val(blank);
   Obj d = data_new_empty(s.len);
-  memcpy(data_ptr(d), s.chars, s.len);
+  memcpy(data_ptr(d), s.chars, cast(Uns, s.len));
   return d;
 }
 

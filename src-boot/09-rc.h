@@ -151,7 +151,7 @@ static void rc_resize(Int len_buckets) {
   rc_table.len_buckets = len_buckets;
   Int size = size_RC_bucket * len_buckets;
   rc_table.buckets = raw_alloc(size, ci_RC_table);
-  memset(rc_table.buckets, 0, size);
+  memset(rc_table.buckets, 0, cast(Uns, size));
   // copy existing elements.
   for_in(i, old_len_buckets) {
     RC_bucket src = old_buckets[i];
@@ -197,6 +197,7 @@ static Obj rc_insert(Obj r) {
 
 static RC_item* rc_resolve_item(RC_item* item) {
   // requires that the immediate delegate is direct; returns NULL if this is not the case.
+  assert(item);
   if (rc_item_is_direct(item)) return item;
   RC_item* i = item->p;
   if (rc_item_is_direct(i)) return i;

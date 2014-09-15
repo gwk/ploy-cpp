@@ -20,7 +20,7 @@ static Raw raw_alloc(Int size, Counter_index ci) {
     fail();
   }
 #if OPT_ALLOC_SCRIBBLE
-  memset(p, 0xAA, size); // same value as OSX MallocPreScribble.
+  memset(p, 0xAA, cast(Uns, size)); // same value as OSX MallocPreScribble.
 #endif
   return p;
 }
