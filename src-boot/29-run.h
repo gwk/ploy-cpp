@@ -253,7 +253,7 @@ Obj p##_el_dflt = p##_els[2]
 
 
 static Call_envs run_bind_par(Int d, Trace* trace, Obj env, Obj callee_env, Obj call,
-  Bool is_expand, Obj par, Mem args, Int* i_args) {
+  Bool should_run_args, Obj par, Mem args, Int* i_args) {
   UNPACK_PAR(par); UNUSED_VAR(par_el_type);
   Obj arg_expr;
   if (*i_args < args.len) {
@@ -278,12 +278,12 @@ static Call_envs run_bind_par(Int d, Trace* trace, Obj env, Obj callee_env, Obj 
     error("call: %o\nreceived too few arguments", call);
   }
   Obj val;
-  if (is_expand) {
-    val = rc_ret(arg_expr);
-  } else {
+  if (should_run_args) {
     Step step = run(d, trace, env, arg_expr);
     env = step.res.env;
     val = step.res.val;
+  } else {
+    val = rc_ret(arg_expr);
   }
   callee_env = run_env_bind(trace, false, callee_env, rc_ret_val(par_el_name), val);
   return (Call_envs){.caller_env=env, .callee_env=callee_env};
@@ -291,7 +291,7 @@ static Call_envs run_bind_par(Int d, Trace* trace, Obj env, Obj callee_env, Obj 
 
 
 static Call_envs run_bind_variad(Int d, Trace* trace, Obj env, Obj callee_env, Obj call,
-  Bool is_expand, Obj par, Mem args, Int* i_args) {
+  Bool should_run_args, Obj par, Mem args, Int* i_args) {
   // owns env (the caller env), callee_env.
   // bind args to a variad parameter.
   // note: it would be nice to implement this without allocating a temporary array;
@@ -309,12 +309,12 @@ static Call_envs run_bind_variad(Int d, Trace* trace, Obj env, Obj callee_env, O
         call, *i_args, arg);
       exc_raise("call: %o\nvariadic splat not implemented: %o", call, arg_el_expr);
     } else { // arg is simple (not label or variad).
-      if (is_expand) {
-        array_append(&vals, rc_ret(arg));
-      } else {
+      if (should_run_args) {
         Step step = run(d, trace, env, arg);
         env = step.res.env;
         array_append(&vals, step.res.val);
+      } else {
+        array_append(&vals, rc_ret(arg));
       }
     }
     *i_args += 1;
@@ -331,7 +331,7 @@ static Call_envs run_bind_variad(Int d, Trace* trace, Obj env, Obj callee_env, O
 
 
 static Call_envs run_bind_args(Int d, Trace* trace, Obj env, Obj callee_env,
-  Obj call, Obj variad, Obj pars, Mem args, Bool is_expand) {
+  Obj call, Obj variad, Obj pars, Mem args, Bool should_run_args) {
   // owns env (the caller env), callee_env.
   Mem mp = struct_mem(pars);
   Int i_args = 0;
@@ -344,12 +344,12 @@ static Call_envs run_bind_args(Int d, Trace* trace, Obj env, Obj callee_env,
       exc_check(!has_variad, "call: %o\nmultiple variad parameters", call);
       has_variad = true;
       Call_envs envs =
-      run_bind_variad(d, trace, env, callee_env, call, is_expand, par, args, &i_args);
+      run_bind_variad(d, trace, env, callee_env, call, should_run_args, par, args, &i_args);
       env = envs.caller_env;
       callee_env = envs.callee_env;
     } else {
       Call_envs envs =
-      run_bind_par(d, trace, env, callee_env, call, is_expand, par, args, &i_args);
+      run_bind_par(d, trace, env, callee_env, call, should_run_args, par, args, &i_args);
       env = envs.caller_env;
       callee_env = envs.callee_env;
     }
@@ -359,7 +359,7 @@ static Call_envs run_bind_args(Int d, Trace* trace, Obj env, Obj callee_env,
 }
 
 
-static Step run_call_func(Int d, Trace* trace, Obj env, Obj call, Obj func, Bool is_expand) {
+static Step run_call_func(Int d, Trace* trace, Obj env, Obj call, Obj func, Bool is_call) {
   // owns env, func.
   Mem args = mem_next(struct_mem(call));
   Mem m = struct_mem(func);
@@ -380,20 +380,19 @@ static Step run_call_func(Int d, Trace* trace, Obj env, Obj call, Obj func, Bool
   exc_check(is(obj_type(pars), t_Mem_Par), "function %o pars is not a Mem-Par: %o", name, pars);
   // TODO: check that ret-type is a Type.
   exc_check(is(ret_type, s_nil), "function %o ret-type is non-nil: %o", name, ret_type);
-  if (is_expand) {
-    exc_check(bool_is_true(is_macro), "cannot expand function: %o", name);
-  } else {
+  if (is_call) {
     exc_check(!bool_is_true(is_macro), "cannot call macro: %o", name);
+  } else {
+    exc_check(bool_is_true(is_macro), "cannot expand function: %o", name);
   }
   Obj callee_env = env_push_frame(rc_ret(lex_env));
   // NOTE: because func is bound to self in callee_env, and func contains body,
   // we can give func to callee_env and still safely return the unretained body as tail.code.
   callee_env = run_env_bind(trace, false, callee_env, rc_ret_val(s_self), func);
   // owns env, callee_env.
-  Call_envs envs =
-  run_bind_args(d, trace, env, callee_env, call, variad, pars, args, is_expand);
-  env = envs.caller_env;
-  callee_env = envs.callee_env;
+  Call_envs e = run_bind_args(d, trace, env, callee_env, call, variad, pars, args, is_call);
+  env = e.caller_env;
+  callee_env = e.callee_env;
   if (bool_is_true(is_native)) {
 #if OPT_TCO
   // caller will own .env, .callee_env, but not .code.
@@ -408,8 +407,40 @@ static Step run_call_func(Int d, Trace* trace, Obj env, Obj call, Obj func, Bool
     Func_host_ptr f_ptr = cast(Func_host_ptr, ptr_val(body));
     Obj res = f_ptr(trace, callee_env);
     rc_rel(callee_env);
-    return mk_res(envs.caller_env, res);
+    return mk_res(env, res); // NO TCO.
   }
+}
+
+
+static Step run_call_accessor(Int d, Trace* trace, Obj env, Obj call, Obj accessor) {
+  // owns env, accessor.
+  Mem args = mem_next(struct_mem(call));
+  Mem m = struct_mem(accessor);
+  assert(m.len == 1);
+  Obj name = m.els[0];
+  exc_check(obj_is_sym(name), "call: %o\naccessor is not a sym: %o", call, name);
+  Obj accessee_expr = args.els[0];
+  Step step = run(d, trace, env, accessee_expr);
+  env = step.res.env;
+  Obj accessee = step.res.val;
+  exc_check(obj_is_struct(accessee), "call: %o\naccessee is not a struct: %o", call, accessee);
+  Obj type = obj_type(accessee);
+  exc_check(is(obj_type(type), t_Type), "call: %o\nbad type: %o", call, type);
+  Obj type_kind = struct_el(type, 1);
+  Mem pars = struct_mem(type_kind);
+  Mem fields = struct_mem(accessee); DBG_VAR(fields);
+  assert(pars.len == fields.len);
+  for_in(i, pars.len) {
+    Obj par = pars.els[i];
+    Obj par_name = struct_el(par, 0);
+    if (is(par_name, name)) {
+      Obj val = rc_ret(struct_el(accessee, i));
+      rc_rel(accessor);
+      rc_rel(accessee);
+      return mk_res(env, val);
+    }
+  }
+  exc_raise("call: %o\nstruct field not found: %o", call, name);
 }
 
 
@@ -420,12 +451,15 @@ static Step run_Call(Int d, Trace* trace, Obj env, Obj code) {
   Obj callee_expr = m.els[0];
   Step step = run(d, trace, env, callee_expr);
   env = step.res.env;
-  Obj func = step.res.val;
-  Obj type = obj_type(func);
-  if (is(type, t_Func)) {
-    return run_call_func(d, trace, env, code, func, false); // TCO.
+  Obj callee = step.res.val;
+  Obj type = obj_type(callee);
+  Int ti = type_index(type); //  cast to Int c type avoids incomplete enum switch error.
+  switch (ti) {
+    case ti_Func:     return run_call_func(d, trace, env, code, callee, true);
+    case ti_Accessor: return run_call_accessor(d, trace, env, code, callee);
+    default:
+      exc_raise("object is not callable: %o", callee);
   }
-  exc_raise("object is not callable: %o", func);
 }
 
 
@@ -576,7 +610,7 @@ static Obj run_macro(Trace* trace, Obj env, Obj code) {
   if (is(macro, obj0)) { // lookup failed.
     error("macro lookup error: %o", macro_sym);
   }
-  Step step = run_call_func(0, trace, env, code, rc_ret(macro), true); // owns env, macro.
+  Step step = run_call_func(0, trace, env, code, rc_ret(macro), false); // owns env, macro.
   step = run_tail(0, trace, step); // handle any TCO steps.
   rc_rel(step.res.env);
   run_err_trace(0, trace_expand_val_prefix, step.res.val);
