@@ -38,8 +38,11 @@ int main(int argc, Chars_const argv[]) {
   rc_init();
   type_init_table();
   sym_init(); // requires type_init_table.
-  type_init_values(); // requires sym_init.
-  
+  Obj env = rc_ret_val(s_ENV_END);
+  env = env_push_frame(env);
+  env = type_init_values(env); // requires sym_init.
+  env = host_init(env);
+
   // parse arguments.
   Chars_const paths[len_buffer];
   Int path_count = 0;
@@ -68,11 +71,6 @@ int main(int argc, Chars_const argv[]) {
       paths[path_count++] = arg;
     }
   }
-
-  Obj env = rc_ret_val(s_ENV_END);
-  env = env_push_frame(env);
-  env = type_init_bindings(env);
-  env = host_init(env);
 
   // global array of (path, source) objects for error reporting.
   Array sources = array0;

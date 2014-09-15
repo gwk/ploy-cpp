@@ -118,16 +118,12 @@ static void type_init_table() {
 }
 
 
-static void type_init_values() {
+static Obj type_init_values(Obj env) {
   // this must be called after sym_init, because this adds symbols for the core types.
   assert(global_sym_names.mem.len);
   #define T(t, n) type_add(t_##t, n, #t);
   TYPE_LIST
   #undef T
-}
-
-
-static Obj type_init_bindings(Obj env) {
   for_in(i, ti_END) {
     Obj o = type_for_index((Type_index)i);
     env = env_bind(env, false, rc_ret(o.t->name), rc_ret(o));
