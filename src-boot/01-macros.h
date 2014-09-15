@@ -25,6 +25,11 @@
 // include the generated source here, before 'char' is disallowed via macros below.
 #include "ploy-core.h"
 
+// enable tail-call optimizations.
+#ifndef OPT_TCO
+#define OPT_TCO 1
+#endif
+
 // on ref object dealloc, do not actually call free to aid in debugging overelease bugs.
 #ifndef OPT_DEALLOC_PRESERVE
 #define OPT_DEALLOC_PRESERVE DEBUG

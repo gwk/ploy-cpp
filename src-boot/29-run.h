@@ -396,7 +396,7 @@ static Step run_call_func(Int d, Trace* trace, Obj env, Obj call, Obj func, Bool
   env = envs.caller_env;
   callee_env = envs.callee_env;
   if (bool_is_true(is_native)) {
-#if 1 // TCO.
+#if OPT_TCO
   // caller will own .env, .callee_env, but not .code.
   return mk_tail(.env=env, .callee_env=callee_env, .code=body);
 #else // NO TCO.
