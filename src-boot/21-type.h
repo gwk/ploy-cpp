@@ -16,45 +16,53 @@ DEF_SIZE(Type);
 
 
 #define TYPE_LIST \
-T(Type, NULL) \
-T(Ptr, NULL) \
-T(Int, NULL) \
-T(Sym, NULL) \
-T(Data, NULL) \
-T(Accessor, NULL) \
-T(Mutator, NULL) \
-T(Env, NULL) \
-T(Unq, NULL) \
-T(Qua, NULL) \
-T(Expand, NULL) \
-T(Comment, NULL) \
-T(Eval, NULL) \
-T(Quo, NULL) \
-T(Do, NULL) \
-T(Scope, NULL) \
-T(Bind, NULL) \
-T(If, NULL) \
-T(Fn, NULL) \
-T(Syn_struct_typed, "Syn-struct-typed") \
-T(Syn_seq_typed, "Syn-seq-typed") \
-T(Call, NULL) \
-T(Func, NULL) \
-T(File, NULL) \
-T(Label, NULL) \
-T(Variad, NULL) \
-T(Src, NULL) \
-T(Expr, NULL) \
-T(Par, NULL) \
-T(Syn_struct, "Syn-struct") \
-T(Syn_seq, "Syn-seq") \
-T(Mem_Obj, "Mem-Obj") \
-T(Mem_Par, "Mem-Par") \
-T(Mem_Expr, "Mem-Expr") \
+T(Type,             struct) \
+T(Ptr,              prim) \
+T(Int,              prim) \
+T(Sym,              prim) \
+T(Data,             prim) \
+T(Accessor,         struct) \
+T(Mutator,          struct) \
+T(Env,              prim) \
+T(Unq,              struct) \
+T(Qua,              struct) \
+T(Expand,           mem) \
+T(Comment,          struct) \
+T(Eval,             struct) \
+T(Quo,              struct) \
+T(Do,               mem) \
+T(Scope,            struct) \
+T(Bind,             struct) \
+T(If,               struct) \
+T(Fn,               struct) \
+T(Syn_struct_typed, mem) \
+T(Syn_seq_typed,    mem) \
+T(Call,             mem) \
+T(Func,             struct) \
+T(File,             struct) \
+T(Label,            struct) \
+T(Variad,           struct) \
+T(Src,              struct) \
+T(Expr,             union) \
+T(Par,              struct) \
+T(Syn_struct,       mem) \
+T(Syn_seq,          mem) \
+T(Mem_Obj,          mem) \
+T(Mem_Par,          mem) \
+T(Mem_Expr,         mem) \
+T(Type_kind,        union) \
+T(Type_kind_unit,   prim) \
+T(Type_kind_prim,   prim) \
+T(Type_kind_mem,    struct) \
+T(Type_kind_struct, struct) \
+T(Type_kind_union,  struct) \
+T(Type_kind_class,  struct) \
+T(Type_kind_var,    struct) \
 
 
 // type indices for the basic types allow us to dispatch on type using a single index value,
 // rather than multiple pointer comparisons.
-#define T(t, n) ti_##t,
+#define T(t, k) ti_##t,
 typedef enum {
   TYPE_LIST
   ti_END
@@ -62,7 +70,7 @@ typedef enum {
 #undef T
 
 // the basic types are prefixed with t_.
-#define T(t, n) static Obj t_##t;
+#define T(t, k) static Obj t_##t;
 TYPE_LIST
 #undef T
 
@@ -93,8 +101,8 @@ static Obj type_name(Obj t) {
 }
 
 
-static void type_add(Obj type, Chars_const name_custom, Chars_const name_default) {
-  Obj name = sym_new_from_chars(name_custom ?: name_default);
+static void type_add(Obj type, Chars_const c_name) {
+  Obj name = sym_new_from_c(c_name);
   *type.t = (Type){
     .type=rc_ret(t_Type),
     .len=2,
@@ -112,7 +120,7 @@ static void type_init_table() {
   // we can now set all of the core type t_<T> c pointer variables,
   // which are necessary for initialization of all other basic ploy objects.
   // we must also insert these objects into the rc table using the special rc_insert function.
-#define T(type, n) t_##type = rc_insert((Obj){.t=(type_table + ti_##type)});
+#define T(type, k) t_##type = rc_insert((Obj){.t=(type_table + ti_##type)});
   TYPE_LIST
 #undef T
 }
@@ -121,7 +129,7 @@ static void type_init_table() {
 static Obj type_init_values(Obj env) {
   // this must be called after sym_init, because this adds symbols for the core types.
   assert(global_sym_names.mem.len);
-  #define T(t, n) type_add(t_##t, n, #t);
+  #define T(t, k) type_add(t_##t, #t);
   TYPE_LIST
   #undef T
   for_in(i, ti_END) {

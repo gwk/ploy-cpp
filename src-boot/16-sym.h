@@ -34,6 +34,8 @@ static Obj sym_data(Obj s) {
 
 
 static Str data_str(Obj d);
+static Int data_len(Obj d);
+static Chars data_ptr(Obj d);
 static Obj data_new_from_str(Str s);
 
 static Obj sym_new(Str s) {
@@ -53,6 +55,22 @@ static Obj sym_new(Str s) {
 
 static Obj sym_new_from_chars(Chars_const c) {
   return sym_new(str_from_chars(c));
+}
+
+
+static Obj sym_new_from_c(Chars_const c) {
+  // create a symbol, then alter the data to change underscores to dashes.
+  Obj sym = sym_new(str_from_chars(c));
+  assert(obj_is_val(sym)); // TODO: support all data-word values.
+  Obj data = sym_data(sym);
+  Int len = data_len(data);
+  Chars p = data_ptr(data);
+  for_in(i, len) {
+    if (p[i] == '_') {
+      p[i] = '-';
+    }
+  }
+  return sym;
 }
 
 
@@ -113,7 +131,7 @@ static void sym_init() {
   assert(global_sym_names.mem.len == 0);
   for_in(i, si_END) {
     Chars_const name = sym_index_names[i];
-    Obj sym = sym_new_from_chars(name);
+    Obj sym = sym_new_from_c(name);
     assert(sym_index(sym) == i);
     rc_rel_val(sym);
   }
