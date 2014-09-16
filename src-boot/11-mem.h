@@ -86,7 +86,7 @@ static Obj mem_el_ret(Mem m, Int i) {
 static Obj mem_el_move(Mem m, Int i) {
   // move element at i out of m.
   Obj e = mem_el(m, i);
-#if OPT_ALLOC_SCRIBBLE
+#if OPT_MEM_ZERO
   m.els[i] = obj0;
 #endif
   return e;
@@ -107,9 +107,12 @@ static void mem_realloc(Mem* m, Int len) {
   // because that reflects the number of elements used, not allocation size.
   it_mem_from(it, *m, len) { // release any old elements.
     rc_rel(*it);
+#if OPT_MEM_ZERO
+    *it = obj0;
+#endif
   }
   m->els = raw_realloc(m->els, len * size_Obj, ci_Mem);
-#if OPT_ALLOC_SCRIBBLE
+#if OPT_MEM_ZERO
   if (m->len < len) {
     // zero all new, uninitialized els to catch illegal derefernces.
     memset(m->els + m->len, 0, cast(Uns, (len - m->len) * size_Obj));
@@ -120,7 +123,7 @@ static void mem_realloc(Mem* m, Int len) {
 
 static void mem_dealloc(Mem m) {
   // dealloc m but do not release the elements, which must have been previously moved.
-#if OPT_ALLOC_SCRIBBLE
+#if OPT_MEM_ZERO
   it_mem(it, m) {
     assert(it->u == obj0.u);
   }
@@ -133,7 +136,7 @@ static void mem_release_dealloc(Mem m) {
   // release all elements and dealloc m.
   it_mem(it, m) {
     rc_rel(*it);
-#if OPT_ALLOC_SCRIBBLE
+#if OPT_MEM_ZERO
     *it = obj0;
 #endif
   }

@@ -19,9 +19,6 @@ static Raw raw_alloc(Int size, Counter_index ci) {
     fprintf(stderr, "raw_alloc failed; size: %ld", size);
     fail();
   }
-#if OPT_ALLOC_SCRIBBLE
-  memset(p, 0xAA, cast(Uns, size)); // same value as OSX MallocPreScribble.
-#endif
   return p;
 }
 

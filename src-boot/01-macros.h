@@ -30,6 +30,11 @@
 #define OPT_TCO 1
 #endif
 
+// zero object words in allocated blocks to catch invalid accesses.
+#ifndef OPT_MEM_ZERO
+#define OPT_MEM_ZERO DEBUG
+#endif
+
 // on ref object dealloc, do not actually call free to aid in debugging overelease bugs.
 #ifndef OPT_DEALLOC_PRESERVE
 #define OPT_DEALLOC_PRESERVE DEBUG
@@ -43,16 +48,6 @@
 // reference counter hash table stats.
 #ifndef OPT_RC_TABLE_STATS
 #define OPT_RC_TABLE_STATS 0
-#endif
-
-// write invalid or unlikely values into unused portions of heap allocations.
-// this helps detect illegal reads from uninitialized and dead regions,
-// and also helps detect errors in allocation code,
-// because we immediately attempt to write to the entire allocation.
-// it is not totally redundant with the MallocScribble and MallocPreScribble
-// environment variables on OSX, but it is completely compatible.
-#ifndef OPT_ALLOC_SCRIBBLE
-#define OPT_ALLOC_SCRIBBLE DEBUG
 #endif
 
 #ifndef OPT_BLANK_PTR_REPR
