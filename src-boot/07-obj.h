@@ -94,8 +94,8 @@ static Obj_tag obj_tag(Obj o) {
 }
 
 
-DEBUG_FN static Bool obj_is_val(Obj o) {
-  return (o.u & obj_tag_mask);
+static Bool obj_is_val(Obj o) {
+  return obj_tag(o) != ot_ref;
 }
 
 
