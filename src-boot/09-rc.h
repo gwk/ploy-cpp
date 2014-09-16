@@ -142,7 +142,7 @@ static void rc_bucket_append(RC_bucket* b, Obj r, Uns c) {
 
 
 static void rc_bucket_remove(RC_bucket* b, Int i) {
-  // replace this item with the last item. no-op if len == 1.
+  // first, replace this item with the last item. no-op if len == 1.
   b->items[i] = b->items[b->len - 1];
   b->len--; // then simply forget the original last item.
   assert(rc_table.len > 0);
