@@ -166,7 +166,6 @@ static Obj host_cycle_pair(Trace* trace, Obj env) {
   exc_check(obj_is_struct(b), "cycle-pair requires arg 2 to be a Struct; received: %o", b);
 
   RC_item* ai = rc_resolve_item(rc_get_item(a));
-  assert(ai);
   RC_item* bi = rc_get_item(b);
   exc_check(rc_item_is_direct(bi), "cycle-pair arg 2 (delegator) has already delegated: %o", b);
   rc_delegate_item(ai, bi);

@@ -196,12 +196,12 @@ static Obj rc_insert(Obj r) {
 
 
 static RC_item* rc_resolve_item(RC_item* item) {
-  // requires that the immediate delegate is direct; returns NULL if this is not the case.
+  // requires that the immediate delegate is direct.
   assert(item);
   if (rc_item_is_direct(item)) return item;
   RC_item* i = item->p;
   if (rc_item_is_direct(i)) return i;
-  return NULL;
+  error("rc_resolve_item: doubly indirect item");
 }
 
 
@@ -238,7 +238,7 @@ static void rc_delegate_item(RC_item* a, RC_item* b) {
   assert(rc_item_is_direct(b));
   Uns c = b->c - 1; // remove the tag bit, but do not shift.
   b->p = a;
-  a->c += c;
+  a->c += c; // a acquires the count from b.
   assert(rc_item_is_direct(a));
   assert(!rc_item_is_direct(b));
 }
@@ -264,7 +264,6 @@ static Uns rc_get(Obj o) {
   // get the object's retain count for debugging purposes.
   if (obj_tag(o)) return max_Uns;
   RC_item* item = rc_resolve_item(rc_get_item(o));
-  assert(item);
   return item->c >> 1; // shift off the flag bit.
 }
 
@@ -276,7 +275,6 @@ static Obj rc_ret(Obj o) {
   RC_item* item = rc_get_item(o);
   check(item, "object was prematurely deallocated: %p", o);
   item = rc_resolve_item(item);
-  assert(item);
   assert(item->c < max_Uns);
   item->c += 2; // increment by two to leave the flag bit intact.
   return o;
