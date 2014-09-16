@@ -14,7 +14,7 @@ static const Int load_factor_denom = 1;
 
 typedef struct _RC_item {
   Obj r;
-  union { // if the low bit is set, then it is a count; otherwise, it is an pointer to a count.
+  union { // if the low bit is set, then it is a count; otherwise, it is a pointer to a count.
     Uns c; // count.
     struct _RC_item* p;
   };
