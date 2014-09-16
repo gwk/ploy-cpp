@@ -3,6 +3,10 @@
 
 // imports and macros.
 
+#ifndef DEBUG
+#define DEBUG 0
+#endif
+
 #if !DEBUG
 #define NDEBUG 1 // omit assertions.
 #endif
