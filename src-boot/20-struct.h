@@ -98,6 +98,35 @@ static Obj struct_new4(Obj type, Obj a, Obj b, Obj c, Obj d) {
 }
 
 
+static Obj struct_new6(Obj type, Obj a, Obj b, Obj c, Obj d, Obj e, Obj f) {
+  // owns all arguments.
+  Obj s = struct_new_raw(type, 6);
+  Obj* els = struct_els(s);
+  els[0] = a;
+  els[1] = b;
+  els[2] = c;
+  els[3] = d;
+  els[4] = e;
+  els[5] = f;
+  return s;
+}
+
+
+static Obj struct_new7(Obj type, Obj a, Obj b, Obj c, Obj d, Obj e, Obj f, Obj g) {
+  // owns all arguments.
+  Obj s = struct_new_raw(type, 7);
+  Obj* els = struct_els(s);
+  els[0] = a;
+  els[1] = b;
+  els[2] = c;
+  els[3] = d;
+  els[4] = e;
+  els[5] = f;
+  els[6] = g;
+  return s;
+}
+
+
 static Obj struct_new8(Obj type, Obj a, Obj b, Obj c, Obj d, Obj e, Obj f, Obj g, Obj h) {
   // owns all arguments.
   Obj s = struct_new_raw(type, 8);
@@ -110,6 +139,29 @@ static Obj struct_new8(Obj type, Obj a, Obj b, Obj c, Obj d, Obj e, Obj f, Obj g
   els[5] = f;
   els[6] = g;
   els[7] = h;
+  return s;
+}
+
+
+static Obj struct_new14(Obj type, Obj a, Obj b, Obj c, Obj d, Obj e, Obj f, Obj g, Obj h,
+  Obj i, Obj j, Obj k, Obj l, Obj m, Obj n) {
+  // owns all arguments.
+  Obj s = struct_new_raw(type, 14);
+  Obj* els = struct_els(s);
+  els[0] = a;
+  els[1] = b;
+  els[2] = c;
+  els[3] = d;
+  els[4] = e;
+  els[5] = f;
+  els[6] = g;
+  els[7] = h;
+  els[8] = i;
+  els[9] = j;
+  els[10] = k;
+  els[11] = l;
+  els[12] = m;
+  els[13] = n;
   return s;
 }
 

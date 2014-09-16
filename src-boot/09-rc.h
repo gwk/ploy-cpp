@@ -250,14 +250,23 @@ static void rc_delegate_item(RC_item* a, RC_item* b) {
 }
 
 
+UNUSED_FN static void rc_delegate(Obj a, Obj b) {
+  RC_item* ai = rc_resolve_item(rc_get_item(a));
+  RC_item* bi = rc_get_item(b);
+  check(rc_item_is_direct(bi), "rc_delegate: delegator has already delegated: %o", b);
+  rc_delegate_item(ai, bi);
+}
+
+
 #if OPT_ALLOC_COUNT
 static void rc_remove(Obj r) {
   RC_BII bii = rc_get_BII(r);
   if (rc_item_is_direct(bii.item)) {
-    if (bii.item->c == (1<<1) + 1) { // expected.
+    Uns count = bii.item->c >> 1;
+    if (count == 1) { // expected.
       rc_bucket_remove(bii.bucket, bii.index);
     } else { // leak.
-      errFL("rc_remove: detected leaked object: " fmt_obj_dealloc_preserve, r);
+      errFL("rc_remove: leak with rc: %u; " fmt_obj_dealloc_preserve, count, r);
     }
   } else {
     errFL("rc_remove: item has an indirect count: " fmt_obj_dealloc_preserve, r);
@@ -276,6 +285,7 @@ static Uns rc_get(Obj o) {
 
 static Obj rc_ret(Obj o) {
   // increase the object's retain count by one.
+  assert(!is(o, obj0));
   counter_inc(obj_counter_index(o));
   if (obj_is_val(o)) return o;
   RC_item* item = rc_get_item(o);
@@ -293,13 +303,16 @@ static void rc_rel(Obj o) {
   // decrease the object's retain count by one, or deallocate it.
   assert(!is(o, obj0));
   do {
-    counter_dec(obj_counter_index(o));
-    if (obj_is_val(o)) return;
+    if (obj_is_val(o)) {
+      counter_dec(obj_counter_index(o));
+      return;
+    }
     RC_BII bii = rc_get_BII(o);
     if (!bii.item) {
       // cycle deallocation is complete, and we have arrived at an already-deallocated member.
       return;     
     }
+    counter_dec(obj_counter_index(o));
     RC_item* item = rc_resolve_item(bii.item);
     if (item->c == (1<<1) + 1) { // count == 1.
       rc_bucket_remove(bii.bucket, bii.index); // removes original item, not resolved.

@@ -137,42 +137,6 @@ static Obj host_el(Trace* trace, Obj env) {
 }
 
 
-static Obj host_init_el(Trace* trace, Obj env) {
-  GET_ABC;
-  exc_check(obj_is_struct(a), "init-el requires arg 1 to be a Mem; received: %o", a);
-  exc_check(obj_is_int(b), "init-el requires arg 2 to be an Int; received: %o", b);
-  Int i = int_val(b);
-  Mem m = struct_mem(a);
-  exc_check(i >= 0 && i < m.len, "init-el index out of range; index: %i; len: %i", i, m.len);
-  Obj old = m.els[i];
-  exc_check(is(old, s_UNINIT), "init-el found element %i is already initialized: %o", i, a);
-  rc_rel_val(old);
-  exc_check(rc_get(c) > 1, "init-el must not have sole ownership of argument 3: %o", c);
-  m.els[i] = c; // a acquires c without calling rc_ret, thereby creating a 'weak' ref.
-  counter_inc(obj_counter_index(c)); // for the purpose of balancing counters.
-  return rc_ret(a);
-}
-
-
-static Obj host_cycle_pair(Trace* trace, Obj env) {
-  // owns elements of args.
-  // a is the delegate item (the conceptual root of the cycle);
-  // b is the delegator item (the auxiliary object).
-  // the ref from a to b is described as the 'forward reference';
-  // b -> a is the 'back reference', although both are simple references semantically.
-  // b -> a MUST be formed using init-el.
-  GET_AB;
-  exc_check(obj_is_struct(a), "cycle-pair requires arg 1 to be a Struct; received: %o", a);
-  exc_check(obj_is_struct(b), "cycle-pair requires arg 2 to be a Struct; received: %o", b);
-
-  RC_item* ai = rc_resolve_item(rc_get_item(a));
-  RC_item* bi = rc_get_item(b);
-  exc_check(rc_item_is_direct(bi), "cycle-pair arg 2 (delegator) has already delegated: %o", b);
-  rc_delegate_item(ai, bi);
-  return rc_ret(a);
-}
-
-
 static Obj host_slice(Trace* trace, Obj env) {
   GET_ABC;
   exc_check(obj_is_struct(a), "el requires arg 1 to be a Struct; received: %o", a);
@@ -356,8 +320,6 @@ static Obj host_init(Obj env) {
   DEF_FH(1, "mlen", host_mlen);
   DEF_FH(2, "field", host_field);
   DEF_FH(2, "el", host_el);
-  DEF_FH(3, "init-el", host_init_el);
-  DEF_FH(2, "cycle-pair", host_cycle_pair);
   DEF_FH(3, "slice", host_slice);
   DEF_FH(2, "prepend", host_prepend);
   DEF_FH(2, "append", host_append);
