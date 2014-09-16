@@ -124,6 +124,12 @@ static RC_bucket* rc_bucket_ptr(Obj r) {
 
 static void rc_bucket_append(RC_bucket* b, Obj r, Uns c) {
   assert(b->len <= b->cap);
+#if DEBUG // check that r is not already in b.
+  for_in(i, b->len) {
+    RC_item* item = b->items + i;
+    assert(!is(item->r, r));
+  }
+#endif
   if (b->len == b->cap) { // grow.
     b->cap = (b->cap ? b->cap * 2 : min_rc_len_bucket);
     b->items = raw_realloc(b->items, size_RC_item * b->cap, ci_RC_bucket);
