@@ -156,7 +156,7 @@ static void mem_dealloc(Mem m) {
 
 
 
-static void mem_release_dealloc(Mem m) {
+static void mem_rel_dealloc(Mem m) {
   mem_rel_no_clear(m);
   mem_dealloc_no_clear(m);
 }

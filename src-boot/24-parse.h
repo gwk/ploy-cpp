@@ -115,7 +115,7 @@ static Bool parser_has_next_expr(Parser* p) {
 static Obj parse_expr(Parser* p);
 
 static Mem parse_exprs(Parser* p, Char term) {
-  // caller must call mem_release_dealloc or mem_dealloc on returned Mem.
+  // caller must call mem_rel_dealloc or mem_dealloc on returned Mem.
   // term is a the expected terminator character (e.g. closing paren).
   Array a = array0;
   while (parser_has_next_expr(p)) {
@@ -128,7 +128,7 @@ static Mem parse_exprs(Parser* p, Char term) {
     array_append(&a, o);
   }
   if (p->e) {
-    mem_release_dealloc(a.mem);
+    mem_rel_dealloc(a.mem);
     return mem0;
   }
   return a.mem;
@@ -409,7 +409,7 @@ static Bool parse_terminator(Parser* p, Char t) {
 
 #define P_CONSUME_TERMINATOR(t) \
 if (p->e || !parse_terminator(p, t)) { \
-  mem_release_dealloc(m); \
+  mem_rel_dealloc(m); \
   return obj0; \
 }
 
@@ -552,7 +552,7 @@ static Obj parse_src(Str path, Str src, Chars* e) {
     o = obj0;
   } else if (p.sp.pos != p.src.len) {
     o = parse_error(&p, "parsing terminated early");
-    mem_release_dealloc(m);
+    mem_rel_dealloc(m);
   } else {
     o = struct_new_M(rc_ret(t_Mem_Expr), m);
     mem_dealloc(m);
