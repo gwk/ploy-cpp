@@ -251,10 +251,10 @@ static void rc_remove(Obj r) {
     if (bii.item->c == (1<<1) + 1) { // expected.
       rc_bucket_remove(bii.bucket, bii.index);
     } else { // leak.
-      errFL("rc_remove: detected leaked object: %p", r);
+      errFL("rc_remove: detected leaked object: " fmt_obj_dealloc_preserve, r);
     }
   } else {
-    errFL("rc_remove: item has an indirect count: %p", r);
+    errFL("rc_remove: item has an indirect count: " fmt_obj_dealloc_preserve, r);
   }
 }
 #endif

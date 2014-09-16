@@ -99,10 +99,13 @@ int main(int argc, Chars_const argv[]) {
 #if OPT_ALLOC_COUNT
   // cleanup in reverse order.
   rc_rel(env);
-  mem_release_dealloc(sources.mem);
-  mem_release_dealloc(global_sym_names.mem);
+  // release but do not clear to facilitate debugging during type_cleanup.
+  mem_rel_no_clear(sources.mem);
+  mem_rel_no_clear(global_sym_names.mem);
   type_cleanup();
   rc_cleanup();
+  mem_dealloc_no_clear(sources.mem);
+  mem_dealloc_no_clear(global_sym_names.mem);
   counter_stats(should_log_stats);
 #endif
 

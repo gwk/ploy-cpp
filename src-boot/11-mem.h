@@ -121,24 +121,42 @@ static void mem_realloc(Mem* m, Int len) {
 }
 
 
-static void mem_dealloc(Mem m) {
-  // dealloc m but do not release the elements, which must have been previously moved.
-#if OPT_MEM_ZERO
+static void mem_rel_no_clear(Mem m) {
+  // release all elements without clearing them; useful for debugging final teardown.
   it_mem(it, m) {
-    assert(it->u == obj0.u);
+    rc_rel(*it);
   }
-#endif
-  raw_dealloc(m.els, ci_Mem);
 }
 
 
-static void mem_release_dealloc(Mem m) {
-  // release all elements and dealloc m.
+UNUSED_FN static void mem_rel(Mem m) {
   it_mem(it, m) {
     rc_rel(*it);
 #if OPT_MEM_ZERO
     *it = obj0;
 #endif
   }
-  mem_dealloc(m);
+}
+
+
+static void mem_dealloc_no_clear(Mem m) {
+  raw_dealloc(m.els, ci_Mem);
+}
+
+
+static void mem_dealloc(Mem m) {
+  // elements must have been previously moved or cleared.
+#if OPT_MEM_ZERO
+  it_mem(it, m) {
+    assert(is(*it, obj0));
+  }
+#endif
+  mem_dealloc_no_clear(m);
+}
+
+
+
+static void mem_release_dealloc(Mem m) {
+  mem_rel_no_clear(m);
+  mem_dealloc_no_clear(m);
 }
