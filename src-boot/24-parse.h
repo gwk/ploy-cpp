@@ -305,12 +305,12 @@ static Obj parse_unq(Parser* p) {
 }
 
 
-static Obj parse_eval(Parser* p) {
+static Obj parse_bang(Parser* p) {
   assert(PC == '!');
   P_ADV(1);
   Obj o = parse_sub_expr(p);
   if (p->e) return obj0;
-  return struct_new1(rc_ret(t_Eval), o);
+  return struct_new1(rc_ret(t_Bang), o);
 }
 
 
@@ -495,7 +495,7 @@ static Obj parse_expr_dispatch(Parser* p) {
     case '`':   return parse_quo(p);
     case '~':   return parse_qua(p);
     case ',':   return parse_unq(p);
-    case '!':   return parse_eval(p);
+    case '!':   return parse_bang(p);
     case '\'':  return parse_data(p, '\'');
     case '"':   return parse_data(p, '"');
     case '#':   return parse_comment(p);

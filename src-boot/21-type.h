@@ -28,7 +28,7 @@ T(Unq,              struct1, "expr", t_Expr) \
 T(Qua,              struct1, "expr", t_Expr) \
 T(Expand,           mem, t_Expr) \
 T(Comment,          struct2, "is-expr", t_Bool, "val", t_Expr) \
-T(Eval,             struct1, "expr", t_Expr) \
+T(Bang,             struct1, "expr", t_Expr) \
 T(Quo,              struct1, "expr", t_Expr) \
 T(Do,               mem, t_Expr) \
 T(Scope,            struct1, "expr", t_Expr) \
@@ -201,7 +201,7 @@ static Obj type_kind_init_union_expr() {
     rc_ret(t_Int),
     rc_ret(t_Sym),
     rc_ret(t_Data),
-    rc_ret(t_Eval),
+    rc_ret(t_Bang),
     rc_ret(t_Quo),
     rc_ret(t_Do),
     rc_ret(t_Scope),

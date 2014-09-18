@@ -11,5 +11,5 @@ x # 0
 ~{:Mem-Expr x ,x `x `,x ~x ~,x ~,,x ~~,,x ~~,,,x}
 ##`{:Mem-Expr x 0 `x `0 ~x ~,x ~,0 ~~,,x ~~,,0}
 ~,y
-!~,y
+(RUN ~,y)
 )

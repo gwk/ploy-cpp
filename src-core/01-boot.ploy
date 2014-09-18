@@ -1,37 +1,37 @@
 # Copyright 2014 George King.
 # Permission to use this file is granted in ploy/license.txt.
 
-# macros and functions that must be bootstrapped using special syntax.
-# the !{:...} idiom is used to construct and run special forms directly,
+# macros and functions that must be bootstrapped using special syntax,
 # before the idiomatic form macros are defined.
 # once available, the form macros are used;
 # they provide a layer of abstraction between ploy code and the exact evaluation semantics.
 
-!{:Bind
-  false # immutable binding.
-  `macro # symbol to bind.
-  # the 'macro' macro defines a new macro in the current environment.
-  # because we cannot use macro to define itself, we must define it using raw forms.
-  # note the structural similarity between the outer Fn form and the inner struct literal.
-  {:Fn # Fn creates both functions and macros.
-    `macro # the sym for this macro is `macro.
-    true # is-native.
-    true # is-macro.
-    `[-sym -pars &body] # the parameter list, which does not get evaluated.
-    nil # ret.
-    `{:Bind # the body of the 'macro' macro is a Bind form.
-      false # immutable.
-      sym # the sym parameter that the macro to be created is bound to (not `macro).
-      {:Fn # the value of the binding is created by evaluating the FN form;
-        # note that this inner FN is inside a vec literal;
-        # when the 'macro' macro is expanded, the literal is evaluated,
-        # and a {FN ...} form is the resulting code vector.
-        sym
-        true
-        true
-        pars
-        nil # unspecified ret type.
-        (_boot-mk-do body)}}}}
+(RUN # special call form to run the argument as code in the current environment.
+  {:Bind
+    false # immutable binding.
+    `macro # symbol to bind.
+    # the 'macro' macro defines a new macro in the current environment.
+    # because we cannot use macro to define itself, we must define it using raw forms.
+    # note the structural similarity between the outer Fn form and the inner struct literal.
+    {:Fn # Fn creates both functions and macros.
+      `macro # the sym for this macro is `macro.
+      true # is-native.
+      true # is-macro.
+      `[-sym -pars &body] # the parameter list, which does not get evaluated.
+      nil # ret.
+      `{:Bind # the body of the 'macro' macro is a Bind form.
+        false # immutable.
+        sym # the sym parameter that the macro to be created is bound to (not `macro).
+        {:Fn # the value of the binding is created by evaluating the FN form;
+          # note that this inner FN is inside a vec literal;
+          # when the 'macro' macro is expanded, the literal is evaluated,
+          # and a {FN ...} form is the resulting code vector.
+          sym
+          true
+          true
+          pars
+          nil # unspecified ret type.
+          (_boot-mk-do body)}}}})
 
 # define macros to wrap the special forms.
 

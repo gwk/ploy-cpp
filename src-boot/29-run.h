@@ -41,24 +41,6 @@ static Step run_sym(Trace* trace, Obj env, Obj code) {
 }
 
 
-static Step run(Int d, Trace* trace, Obj env, Obj code);
-
-static Step run_Eval(Int d, Trace* trace, Obj env, Obj code) {
-  // owns env.
-  Mem m = struct_mem(code);
-  exc_check(m.len == 1, "Env requires 1 field; received %i", m.len);
-  Obj expr = m.els[0];
-  Step step = run(d, trace, env, expr);
-  env = step.res.env;
-  Obj dyn_code = step.res.val;
-  // for now, perform a non-TCO run so that we do not have to retain dyn_code.
-  // TODO: TCO?
-  step = run(d, trace, env, dyn_code);
-  rc_rel(dyn_code);
-  return step;
-}
-
-
 static Step run_Quo(Int d, Trace* trace, Obj env, Obj code) {
   // owns env.
   Mem m = struct_mem(code);
@@ -66,6 +48,8 @@ static Step run_Quo(Int d, Trace* trace, Obj env, Obj code) {
   return mk_res(env, rc_ret(m.els[0]));
 }
 
+
+static Step run(Int depth, Trace* parent_trace, Obj env, Obj code);
 
 static Step run_Do(Int d, Trace* trace, Obj env, Obj code) {
   // owns env.
@@ -444,6 +428,22 @@ static Step run_call_accessor(Int d, Trace* trace, Obj env, Obj call, Obj access
 }
 
 
+static Step run_call_RUN(Int d, Trace* trace, Obj env, Obj call) {
+  // owns env.
+  Mem args = mem_next(struct_mem(call));
+  exc_check(args.len == 1, "call: %o\n:RUN requires 1 argument");
+  Obj expr = args.els[0];
+  Step step = run(d, trace, env, expr);
+  env = step.res.env;
+  Obj dyn_code = step.res.val;
+  // for now, perform a non-TCO run so that we do not have to retain dyn_code.
+  // TODO: TCO?
+  step = run(d, trace, env, dyn_code);
+  rc_rel(dyn_code);
+  return step;
+}
+
+
 static Step run_Call(Int d, Trace* trace, Obj env, Obj code) {
   // owns env.
   Mem m = struct_mem(code);
@@ -457,9 +457,13 @@ static Step run_Call(Int d, Trace* trace, Obj env, Obj code) {
   switch (ti) {
     case ti_Func:     return run_call_func(d, trace, env, code, callee, true);
     case ti_Accessor: return run_call_accessor(d, trace, env, code, callee);
-    default:
-      exc_raise("object is not callable: %o", callee);
+    case ti_Sym:
+      rc_rel_val(callee);
+      switch (sym_index(callee)) {
+        case si_RUN: return run_call_RUN(d, trace, env, code);
+      }
   }
+  exc_raise("object is not callable: %o", callee);
 }
 
 
@@ -505,7 +509,6 @@ static Step run_step_disp(Int d, Trace* trace, Obj env, Obj code) {
     case ti_Accessor:
     case ti_Mutator:
       return mk_res(env, rc_ret(code)); // self-evaluating.
-    RUN(Eval);
     RUN(Quo);
     RUN(Do);
     RUN(Scope);

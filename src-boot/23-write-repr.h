@@ -46,7 +46,7 @@ static void write_repr_Env(CFile f, Obj env, Bool is_quoted, Int depth, Set* set
 
 static void write_repr_obj(CFile f, Obj o, Bool is_quoted, Int depth, Set* set);
 
-static void write_repr_Eval(CFile f, Obj e, Bool is_quoted, Int depth, Set* set) {
+static void write_repr_Bang(CFile f, Obj e, Bool is_quoted, Int depth, Set* set) {
   assert(struct_len(e) == 1);
   if (!is_quoted) {
     fputc('`', f);
@@ -165,7 +165,7 @@ static Bool write_repr_is_quotable(Obj o) {
   Obj type = ref_type(o);
   if (is(type, t_Data) || is(type, t_Env)) return true; // env does not have true repr.
   assert(ref_is_struct(o));
-  if (!(is(type, t_Eval)
+  if (!(is(type, t_Bang)
     || is(type, t_Quo)
     || is(type, t_Qua)
     || is(type, t_Unq)
@@ -199,7 +199,7 @@ static void write_repr_dispatch(CFile f, Obj s, Bool is_quoted, Int depth, Set* 
     write_repr_default(f, s, is_quoted, depth, set);
     return;
   }
-  DISP(Eval);
+  DISP(Bang);
   DISP(Quo);
   DISP(Qua);
   DISP(Unq);
