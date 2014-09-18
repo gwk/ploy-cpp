@@ -428,6 +428,43 @@ static Step run_call_accessor(Int d, Trace* trace, Obj env, Obj call, Obj access
 }
 
 
+static Step run_call_mutator(Int d, Trace* trace, Obj env, Obj call, Obj mutator) {
+  // owns env, mutator.
+  Mem args = mem_next(struct_mem(call));
+  Mem m = struct_mem(mutator);
+  assert(m.len == 1);
+  Obj name = m.els[0];
+  exc_check(obj_is_sym(name), "call: %o\nmutator is not a sym: %o", call, name);
+  exc_check(args.len == 2, "call: %o\nmutator requires 2 arguments");
+  Obj mutatee_expr = args.els[0];
+  Obj val_expr = args.els[1];
+  Step step = run(d, trace, env, mutatee_expr);
+  env = step.res.env;
+  Obj mutatee = step.res.val;
+  step = run(d, trace, env, val_expr);
+  env = step.res.env;
+  Obj val = step.res.val;
+  exc_check(obj_is_struct(mutatee), "call: %o\nmutatee is not a struct: %o", call, mutatee);
+  Obj type = obj_type(mutatee);
+  assert(is(obj_type(type), t_Type));
+  Obj type_kind = struct_el(type, 1);
+  Mem pars = struct_mem(type_kind);
+  Mem fields = struct_mem(mutatee);
+  assert(pars.len == fields.len);
+  for_in(i, pars.len) {
+    Obj par = pars.els[i];
+    Obj par_name = struct_el(par, 0);
+    if (is(par_name, name)) {
+      rc_rel(fields.els[i]);
+      fields.els[i] = val;
+      rc_rel(mutator);
+      return mk_res(env, mutatee);
+    }
+  }
+  exc_raise("call: %o\nmutator field not found: %o", call, name);
+}
+
+
 static Step run_call_RUN(Int d, Trace* trace, Obj env, Obj call) {
   // owns env.
   Mem args = mem_next(struct_mem(call));
@@ -457,6 +494,7 @@ static Step run_Call(Int d, Trace* trace, Obj env, Obj code) {
   switch (ti) {
     case ti_Func:     return run_call_func(d, trace, env, code, callee, true);
     case ti_Accessor: return run_call_accessor(d, trace, env, code, callee);
+    case ti_Mutator:  return run_call_mutator(d, trace, env, code, callee);
     case ti_Sym:
       rc_rel_val(callee);
       switch (sym_index(callee)) {
