@@ -419,17 +419,17 @@ static Step run_call_accessor(Int d, Trace* trace, Obj env, Obj call, Obj access
   assert(m.len == 1);
   Obj name = m.els[0];
   exc_check(obj_is_sym(name), "call: %o\naccessor is not a sym: %o", call, name);
+  exc_check(args.len == 1, "call: %o\naccessor requires 1 argument");
   Obj accessee_expr = args.els[0];
   Step step = run(d, trace, env, accessee_expr);
   env = step.res.env;
   Obj accessee = step.res.val;
   exc_check(obj_is_struct(accessee), "call: %o\naccessee is not a struct: %o", call, accessee);
   Obj type = obj_type(accessee);
-  exc_check(is(obj_type(type), t_Type), "call: %o\nbad type: %o", call, type);
+  assert(is(obj_type(type), t_Type));
   Obj type_kind = struct_el(type, 1);
   Mem pars = struct_mem(type_kind);
-  Mem fields = struct_mem(accessee); DBG_VAR(fields);
-  assert(pars.len == fields.len);
+  assert(pars.len == struct_len(accessee));
   for_in(i, pars.len) {
     Obj par = pars.els[i];
     Obj par_name = struct_el(par, 0);
@@ -440,7 +440,7 @@ static Step run_call_accessor(Int d, Trace* trace, Obj env, Obj call, Obj access
       return mk_res(env, val);
     }
   }
-  exc_raise("call: %o\nstruct field not found: %o", call, name);
+  exc_raise("call: %o\naccessor field not found: %o", call, name);
 }
 
 
