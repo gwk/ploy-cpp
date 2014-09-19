@@ -56,10 +56,12 @@ T(Type_kind,        union_type_kind) \
 T(Type_kind_unit,   unit) \
 T(Type_kind_prim,   unit) \
 T(Type_kind_mem,    struct1, "el-type", t_Type) \
-T(Type_kind_struct, mem, t_Par) \
+T(Type_kind_struct, struct2, "fields", t_Mem_Par, "applicator", t_Applicator) \
 T(Type_kind_union,  mem, t_Type) \
 T(Type_kind_class,  unit) \
 T(Type_kind_var,    struct1, "name", t_Sym) \
+T(Applicator,       class_applicator) \
+
 
 // type indices for the basic types allow us to dispatch on type using a single index value,
 // rather than multiple pointer comparisons.
@@ -148,27 +150,36 @@ static Obj type_kind_init_mem(Obj el_type) {
 }
 
 
+static Obj type_kind_struct(Obj fields) {
+  // owns fields.
+  // all structs start with a nil applicator.
+  return struct_new2(rc_ret(t_Type_kind_struct), fields, rc_ret_val(s_nil));
+}
+
+
 static Obj type_kind_init_struct1(Chars_const n0, Obj t0) {
-  return struct_new1(rc_ret(t_Type_kind_struct), par_new(n0, t0));
+  return type_kind_struct(struct_new1(rc_ret(t_Mem_Par),
+    par_new(n0, t0)));
 }
 
 
 static Obj type_kind_init_struct2(Chars_const n0, Obj t0, Chars_const n1, Obj t1) {
-  return struct_new2(rc_ret(t_Type_kind_struct), par_new(n0, t0), par_new(n1, t1));
+  return type_kind_struct(struct_new2(rc_ret(t_Mem_Par),
+    par_new(n0, t0), par_new(n1, t1)));
 }
 
 
 static Obj type_kind_init_struct3(Chars_const n0, Obj t0, Chars_const n1, Obj t1,
   Chars_const n2, Obj t2) {
-  return struct_new3(rc_ret(t_Type_kind_struct),
-    par_new(n0, t0), par_new(n1, t1), par_new(n2, t2));
+  return type_kind_struct(struct_new3(rc_ret(t_Mem_Par),
+    par_new(n0, t0), par_new(n1, t1), par_new(n2, t2)));
 }
 
 
 static Obj type_kind_init_struct4(Chars_const n0, Obj t0, Chars_const n1, Obj t1,
   Chars_const n2, Obj t2, Chars_const n3, Obj t3) {
-  return struct_new4(rc_ret(t_Type_kind_struct),
-    par_new(n0, t0), par_new(n1, t1), par_new(n2, t2), par_new(n3, t3));
+  return type_kind_struct(struct_new4(rc_ret(t_Mem_Par),
+    par_new(n0, t0), par_new(n1, t1), par_new(n2, t2), par_new(n3, t3)));
 }
 
 
@@ -233,6 +244,11 @@ static Obj type_kind_init_class_obj() {
 
 
 static Obj type_kind_init_class_bool() {
+  return type_unit(t_Type_kind_class);
+}
+
+
+static Obj type_kind_init_class_applicator() {
   return type_unit(t_Type_kind_class);
 }
 

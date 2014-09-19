@@ -411,13 +411,14 @@ static Step run_call_accessor(Int d, Trace* trace, Obj env, Obj call, Obj access
   exc_check(obj_is_struct(accessee), "call: %o\naccessee is not a struct: %o", call, accessee);
   Obj type = obj_type(accessee);
   assert(is(obj_type(type), t_Type));
-  Obj type_kind = struct_el(type, 1);
-  Mem pars = struct_mem(type_kind);
-  assert(pars.len == struct_len(accessee));
-  for_in(i, pars.len) {
-    Obj par = pars.els[i];
-    Obj par_name = struct_el(par, 0);
-    if (is(par_name, name)) {
+  Obj kind = struct_el(type, 1);
+  Obj fields = struct_el(kind, 0);
+  Mem m_fields = struct_mem(fields);
+  assert(m_fields.len == struct_len(accessee));
+  for_in(i, m_fields.len) {
+    Obj field = m_fields.els[i];
+    Obj field_name = struct_el(field, 0);
+    if (is(field_name, name)) {
       Obj val = rc_ret(struct_el(accessee, i));
       rc_rel(accessor);
       rc_rel(accessee);
@@ -447,16 +448,17 @@ static Step run_call_mutator(Int d, Trace* trace, Obj env, Obj call, Obj mutator
   exc_check(obj_is_struct(mutatee), "call: %o\nmutatee is not a struct: %o", call, mutatee);
   Obj type = obj_type(mutatee);
   assert(is(obj_type(type), t_Type));
-  Obj type_kind = struct_el(type, 1);
-  Mem pars = struct_mem(type_kind);
-  Mem fields = struct_mem(mutatee);
-  assert(pars.len == fields.len);
-  for_in(i, pars.len) {
-    Obj par = pars.els[i];
-    Obj par_name = struct_el(par, 0);
-    if (is(par_name, name)) {
-      rc_rel(fields.els[i]);
-      fields.els[i] = val;
+  Obj kind = struct_el(type, 1);
+  Obj fields = struct_el(kind, 0);
+  Mem m_fields = struct_mem(fields);
+  assert(m_fields.len == struct_len(mutatee));
+  for_in(i, m_fields.len) {
+    Obj field = m_fields.els[i];
+    Obj field_name = struct_el(field, 0);
+    if (is(field_name, name)) {
+      Mem mutatee_fields = struct_mem(mutatee);
+      rc_rel(mutatee_fields.els[i]);
+      mutatee_fields.els[i] = val;
       rc_rel(mutator);
       return mk_res(env, mutatee);
     }
