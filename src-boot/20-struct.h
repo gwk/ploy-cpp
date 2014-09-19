@@ -13,7 +13,7 @@ DEF_SIZE(Struct);
 
 static Obj struct_new_raw(Obj type, Int len) {
   // owns type.
-  Obj s = ref_new(size_Struct + (size_Obj * len), type, false);
+  Obj s = ref_new(size_Struct + (size_Obj * len), type);
   s.s->len = len;
   return s;
 }

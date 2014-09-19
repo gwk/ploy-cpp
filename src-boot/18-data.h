@@ -46,7 +46,7 @@ static Str data_str(Obj d) {
 
 
 static Obj data_new_empty(Int len) {
-  Obj d = ref_new(size_Data + len, rc_ret(t_Data), false);
+  Obj d = ref_new(size_Data + len, rc_ret(t_Data));
   d.d->len = len;
   return d; // borrowed.
 }

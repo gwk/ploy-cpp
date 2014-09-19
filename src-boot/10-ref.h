@@ -6,34 +6,14 @@
 #include "09-rc.h"
 
 
-typedef enum {
-  rt_mutable_bit = 1 << 0,
-} Ref_tag;
-
-
 struct _Ref_head {
-  Obj tagged_type;
+  Obj type;
 };
 
 
 static Obj ref_type(Obj r) {
   assert_valid_ref(r);
-  Obj t = r.h->tagged_type;
-  t.u &= ~cast(Uns, rt_mutable_bit); // mask off the mutable bit.
-  return t;
-}
-
-
-static Bool ref_is_mutable(Obj r) {
-  assert_valid_ref(r);
-  Obj type = r.h->tagged_type;
-  return type.u & rt_mutable_bit; // get the mutable bit.
-}
-
-
-UNUSED_FN static void ref_freeze(Obj r) {
-  assert_valid_ref(r);
-  r.h->tagged_type.u &= ~cast(Uns, rt_mutable_bit); // unset the mutable bit.
+  return r.h->type;
 }
 
 
@@ -61,30 +41,14 @@ static Bool ref_is_type(Obj r) {
 }
 
 
-static Obj ref_alloc(Int size) {
+static Obj ref_new(Int size, Obj type) {
   assert(size >= size_Word * 2);
   counter_inc(ci_Ref_rc); // ret/rel counter.
   Obj r = (Obj){.r=raw_alloc(size, ci_Ref_alloc)}; // alloc counter also incremented.
   assert(!obj_tag(r)); // check that alloc is sufficiently aligned for pointer tagging.
   rc_insert(r);
+  r.h->type = type;
   return r;
-}
-
-
-static Obj ref_init(Obj r, Obj type, Bool is_mutable) {
-  // owns type,
-  assert_valid_ref(r);
-  r.h->tagged_type = type;
-  if (is_mutable) {
-    r.h->tagged_type.u |= rt_mutable_bit; // set the mutable bit.
-  }
-  return r;
-}
-
-
-static Obj ref_new(Int size, Obj type, Bool is_mutable) {
-  // owns type.
-  return ref_init(ref_alloc(size), type, is_mutable);
 }
 
 

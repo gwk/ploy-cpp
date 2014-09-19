@@ -11,6 +11,8 @@
 
 struct _Env {
   Ref_head head;
+  Bool is_var;
+  Char padding[7];
   Obj key; // ENV_FRAME_KEY for frame.
   Obj val; // ENV_FRAME_VAL for frame.
   Obj tl;
@@ -26,11 +28,12 @@ static Obj env_rel_fields(Obj o) {
 }
 
 
-static Obj env_new(Bool is_mutable, Obj key, Obj val, Obj tl) {
+static Obj env_new(Bool is_var, Obj key, Obj val, Obj tl) {
   // owns key, val, tl.
   assert(obj_is_sym(key));
   assert(is(tl, s_ENV_END) || obj_is_env(tl));
-  Obj o = ref_new(size_Env, rc_ret(t_Env), is_mutable);
+  Obj o = ref_new(size_Env, rc_ret(t_Env));
+  o.e->is_var = is_var;
   o.e->key = key;
   o.e->val = val;
   o.e->tl = tl;
@@ -68,7 +71,7 @@ static Obj env_bind(Obj env, Bool is_mutable, Obj key, Obj val) {
     if (!is_mutable && is(k, s_ENV_FRAME_KEY)) { // frame boundary; check is complete.
       break;
     } else if (is(k, key)) { // symbol is already bound.
-      if (is_mutable && ref_is_mutable(e)) { // mutate the mutable binding.
+      if (is_mutable && e.e->is_var) { // mutate the mutable binding.
         rc_rel(key);
         rc_rel(e.e->val);
         e.e->val = val;
