@@ -97,7 +97,7 @@ static void write_repr_Label(CFile f, Obj p, Bool is_quoted, Int depth, Set* set
   Obj expr = els[2];
   fputc('-', f);
   write_repr_obj(f, name, true, depth, set);
-  if (!is(type, s_INFER_PAR)) {
+  if (!is(type, s_nil)) {
     fputc(':', f);
     write_repr_obj(f, type, true, depth, set);
   }
@@ -118,7 +118,7 @@ static void write_repr_Variad(CFile f, Obj p, Bool is_quoted, Int depth, Set* se
   Obj type = els[1];
   fputc('&', f);
   write_repr_obj(f, expr, true, depth, set);
-  if (!is(type, s_INFER_PAR)) {
+  if (!is(type, s_nil)) {
     fputc(':', f);
     write_repr_obj(f, type, true, depth, set);
   }

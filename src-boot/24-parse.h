@@ -332,7 +332,7 @@ static Obj parse_label(Parser* p) {
       return obj0;
     }
   } else {
-    type = rc_ret_val(s_INFER_PAR);
+    type = rc_ret_val(s_nil);
   }
   Obj expr;
   if (PC == '=') {
@@ -369,7 +369,7 @@ static Obj parse_variad(Parser* p) {
       return obj0;
     }
   } else {
-    type = rc_ret_val(s_INFER_PAR);
+    type = rc_ret_val(s_nil);
   }
   return struct_new2(rc_ret(t_Variad), expr, type);
 }

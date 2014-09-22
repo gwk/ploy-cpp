@@ -97,7 +97,6 @@ S(false) \
 S(true) \
 S(INFER_STRUCT) \
 S(INFER_SEQ) \
-S(INFER_PAR) \
 S(INFER_EXPR) \
 S(RUN) \
 S(END_SPECIAL_SYMS) \
