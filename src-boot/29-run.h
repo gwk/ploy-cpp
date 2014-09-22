@@ -379,12 +379,12 @@ static Step run_call_func(Int d, Trace* trace, Obj env, Obj call, Obj func, Bool
   callee_env = e.callee_env;
   if (bool_is_true(is_native)) {
 #if OPT_TCO
-  // caller will own .env, .callee_env, but not .code.
-  return mk_tail(.env=env, .callee_env=callee_env, .code=body);
+    // caller will own .env, .callee_env, but not .code.
+    return mk_tail(.env=env, .callee_env=callee_env, .code=body);
 #else // NO TCO.
-  Step step = run(d, trace, callee_env, body); // owns callee_env.
-  rc_rel(step.res.env);
-  return mk_res(env, step.res.val); // NO TCO.
+    Step step = run(d, trace, callee_env, body); // owns callee_env.
+    rc_rel(step.res.env);
+    return mk_res(env, step.res.val); // NO TCO.
 #endif
   } else { // host function.
     exc_check(obj_is_ptr(body), "host function %o body is not a Ptr: %o", name, body);
