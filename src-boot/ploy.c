@@ -38,9 +38,8 @@ int main(int argc, Chars_const argv[]) {
   rc_init();
   type_init_table();
   sym_init(); // requires type_init_table.
-  Obj env = rc_ret_val(s_ENV_END);
-  env = env_push_frame(env);
-  env = type_init_values(env); // requires sym_init.
+  env_init();
+  Obj env = type_init_values(rc_ret(empty_env)); // requires sym_init.
   env = host_init(env);
 
   // parse arguments.
@@ -99,6 +98,7 @@ int main(int argc, Chars_const argv[]) {
 #if OPT_ALLOC_COUNT
   // cleanup in reverse order.
   rc_rel(env);
+  env_cleanup();
   // release but do not clear to facilitate debugging during type_cleanup.
   mem_rel_no_clear(sources.mem);
   mem_rel_no_clear(global_sym_names.mem);

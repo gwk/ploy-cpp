@@ -49,18 +49,19 @@ T(Syn_struct,       mem, t_Expr) \
 T(Syn_seq,          mem, t_Expr) \
 T(Obj,              class_obj) \
 T(Bool,             class_bool) \
-T(Mem_Obj,          mem, t_Obj) \
+T(Mem_Type,         mem, t_Type) \
 T(Mem_Par,          mem, t_Par) \
+T(Mem_Obj,          mem, t_Obj) \
 T(Mem_Expr,         mem, t_Expr) \
 T(Type_kind,        union_type_kind) \
 T(Type_kind_unit,   unit) \
 T(Type_kind_prim,   unit) \
 T(Type_kind_mem,    struct1, "el-type", t_Type) \
-T(Type_kind_struct, struct2, "fields", t_Mem_Par, "applicator", t_Applicator) \
+T(Type_kind_struct, struct2, "fields", t_Mem_Par, "dispatcher", t_Dispatcher) \
 T(Type_kind_union,  mem, t_Type) \
 T(Type_kind_class,  unit) \
 T(Type_kind_var,    struct1, "name", t_Sym) \
-T(Applicator,       class_applicator) \
+T(Dispatcher,       class_dispatcher) \
 
 
 // type indices for the basic types allow us to dispatch on type using a single index value,
@@ -90,9 +91,8 @@ static Obj type_for_index(Type_index ti) {
 }
 
 
-static Type_index type_index(Obj t) {
+static Int type_index(Obj t) {
   Int ti = t.t - type_table;
-  assert_valid_type_index(ti);
   return cast(Type_index, ti);
 }
 
@@ -105,7 +105,7 @@ static Obj type_name(Obj t) {
 }
 
 
-UNUSED_FN static Obj type_kind(Obj t) {
+static Obj type_kind(Obj t) {
   assert(obj_is_type(t));
   Obj kind = struct_el(t, 1);
   return kind;
@@ -152,7 +152,7 @@ static Obj type_kind_init_mem(Obj el_type) {
 
 static Obj type_kind_struct(Obj fields) {
   // owns fields.
-  // all structs start with a nil applicator.
+  // all structs start with a nil dispatcher.
   return struct_new2(rc_ret(t_Type_kind_struct), fields, rc_ret_val(s_nil));
 }
 
@@ -248,7 +248,7 @@ static Obj type_kind_init_class_bool() {
 }
 
 
-static Obj type_kind_init_class_applicator() {
+static Obj type_kind_init_class_dispatcher() {
   return type_unit(t_Type_kind_class);
 }
 

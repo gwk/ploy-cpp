@@ -88,3 +88,19 @@ static Obj env_bind(Obj env, Bool is_mutable, Obj key, Obj val) {
   return env_new(is_mutable, key, val, env);
 }
 
+
+static Obj empty_env;
+
+static void env_init() {
+  empty_env = env_push_frame(rc_ret_val(s_ENV_END));
+}
+
+
+#if OPT_ALLOC_COUNT
+static void env_cleanup() {
+  rc_rel(empty_env);
+  empty_env = obj0;
+}
+#endif
+
+

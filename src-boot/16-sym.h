@@ -105,6 +105,9 @@ S(self) \
 S(a) \
 S(b) \
 S(c) \
+S(callee) \
+S(types) \
+
 
 // sym indices.
 #define S(s) si_##s,

@@ -439,6 +439,35 @@ static Step run_call_RUN(Int d, Trace* trace, Obj env, Obj call, Mem vals) {
 }
 
 
+static Step run_Call_disp(Int d, Trace* trace, Obj env, Obj code, Mem vals);
+static Step run_tail(Int d, Trace* parent_trace, Step step);
+
+static Step run_call_dispatcher(Int d, Trace* trace, Obj env, Obj call, Mem vals,
+  Obj dispatcher) {
+  // owns env, vals.
+  Obj callee = mem_el_ret(vals, 0);
+  Int types_len = (vals.len - 1) / 2;
+  Obj types = struct_new_raw(rc_ret(t_Mem_Type), types_len);
+  Mem m_types = struct_mem(types);
+  for_in(i, types_len) {
+    Obj val = mem_el(vals, i * 2 + 2);
+    mem_put(m_types, i, rc_ret(obj_type(val)));
+  }
+  Mem disp_vals = mem_alloc(5);
+  mem_put(disp_vals, 0, rc_ret(dispatcher));
+  mem_put(disp_vals, 1, s_callee);
+  mem_put(disp_vals, 2, callee);
+  mem_put(disp_vals, 3, s_types);
+  mem_put(disp_vals, 4, types);
+  Step step = run_Call_disp(d, trace, env, call, disp_vals);
+  step = run_tail(d, trace, step);
+  env = step.res.env;
+  rc_rel(callee); // vals 0.
+  mem_put(vals, 0, step.res.val);
+  return run_Call_disp(d, trace, env, call, vals);
+}
+
+
 static Step run_Call(Int d, Trace* trace, Obj env, Obj code) {
   // owns env.
   Mem m_code = struct_mem(code);
@@ -470,9 +499,14 @@ static Step run_Call(Int d, Trace* trace, Obj env, Obj code) {
       env = step.res.env;
     }
   }
+  return run_Call_disp(d, trace, env, code, vals);
+}
+
+
+static Step run_Call_disp(Int d, Trace* trace, Obj env, Obj code, Mem vals) {
   Obj callee = mem_el(vals, 0);
   Obj type = obj_type(callee);
-  Int ti = type_index(type); //  cast to Int c type avoids incomplete enum switch error.
+  Int ti = type_index(type); // Int type avoids incomplete enum switch error.
   switch (ti) {
     case ti_Func:     return run_call_func(d, trace, env, code, vals, true);
     case ti_Accessor: return run_call_accessor(d, trace, env, code, vals);
@@ -481,6 +515,14 @@ static Step run_Call(Int d, Trace* trace, Obj env, Obj code) {
       switch (sym_index(callee)) {
         case si_RUN: return run_call_RUN(d, trace, env, code, vals);
       }
+  }
+  Obj kind = type_kind(type);
+  if (is(obj_type(kind), t_Type_kind_struct)) {
+    Obj dispatcher = struct_el(kind, 1);
+    exc_check(!is(dispatcher, s_nil), "call: %o\nobject type has nil dispatcher: %o",
+      code, type);
+    return run_call_dispatcher(d, trace, env, code, vals, dispatcher);
+
   }
   exc_raise("call: %o\nobject is not callable: %o", code, callee);
 }
@@ -521,7 +563,7 @@ static Step run_step_disp(Int d, Trace* trace, Obj env, Obj code) {
   }
   assert(ot == ot_ref);
   Obj type = ref_type(code);
-  Int ti = type_index(type); // cast to Int c type avoids incomplete enum switch error.
+  Int ti = type_index(type); // Int type avoids incomplete enum switch error.
 #define RUN(t) case ti_##t: return run_##t(d, trace, env, code)
   switch (ti) {
     case ti_Data:
