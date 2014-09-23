@@ -336,7 +336,7 @@ static Obj parse_label(Parser* p) {
   }
   Obj expr;
   if (PC == '=') {
-    P_ADV(1, return parse_error(p, "incomplete label default"));
+    P_ADV(1, return parse_error(p, "incomplete label expr"));
     expr = parse_sub_expr(p);
     if (p->e) {
       rc_rel(name);
