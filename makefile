@@ -83,6 +83,8 @@ ast: _bld/ploy-ast-list.txt _bld/ploy-ast-print.txt _bld/ploy-ast-dump.txt
 cov: _bld/ploy-cov-summary.txt
 	cat $^
 
+llvm: _bld/ploy.llvm _bld/ploy-dbg.llvm
+
 # output the useless plist to /dev/null.
 analyze: tools/cc.sh src-boot/*
 	tools/cc.sh -dbg src-boot/ploy.c --analyze -o /dev/null
