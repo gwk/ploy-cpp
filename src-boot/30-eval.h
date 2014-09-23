@@ -30,6 +30,9 @@ static Step eval_mem_expr(Obj env, Obj s) {
   }
   Int last = m.len - 1;
   it_mem_to(it, m, last) {
+    if (is(*it, s_HALT)) {
+      return mk_res(env, rc_ret_val(s_HALT));
+    }
     Step step = eval(env, *it);
     env = step.res.env;
     rc_rel(step.res.val);

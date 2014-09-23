@@ -99,6 +99,7 @@ S(INFER_STRUCT) \
 S(INFER_SEQ) \
 S(INFER_EXPR) \
 S(RUN) \
+S(HALT) \
 S(END_SPECIAL_SYMS) \
 S(self) \
 S(a) \
