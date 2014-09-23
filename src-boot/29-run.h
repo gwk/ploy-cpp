@@ -77,7 +77,7 @@ static Step run_Scope(Int d, Trace* trace, Obj env, Obj code) {
 }
 
 
-static Obj run_env_bind(Trace* trace, Bool is_mutable, Obj env, Obj key, Obj val) {
+static Obj bind_val(Trace* trace, Bool is_mutable, Obj env, Obj key, Obj val) {
   // owns env, key, val.
   Obj env1 = env_bind(env, is_mutable, key, val);
   exc_check(!is(env1, obj0), "symbol is already bound: %o", key);
@@ -98,7 +98,7 @@ static Step run_Bind(Int d, Trace* trace, Obj env, Obj code) {
     sym);
   exc_check(!sym_is_special(sym), "Bind cannot bind to special sym: %o", sym);
   Step step = run(d, trace, env, expr);
-  Obj env1 = run_env_bind(trace, bool_is_true(is_mutable), step.res.env, rc_ret_val(sym),
+  Obj env1 = bind_val(trace, bool_is_true(is_mutable), step.res.env, rc_ret_val(sym),
     rc_ret(step.res.val));
   return mk_res(env1, step.res.val);
 }
@@ -212,12 +212,6 @@ static Step run_Syn_seq_typed(Int d, Trace* trace, Obj env, Obj code) {
 }
 
 
-typedef struct {
-  Obj caller_env;
-  Obj callee_env;
-} Call_envs;
-
-
 #define UNPACK_LABEL(l) \
 Obj* l##_els = struct_els(l); \
 Obj l##_el_name = l##_els[0]; \
@@ -236,126 +230,96 @@ Obj p##_el_type = p##_els[1]; \
 Obj p##_el_dflt = p##_els[2]
 
 
-static Call_envs run_bind_par(Int d, Trace* trace, Obj env, Obj callee_env, Obj call,
-  Bool should_run_args, Obj par, Mem args, Int* i_args) {
+static Obj bind_par(Int d, Trace* trace, Obj env, Obj call, Obj par, Mem vals, Int* i_vals) {
+  // owns env.
   UNPACK_PAR(par); UNUSED_VAR(par_el_type);
-  Obj arg_expr;
-  if (*i_args < args.len) {
-    Obj arg = args.els[*i_args];
-    *i_args += 1;
-    Obj arg_type = obj_type(arg);
-    if (is(arg_type, t_Label)) {
-      UNPACK_LABEL(arg); UNUSED_VAR(arg_el_type);
-      exc_check(is(par_el_name, arg_el_name),
-        "call: %o\nparameter %o does not match argument: %o",
-        call, par_el_name, arg_el_name);
-      // TODO: check type.
-      arg_expr = arg_el_dflt;
-    } else if (is(arg_type, t_Variad)) {
-      exc_raise("call: %o\nsplat not implemented: %o", call, arg);
-    } else { // simple arg expr.
-      arg_expr = arg;
-    }
-  } else if (!is(par_el_dflt, s_void)) { // use parameter default expression.
-    arg_expr = par_el_dflt;
-  } else {
-    error("call: %o\nreceived too few arguments", call);
-  }
   Obj val;
-  if (should_run_args) {
-    Step step = run(d, trace, env, arg_expr);
+  Int i = *i_vals;
+  if (i < vals.len) {
+    Obj arg_name = mem_el_move(vals, i++);
+    Obj arg = mem_el_move(vals, i++);
+    *i_vals = i;
+    exc_check(is(arg_name, obj0) || is(par_el_name, arg_name),
+      "call: %o\nparameter: %o\ndoes not match argument label %i: %o\narg: %o",
+       call, par_el_name, i, arg_name, arg);
+    // TODO: check type.
+    val = arg;
+  } else if (!is(par_el_dflt, s_void)) { // use parameter default expression.
+    Step step = run(d, trace, env, par_el_dflt);
     env = step.res.env;
     val = step.res.val;
   } else {
-    val = rc_ret(arg_expr);
+    error("call: %o\nreceived too few arguments", call);
   }
-  callee_env = run_env_bind(trace, false, callee_env, rc_ret_val(par_el_name), val);
-  return (Call_envs){.caller_env=env, .callee_env=callee_env};
+  env = bind_val(trace, false, env, rc_ret_val(par_el_name), val);
+  return env;
 }
 
 
-static Call_envs run_bind_variad(Int d, Trace* trace, Obj env, Obj callee_env, Obj call,
-  Bool should_run_args, Obj par, Mem args, Int* i_args) {
-  // owns env (the caller env), callee_env.
-  // bind args to a variad parameter.
-  // note: it would be nice to implement this without allocating a temporary array;
-  // however i can't see how to do so while still maintaining evaluation order of arguments,
-  // because we cannot count the values in a splat argument until it has been evaluated.
-  UNPACK_PAR(par); UNUSED_VAR(par_el_type); UNUSED_VAR(par_el_dflt);
-  Array vals = array0;
-  while (*i_args < args.len) {
-    Obj arg = args.els[*i_args];
-    if (is(obj_type(arg), t_Label)) {
-      break; // terminate variad.
-    } else if (is(obj_type(arg), t_Variad)) { // splat variad argument into variad parameter.
-      UNPACK_VARIAD(arg);
-      exc_check(is(arg_el_type, s_void), "call: %o\nsplat argument %i has extraneous type: %o",
-        call, *i_args, arg);
-      exc_raise("call: %o\nvariadic splat not implemented: %o", call, arg_el_expr);
-    } else { // arg is simple (not label or variad).
-      if (should_run_args) {
-        Step step = run(d, trace, env, arg);
-        env = step.res.env;
-        array_append(&vals, step.res.val);
-      } else {
-        array_append(&vals, rc_ret(arg));
-      }
+static Obj bind_variad(Int d, Trace* trace, Obj env, Obj call, Obj par, Mem vals, Int* i_vals) {
+  // owns env.
+  UNPACK_PAR(par); UNUSED_VAR(par_el_type);
+  exc_check(is(par_el_dflt, s_void), "variad parameter has non-void default argument: %o", par);
+  Int start = *i_vals;
+  Int end = vals.len;
+  for_imns(i, start, end, 2) {
+    if (!is(mem_el(vals, i), obj0)) { // labeled arg; terminate variad.
+      end = i;
+      break;
     }
-    *i_args += 1;
   }
-  Obj variad_val = struct_new_raw(rc_ret(t_Mem_Obj), vals.mem.len); // TODO: set correct type.
-  Obj* els = struct_els(variad_val);
-  for_in(i, vals.mem.len) {
-    els[i] = mem_el_move(vals.mem, i);
+  *i_vals = end;
+  Int len = (end - start) / 2;
+  Obj vrd = struct_new_raw(rc_ret(t_Mem_Obj), len); // TODO: set correct type.
+  Mem m_vrd = struct_mem(vrd);
+  Int j = 0;
+  for_imns(i, start + 1, end, 2) {
+    Obj arg = mem_el_move(vals, i);
+    mem_put(m_vrd, j++, arg);
   }
-  mem_dealloc(vals.mem);
-  callee_env = run_env_bind(trace, false, callee_env, rc_ret_val(par_el_name), variad_val);
-  return (Call_envs){.caller_env=env, .callee_env=callee_env};
+  env = bind_val(trace, false, env, rc_ret_val(par_el_name), vrd);
+  return env;
 }
 
 
-static Call_envs run_bind_args(Int d, Trace* trace, Obj env, Obj callee_env,
-  Obj call, Obj variad, Obj pars, Mem args, Bool should_run_args) {
-  // owns env (the caller env), callee_env.
-  Mem mp = struct_mem(pars);
-  Int i_args = 0;
+static Obj run_bind_vals(Int d, Trace* trace, Obj env, Obj call, Obj variad, Obj pars,
+  Mem vals) {
+  // owns env.
+  env = bind_val(trace, false, env, rc_ret_val(s_self), mem_el_move(vals, 0));
+  Mem m_pars = struct_mem(pars);
+  Int i_vals = 1; // first name of the interleaved name/value pairs.
   Bool has_variad = false;
-  for_in(i_pars, mp.len) {
-    Obj par = mp.els[i_pars];
+  for_in(i_pars, m_pars.len) {
+    assert(i_vals <= vals.len && i_vals % 2 == 1);
+    Obj par = mem_el(m_pars, i_pars);
     exc_check(is(obj_type(par), t_Par), "call: %o\nparameter %i is malformed: %o",
       call, i_pars, par);
     if (is(par, variad)) {
       exc_check(!has_variad, "call: %o\nmultiple variad parameters", call);
       has_variad = true;
-      Call_envs envs =
-      run_bind_variad(d, trace, env, callee_env, call, should_run_args, par, args, &i_args);
-      env = envs.caller_env;
-      callee_env = envs.callee_env;
+      env = bind_variad(d, trace, env, call, par, vals, &i_vals);
     } else {
-      Call_envs envs =
-      run_bind_par(d, trace, env, callee_env, call, should_run_args, par, args, &i_args);
-      env = envs.caller_env;
-      callee_env = envs.callee_env;
+      env = bind_par(d, trace, env, call, par, vals, &i_vals);
     }
   }
-  check(i_args == args.len, "call: %o\nreceived too many arguments", call);
-  return (Call_envs){.caller_env=env, .callee_env=callee_env};
+  check(i_vals == vals.len, "call: %o\nreceived too many arguments", call);
+  return env;
 }
 
 
-static Step run_call_func(Int d, Trace* trace, Obj env, Obj call, Obj func, Bool is_call) {
+static Step run_call_func(Int d, Trace* trace, Obj env, Obj call, Mem vals, Bool is_call) {
   // owns env, func.
-  Mem args = mem_next(struct_mem(call));
-  Mem m = struct_mem(func);
-  assert(m.len == 8);
-  Obj name      = m.els[0];
-  Obj is_native = m.els[1];
-  Obj is_macro  = m.els[2];
-  Obj lex_env   = m.els[3];
-  Obj variad    = m.els[4];
-  Obj pars      = m.els[5];
-  Obj ret_type  = m.els[6];
-  Obj body      = m.els[7];
+  Obj func = mem_el(vals, 0);
+  Mem m_func = struct_mem(func);
+  assert(m_func.len == 8);
+  Obj name      = mem_el(m_func, 0);
+  Obj is_native = mem_el(m_func, 1);
+  Obj is_macro  = mem_el(m_func, 2);
+  Obj lex_env   = mem_el(m_func, 3);
+  Obj variad    = mem_el(m_func, 4);
+  Obj pars      = mem_el(m_func, 5);
+  Obj ret_type  = mem_el(m_func, 6);
+  Obj body      = mem_el(m_func, 7);
   exc_check(obj_is_sym(name), "function name is not a Sym: %o", name);
   exc_check(obj_is_bool(is_native), "function is-native is not a Bool: %o", is_native);
   exc_check(obj_is_bool(is_macro), "function is-macro is not a Bool: %o", is_macro);
@@ -372,11 +336,8 @@ static Step run_call_func(Int d, Trace* trace, Obj env, Obj call, Obj func, Bool
   Obj callee_env = env_push_frame(rc_ret(lex_env));
   // NOTE: because func is bound to self in callee_env, and func contains body,
   // we can give func to callee_env and still safely return the unretained body as tail.code.
-  callee_env = run_env_bind(trace, false, callee_env, rc_ret_val(s_self), func);
-  // owns env, callee_env.
-  Call_envs e = run_bind_args(d, trace, env, callee_env, call, variad, pars, args, is_call);
-  env = e.caller_env;
-  callee_env = e.callee_env;
+  callee_env = run_bind_vals(d, trace, callee_env, call, variad, pars, vals);
+  mem_dealloc(vals);
   if (bool_is_true(is_native)) {
 #if OPT_TCO
     // caller will own .env, .callee_env, but not .code.
@@ -396,18 +357,17 @@ static Step run_call_func(Int d, Trace* trace, Obj env, Obj call, Obj func, Bool
 }
 
 
-static Step run_call_accessor(Int d, Trace* trace, Obj env, Obj call, Obj accessor) {
-  // owns env, accessor.
-  Mem args = mem_next(struct_mem(call));
-  Mem m = struct_mem(accessor);
-  assert(m.len == 1);
-  Obj name = m.els[0];
-  exc_check(obj_is_sym(name), "call: %o\naccessor is not a sym: %o", call, name);
-  exc_check(args.len == 1, "call: %o\naccessor requires 1 argument");
-  Obj accessee_expr = args.els[0];
-  Step step = run(d, trace, env, accessee_expr);
-  env = step.res.env;
-  Obj accessee = step.res.val;
+static Step run_call_accessor(Int d, Trace* trace, Obj env, Obj call, Mem vals) {
+  // owns env, vals.
+  exc_check(vals.len == 3, "call: %o\naccessor requires 1 argument", call);
+  exc_check(is(mem_el(vals, 1), obj0), "call:%o\naccessee is a label", call);
+  Obj accessor = mem_el_move(vals, 0);
+  Obj accessee = mem_el_move(vals, 2);
+  mem_dealloc(vals);
+  Mem m_accessor = struct_mem(accessor);
+  assert(m_accessor.len == 1);
+  Obj name = mem_el(m_accessor, 0);
+  exc_check(obj_is_sym(name), "call: %o\naccessor expr is not a sym: %o", call, name);
   exc_check(obj_is_struct(accessee), "call: %o\naccessee is not a struct: %o", call, accessee);
   Obj type = obj_type(accessee);
   assert(is(obj_type(type), t_Type));
@@ -429,22 +389,19 @@ static Step run_call_accessor(Int d, Trace* trace, Obj env, Obj call, Obj access
 }
 
 
-static Step run_call_mutator(Int d, Trace* trace, Obj env, Obj call, Obj mutator) {
-  // owns env, mutator.
-  Mem args = mem_next(struct_mem(call));
-  Mem m = struct_mem(mutator);
-  assert(m.len == 1);
-  Obj name = m.els[0];
-  exc_check(obj_is_sym(name), "call: %o\nmutator is not a sym: %o", call, name);
-  exc_check(args.len == 2, "call: %o\nmutator requires 2 arguments");
-  Obj mutatee_expr = args.els[0];
-  Obj val_expr = args.els[1];
-  Step step = run(d, trace, env, mutatee_expr);
-  env = step.res.env;
-  Obj mutatee = step.res.val;
-  step = run(d, trace, env, val_expr);
-  env = step.res.env;
-  Obj val = step.res.val;
+static Step run_call_mutator(Int d, Trace* trace, Obj env, Obj call, Mem vals) {
+  // owns env, vals.
+  exc_check(vals.len == 5, "call: %o\nmutator requires 2 arguments", call);
+  exc_check(is(mem_el(vals, 1), obj0), "call:%o\nmutatee is a label", call);
+  exc_check(is(mem_el(vals, 3), obj0), "call:%o\nmutator expr is a label", call);
+  Obj mutator = mem_el_move(vals, 0);
+  Obj mutatee = mem_el_move(vals, 2);
+  Obj val = mem_el_move(vals, 4);
+  mem_dealloc(vals);
+  Mem m_mutator = struct_mem(mutator);
+  assert(m_mutator.len == 1);
+  Obj name = mem_el(m_mutator, 0);
+  exc_check(obj_is_sym(name), "call: %o\nmutator expr is not a sym: %o", call, name);
   exc_check(obj_is_struct(mutatee), "call: %o\nmutatee is not a struct: %o", call, mutatee);
   Obj type = obj_type(mutatee);
   assert(is(obj_type(type), t_Type));
@@ -467,43 +424,65 @@ static Step run_call_mutator(Int d, Trace* trace, Obj env, Obj call, Obj mutator
 }
 
 
-static Step run_call_RUN(Int d, Trace* trace, Obj env, Obj call) {
-  // owns env.
-  Mem args = mem_next(struct_mem(call));
-  exc_check(args.len == 1, "call: %o\n:RUN requires 1 argument");
-  Obj expr = args.els[0];
+static Step run_call_RUN(Int d, Trace* trace, Obj env, Obj call, Mem vals) {
+  // owns env, vals.
+  exc_check(vals.len == 3, "call: %o\n:RUN requires 1 argument", call);
+  exc_check(is(mem_el(vals, 1), obj0), "call: %o\n: RUN expr is a label", call);
+  Obj callee = mem_el_move(vals, 0);
+  Obj expr = mem_el_move(vals, 2);
+  mem_dealloc(vals);
+  rc_rel_val(callee);
+  // for now, perform a non-TCO run so that we do not have to retain expr.
   Step step = run(d, trace, env, expr);
-  env = step.res.env;
-  Obj dyn_code = step.res.val;
-  // for now, perform a non-TCO run so that we do not have to retain dyn_code.
-  // TODO: TCO?
-  step = run(d, trace, env, dyn_code);
-  rc_rel(dyn_code);
+  rc_rel(expr);
   return step;
 }
 
 
 static Step run_Call(Int d, Trace* trace, Obj env, Obj code) {
   // owns env.
-  Mem m = struct_mem(code);
-  check(m.len > 0, "call is empty");
-  Obj callee_expr = m.els[0];
-  Step step = run(d, trace, env, callee_expr);
-  env = step.res.env;
-  Obj callee = step.res.val;
+  Mem m_code = struct_mem(code);
+  check(m_code.len > 0, "call is empty: %o", code);
+  // assemble vals as interleaved name, value pairs.
+  // the callee never has a name, hence the odd number of elements.
+  // the names are required for dispatch and argument binding.
+  // the names are not ref-counted, but the values are.
+  Mem vals = mem_alloc(m_code.len * 2 - 1);
+  for_in(i, m_code.len) {
+    Obj expr = mem_el(m_code, i);
+    Obj expr_type = obj_type(expr);
+    if (i && is(expr_type, t_Label)) {
+      UNPACK_LABEL(expr);
+      exc_check(is(expr_el_type, s_nil),
+        "call: %o\nlabeled argument cannot specify a type: %o", code, expr_el_type);
+      Step step = run(d, trace, env, expr_el_dflt);
+      mem_put(vals, i * 2 - 1, expr_el_name);
+      mem_put(vals, i * 2, step.res.val);
+      env = step.res.env;
+    }
+    // TODO: splats; will require that vals grow dynamically.
+    else { // unlabeled arg expr.
+      Step step = run(d, trace, env, expr);
+      if (i) { // no name for the callee.
+        mem_put(vals, i * 2 - 1, obj0);
+      }
+      mem_put(vals, i * 2, step.res.val);
+      env = step.res.env;
+    }
+  }
+  Obj callee = mem_el(vals, 0);
   Obj type = obj_type(callee);
   Int ti = type_index(type); //  cast to Int c type avoids incomplete enum switch error.
   switch (ti) {
-    case ti_Func:     return run_call_func(d, trace, env, code, callee, true);
-    case ti_Accessor: return run_call_accessor(d, trace, env, code, callee);
-    case ti_Mutator:  return run_call_mutator(d, trace, env, code, callee);
+    case ti_Func:     return run_call_func(d, trace, env, code, vals, true);
+    case ti_Accessor: return run_call_accessor(d, trace, env, code, vals);
+    case ti_Mutator:  return run_call_mutator(d, trace, env, code, vals);
     case ti_Sym:
-      rc_rel_val(callee);
       switch (sym_index(callee)) {
-        case si_RUN: return run_call_RUN(d, trace, env, code);
+        case si_RUN: return run_call_RUN(d, trace, env, code, vals);
       }
   }
-  exc_raise("object is not callable: %o", callee);
+  exc_raise("call: %o\nobject is not callable: %o", code, callee);
 }
 
 
@@ -645,15 +624,23 @@ static Step run_code(Obj env, Obj code) {
 static Obj run_macro(Trace* trace, Obj env, Obj code) {
   // owns env.
   run_err_trace(0, trace_expand_prefix, code);
-  Mem m = struct_mem(code);
-  check(m.len > 0, "empty macro expand");
-  Obj macro_sym = mem_el(m, 0);
-  check(obj_is_sym(macro_sym), "expand argument 0 must be a Sym; found: %o", macro_sym);
+  Mem m_code = struct_mem(code);
+  check(m_code.len > 0, "expand: %o\nempty", code);
+  Obj macro_sym = mem_el(m_code, 0);
+  check(obj_is_sym(macro_sym), "expand: %o\nargument 0 must be a Sym; found: %o",
+    code, macro_sym);
   Obj macro = env_get(env, macro_sym);
   if (is(macro, obj0)) { // lookup failed.
-    error("macro lookup error: %o", macro_sym);
+    error("expand: %o\nmacro lookup error: %o", code, macro_sym);
   }
-  Step step = run_call_func(0, trace, env, code, rc_ret(macro), false); // owns env, macro.
+  Mem vals = mem_alloc(m_code.len * 2 - 1);
+  mem_put(vals, 0, rc_ret(macro));
+  for_imn(i, 1, m_code.len) {
+    Obj expr = mem_el(m_code, i);
+    mem_put(vals, i * 2 - 1, obj0);
+    mem_put(vals, i * 2, rc_ret(expr));
+  }
+  Step step = run_call_func(0, trace, env, code, vals, false); // owns env, macro.
   step = run_tail(0, trace, step); // handle any TCO steps.
   rc_rel(step.res.env);
   run_err_trace(0, trace_expand_val_prefix, step.res.val);
