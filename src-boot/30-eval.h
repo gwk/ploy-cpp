@@ -10,7 +10,7 @@ static Step eval(Obj env, Obj code) {
   if (is(preprocessed, obj0)) {
     return mk_res(env, rc_ret_val(s_void)); // TODO: document why this is necessary.
   }
-  Obj expanded = expand(env, preprocessed); // owns preprocessed.
+  Obj expanded = expand(0, env, preprocessed); // owns preprocessed.
   Obj compiled = compile(env, expanded); // owns expanded.
   Step step = run_code(env, compiled); // borrows compiled.
   rc_rel(compiled);

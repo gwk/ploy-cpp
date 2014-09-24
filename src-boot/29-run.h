@@ -556,6 +556,9 @@ static void run_err_trace(Int d, Chars_const p, Obj o) {
 static Step run_step(Int d, Trace* trace, Obj env, Obj code) {
   // owns env.
   run_err_trace(d, trace_run_prefix, code);
+#if OPT_REC_LIMIT
+  exc_check(d < OPT_REC_LIMIT, "execution exceeded recursion limit: %i", OPT_REC_LIMIT);
+#endif
   Step step = run_step_disp(d, trace, env, code);
   return step;
 }

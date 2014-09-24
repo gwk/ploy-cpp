@@ -34,6 +34,10 @@
 #define OPT_TCO 1
 #endif
 
+#ifndef OPT_REC_LIMIT
+#define OPT_REC_LIMIT (1<<10)
+#endif
+
 // zero object words for new, moved, and released elements to catch invalid accesses.
 #ifndef OPT_MEM_ZERO
 #define OPT_MEM_ZERO DEBUG

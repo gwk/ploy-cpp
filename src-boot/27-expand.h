@@ -6,6 +6,10 @@
 
 static Obj expand_quasiquote(Int d, Obj o) {
   // owns o.
+#if OPT_REC_LIMIT
+  check(d < OPT_REC_LIMIT, "quasiquotation exceeded recursion limit: %i\n%o",
+    OPT_REC_LIMIT, o);
+#endif
   if (!obj_is_struct(o)) { // replace the quasiquote with quote.
     return struct_new1(rc_ret(t_Quo), o);
   }
@@ -41,8 +45,12 @@ static Obj expand_quasiquote(Int d, Obj o) {
 
 static Obj run_macro(Trace* trace, Obj env, Obj code);
 
-static Obj expand(Obj env, Obj code) {
+static Obj expand(Int d, Obj env, Obj code) {
   // owns code.
+#if OPT_REC_LIMIT
+  check(d < OPT_REC_LIMIT, "macro expansion exceeded recursion limit: %i\n%o",
+    OPT_REC_LIMIT, code);
+#endif
   Trace t = {.code=code, .elided_step_count=0, .next=NULL};
   Trace* trace = &t;
   if (!obj_is_struct(code)) {
@@ -64,7 +72,7 @@ static Obj expand(Obj env, Obj code) {
     Obj expanded = run_macro(trace, rc_ret(env), code); // owns env.
     rc_rel(code);
     // macro result may contain more expands; recursively expand the result.
-    Obj final = expand(env, expanded);
+    Obj final = expand(d + 1, env, expanded);
     return final;
   } else {
     // recursively expand the elements of the struct.
@@ -74,7 +82,7 @@ static Obj expand(Obj env, Obj code) {
     Obj expanded = struct_new_raw(rc_ret(ref_type(code)), m.len);
     Obj* expanded_els = struct_els(expanded);
     for_in(i, m.len) {
-      expanded_els[i] = expand(env, rc_ret(m.els[i]));
+      expanded_els[i] = expand(d + 1, env, rc_ret(m.els[i]));
     }
     rc_rel(code);
     return expanded;
