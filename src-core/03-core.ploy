@@ -70,7 +70,7 @@
 
 <macro when [-pred &exprs]
   # if 'pred', do 'exprs'. else none.
-  {:If pred (prepend Do exprs) void}> # TODO: eventually this should use splice-unquote.
+  {:If pred (_boot-mk-do exprs) void}> # TODO: eventually this should use splice-unquote.
 
 # output functions.
 
