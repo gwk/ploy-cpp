@@ -271,11 +271,10 @@ static Obj bind_variad(Int d, Trace* trace, Obj env, Obj call, Obj par, Mem vals
   *i_vals = end;
   Int len = (end - start) / 2;
   Obj vrd = struct_new_raw(rc_ret(t_Mem_Obj), len); // TODO: set correct type.
-  Mem m_vrd = struct_mem(vrd);
   Int j = 0;
   for_imns(i, start + 1, end, 2) {
     Obj arg = mem_el_move(vals, i);
-    mem_put(m_vrd, j++, arg);
+    struct_put(vrd, j++, arg);
   }
   env = bind_val(trace, false, env, rc_ret_val(par_el_name), vrd);
   return env;

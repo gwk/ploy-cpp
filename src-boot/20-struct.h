@@ -187,9 +187,12 @@ static Mem struct_mem(Obj s) {
 static Obj struct_el(Obj s, Int i) {
   // assumes the caller knows the size of the struct.
   assert(ref_is_struct(s));
-  assert(i >= 0 && i < struct_len(s));
-  Obj* els = struct_els(s);
-  return els[i];
+  return mem_el(struct_mem(s), i);
+}
+
+
+static void struct_put(Obj s, Int i, Obj e) {
+  mem_put(struct_mem(s), i, e);
 }
 
 
