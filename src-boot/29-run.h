@@ -206,7 +206,7 @@ static Step run_Syn_seq_typed(Int d, Trace* trace, Obj env, Obj code) {
 #define UNPACK_LABEL(l) \
 Obj l##_el_name = cmpd_el(l, 0); \
 Obj l##_el_type = cmpd_el(l, 1); \
-Obj l##_el_dflt = cmpd_el(l, 2)
+Obj l##_el_expr = cmpd_el(l, 2)
 
 #define UNPACK_VARIAD(v) \
 Obj v##_el_expr = cmpd_el(v, 0); \
@@ -465,7 +465,7 @@ static Step run_Call(Int d, Trace* trace, Obj env, Obj code) {
       UNPACK_LABEL(expr);
       exc_check(is(expr_el_type, s_nil),
         "call: %o\nlabeled argument cannot specify a type: %o", code, expr_el_type);
-      Step step = run(d, trace, env, expr_el_dflt);
+      Step step = run(d, trace, env, expr_el_expr);
       mem_put(vals, i * 2 - 1, expr_el_name);
       mem_put(vals, i * 2, step.res.val);
       env = step.res.env;

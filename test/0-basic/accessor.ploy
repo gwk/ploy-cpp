@@ -1,2 +1,2 @@
 <let p `-n:t=d>
-(outRSL (.name p) (.type p) (.dflt p))
+(outRSL (.name p) (.type p) (.expr p))

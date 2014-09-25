@@ -40,7 +40,7 @@ T(Syn_seq_typed,    mem, t_Expr) \
 T(Call,             mem, t_Expr) \
 T(Func,             struct_func) \
 T(File, struct4, "name", t_Data, "ptr", t_Ptr, "is-readable", t_Bool, "is_writeable", t_Bool) \
-T(Label,            struct3, "name", t_Expr, "type", t_Expr, "dflt", t_Expr) \
+T(Label,            struct3, "name", t_Expr, "type", t_Expr, "expr", t_Expr) \
 T(Variad,           struct2, "name", t_Expr, "type", t_Expr) \
 T(Src,              struct2, "path", t_Data, "src", t_Data) \
 T(Expr,             union_expr) \
