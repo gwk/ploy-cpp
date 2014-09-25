@@ -29,7 +29,7 @@ static Bool ref_is_env(Obj r) {
 }
 
 
-static Bool ref_is_struct(Obj r) {
+static Bool ref_is_cmpd(Obj r) {
   return !ref_is_data(r) && !ref_is_env(r);
 }
 
@@ -53,7 +53,7 @@ static Obj ref_new(Int size, Obj type) {
 
 
 static Obj env_rel_fields(Obj o);
-static Obj struct_rel_fields(Obj s);
+static Obj cmpd_rel_fields(Obj c);
 
 static Obj ref_dealloc(Obj r) {
   //errFL("DEALLOC: %p:%o", r, r);
@@ -64,7 +64,7 @@ static Obj ref_dealloc(Obj r) {
   } else if (ref_is_env(r)) {
     tail = env_rel_fields(r);
   } else {
-    tail = struct_rel_fields(r);
+    tail = cmpd_rel_fields(r);
   }
   // ret/rel counter has already been decremented by rc_rel.
 #if !OPT_DEALLOC_PRESERVE

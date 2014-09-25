@@ -10,26 +10,26 @@ static Obj expand_quasiquote(Int d, Obj o) {
   check(d < OPT_REC_LIMIT, "quasiquotation exceeded recursion limit: %i\n%o",
     OPT_REC_LIMIT, o);
 #endif
-  if (!obj_is_struct(o)) { // replace the quasiquote with quote.
-    return struct_new1(rc_ret(t_Quo), o);
+  if (!obj_is_cmpd(o)) { // replace the quasiquote with quote.
+    return cmpd_new1(rc_ret(t_Quo), o);
   }
   Obj type = obj_type(o);
-  Mem m = struct_mem(o);
+  Mem m = cmpd_mem(o);
   if (!d && is(type, t_Unq)) { // unquote is only performed at the same (innermost) level.
     check(m.len == 1, "malformed Unq: %o", o);
     Obj e = rc_ret(m.els[0]);
     rc_rel(o);
     return e;
   }
-  if (struct_contains_unquote(o)) { // unquote exists somewhere in the tree.
+  if (cmpd_contains_unquote(o)) { // unquote exists somewhere in the tree.
     Int d1 = d; // count Qua nesting level.
     if (is(type, t_Qua)) {
       d1++;
     } else if (is(type, t_Unq)) {
       d1--;
     }
-    Obj s = struct_new_raw(rc_ret(t_Syn_struct_typed), m.len + 1);
-    Obj* dst = struct_els(s);
+    Obj s = cmpd_new_raw(rc_ret(t_Syn_struct_typed), m.len + 1);
+    Obj* dst = cmpd_els(s);
     dst[0] = rc_ret(type_name(type));
     for_in(i, m.len) {
       Obj e = m.els[i];
@@ -38,7 +38,7 @@ static Obj expand_quasiquote(Int d, Obj o) {
     rc_rel(o);
     return s;
   } else { // no unquotes in the tree; simply quote the top level.
-    return struct_new1(rc_ret(t_Quo), o);
+    return cmpd_new1(rc_ret(t_Quo), o);
   }
 }
 
@@ -53,10 +53,10 @@ static Obj expand(Int d, Obj env, Obj code) {
 #endif
   Trace t = {.code=code, .elided_step_count=0, .next=NULL};
   Trace* trace = &t;
-  if (!obj_is_struct(code)) {
+  if (!obj_is_cmpd(code)) {
     return code;
   }
-  Mem m = struct_mem(code);
+  Mem m = cmpd_mem(code);
   Obj type = ref_type(code);
   if (is(type, t_Quo)) {
     exc_check(m.len == 1, "malformed Quo: %o", code);
@@ -79,8 +79,8 @@ static Obj expand(Int d, Obj env, Obj code) {
     // TODO: collapse comment and VOID nodes or perhaps a special COLLAPSE node?
     // this might allow for us to do away with the preprocess phase,
     // and would also allow a macro to collapse into nothing.
-    Obj expanded = struct_new_raw(rc_ret(ref_type(code)), m.len);
-    Obj* expanded_els = struct_els(expanded);
+    Obj expanded = cmpd_new_raw(rc_ret(ref_type(code)), m.len);
+    Obj* expanded_els = cmpd_els(expanded);
     for_in(i, m.len) {
       expanded_els[i] = expand(d + 1, env, rc_ret(m.els[i]));
     }

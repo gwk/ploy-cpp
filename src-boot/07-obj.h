@@ -62,7 +62,7 @@ static Chars_const obj_tag_names[] = {
 typedef struct _Ref_head Ref_head;
 typedef struct _Data Data;
 typedef struct _Env Env;
-typedef struct _Struct Struct;
+typedef struct _Cmpd Cmpd;
 typedef struct _Type Type;
 
 union _Obj {
@@ -73,7 +73,7 @@ union _Obj {
   Ref_head* h; // common to all ref types.
   Data* d;
   Env* e;
-  Struct* s;
+  Cmpd* c;
   Type* t;
 };
 DEF_SIZE(Obj);
@@ -129,8 +129,8 @@ static Bool obj_is_sym(Obj o) {
 
 static const Obj s_true, s_false;
 
-static Bool obj_is_bool(Obj s) {
-  return is(s, s_true) || is(s, s_false);
+static Bool obj_is_bool(Obj o) {
+  return is(o, s_true) || is(o, s_false);
 }
 
 
@@ -141,7 +141,7 @@ static Bool obj_is_data_word(Obj o) {
 
 static Bool ref_is_data(Obj o);
 static Bool ref_is_env(Obj o);
-static Bool ref_is_struct(Obj o);
+static Bool ref_is_cmpd(Obj o);
 static Bool ref_is_type(Obj o);
 
 static Bool obj_is_data_ref(Obj o) {
@@ -159,8 +159,8 @@ static Bool obj_is_env(Obj o) {
 }
 
 
-static Bool obj_is_struct(Obj o) {
-  return obj_is_ref(o) && ref_is_struct(o);
+static Bool obj_is_cmpd(Obj o) {
+  return obj_is_ref(o) && ref_is_cmpd(o);
 }
 
 

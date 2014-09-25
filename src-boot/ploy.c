@@ -20,7 +20,7 @@ static Obj parse_and_eval(Obj env, Obj path, Obj src, Array* sources, Bool out_v
 #if VERBOSE_PARSE
   errFL("parse_and_eval: %o\n%o", path, code);
 #endif
-  array_append(sources, struct_new2(rc_ret(t_Src), path, src));
+  array_append(sources, cmpd_new2(rc_ret(t_Src), path, src));
   Step step = eval_mem_expr(env, code);
   if (out_val && !is(step.res.val, s_void)) {
     write_repr(stdout, step.res.val);

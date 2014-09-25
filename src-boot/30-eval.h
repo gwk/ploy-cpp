@@ -18,13 +18,13 @@ static Step eval(Obj env, Obj code) {
 }
 
 
-static Step eval_mem_expr(Obj env, Obj s) {
+static Step eval_mem_expr(Obj env, Obj exprs) {
   // top level eval of a series of expressions.
   // this is quite different than calling eval on a Do instance;
   // besides evaluating a different, non-Expr type,
   // it also does the complete eval cycle on each item in turn.
-  assert(is(obj_type(s), t_Mem_Expr));
-  Mem m = struct_mem(s);
+  assert(is(obj_type(exprs), t_Mem_Expr));
+  Mem m = cmpd_mem(exprs);
   if (m.len == 0) {
     return mk_res(env, rc_ret_val(s_void));
   }

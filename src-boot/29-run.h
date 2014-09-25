@@ -43,7 +43,7 @@ static Step run_sym(Trace* trace, Obj env, Obj code) {
 
 static Step run_Quo(Int d, Trace* trace, Obj env, Obj code) {
   // owns env.
-  Mem m = struct_mem(code);
+  Mem m = cmpd_mem(code);
   exc_check(m.len == 1, "Quo requires 1 field; received %i", m.len);
   return mk_res(env, rc_ret(m.els[0]));
 }
@@ -53,7 +53,7 @@ static Step run(Int depth, Trace* parent_trace, Obj env, Obj code);
 
 static Step run_Do(Int d, Trace* trace, Obj env, Obj code) {
   // owns env.
-  Mem exprs = struct_mem(code);
+  Mem exprs = cmpd_mem(code);
   if (!exprs.len) {
     return mk_res(env, rc_ret_val(s_void));
   }
@@ -69,7 +69,7 @@ static Step run_Do(Int d, Trace* trace, Obj env, Obj code) {
 
 static Step run_Scope(Int d, Trace* trace, Obj env, Obj code) {
   // owns env.
-  Mem m = struct_mem(code);
+  Mem m = cmpd_mem(code);
   exc_check(m.len == 1, "Scope requires 1 field; received %i", m.len);
   Obj expr = m.els[0];
   Obj sub_env = env_push_frame(rc_ret(env));
@@ -87,7 +87,7 @@ static Obj bind_val(Trace* trace, Bool is_mutable, Obj env, Obj key, Obj val) {
 
 static Step run_Bind(Int d, Trace* trace, Obj env, Obj code) {
   // owns env.
-  Mem m = struct_mem(code);
+  Mem m = cmpd_mem(code);
   exc_check(m.len == 3, "Bind requires 3 fields; received %i", m.len);
   Obj is_mutable = m.els[0];
   Obj sym = m.els[1];
@@ -106,7 +106,7 @@ static Step run_Bind(Int d, Trace* trace, Obj env, Obj code) {
 
 static Step run_If(Int d, Trace* trace, Obj env, Obj code) {
   // owns env.
-  Mem m = struct_mem(code);
+  Mem m = cmpd_mem(code);
   exc_check(m.len == 3, "If requires 3 fields; received %i", m.len);
   Obj pred = m.els[0];
   Obj then = m.els[1];
@@ -121,7 +121,7 @@ static Step run_If(Int d, Trace* trace, Obj env, Obj code) {
 
 static Step run_Fn(Int d, Trace* trace, Obj env, Obj code) {
   // owns env.
-  Mem m = struct_mem(code);
+  Mem m = cmpd_mem(code);
   exc_check(m.len == 6, "Fn requires 6 fields; received %i", m.len);
   Obj name      = m.els[0];
   Obj is_native = m.els[1];
@@ -133,9 +133,9 @@ static Step run_Fn(Int d, Trace* trace, Obj env, Obj code) {
   exc_check(obj_is_bool(is_macro), "Fn: is-macro is not a Bool: %o", is_macro);
   exc_check(is(obj_type(pars_syn), t_Syn_seq),
     "Fn: pars is not a sequence literal: %o", pars_syn);
-  Mem m_pars_syn = struct_mem(pars_syn);
-  Obj pars = struct_new_raw(rc_ret(t_Mem_Par), m_pars_syn.len);
-  Mem m_pars = struct_mem(pars);
+  Mem m_pars_syn = cmpd_mem(pars_syn);
+  Obj pars = cmpd_new_raw(rc_ret(t_Mem_Par), m_pars_syn.len);
+  Mem m_pars = cmpd_mem(pars);
   Obj variad = rc_ret(s_void);
   for_in(i, m_pars.len) {
     Obj syn = m_pars_syn.els[i];
@@ -145,18 +145,18 @@ static Step run_Fn(Int d, Trace* trace, Obj env, Obj code) {
     Obj par_dflt;
     Bool is_variad = false;
     if (is(syn_type, t_Label)) {
-      par_name = rc_ret(struct_el(syn, 0));
-      par_type = rc_ret(struct_el(syn, 1));
-      par_dflt = rc_ret(struct_el(syn, 2));
+      par_name = rc_ret(cmpd_el(syn, 0));
+      par_type = rc_ret(cmpd_el(syn, 1));
+      par_dflt = rc_ret(cmpd_el(syn, 2));
     } else if (is(syn_type, t_Variad)) {
       is_variad = true;
-      par_name = rc_ret(struct_el(syn, 0));
-      par_type = rc_ret(struct_el(syn, 1));
-      par_dflt = rc_ret_val(s_void); // TODO: ? struct_new1(rc_ret(t_Syn_seq_typed), rc_ret(par_type));
+      par_name = rc_ret(cmpd_el(syn, 0));
+      par_type = rc_ret(cmpd_el(syn, 1));
+      par_dflt = rc_ret_val(s_void); // TODO: ? cmpd_new1(rc_ret(t_Syn_seq_typed), rc_ret(par_type));
     } else {
       exc_raise("Fn: parameter %i is malformed: %o", i, syn);
     }
-    Obj par =  struct_new3(rc_ret(t_Par), par_name, par_type, par_dflt);
+    Obj par =  cmpd_new3(rc_ret(t_Par), par_name, par_type, par_dflt);
     m_pars.els[i] = par;
     if (is_variad) {
       exc_check(is(variad, s_void), "Fn: multiple variadic parameters: %o", syn);
@@ -164,7 +164,7 @@ static Step run_Fn(Int d, Trace* trace, Obj env, Obj code) {
       variad = rc_ret(par);
     }
   }
-  Obj f = struct_new8(rc_ret(t_Func),
+  Obj f = cmpd_new8(rc_ret(t_Func),
     rc_ret_val(name),
     rc_ret_val(is_native),
     rc_ret_val(is_macro),
@@ -179,12 +179,12 @@ static Step run_Fn(Int d, Trace* trace, Obj env, Obj code) {
 
 static Step run_Syn_struct_typed(Int d, Trace* trace, Obj env, Obj code) {
   // owns env.
-  Mem m = struct_mem(code);
+  Mem m = cmpd_mem(code);
   check(m.len > 0, "Syn-struct-typed is empty");
   Step step = run(d, trace, env, m.els[0]); // evaluate the type.
   env = step.res.env;
-  Obj s = struct_new_raw(step.res.val, m.len - 1);
-  Obj* els = struct_els(s);
+  Obj s = cmpd_new_raw(step.res.val, m.len - 1);
+  Obj* els = cmpd_els(s);
   for_in(i, m.len - 1) {
     step = run(d, trace, env, m.els[i + 1]);
     env = step.res.env;
@@ -196,13 +196,13 @@ static Step run_Syn_struct_typed(Int d, Trace* trace, Obj env, Obj code) {
 
 static Step run_Syn_seq_typed(Int d, Trace* trace, Obj env, Obj code) {
   // owns env.
-  Mem m = struct_mem(code);
+  Mem m = cmpd_mem(code);
   check(m.len > 0, "Syn-seq-typed is empty");
   Step step = run(d, trace, env, m.els[0]); // evaluate the type.
   env = step.res.env;
   // TODO: derive the appropriate sequence type from the element type.
-  Obj s = struct_new_raw(step.res.val, m.len - 1);
-  Obj* els = struct_els(s);
+  Obj s = cmpd_new_raw(step.res.val, m.len - 1);
+  Obj* els = cmpd_els(s);
   for_in(i, m.len - 1) {
     step = run(d, trace, env, m.els[i + 1]);
     env = step.res.env;
@@ -213,18 +213,18 @@ static Step run_Syn_seq_typed(Int d, Trace* trace, Obj env, Obj code) {
 
 
 #define UNPACK_LABEL(l) \
-Obj* l##_els = struct_els(l); \
+Obj* l##_els = cmpd_els(l); \
 Obj l##_el_name = l##_els[0]; \
 Obj l##_el_type = l##_els[1]; \
 Obj l##_el_dflt = l##_els[2]
 
 #define UNPACK_VARIAD(v) \
-Obj* v##_els = struct_els(v); \
+Obj* v##_els = cmpd_els(v); \
 Obj v##_el_expr = v##_els[0]; \
 Obj v##_el_type = v##_els[1]
 
 #define UNPACK_PAR(p) \
-Obj* p##_els = struct_els(p); \
+Obj* p##_els = cmpd_els(p); \
 Obj p##_el_name = p##_els[0]; \
 Obj p##_el_type = p##_els[1]; \
 Obj p##_el_dflt = p##_els[2]
@@ -270,11 +270,11 @@ static Obj bind_variad(Int d, Trace* trace, Obj env, Obj call, Obj par, Mem vals
   }
   *i_vals = end;
   Int len = (end - start) / 2;
-  Obj vrd = struct_new_raw(rc_ret(t_Mem_Obj), len); // TODO: set correct type.
+  Obj vrd = cmpd_new_raw(rc_ret(t_Mem_Obj), len); // TODO: set correct type.
   Int j = 0;
   for_imns(i, start + 1, end, 2) {
     Obj arg = mem_el_move(vals, i);
-    struct_put(vrd, j++, arg);
+    cmpd_put(vrd, j++, arg);
   }
   env = bind_val(trace, false, env, rc_ret_val(par_el_name), vrd);
   return env;
@@ -285,7 +285,7 @@ static Obj run_bind_vals(Int d, Trace* trace, Obj env, Obj call, Obj variad, Obj
   Mem vals) {
   // owns env.
   env = bind_val(trace, false, env, rc_ret_val(s_self), mem_el_move(vals, 0));
-  Mem m_pars = struct_mem(pars);
+  Mem m_pars = cmpd_mem(pars);
   Int i_vals = 1; // first name of the interleaved name/value pairs.
   Bool has_variad = false;
   for_in(i_pars, m_pars.len) {
@@ -309,7 +309,7 @@ static Obj run_bind_vals(Int d, Trace* trace, Obj env, Obj call, Obj variad, Obj
 static Step run_call_func(Int d, Trace* trace, Obj env, Obj call, Mem vals, Bool is_call) {
   // owns env, func.
   Obj func = mem_el(vals, 0);
-  Mem m_func = struct_mem(func);
+  Mem m_func = cmpd_mem(func);
   assert(m_func.len == 8);
   Obj name      = mem_el(m_func, 0);
   Obj is_native = mem_el(m_func, 1);
@@ -363,22 +363,22 @@ static Step run_call_accessor(Int d, Trace* trace, Obj env, Obj call, Mem vals) 
   Obj accessor = mem_el_move(vals, 0);
   Obj accessee = mem_el_move(vals, 2);
   mem_dealloc(vals);
-  Mem m_accessor = struct_mem(accessor);
+  Mem m_accessor = cmpd_mem(accessor);
   assert(m_accessor.len == 1);
   Obj name = mem_el(m_accessor, 0);
   exc_check(obj_is_sym(name), "call: %o\naccessor expr is not a sym: %o", call, name);
-  exc_check(obj_is_struct(accessee), "call: %o\naccessee is not a struct: %o", call, accessee);
+  exc_check(obj_is_cmpd(accessee), "call: %o\naccessee is not a struct: %o", call, accessee);
   Obj type = obj_type(accessee);
   assert(is(obj_type(type), t_Type));
-  Obj kind = struct_el(type, 1);
-  Obj fields = struct_el(kind, 0);
-  Mem m_fields = struct_mem(fields);
-  assert(m_fields.len == struct_len(accessee));
+  Obj kind = cmpd_el(type, 1);
+  Obj fields = cmpd_el(kind, 0);
+  Mem m_fields = cmpd_mem(fields);
+  assert(m_fields.len == cmpd_len(accessee));
   for_in(i, m_fields.len) {
     Obj field = m_fields.els[i];
-    Obj field_name = struct_el(field, 0);
+    Obj field_name = cmpd_el(field, 0);
     if (is(field_name, name)) {
-      Obj val = rc_ret(struct_el(accessee, i));
+      Obj val = rc_ret(cmpd_el(accessee, i));
       rc_rel(accessor);
       rc_rel(accessee);
       return mk_res(env, val);
@@ -397,22 +397,22 @@ static Step run_call_mutator(Int d, Trace* trace, Obj env, Obj call, Mem vals) {
   Obj mutatee = mem_el_move(vals, 2);
   Obj val = mem_el_move(vals, 4);
   mem_dealloc(vals);
-  Mem m_mutator = struct_mem(mutator);
+  Mem m_mutator = cmpd_mem(mutator);
   assert(m_mutator.len == 1);
   Obj name = mem_el(m_mutator, 0);
   exc_check(obj_is_sym(name), "call: %o\nmutator expr is not a sym: %o", call, name);
-  exc_check(obj_is_struct(mutatee), "call: %o\nmutatee is not a struct: %o", call, mutatee);
+  exc_check(obj_is_cmpd(mutatee), "call: %o\nmutatee is not a struct: %o", call, mutatee);
   Obj type = obj_type(mutatee);
   assert(is(obj_type(type), t_Type));
-  Obj kind = struct_el(type, 1);
-  Obj fields = struct_el(kind, 0);
-  Mem m_fields = struct_mem(fields);
-  assert(m_fields.len == struct_len(mutatee));
+  Obj kind = cmpd_el(type, 1);
+  Obj fields = cmpd_el(kind, 0);
+  Mem m_fields = cmpd_mem(fields);
+  assert(m_fields.len == cmpd_len(mutatee));
   for_in(i, m_fields.len) {
     Obj field = m_fields.els[i];
-    Obj field_name = struct_el(field, 0);
+    Obj field_name = cmpd_el(field, 0);
     if (is(field_name, name)) {
-      Mem mutatee_fields = struct_mem(mutatee);
+      Mem mutatee_fields = cmpd_mem(mutatee);
       rc_rel(mutatee_fields.els[i]);
       mutatee_fields.els[i] = val;
       rc_rel(mutator);
@@ -446,8 +446,8 @@ static Step run_call_dispatcher(Int d, Trace* trace, Obj env, Obj call, Mem vals
   // owns env, vals.
   Obj callee = mem_el_ret(vals, 0);
   Int types_len = (vals.len - 1) / 2;
-  Obj types = struct_new_raw(rc_ret(t_Mem_Type), types_len);
-  Mem m_types = struct_mem(types);
+  Obj types = cmpd_new_raw(rc_ret(t_Mem_Type), types_len);
+  Mem m_types = cmpd_mem(types);
   for_in(i, types_len) {
     Obj val = mem_el(vals, i * 2 + 2);
     mem_put(m_types, i, rc_ret(obj_type(val)));
@@ -469,7 +469,7 @@ static Step run_call_dispatcher(Int d, Trace* trace, Obj env, Obj call, Mem vals
 
 static Step run_Call(Int d, Trace* trace, Obj env, Obj code) {
   // owns env.
-  Mem m_code = struct_mem(code);
+  Mem m_code = cmpd_mem(code);
   check(m_code.len > 0, "call is empty: %o", code);
   // assemble vals as interleaved name, value pairs.
   // the callee never has a name, hence the odd number of elements.
@@ -517,7 +517,7 @@ static Step run_Call_disp(Int d, Trace* trace, Obj env, Obj code, Mem vals) {
   }
   Obj kind = type_kind(type);
   if (is(obj_type(kind), t_Type_kind_struct)) {
-    Obj dispatcher = struct_el(kind, 1);
+    Obj dispatcher = cmpd_el(kind, 1);
     exc_check(!is(dispatcher, s_nil), "call: %o\nobject type has nil dispatcher: %o",
       code, type);
     return run_call_dispatcher(d, trace, env, code, vals, dispatcher);
@@ -668,7 +668,7 @@ static Step run_code(Obj env, Obj code) {
 static Obj run_macro(Trace* trace, Obj env, Obj code) {
   // owns env.
   run_err_trace(0, trace_expand_prefix, code);
-  Mem m_code = struct_mem(code);
+  Mem m_code = cmpd_mem(code);
   check(m_code.len > 0, "expand: %o\nempty", code);
   Obj macro_sym = mem_el(m_code, 0);
   check(obj_is_sym(macro_sym), "expand: %o\nargument 0 must be a Sym; found: %o",

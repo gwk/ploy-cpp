@@ -8,10 +8,10 @@
 
 
 static Obj preprocess(Obj code) {
-  if (!obj_is_struct(code)) {
+  if (!obj_is_cmpd(code)) {
     return rc_ret(code);
   }
-  Mem src = struct_mem(code);
+  Mem src = cmpd_mem(code);
   if (is(ref_type(code), t_Comment)) {
     return obj0;
   }
@@ -22,7 +22,7 @@ static Obj preprocess(Obj code) {
       array_append(&dst, o); // owns o.
     }
   }
-  Obj s = struct_new_M(rc_ret(ref_type(code)), dst.mem);
+  Obj c = cmpd_new_M(rc_ret(ref_type(code)), dst.mem);
   mem_dealloc(dst.mem);
-  return s;
+  return c;
 }

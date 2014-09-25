@@ -107,53 +107,53 @@ static Obj host_dlen(Trace* trace, Obj env) {
 
 static Obj host_mlen(Trace* trace, Obj env) {
   GET_A;
-  exc_check(obj_is_struct(a), "mlen requires Struct; received: %o", a);
-  Int l = a.s->len;
+  exc_check(obj_is_cmpd(a), "mlen requires Cmpd; received: %o", a);
+  Int l = cmpd_len(a);
   return int_new(l);
 }
 
 
 static Obj host_field(Trace* trace, Obj env) {
   GET_AB;
-  exc_check(obj_is_struct(a), "field requires arg 1 to be a Struct; received: %o", a);
+  exc_check(obj_is_cmpd(a), "field requires arg 1 to be a Struct; received: %o", a);
   exc_check(obj_is_int(b), "field requires arg 2 to be a Int; received: %o", b);
-  Int l = struct_len(a);
+  Int l = cmpd_len(a);
   Int i = int_val(b);
   exc_check(i >= 0 && i < l, "field index out of range; index: %i; len: %i", i, l);
-  Obj field = struct_el(a, i);
+  Obj field = cmpd_el(a, i);
   return rc_ret(field);
 }
 
 
 static Obj host_el(Trace* trace, Obj env) {
   GET_AB;
-  exc_check(obj_is_struct(a), "el requires arg 1 to be a Mem; received: %o", a);
+  exc_check(obj_is_cmpd(a), "el requires arg 1 to be a Mem; received: %o", a);
   exc_check(obj_is_int(b), "el requires arg 2 to be a Int; received: %o", b);
-  Int l = struct_len(a);
+  Int l = cmpd_len(a);
   Int i = int_val(b);
   exc_check(i >= 0 && i < l, "el index out of range; index: %i; len: %i", i, l);
-  Obj el = struct_el(a, i);
+  Obj el = cmpd_el(a, i);
   return rc_ret(el);
 }
 
 
 static Obj host_slice(Trace* trace, Obj env) {
   GET_ABC;
-  exc_check(obj_is_struct(a), "el requires arg 1 to be a Struct; received: %o", a);
+  exc_check(obj_is_cmpd(a), "el requires arg 1 to be a Mem; received: %o", a);
   exc_check(obj_is_int(b), "el requires arg 2 to be a Int; received: %o", b);
   exc_check(obj_is_int(c), "el requires arg 3 to be a Int; received: %o", c);
   Int f = int_val(b);
   Int t = int_val(c);
-  return struct_slice(a, f, t);
+  return cmpd_slice(a, f, t);
 }
 
 
 static Obj host_prepend(Trace* trace, Obj env) {
   GET_AB;
-  exc_check(obj_is_struct(b), "prepend requires arg 2 to be a Struct; received: %o", b);
-  Mem  m = struct_mem(b);
-  Obj res = struct_new_raw(rc_ret(ref_type(b)), m.len + 1);
-  Obj* els = struct_els(res);
+  exc_check(obj_is_cmpd(b), "prepend requires arg 2 to be a Mem; received: %o", b);
+  Mem  m = cmpd_mem(b);
+  Obj res = cmpd_new_raw(rc_ret(ref_type(b)), m.len + 1);
+  Obj* els = cmpd_els(res);
   els[0] = rc_ret(a);
   for_in(i, m.len) {
     els[1 + i] = rc_ret(m.els[i]);
@@ -164,10 +164,10 @@ static Obj host_prepend(Trace* trace, Obj env) {
 
 static Obj host_append(Trace* trace, Obj env) {
   GET_AB;
-  exc_check(obj_is_struct(a), "append requires arg 1 to be a Struct; received: %o", a);
-  Mem  m = struct_mem(a);
-  Obj res = struct_new_raw(rc_ret(ref_type(a)), m.len + 1);
-  Obj* els = struct_els(res);
+  exc_check(obj_is_cmpd(a), "append requires arg 1 to be a Mem; received: %o", a);
+  Mem  m = cmpd_mem(a);
+  Obj res = cmpd_new_raw(rc_ret(ref_type(a)), m.len + 1);
+  Obj* els = cmpd_els(res);
   for_in(i, m.len) {
     els[i] = rc_ret(m.els[i]);
   }
@@ -224,8 +224,8 @@ static Obj host_error(Trace* trace, Obj env) {
 
 static Obj host_type_of(Trace* trace, Obj env) {
   GET_A;
-  Obj s = obj_type(a);
-  return rc_ret(s);
+  Obj t = obj_type(a);
+  return rc_ret(t);
 }
 
 
@@ -243,13 +243,13 @@ static Obj host_dbg(Trace* trace, Obj env) {
 
 static Obj host_boot_mk_do(Trace* trace, Obj env) {
   GET_A;
-  if (!obj_is_struct(a)) return a;
-  Mem m = struct_mem(a);
+  if (!obj_is_cmpd(a)) return a;
+  Mem m = cmpd_mem(a);
   Obj val;
   if (m.len == 1) {
     val = rc_ret(m.els[0]);
   } else {
-     val = struct_new_M_ret(rc_ret(t_Do), m);
+     val = cmpd_new_M_ret(rc_ret(t_Do), m);
   }
   return val;
 }
@@ -263,15 +263,15 @@ static Obj host_init_func(Obj env, Int len_pars, Chars_const name, Func_host_ptr
   Obj sym = sym_new_from_chars(name);
   Obj pars; // TODO: add real types; unique value for expression default?
   #define PAR(s) \
-  struct_new3(rc_ret(t_Par), rc_ret_val(s), rc_ret_val(s_nil), rc_ret_val(s_void))
+  cmpd_new3(rc_ret(t_Par), rc_ret_val(s), rc_ret_val(s_nil), rc_ret_val(s_void))
   switch (len_pars) {
-    case 1: pars = struct_new1(rc_ret(t_Mem_Par), PAR(s_a)); break;
-    case 2: pars = struct_new2(rc_ret(t_Mem_Par), PAR(s_a), PAR(s_b)); break;
-    case 3: pars = struct_new3(rc_ret(t_Mem_Par), PAR(s_a), PAR(s_b), PAR(s_c)); break;
+    case 1: pars = cmpd_new1(rc_ret(t_Mem_Par), PAR(s_a)); break;
+    case 2: pars = cmpd_new2(rc_ret(t_Mem_Par), PAR(s_a), PAR(s_b)); break;
+    case 3: pars = cmpd_new3(rc_ret(t_Mem_Par), PAR(s_a), PAR(s_b), PAR(s_c)); break;
     default: assert(0);
   }
   #undef PAR
-  Obj f = struct_new8(rc_ret(t_Func),
+  Obj f = cmpd_new8(rc_ret(t_Func),
     rc_ret_val(sym),
     bool_new(false),
     bool_new(false),
@@ -288,7 +288,7 @@ static Obj host_init_file(Obj env, Chars_const sym_name, Chars_const name, CFile
   Bool w) {
   // owns env.
   Obj sym = sym_new_from_chars(sym_name);
-  Obj val = struct_new4(rc_ret(t_File), data_new_from_chars(name), ptr_new(f),
+  Obj val = cmpd_new4(rc_ret(t_File), data_new_from_chars(name), ptr_new(f),
     bool_new(r), bool_new(w));
   return env_bind(env, false, sym, val);
 }

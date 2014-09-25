@@ -2,7 +2,6 @@
 // Permission to use this file is granted in ploy/license.txt.
 
 // environments are an opaque type, currently implemented as a linked list of bindings.
-// Env is an immutable data structure.
 // frame boundaries are denoted by the special ENV_FRAME_MARKER symbol.
 // frame boundaries allow us to check for redefinitions within a frame.
 

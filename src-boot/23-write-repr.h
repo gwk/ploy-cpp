@@ -47,51 +47,51 @@ static void write_repr_Env(CFile f, Obj env, Bool is_quoted, Int depth, Set* set
 static void write_repr_obj(CFile f, Obj o, Bool is_quoted, Int depth, Set* set);
 
 static void write_repr_Bang(CFile f, Obj e, Bool is_quoted, Int depth, Set* set) {
-  assert(struct_len(e) == 1);
+  assert(cmpd_len(e) == 1);
   if (!is_quoted) {
     fputc('`', f);
   }
   fputc('!', f);
-  write_repr_obj(f, struct_el(e, 0), true, depth, set);
+  write_repr_obj(f, cmpd_el(e, 0), true, depth, set);
 }
 
 
 static void write_repr_Quo(CFile f, Obj q, Bool is_quoted, Int depth, Set* set) {
-  assert(struct_len(q) == 1);
+  assert(cmpd_len(q) == 1);
   if (!is_quoted) {
     fputc('`', f);
   }
   fputc('`', f);
-  write_repr_obj(f, struct_el(q, 0), true, depth, set);
+  write_repr_obj(f, cmpd_el(q, 0), true, depth, set);
 }
 
 
 static void write_repr_Qua(CFile f, Obj q, Bool is_quoted, Int depth, Set* set) {
-  assert(struct_len(q) == 1);
+  assert(cmpd_len(q) == 1);
   if (!is_quoted) {
     fputc('`', f);
   }
   fputc('~', f);
-  write_repr_obj(f, struct_el(q, 0), true, depth, set);
+  write_repr_obj(f, cmpd_el(q, 0), true, depth, set);
 }
 
 
 static void write_repr_Unq(CFile f, Obj q, Bool is_quoted, Int depth, Set* set) {
-  assert(struct_len(q) == 1);
+  assert(cmpd_len(q) == 1);
   if (!is_quoted) {
     fputc('`', f);
   }
   fputc(',', f);
-  write_repr_obj(f, struct_el(q, 0), true, depth, set);
+  write_repr_obj(f, cmpd_el(q, 0), true, depth, set);
 }
 
 
 static void write_repr_Label(CFile f, Obj p, Bool is_quoted, Int depth, Set* set) {
-  assert(struct_len(p) == 3);
+  assert(cmpd_len(p) == 3);
   if (!is_quoted) {
     fputc('`', f);
   }
-  Obj* els = struct_els(p);
+  Obj* els = cmpd_els(p);
   Obj name = els[0];
   Obj type = els[1];
   Obj expr = els[2];
@@ -109,11 +109,11 @@ static void write_repr_Label(CFile f, Obj p, Bool is_quoted, Int depth, Set* set
 
 
 static void write_repr_Variad(CFile f, Obj p, Bool is_quoted, Int depth, Set* set) {
-  assert(struct_len(p) == 2);
+  assert(cmpd_len(p) == 2);
   if (!is_quoted) {
     fputc('`', f);
   }
-  Obj* els = struct_els(p);
+  Obj* els = cmpd_els(p);
   Obj expr = els[0];
   Obj type = els[1];
   fputc('&', f);
@@ -128,12 +128,12 @@ static void write_repr_Variad(CFile f, Obj p, Bool is_quoted, Int depth, Set* se
 static void write_repr_syn_seq(CFile f, Obj s, Bool is_quoted, Int depth, Set* set,
   Chars_const chars_open, Char char_close) {
 
-  assert(ref_is_struct(s));
+  assert(ref_is_cmpd(s));
   if (!is_quoted) {
     fputc('`', f);
   }
   fputs(chars_open, f);
-  Mem m = struct_mem(s);
+  Mem m = cmpd_mem(s);
   for_in(i, m.len) {
     if (i) fputc(' ', f);
     write_repr_obj(f, m.els[i], true, depth, set);
@@ -142,15 +142,15 @@ static void write_repr_syn_seq(CFile f, Obj s, Bool is_quoted, Int depth, Set* s
 }
 
 
-static void write_repr_default(CFile f, Obj s, Bool is_quoted, Int depth, Set* set) {
-  assert(ref_is_struct(s));
+static void write_repr_default(CFile f, Obj c, Bool is_quoted, Int depth, Set* set) {
+  assert(ref_is_cmpd(c));
   if (is_quoted) fputs("¿Q?", f);
   fputs("{:", f);
-  Obj t = obj_type(s);
+  Obj t = obj_type(c);
   assert(obj_is_type(t));
   assert(obj_is_sym(t.t->name));
   write_repr_obj(f, t.t->name, true, depth, set);
-  Mem m = struct_mem(s);
+  Mem m = cmpd_mem(c);
   for_in(i, m.len) {
     fputc(' ', f);
     write_repr_obj(f, m.els[i], is_quoted, depth, set);
@@ -164,7 +164,7 @@ static Bool write_repr_is_quotable(Obj o) {
   if (!obj_is_valid_ref(o)) return true; // Ptr and obj0 do not have true repr.
   Obj type = ref_type(o);
   if (is(type, t_Data) || is(type, t_Env)) return true; // env does not have true repr.
-  assert(ref_is_struct(o));
+  assert(ref_is_cmpd(o));
   if (!(is(type, t_Bang)
     || is(type, t_Quo)
     || is(type, t_Qua)
@@ -177,9 +177,9 @@ static Bool write_repr_is_quotable(Obj o) {
     || is(type, t_Syn_seq_typed)
     || is(type, t_Expand)
     || is(type, t_Call))) {
-    return false; // non-syntax struct.
+    return false; // not an Expr.
   }
-  it_struct(it, o) {
+  it_cmpd(it, o) {
     if (!write_repr_is_quotable(*it)) return false;
   }
   return true;

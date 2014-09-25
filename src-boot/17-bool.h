@@ -17,7 +17,7 @@ static Bool bool_is_true(Obj b) {
 
 
 static const Obj blank;
-static Int struct_len(Obj s);
+static Int cmpd_len(Obj c);
 
 static Bool is_true(Obj o) {
   switch (obj_tag(o)) {
@@ -25,7 +25,7 @@ static Bool is_true(Obj o) {
       Obj t = ref_type(o);
       if (is(t, t_Data)) return !is(o, blank);
       if (is(t, t_Env)) return true;
-      return !!struct_len(o);
+      return !!cmpd_len(o);
     }
     case ot_ptr:
       return (ptr_val(o) != NULL);
