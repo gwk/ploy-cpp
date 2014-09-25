@@ -99,7 +99,7 @@ static Obj host_dlen(Trace* trace, Obj env) {
     l = 0;
   } else {
     exc_check(obj_is_data(a), "data-len requires Data; received: %o", a);
-    l = a.d->len;
+    l = data_len(a);
   }
   return int_new(l);
 }
@@ -151,12 +151,10 @@ static Obj host_slice(Trace* trace, Obj env) {
 static Obj host_prepend(Trace* trace, Obj env) {
   GET_AB;
   exc_check(obj_is_cmpd(b), "prepend requires arg 2 to be a Mem; received: %o", b);
-  Mem  m = cmpd_mem(b);
-  Obj res = cmpd_new_raw(rc_ret(ref_type(b)), m.len + 1);
-  Obj* els = cmpd_els(res);
-  els[0] = rc_ret(a);
-  for_in(i, m.len) {
-    els[1 + i] = rc_ret(m.els[i]);
+  Obj res = cmpd_new_raw(rc_ret(ref_type(b)), cmpd_len(b) + 1);
+  cmpd_put(res, 0, rc_ret(a));
+  for_in(i, cmpd_len(b)) {
+    cmpd_put(res, i + 1, rc_ret(cmpd_el(b, i)));
   }
   return res;
 }
@@ -165,13 +163,12 @@ static Obj host_prepend(Trace* trace, Obj env) {
 static Obj host_append(Trace* trace, Obj env) {
   GET_AB;
   exc_check(obj_is_cmpd(a), "append requires arg 1 to be a Mem; received: %o", a);
-  Mem  m = cmpd_mem(a);
-  Obj res = cmpd_new_raw(rc_ret(ref_type(a)), m.len + 1);
-  Obj* els = cmpd_els(res);
-  for_in(i, m.len) {
-    els[i] = rc_ret(m.els[i]);
+  Int l = cmpd_len(a);
+  Obj res = cmpd_new_raw(rc_ret(ref_type(a)), l + 1);
+  for_in(i, l) {
+    cmpd_put(res, i, rc_ret(cmpd_el(a, i)));
   }
-  els[m.len] = rc_ret(b);
+  cmpd_put(res, l, rc_ret(b));
   return res;
 }
 

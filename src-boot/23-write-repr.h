@@ -133,10 +133,9 @@ static void write_repr_syn_seq(CFile f, Obj s, Bool is_quoted, Int depth, Set* s
     fputc('`', f);
   }
   fputs(chars_open, f);
-  Mem m = cmpd_mem(s);
-  for_in(i, m.len) {
+  for_in(i, cmpd_len(s)) {
     if (i) fputc(' ', f);
-    write_repr_obj(f, m.els[i], true, depth, set);
+    write_repr_obj(f, cmpd_el(s, i), true, depth, set);
   }
   fputc(char_close, f);
 }
@@ -150,10 +149,9 @@ static void write_repr_default(CFile f, Obj c, Bool is_quoted, Int depth, Set* s
   assert(obj_is_type(t));
   assert(obj_is_sym(t.t->name));
   write_repr_obj(f, t.t->name, true, depth, set);
-  Mem m = cmpd_mem(c);
-  for_in(i, m.len) {
+  for_in(i, cmpd_len(c)) {
     fputc(' ', f);
-    write_repr_obj(f, m.els[i], is_quoted, depth, set);
+    write_repr_obj(f, cmpd_el(c, i), is_quoted, depth, set);
   }
   fputc('}', f);
   if (is_quoted) fputs("¿?", f);

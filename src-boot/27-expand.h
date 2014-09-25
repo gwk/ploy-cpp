@@ -14,10 +14,9 @@ static Obj expand_quasiquote(Int d, Obj o) {
     return cmpd_new1(rc_ret(t_Quo), o);
   }
   Obj type = obj_type(o);
-  Mem m = cmpd_mem(o);
   if (!d && is(type, t_Unq)) { // unquote is only performed at the same (innermost) level.
-    check(m.len == 1, "malformed Unq: %o", o);
-    Obj e = rc_ret(m.els[0]);
+    check(cmpd_len(o) == 1, "malformed Unq: %o", o);
+    Obj e = rc_ret(cmpd_el(o, 0));
     rc_rel(o);
     return e;
   }
@@ -28,11 +27,11 @@ static Obj expand_quasiquote(Int d, Obj o) {
     } else if (is(type, t_Unq)) {
       d1--;
     }
-    Obj s = cmpd_new_raw(rc_ret(t_Syn_struct_typed), m.len + 1);
+    Obj s = cmpd_new_raw(rc_ret(t_Syn_struct_typed), cmpd_len(o) + 1);
     Obj* dst = cmpd_els(s);
     dst[0] = rc_ret(type_name(type));
-    for_in(i, m.len) {
-      Obj e = m.els[i];
+    for_in(i, cmpd_len(o)) {
+      Obj e = cmpd_el(o, i);
       dst[i + 1] = expand_quasiquote(d1, rc_ret(e)); // propagate the quotation.
     }
     rc_rel(o);
@@ -56,15 +55,14 @@ static Obj expand(Int d, Obj env, Obj code) {
   if (!obj_is_cmpd(code)) {
     return code;
   }
-  Mem m = cmpd_mem(code);
   Obj type = ref_type(code);
   if (is(type, t_Quo)) {
-    exc_check(m.len == 1, "malformed Quo: %o", code);
+    exc_check(cmpd_len(code) == 1, "malformed Quo: %o", code);
     return code;
   }
   if (is(type, t_Qua)) {
-    exc_check(m.len == 1, "malformed Qua: %o", code);
-    Obj expr = rc_ret(m.els[0]);
+    exc_check(cmpd_len(code) == 1, "malformed Qua: %o", code);
+    Obj expr = rc_ret(cmpd_el(code, 0));
     rc_rel(code);
     return expand_quasiquote(0, expr);
   }
@@ -79,10 +77,10 @@ static Obj expand(Int d, Obj env, Obj code) {
     // TODO: collapse comment and VOID nodes or perhaps a special COLLAPSE node?
     // this might allow for us to do away with the preprocess phase,
     // and would also allow a macro to collapse into nothing.
-    Obj expanded = cmpd_new_raw(rc_ret(ref_type(code)), m.len);
+    Obj expanded = cmpd_new_raw(rc_ret(ref_type(code)), cmpd_len(code));
     Obj* expanded_els = cmpd_els(expanded);
-    for_in(i, m.len) {
-      expanded_els[i] = expand(d + 1, env, rc_ret(m.els[i]));
+    for_in(i, cmpd_len(code)) {
+      expanded_els[i] = expand(d + 1, env, rc_ret(cmpd_el(code, i)));
     }
     rc_rel(code);
     return expanded;
