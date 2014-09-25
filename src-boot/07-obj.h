@@ -69,7 +69,7 @@ union _Obj {
   Int i;
   Uns u;
   Raw r;
-  Chars c; // no valid object can be interpreted as Chars; this for the exc_raise formatter.
+  Chars chars; // no valid object can be interpreted as Chars; this for the exc_raise formatter.
   Ref_head* h; // common to all ref types.
   Data* d;
   Env* e;

@@ -44,7 +44,7 @@ static void fmt_list_to_file(CFile f, Chars_const fmt, Chars_const args_str, va_
         case 'i': fprintf(f, "%li", arg.i); break;
         case 'u': fprintf(f, "%lu", arg.u); break;
         case 'p': fprintf(f, "%p", arg.r); break;
-        case 's': fputs(arg.c, f); break;
+        case 's': fputs(arg.chars, f); break;
         case 'c': fputs(char_repr((Char)arg.u), f); break;
         default: error("obj_fmt: invalid placeholder: '%c'; %s", (Uns)c, fmt);
       }
