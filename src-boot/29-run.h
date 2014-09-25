@@ -461,7 +461,8 @@ static Step run_call_dispatcher(Int d, Trace* trace, Obj env, Obj call, Mem vals
   Step step = run_Call_disp(d, trace, env, call, disp_vals);
   step = run_tail(d, trace, step);
   env = step.res.env;
-  rc_rel(callee); // vals 0.
+  // replace the original callee with the function returned by the dispatcher.
+  rc_rel(mem_el_move(vals, 0));
   mem_put(vals, 0, step.res.val);
   return run_Call_disp(d, trace, env, call, vals);
 }

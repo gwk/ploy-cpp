@@ -11,15 +11,18 @@ struct _Cmpd {
 DEF_SIZE(Cmpd);
 
 
+static Obj* cmpd_els(Obj c);
+
 static Obj cmpd_new_raw(Obj type, Int len) {
   // owns type.
   Obj c = ref_new(size_Cmpd + (size_Obj * len), type);
   c.c->len = len;
+#if OPTION_MEM_ZERO
+  memset(cmpd_els(c), 0, cast(Uns, (size_Obj * len)));
+#endif
   return c;
 }
 
-
-static Obj* cmpd_els(Obj c);
 
 static Obj cmpd_new_M(Obj type, Mem m) {
   // owns type, elements of m.

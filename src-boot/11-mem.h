@@ -95,6 +95,9 @@ static Obj mem_el_move(Mem m, Int i) {
 
 static void mem_put(Mem m, Int i, Obj o) {
   assert_mem_index_is_valid(m, i);
+#if OPTION_MEM_ZERO
+  assert(is(m.els[i], obj0));
+#endif
   m.els[i] = o;
 }
 
