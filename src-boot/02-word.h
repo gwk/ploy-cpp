@@ -137,7 +137,7 @@ static NO_RETURN _exc_raise(Trace* trace, Obj env, Chars_const fmt, Chars_const 
 #define check(condition, fmt, ...) { if (!(condition)) error(fmt, ## __VA_ARGS__); }
 
 // NOTE: the exc macros expect env to be defined in the current scope.
-#define exc_raise(fmt, ...) _exc_raise(trace, env, fmt, #__VA_ARGS__, ##__VA_ARGS__)
+#define exc_raise(fmt, ...) _exc_raise(t, env, fmt, #__VA_ARGS__, ##__VA_ARGS__)
 #define exc_check(condition, ...) if (!(condition)) exc_raise(__VA_ARGS__)
 
 

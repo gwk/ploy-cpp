@@ -28,7 +28,7 @@ typedef union {
 #define is_step_tail(step) !is_step_res(step)
 
 
-static Step run_sym(Trace* trace, Obj env, Obj code) {
+static Step run_sym(Trace* t, Obj env, Obj code) {
   // owns env.
   assert(obj_is_sym(code));
   assert(!is(code, s_ILLEGAL)); // anything that returns ILLEGAL should have raised an error.
@@ -41,7 +41,7 @@ static Step run_sym(Trace* trace, Obj env, Obj code) {
 }
 
 
-static Step run_Quo(Int d, Trace* trace, Obj env, Obj code) {
+static Step run_Quo(Int d, Trace* t, Obj env, Obj code) {
   // owns env.
   exc_check(cmpd_len(code) == 1, "Quo requires 1 field; received %i", cmpd_len(code));
   return mk_res(env, rc_ret(cmpd_el(code, 0)));
@@ -50,7 +50,7 @@ static Step run_Quo(Int d, Trace* trace, Obj env, Obj code) {
 
 static Step run(Int depth, Trace* parent_trace, Obj env, Obj code);
 
-static Step run_Do(Int d, Trace* trace, Obj env, Obj code) {
+static Step run_Do(Int d, Trace* t, Obj env, Obj code) {
   // owns env.
   Int len = cmpd_len(code);
   if (!len) {
@@ -58,7 +58,7 @@ static Step run_Do(Int d, Trace* trace, Obj env, Obj code) {
   }
   Int last = len - 1;
   for_in(i, last) {
-    Step step = run(d, trace, env, cmpd_el(code, i));
+    Step step = run(d, t, env, cmpd_el(code, i));
     env = step.res.env;
     rc_rel(step.res.val); // value ignored.
   };
@@ -66,7 +66,7 @@ static Step run_Do(Int d, Trace* trace, Obj env, Obj code) {
 }
 
 
-static Step run_Scope(Int d, Trace* trace, Obj env, Obj code) {
+static Step run_Scope(Int d, Trace* t, Obj env, Obj code) {
   // owns env.
   exc_check(cmpd_len(code) == 1, "Scope requires 1 field; received %i", cmpd_len(code));
   Obj expr = cmpd_el(code, 0);
@@ -75,7 +75,7 @@ static Step run_Scope(Int d, Trace* trace, Obj env, Obj code) {
 }
 
 
-static Obj bind_val(Trace* trace, Bool is_mutable, Obj env, Obj key, Obj val) {
+static Obj bind_val(Trace* t, Bool is_mutable, Obj env, Obj key, Obj val) {
   // owns env, key, val.
   Obj env1 = env_bind(env, is_mutable, key, val);
   exc_check(!is(env1, obj0), "symbol is already bound: %o", key);
@@ -83,7 +83,7 @@ static Obj bind_val(Trace* trace, Bool is_mutable, Obj env, Obj key, Obj val) {
 }
 
 
-static Step run_Bind(Int d, Trace* trace, Obj env, Obj code) {
+static Step run_Bind(Int d, Trace* t, Obj env, Obj code) {
   // owns env.
   exc_check(cmpd_len(code) == 3, "Bind requires 3 fields; received %i", cmpd_len(code));
   Obj is_mutable = cmpd_el(code, 0);
@@ -94,20 +94,20 @@ static Step run_Bind(Int d, Trace* trace, Obj env, Obj code) {
   exc_check(obj_is_sym(sym), "Bind requires argument 1 to be a bindable sym; received: %o",
     sym);
   exc_check(!sym_is_special(sym), "Bind cannot bind to special sym: %o", sym);
-  Step step = run(d, trace, env, expr);
-  Obj env1 = bind_val(trace, bool_is_true(is_mutable), step.res.env, rc_ret_val(sym),
+  Step step = run(d, t, env, expr);
+  Obj env1 = bind_val(t, bool_is_true(is_mutable), step.res.env, rc_ret_val(sym),
     rc_ret(step.res.val));
   return mk_res(env1, step.res.val);
 }
 
 
-static Step run_If(Int d, Trace* trace, Obj env, Obj code) {
+static Step run_If(Int d, Trace* t, Obj env, Obj code) {
   // owns env.
   exc_check(cmpd_len(code) == 3, "If requires 3 fields; received %i", cmpd_len(code));
   Obj pred = cmpd_el(code, 0);
   Obj then = cmpd_el(code, 1);
   Obj else_ = cmpd_el(code, 2);
-  Step step = run(d, trace, env, pred);
+  Step step = run(d, t, env, pred);
   env = step.res.env;
   Obj branch = is_true(step.res.val) ? then : else_;
   rc_rel(step.res.val);
@@ -115,7 +115,7 @@ static Step run_If(Int d, Trace* trace, Obj env, Obj code) {
 }
 
 
-static Step run_Fn(Int d, Trace* trace, Obj env, Obj code) {
+static Step run_Fn(Int d, Trace* t, Obj env, Obj code) {
   // owns env.
   exc_check(cmpd_len(code) == 6, "Fn requires 6 fields; received %i", cmpd_len(code));
   Obj name      = cmpd_el(code, 0);
@@ -170,15 +170,15 @@ static Step run_Fn(Int d, Trace* trace, Obj env, Obj code) {
 }
 
 
-static Step run_Syn_struct_typed(Int d, Trace* trace, Obj env, Obj code) {
+static Step run_Syn_struct_typed(Int d, Trace* t, Obj env, Obj code) {
   // owns env.
   Int len = cmpd_len(code);
   check(len > 0, "Syn-struct-typed is empty");
-  Step step = run(d, trace, env, cmpd_el(code, 0)); // evaluate the type.
+  Step step = run(d, t, env, cmpd_el(code, 0)); // evaluate the type.
   env = step.res.env;
   Obj s = cmpd_new_raw(step.res.val, len - 1);
   for_in(i, len - 1) {
-    step = run(d, trace, env, cmpd_el(code, i + 1));
+    step = run(d, t, env, cmpd_el(code, i + 1));
     env = step.res.env;
     cmpd_put(s, i, step.res.val);
   }
@@ -186,16 +186,16 @@ static Step run_Syn_struct_typed(Int d, Trace* trace, Obj env, Obj code) {
 }
 
 
-static Step run_Syn_seq_typed(Int d, Trace* trace, Obj env, Obj code) {
+static Step run_Syn_seq_typed(Int d, Trace* t, Obj env, Obj code) {
   // owns env.
   Int len = cmpd_len(code);
   check(len > 0, "Syn-seq-typed is empty");
-  Step step = run(d, trace, env, cmpd_el(code, 0)); // evaluate the type.
+  Step step = run(d, t, env, cmpd_el(code, 0)); // evaluate the type.
   env = step.res.env;
   // TODO: derive the appropriate sequence type from the element type.
   Obj s = cmpd_new_raw(step.res.val, len - 1);
   for_in(i, len - 1) {
-    step = run(d, trace, env, cmpd_el(code, i + 1));
+    step = run(d, t, env, cmpd_el(code, i + 1));
     env = step.res.env;
     cmpd_put(s, i, step.res.val);
   }
@@ -218,7 +218,7 @@ Obj p##_el_type = cmpd_el(p, 1); \
 Obj p##_el_dflt = cmpd_el(p, 2)
 
 
-static Obj bind_par(Int d, Trace* trace, Obj env, Obj call, Obj par, Mem vals, Int* i_vals) {
+static Obj bind_par(Int d, Trace* t, Obj env, Obj call, Obj par, Mem vals, Int* i_vals) {
   // owns env.
   UNPACK_PAR(par); UNUSED_VAR(par_el_type);
   Obj val;
@@ -233,18 +233,18 @@ static Obj bind_par(Int d, Trace* trace, Obj env, Obj call, Obj par, Mem vals, I
     // TODO: check type.
     val = arg;
   } else if (!is(par_el_dflt, s_void)) { // use parameter default expression.
-    Step step = run(d, trace, env, par_el_dflt);
+    Step step = run(d, t, env, par_el_dflt);
     env = step.res.env;
     val = step.res.val;
   } else {
     error("call: %o\nreceived too few arguments", call);
   }
-  env = bind_val(trace, false, env, rc_ret_val(par_el_name), val);
+  env = bind_val(t, false, env, rc_ret_val(par_el_name), val);
   return env;
 }
 
 
-static Obj bind_variad(Int d, Trace* trace, Obj env, Obj call, Obj par, Mem vals, Int* i_vals) {
+static Obj bind_variad(Int d, Trace* t, Obj env, Obj call, Obj par, Mem vals, Int* i_vals) {
   // owns env.
   UNPACK_PAR(par); UNUSED_VAR(par_el_type);
   exc_check(is(par_el_dflt, s_void), "variad parameter has non-void default argument: %o", par);
@@ -264,15 +264,15 @@ static Obj bind_variad(Int d, Trace* trace, Obj env, Obj call, Obj par, Mem vals
     Obj arg = mem_el_move(vals, i);
     cmpd_put(vrd, j++, arg);
   }
-  env = bind_val(trace, false, env, rc_ret_val(par_el_name), vrd);
+  env = bind_val(t, false, env, rc_ret_val(par_el_name), vrd);
   return env;
 }
 
 
-static Obj run_bind_vals(Int d, Trace* trace, Obj env, Obj call, Obj variad, Obj pars,
+static Obj run_bind_vals(Int d, Trace* t, Obj env, Obj call, Obj variad, Obj pars,
   Mem vals) {
   // owns env.
-  env = bind_val(trace, false, env, rc_ret_val(s_self), mem_el_move(vals, 0));
+  env = bind_val(t, false, env, rc_ret_val(s_self), mem_el_move(vals, 0));
   Int i_vals = 1; // first name of the interleaved name/value pairs.
   Bool has_variad = false;
   for_in(i_pars, cmpd_len(pars)) {
@@ -283,9 +283,9 @@ static Obj run_bind_vals(Int d, Trace* trace, Obj env, Obj call, Obj variad, Obj
     if (is(par, variad)) {
       exc_check(!has_variad, "call: %o\nmultiple variad parameters", call);
       has_variad = true;
-      env = bind_variad(d, trace, env, call, par, vals, &i_vals);
+      env = bind_variad(d, t, env, call, par, vals, &i_vals);
     } else {
-      env = bind_par(d, trace, env, call, par, vals, &i_vals);
+      env = bind_par(d, t, env, call, par, vals, &i_vals);
     }
   }
   check(i_vals == vals.len, "call: %o\nreceived too many arguments", call);
@@ -293,7 +293,7 @@ static Obj run_bind_vals(Int d, Trace* trace, Obj env, Obj call, Obj variad, Obj
 }
 
 
-static Step run_call_func(Int d, Trace* trace, Obj env, Obj call, Mem vals, Bool is_call) {
+static Step run_call_func(Int d, Trace* t, Obj env, Obj call, Mem vals, Bool is_call) {
   // owns env, func.
   Obj func = mem_el(vals, 0);
   assert(cmpd_len(func) == 8);
@@ -321,28 +321,28 @@ static Step run_call_func(Int d, Trace* trace, Obj env, Obj call, Mem vals, Bool
   Obj callee_env = env_push_frame(rc_ret(lex_env));
   // NOTE: because func is bound to self in callee_env, and func contains body,
   // we can give func to callee_env and still safely return the unretained body as tail.code.
-  callee_env = run_bind_vals(d, trace, callee_env, call, variad, pars, vals);
+  callee_env = run_bind_vals(d, t, callee_env, call, variad, pars, vals);
   mem_dealloc(vals);
   if (bool_is_true(is_native)) {
 #if OPTION_TCO
     // caller will own .env, .callee_env, but not .code.
     return mk_tail(.env=env, .callee_env=callee_env, .code=body);
 #else // NO TCO.
-    Step step = run(d, trace, callee_env, body); // owns callee_env.
+    Step step = run(d, t, callee_env, body); // owns callee_env.
     rc_rel(step.res.env);
     return mk_res(env, step.res.val); // NO TCO.
 #endif
   } else { // host function.
     exc_check(obj_is_ptr(body), "host function %o body is not a Ptr: %o", name, body);
     Func_host_ptr f_ptr = cast(Func_host_ptr, ptr_val(body));
-    Obj res = f_ptr(trace, callee_env);
+    Obj res = f_ptr(t, callee_env);
     rc_rel(callee_env);
     return mk_res(env, res); // NO TCO.
   }
 }
 
 
-static Step run_call_accessor(Int d, Trace* trace, Obj env, Obj call, Mem vals) {
+static Step run_call_accessor(Int d, Trace* t, Obj env, Obj call, Mem vals) {
   // owns env, vals.
   exc_check(vals.len == 3, "call: %o\naccessor requires 1 argument", call);
   exc_check(is(mem_el(vals, 1), obj0), "call:%o\naccessee is a label", call);
@@ -372,7 +372,7 @@ static Step run_call_accessor(Int d, Trace* trace, Obj env, Obj call, Mem vals) 
 }
 
 
-static Step run_call_mutator(Int d, Trace* trace, Obj env, Obj call, Mem vals) {
+static Step run_call_mutator(Int d, Trace* t, Obj env, Obj call, Mem vals) {
   // owns env, vals.
   exc_check(vals.len == 5, "call: %o\nmutator requires 2 arguments", call);
   exc_check(is(mem_el(vals, 1), obj0), "call:%o\nmutatee is a label", call);
@@ -405,7 +405,7 @@ static Step run_call_mutator(Int d, Trace* trace, Obj env, Obj call, Mem vals) {
 }
 
 
-static Step run_call_RUN(Int d, Trace* trace, Obj env, Obj call, Mem vals) {
+static Step run_call_RUN(Int d, Trace* t, Obj env, Obj call, Mem vals) {
   // owns env, vals.
   exc_check(vals.len == 3, "call: %o\n:RUN requires 1 argument", call);
   exc_check(is(mem_el(vals, 1), obj0), "call: %o\n: RUN expr is a label", call);
@@ -414,16 +414,16 @@ static Step run_call_RUN(Int d, Trace* trace, Obj env, Obj call, Mem vals) {
   mem_dealloc(vals);
   rc_rel_val(callee);
   // for now, perform a non-TCO run so that we do not have to retain expr.
-  Step step = run(d, trace, env, expr);
+  Step step = run(d, t, env, expr);
   rc_rel(expr);
   return step;
 }
 
 
-static Step run_Call_disp(Int d, Trace* trace, Obj env, Obj code, Mem vals);
+static Step run_Call_disp(Int d, Trace* t, Obj env, Obj code, Mem vals);
 static Step run_tail(Int d, Trace* parent_trace, Step step);
 
-static Step run_call_dispatcher(Int d, Trace* trace, Obj env, Obj call, Mem vals,
+static Step run_call_dispatcher(Int d, Trace* t, Obj env, Obj call, Mem vals,
   Obj dispatcher) {
   // owns env, vals.
   Obj callee = mem_el_ret(vals, 0);
@@ -439,17 +439,17 @@ static Step run_call_dispatcher(Int d, Trace* trace, Obj env, Obj call, Mem vals
   mem_put(disp_vals, 2, callee);
   mem_put(disp_vals, 3, s_types);
   mem_put(disp_vals, 4, types);
-  Step step = run_Call_disp(d, trace, env, call, disp_vals);
-  step = run_tail(d, trace, step);
+  Step step = run_Call_disp(d, t, env, call, disp_vals);
+  step = run_tail(d, t, step);
   env = step.res.env;
   // replace the original callee with the function returned by the dispatcher.
   rc_rel(mem_el_move(vals, 0));
   mem_put(vals, 0, step.res.val);
-  return run_Call_disp(d, trace, env, call, vals);
+  return run_Call_disp(d, t, env, call, vals);
 }
 
 
-static Step run_Call(Int d, Trace* trace, Obj env, Obj code) {
+static Step run_Call(Int d, Trace* t, Obj env, Obj code) {
   // owns env.
   Int len = cmpd_len(code);
   check(len > 0, "call is empty: %o", code);
@@ -465,14 +465,14 @@ static Step run_Call(Int d, Trace* trace, Obj env, Obj code) {
       UNPACK_LABEL(expr);
       exc_check(is(expr_el_type, s_nil),
         "call: %o\nlabeled argument cannot specify a type: %o", code, expr_el_type);
-      Step step = run(d, trace, env, expr_el_expr);
+      Step step = run(d, t, env, expr_el_expr);
       mem_put(vals, i * 2 - 1, expr_el_name);
       mem_put(vals, i * 2, step.res.val);
       env = step.res.env;
     }
     // TODO: splats; will require that vals grow dynamically.
     else { // unlabeled arg expr.
-      Step step = run(d, trace, env, expr);
+      Step step = run(d, t, env, expr);
       if (i) { // no name for the callee.
         mem_put(vals, i * 2 - 1, obj0);
       }
@@ -480,21 +480,21 @@ static Step run_Call(Int d, Trace* trace, Obj env, Obj code) {
       env = step.res.env;
     }
   }
-  return run_Call_disp(d, trace, env, code, vals);
+  return run_Call_disp(d, t, env, code, vals);
 }
 
 
-static Step run_Call_disp(Int d, Trace* trace, Obj env, Obj code, Mem vals) {
+static Step run_Call_disp(Int d, Trace* t, Obj env, Obj code, Mem vals) {
   Obj callee = mem_el(vals, 0);
   Obj type = obj_type(callee);
   Int ti = type_index(type); // Int type avoids incomplete enum switch error.
   switch (ti) {
-    case ti_Func:     return run_call_func(d, trace, env, code, vals, true);
-    case ti_Accessor: return run_call_accessor(d, trace, env, code, vals);
-    case ti_Mutator:  return run_call_mutator(d, trace, env, code, vals);
+    case ti_Func:     return run_call_func(d, t, env, code, vals, true);
+    case ti_Accessor: return run_call_accessor(d, t, env, code, vals);
+    case ti_Mutator:  return run_call_mutator(d, t, env, code, vals);
     case ti_Sym:
       switch (sym_index(callee)) {
-        case si_RUN: return run_call_RUN(d, trace, env, code, vals);
+        case si_RUN: return run_call_RUN(d, t, env, code, vals);
       }
   }
   Obj kind = type_kind(type);
@@ -502,7 +502,7 @@ static Step run_Call_disp(Int d, Trace* trace, Obj env, Obj code, Mem vals) {
     Obj dispatcher = cmpd_el(kind, 1);
     exc_check(!is(dispatcher, s_nil), "call: %o\nobject type has nil dispatcher: %o",
       code, type);
-    return run_call_dispatcher(d, trace, env, code, vals, dispatcher);
+    return run_call_dispatcher(d, t, env, code, vals, dispatcher);
 
   }
   exc_raise("call: %o\nobject is not callable: %o", code, callee);
@@ -526,7 +526,7 @@ static const Chars_const trace_expand_val_prefix = "▫ ";
 
 
 
-static Step run_step_disp(Int d, Trace* trace, Obj env, Obj code) {
+static Step run_step_disp(Int d, Trace* t, Obj env, Obj code) {
   // owns env.
   Obj_tag ot = obj_tag(code);
   if (ot == ot_ptr) {
@@ -539,13 +539,13 @@ static Step run_step_disp(Int d, Trace* trace, Obj env, Obj code) {
     if (obj_is_data_word(code)) {
       return mk_res(env, rc_ret_val(code)); // self-evaluating.
     } else {
-      return run_sym(trace, env, code);
+      return run_sym(t, env, code);
     }
   }
   assert(ot == ot_ref);
   Obj type = ref_type(code);
   Int ti = type_index(type); // Int type avoids incomplete enum switch error.
-#define RUN(t) case ti_##t: return run_##t(d, trace, env, code)
+#define RUN(type) case ti_##type: return run_##type(d, t, env, code)
   switch (ti) {
     case ti_Data:
     case ti_Accessor:
@@ -576,13 +576,13 @@ static void run_err_trace(Int d, Chars_const p, Obj o) {
 }
 
 
-static Step run_step(Int d, Trace* trace, Obj env, Obj code) {
+static Step run_step(Int d, Trace* t, Obj env, Obj code) {
   // owns env.
   run_err_trace(d, trace_run_prefix, code);
 #if OPTION_REC_LIMIT
   exc_check(d < OPTION_REC_LIMIT, "execution exceeded recursion limit: %i", OPTION_REC_LIMIT);
 #endif
-  Step step = run_step_disp(d, trace, env, code);
+  Step step = run_step_disp(d, t, env, code);
   return step;
 }
 
@@ -647,7 +647,7 @@ static Step run_code(Obj env, Obj code) {
 }
 
 
-static Obj run_macro(Trace* trace, Obj env, Obj code) {
+static Obj run_macro(Trace* t, Obj env, Obj code) {
   // owns env.
   run_err_trace(0, trace_expand_prefix, code);
   Int len = cmpd_len(code); 
@@ -666,8 +666,8 @@ static Obj run_macro(Trace* trace, Obj env, Obj code) {
     mem_put(vals, i * 2 - 1, obj0);
     mem_put(vals, i * 2, rc_ret(expr));
   }
-  Step step = run_call_func(0, trace, env, code, vals, false); // owns env, macro.
-  step = run_tail(0, trace, step); // handle any TCO steps.
+  Step step = run_call_func(0, t, env, code, vals, false); // owns env, macro.
+  step = run_tail(0, t, step); // handle any TCO steps.
   rc_rel(step.res.env);
   run_err_trace(0, trace_expand_val_prefix, step.res.val);
   return step.res.val;

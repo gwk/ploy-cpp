@@ -42,7 +42,7 @@ static Obj expand_quasiquote(Int d, Obj o) {
 }
 
 
-static Obj run_macro(Trace* trace, Obj env, Obj code);
+static Obj run_macro(Trace* t, Obj env, Obj code);
 
 static Obj expand(Int d, Obj env, Obj code) {
   // owns code.
@@ -50,8 +50,8 @@ static Obj expand(Int d, Obj env, Obj code) {
   check(d < OPTION_REC_LIMIT, "macro expansion exceeded recursion limit: %i\n%o",
     OPTION_REC_LIMIT, code);
 #endif
-  Trace t = {.code=code, .elided_step_count=0, .next=NULL};
-  Trace* trace = &t;
+  Trace trace = {.code=code, .elided_step_count=0, .next=NULL};
+  Trace* t = &trace;
   if (!obj_is_cmpd(code)) {
     return code;
   }
@@ -67,7 +67,7 @@ static Obj expand(Int d, Obj env, Obj code) {
     return expand_quasiquote(0, expr);
   }
   if (is(type, t_Expand)) {
-    Obj expanded = run_macro(trace, rc_ret(env), code); // owns env.
+    Obj expanded = run_macro(t, rc_ret(env), code); // owns env.
     rc_rel(code);
     // macro result may contain more expands; recursively expand the result.
     Obj final = expand(d + 1, env, expanded);

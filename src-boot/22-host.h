@@ -8,31 +8,31 @@
 #define GET_AB GET_A; GET_VAL(b)
 #define GET_ABC GET_AB; GET_VAL(c)
 
-static Obj host_identity(Trace* trace, Obj env) {
+static Obj host_identity(Trace* t, Obj env) {
   GET_A;
   return rc_ret(a);
 }
 
 
-static Obj host_is(Trace* trace, Obj env) {
+static Obj host_is(Trace* t, Obj env) {
   GET_AB;
   return bool_new(is(a, b));
 }
 
 
-static Obj host_is_true(Trace* trace, Obj env) {
+static Obj host_is_true(Trace* t, Obj env) {
   GET_A;
   return bool_new(is_true(a));
 }
 
 
-static Obj host_not(Trace* trace, Obj env) {
+static Obj host_not(Trace* t, Obj env) {
   GET_A;
   return bool_new(!is_true(a));
 }
 
 
-static Obj host_ineg(Trace* trace, Obj env) {
+static Obj host_ineg(Trace* t, Obj env) {
   GET_A;
   exc_check(obj_is_int(a), "neg requires Int; received: %o", a);
   Int i = int_val(a);
@@ -40,7 +40,7 @@ static Obj host_ineg(Trace* trace, Obj env) {
 }
 
 
-static Obj host_iabs(Trace* trace, Obj env) {
+static Obj host_iabs(Trace* t, Obj env) {
   GET_A;
   exc_check(obj_is_int(a), "abs requires Int; received: %o", a);
   Int i = int_val(a);
@@ -50,7 +50,7 @@ static Obj host_iabs(Trace* trace, Obj env) {
 
 // TODO: check for overflow. currently we rely on clang to insert overflow traps.
 #define HOST_BIN_OP(op) \
-static Obj host_##op(Trace* trace, Obj env) { \
+static Obj host_##op(Trace* t, Obj env) { \
   GET_AB; \
   exc_check(obj_is_int(a), #op " requires arg 1 to be a Int; received: %o", a); \
   exc_check(obj_is_int(b), #op " requires arg 2 to be a Int; received: %o", b); \
@@ -92,7 +92,7 @@ HOST_BIN_OP(ile)
 HOST_BIN_OP(ige)
 
 
-static Obj host_dlen(Trace* trace, Obj env) {
+static Obj host_dlen(Trace* t, Obj env) {
   GET_A;
   Int l;
   if (is(a, blank)) {
@@ -105,7 +105,7 @@ static Obj host_dlen(Trace* trace, Obj env) {
 }
 
 
-static Obj host_mlen(Trace* trace, Obj env) {
+static Obj host_mlen(Trace* t, Obj env) {
   GET_A;
   exc_check(obj_is_cmpd(a), "mlen requires Cmpd; received: %o", a);
   Int l = cmpd_len(a);
@@ -113,7 +113,7 @@ static Obj host_mlen(Trace* trace, Obj env) {
 }
 
 
-static Obj host_field(Trace* trace, Obj env) {
+static Obj host_field(Trace* t, Obj env) {
   GET_AB;
   exc_check(obj_is_cmpd(a), "field requires arg 1 to be a Struct; received: %o", a);
   exc_check(obj_is_int(b), "field requires arg 2 to be a Int; received: %o", b);
@@ -125,7 +125,7 @@ static Obj host_field(Trace* trace, Obj env) {
 }
 
 
-static Obj host_el(Trace* trace, Obj env) {
+static Obj host_el(Trace* t, Obj env) {
   GET_AB;
   exc_check(obj_is_cmpd(a), "el requires arg 1 to be a Mem; received: %o", a);
   exc_check(obj_is_int(b), "el requires arg 2 to be a Int; received: %o", b);
@@ -137,18 +137,18 @@ static Obj host_el(Trace* trace, Obj env) {
 }
 
 
-static Obj host_slice(Trace* trace, Obj env) {
+static Obj host_slice(Trace* t, Obj env) {
   GET_ABC;
   exc_check(obj_is_cmpd(a), "el requires arg 1 to be a Mem; received: %o", a);
   exc_check(obj_is_int(b), "el requires arg 2 to be a Int; received: %o", b);
   exc_check(obj_is_int(c), "el requires arg 3 to be a Int; received: %o", c);
-  Int f = int_val(b);
-  Int t = int_val(c);
-  return cmpd_slice(a, f, t);
+  Int fr = int_val(b);
+  Int to = int_val(c);
+  return cmpd_slice(a, fr, to);
 }
 
 
-static Obj host_prepend(Trace* trace, Obj env) {
+static Obj host_prepend(Trace* t, Obj env) {
   GET_AB;
   exc_check(obj_is_cmpd(b), "prepend requires arg 2 to be a Mem; received: %o", b);
   Obj res = cmpd_new_raw(rc_ret(ref_type(b)), cmpd_len(b) + 1);
@@ -160,7 +160,7 @@ static Obj host_prepend(Trace* trace, Obj env) {
 }
 
 
-static Obj host_append(Trace* trace, Obj env) {
+static Obj host_append(Trace* t, Obj env) {
   GET_AB;
   exc_check(obj_is_cmpd(a), "append requires arg 1 to be a Mem; received: %o", a);
   Int l = cmpd_len(a);
@@ -176,7 +176,7 @@ static Obj host_append(Trace* trace, Obj env) {
 // TODO: host_cat
 
 
-static Obj host_write(Trace* trace, Obj env) {
+static Obj host_write(Trace* t, Obj env) {
   GET_AB;
   exc_check(obj_is_ptr(a), "_host-write requires arg 1 to be a File; received: %o", a);
   exc_check(obj_is_data(b), "_host-write requires arg 2 to be a Data; received: %o", b);
@@ -187,7 +187,7 @@ static Obj host_write(Trace* trace, Obj env) {
 }
 
 
-static Obj host_write_repr(Trace* trace, Obj env) {
+static Obj host_write_repr(Trace* t, Obj env) {
   GET_AB;
   exc_check(obj_is_ptr(a), "_host-write-repr requires arg 1 to be a File; received: %o", a);
   CFile file = ptr_val(a);
@@ -196,7 +196,7 @@ static Obj host_write_repr(Trace* trace, Obj env) {
 }
 
 
-static Obj host_flush(Trace* trace, Obj env) {
+static Obj host_flush(Trace* t, Obj env) {
   GET_A;
   exc_check(obj_is_ptr(a), "_host-flush requires arg 1 to be a File; received: %o", a);
   CFile file = ptr_val(a);
@@ -205,7 +205,7 @@ static Obj host_flush(Trace* trace, Obj env) {
 }
 
 
-static Obj host_exit(Trace* trace, Obj env) {
+static Obj host_exit(Trace* t, Obj env) {
   GET_A;
   exc_check(obj_is_int(a), "exit requires arg 1 to be an Int; recived: %o", a);
   exit(cast(I32, int_val(a)));
@@ -213,22 +213,22 @@ static Obj host_exit(Trace* trace, Obj env) {
 }
 
 
-static Obj host_error(Trace* trace, Obj env) {
+static Obj host_error(Trace* t, Obj env) {
   GET_A;
   exc_raise("error: %o", a);
 }
 
 
-static Obj host_type_of(Trace* trace, Obj env) {
+static Obj host_type_of(Trace* t, Obj env) {
   GET_A;
-  Obj t = obj_type(a);
-  return rc_ret(t);
+  Obj type = obj_type(a);
+  return rc_ret(type);
 }
 
 
 static void write_data(CFile f, Obj d);
 
-static Obj host_dbg(Trace* trace, Obj env) {
+static Obj host_dbg(Trace* t, Obj env) {
   // owns elements of args.
   GET_AB; // label, obj.
   exc_check(is(obj_type(a), t_Data), "dbg expects argument 1 to be Data: %o", a);
@@ -238,7 +238,7 @@ static Obj host_dbg(Trace* trace, Obj env) {
 }
 
 
-static Obj host_boot_mk_do(Trace* trace, Obj env) {
+static Obj host_boot_mk_do(Trace* t, Obj env) {
   GET_A;
   if (!obj_is_cmpd(a)) return a;
   Mem m = cmpd_mem(a);
