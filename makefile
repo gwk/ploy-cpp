@@ -46,19 +46,19 @@ _bld/ploy-post-proc-no-libs.c: tools/cc.sh _bld/ploy-core.h src-boot/*
 _bld/ploy-dbg-post-proc-no-libs.c: tools/cc.sh _bld/ploy-core.h src-boot/*
 	tools/cc.sh -dbg src-boot/ploy.c -o $@ -E -D=SKIP_LIB_INCLUDES
 
-_bld/ploy.llvm: tools/cc.sh _bld/ploy-core.h src-boot/* 
+_bld/ploy.ll: tools/cc.sh _bld/ploy-core.h src-boot/* 
 	tools/cc.sh src-boot/ploy.c -o $@ -S -emit-llvm
 
-_bld/ploy-dbg.llvm: tools/cc.sh _bld/ploy-core.h src-boot/* 
+_bld/ploy-dbg.ll: tools/cc.sh _bld/ploy-core.h src-boot/* 
 	tools/cc.sh -dbg src-boot/ploy.c -o $@ -S -emit-llvm
 
 _bld/compile_commands.json: tools/cdb.sh tools/cc.sh
 	$^ $@
 
-_bld/ploy-callgraph.txt: tools/gen-callgraph-txt.sh _bld/ploy-dbg.llvm
+_bld/ploy-callgraph.txt: tools/gen-callgraph-txt.sh _bld/ploy-dbg.ll
 	$^ $@
 
-_bld/ploy-call-sccs.txt: tools/gen-call-sccs-txt.sh _bld/ploy-dbg.llvm
+_bld/ploy-call-sccs.txt: tools/gen-call-sccs-txt.sh _bld/ploy-dbg.ll
 	$^ $@
 
 _bld/ploy-callgraph.dot: tools/gen-callgraph-dot.py _bld/ploy-callgraph.txt _bld/ploy-call-sccs.txt
@@ -83,10 +83,10 @@ ast: _bld/ploy-ast-list.txt _bld/ploy-ast-print.txt _bld/ploy-ast-dump.txt
 cov: _bld/ploy-cov-summary.txt
 	cat $^
 
-llvm: _bld/ploy.llvm _bld/ploy-dbg.llvm
+ll: _bld/ploy.ll _bld/ploy-dbg.ll
 
 # output the useless plist to /dev/null.
-analyze: tools/cc.sh src-boot/*
+analyze: tools/cc.sh src-boot/*	
 	tools/cc.sh -dbg src-boot/ploy.c --analyze -o /dev/null
 
 callgraph: _bld/ploy-callgraph.svg
