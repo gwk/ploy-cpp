@@ -95,7 +95,7 @@ int main(int argc, Chars_const argv[]) {
     env = parse_and_eval(env, path, src, &sources, should_output_val);
   }
 
-#if OPT_ALLOC_COUNT
+#if OPTION_ALLOC_COUNT
   // cleanup in reverse order.
   rc_rel(env);
   env_cleanup();
@@ -109,7 +109,7 @@ int main(int argc, Chars_const argv[]) {
   counter_stats(should_log_stats);
 #endif
 
-#if OPT_RC_TABLE_STATS
+#if OPTION_RC_TABLE_STATS
   rc_table_stats();
 #endif
 

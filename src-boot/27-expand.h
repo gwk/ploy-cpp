@@ -6,9 +6,9 @@
 
 static Obj expand_quasiquote(Int d, Obj o) {
   // owns o.
-#if OPT_REC_LIMIT
-  check(d < OPT_REC_LIMIT, "quasiquotation exceeded recursion limit: %i\n%o",
-    OPT_REC_LIMIT, o);
+#if OPTION_REC_LIMIT
+  check(d < OPTION_REC_LIMIT, "quasiquotation exceeded recursion limit: %i\n%o",
+    OPTION_REC_LIMIT, o);
 #endif
   if (!obj_is_cmpd(o)) { // replace the quasiquote with quote.
     return cmpd_new1(rc_ret(t_Quo), o);
@@ -46,9 +46,9 @@ static Obj run_macro(Trace* trace, Obj env, Obj code);
 
 static Obj expand(Int d, Obj env, Obj code) {
   // owns code.
-#if OPT_REC_LIMIT
-  check(d < OPT_REC_LIMIT, "macro expansion exceeded recursion limit: %i\n%o",
-    OPT_REC_LIMIT, code);
+#if OPTION_REC_LIMIT
+  check(d < OPTION_REC_LIMIT, "macro expansion exceeded recursion limit: %i\n%o",
+    OPTION_REC_LIMIT, code);
 #endif
   Trace t = {.code=code, .elided_step_count=0, .next=NULL};
   Trace* trace = &t;

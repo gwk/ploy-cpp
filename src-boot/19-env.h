@@ -95,7 +95,7 @@ static void env_init() {
 }
 
 
-#if OPT_ALLOC_COUNT
+#if OPTION_ALLOC_COUNT
 static void env_cleanup() {
   rc_rel(empty_env);
   empty_env = obj0;

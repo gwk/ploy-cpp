@@ -45,7 +45,7 @@ static const Int init_rc_len_buckets = (1<<12) / size_RC_bucket; // start with o
 static RC_table rc_table = {};
 
 
-#if OPT_RC_TABLE_STATS
+#if OPTION_RC_TABLE_STATS
 
 #define rc_hist_len_powers (width_word - 1)
 #define rc_hist_len_collisions 256
@@ -124,7 +124,7 @@ static RC_bucket* rc_bucket_ptr(Obj r) {
 
 static void rc_bucket_append(RC_bucket* b, Obj r, Uns c) {
   assert(b->len <= b->cap);
-#if DEBUG // check that r is not already in b.
+#if !OPT // check that r is not already in b.
   for_in(i, b->len) {
     RC_item* item = b->items + i;
     assert(!is(item->r, r));
@@ -178,7 +178,7 @@ static void rc_init() {
 }
 
 
-#if OPT_ALLOC_COUNT
+#if OPTION_ALLOC_COUNT
 static void rc_cleanup() {
   for_in(i, rc_table.len_buckets) {
     raw_dealloc(rc_table.buckets[i].items, ci_RC_bucket);
@@ -258,7 +258,7 @@ UNUSED_FN static void rc_delegate(Obj a, Obj b) {
 }
 
 
-#if OPT_ALLOC_COUNT
+#if OPTION_ALLOC_COUNT
 static void rc_remove(Obj r) {
   RC_BII bii = rc_get_BII(r);
   if (rc_item_is_direct(bii.item)) {
@@ -357,7 +357,7 @@ UNUSED_FN static void rc_dump(Chars_const identifier) {
 }
 
 
-#if OPT_RC_TABLE_STATS
+#if OPTION_RC_TABLE_STATS
 static void rc_table_stats() {
   errFL("\n==== PLOY RC TABLE STATS ====");
   errFL("total refs: %ld; final buckets_len: %ld", rc_hist_ref_count, rc_table.len_buckets);

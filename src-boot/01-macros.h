@@ -3,11 +3,11 @@
 
 // imports and macros.
 
-#ifndef DEBUG
-#define DEBUG 0
+#ifndef OPT
+#error "must define OPT to either 0 (debug) or 1 (optimized)"
 #endif
 
-#if !DEBUG
+#if OPT
 #define NDEBUG 1 // omit assertions.
 #endif
 
@@ -30,36 +30,36 @@
 #include "ploy-core.h"
 
 // enable tail-call optimizations.
-#ifndef OPT_TCO
-#define OPT_TCO 1
+#ifndef OPTION_TCO
+#define OPTION_TCO 1
 #endif
 
-#ifndef OPT_REC_LIMIT
-#define OPT_REC_LIMIT (1<<10)
+#ifndef OPTION_REC_LIMIT
+#define OPTION_REC_LIMIT (1<<10)
 #endif
 
 // zero object words for new, moved, and released elements to catch invalid accesses.
-#ifndef OPT_MEM_ZERO
-#define OPT_MEM_ZERO DEBUG
+#ifndef OPTION_MEM_ZERO
+#define OPTION_MEM_ZERO !OPT
 #endif
 
 // on ref object dealloc, do not actually call free to aid in debugging overelease bugs.
-#ifndef OPT_DEALLOC_PRESERVE
-#define OPT_DEALLOC_PRESERVE DEBUG
+#ifndef OPTION_DEALLOC_PRESERVE
+#define OPTION_DEALLOC_PRESERVE !OPT
 #endif
 
 // count all heap allocations and deallocations.
-#ifndef OPT_ALLOC_COUNT
-#define OPT_ALLOC_COUNT DEBUG
+#ifndef OPTION_ALLOC_COUNT
+#define OPTION_ALLOC_COUNT !OPT
 #endif
 
 // reference counter hash table stats.
-#ifndef OPT_RC_TABLE_STATS
-#define OPT_RC_TABLE_STATS 0
+#ifndef OPTION_RC_TABLE_STATS
+#define OPTION_RC_TABLE_STATS 0
 #endif
 
-#ifndef OPT_BLANK_PTR_REPR
-#define OPT_BLANK_PTR_REPR 0
+#ifndef OPTION_BLANK_PTR_REPR
+#define OPTION_BLANK_PTR_REPR 0
 #endif
 
 // verbose logging to aid debugging.
@@ -143,10 +143,10 @@ for (Int i = (n) - 1, _end_##i = (m), _step_##i = (s); i >= _end_##i; i -= _step
 #define OVERLOAD __attribute__((overloadable))
 
 
-#if DEBUG
-#define DEBUG_FN
-#define DBG_VAR(x)
-#else
-#define DEBUG_FN UNUSED_FN
+#if OPT
+#define DBG_FN UNUSED_FN
 #define DBG_VAR(x) UNUSED_VAR(x)
+#else
+#define DBG_FN
+#define DBG_VAR(x)
 #endif

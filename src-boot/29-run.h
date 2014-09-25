@@ -338,7 +338,7 @@ static Step run_call_func(Int d, Trace* trace, Obj env, Obj call, Mem vals, Bool
   callee_env = run_bind_vals(d, trace, callee_env, call, variad, pars, vals);
   mem_dealloc(vals);
   if (bool_is_true(is_native)) {
-#if OPT_TCO
+#if OPTION_TCO
     // caller will own .env, .callee_env, but not .code.
     return mk_tail(.env=env, .callee_env=callee_env, .code=body);
 #else // NO TCO.
@@ -597,8 +597,8 @@ static void run_err_trace(Int d, Chars_const p, Obj o) {
 static Step run_step(Int d, Trace* trace, Obj env, Obj code) {
   // owns env.
   run_err_trace(d, trace_run_prefix, code);
-#if OPT_REC_LIMIT
-  exc_check(d < OPT_REC_LIMIT, "execution exceeded recursion limit: %i", OPT_REC_LIMIT);
+#if OPTION_REC_LIMIT
+  exc_check(d < OPTION_REC_LIMIT, "execution exceeded recursion limit: %i", OPTION_REC_LIMIT);
 #endif
   Step step = run_step_disp(d, trace, env, code);
   return step;

@@ -33,7 +33,7 @@ COUNTER_LIST
 } Counter_index;
 
 
-#if OPT_ALLOC_COUNT
+#if OPTION_ALLOC_COUNT
 
 // the global array of inc/dec counter pairs.
 static Int counters[ci_end][2] = {};
@@ -70,10 +70,10 @@ static void counter_stats(Bool log_all) {
 }
 
 
-#else // !OPT_ALLOC_COUNT
+#else // !OPTION_ALLOC_COUNT
 
 #define counter_inc(ci) ((void)0)
 #define counter_dec(ci) ((void)0)
 #define counter_stats(ci) ((void)0)
 
-#endif // OPT_ALLOC_COUNT
+#endif // OPTION_ALLOC_COUNT

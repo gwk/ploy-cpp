@@ -18,7 +18,7 @@ fi
 if [[ "$1" == "-dbg" ]]; then
   shift
   opts="\
--DDEBUG=1 \
+-DOPT=0 \
 -fstack-protector \
 -fsanitize=local-bounds \
 -fsanitize=undefined \
@@ -29,7 +29,7 @@ if [[ "$1" == "-dbg" ]]; then
 
 else
   opts="\
--DDEBUG=0 \
+-DOPT=1 \
 -Ofast \
 "
 #-freg-struct-return        Override the default ABI to return small structs in registers

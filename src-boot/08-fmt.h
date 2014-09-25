@@ -77,7 +77,7 @@ Obj dbg(Obj o) {
 }
 
 
-#if OPT_DEALLOC_PRESERVE
+#if OPTION_DEALLOC_PRESERVE
 #define fmt_obj_dealloc_preserve "%o"
 #else
 #define fmt_obj_dealloc_preserve "%p"

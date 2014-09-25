@@ -292,7 +292,7 @@ static Obj type_init_values(Obj env) {
 }
 
 
-#if OPT_ALLOC_COUNT
+#if OPTION_ALLOC_COUNT
 static void type_cleanup() {
   // run cleanup in reverse so that Type is cleaned up last.
   // the type slot is released first, and then rc_remove is called,

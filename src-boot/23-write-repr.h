@@ -224,7 +224,7 @@ static void write_repr_obj(CFile f, Obj o, Bool is_quoted, Int depth, Set* set) 
   // is_quoted indicates that we are writing part of a repr that has already been quoted.
   Obj_tag ot = obj_tag(o);
   if (ot == ot_ptr) {
-#if OPT_BLANK_PTR_REPR
+#if OPTION_BLANK_PTR_REPR
     fprintf(f, NO_REPR_PO "Ptr" NO_REPR_PC);
 #else
     fprintf(f, NO_REPR_PO "%p" NO_REPR_PC, ptr_val(o));
@@ -255,7 +255,7 @@ static void write_repr_obj(CFile f, Obj o, Bool is_quoted, Int depth, Set* set) 
       set_remove(set, o);
     }
   }
-#if DEBUG
+#if !OPT
   err_flush();
 #endif
 }

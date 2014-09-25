@@ -164,7 +164,7 @@ static Bool obj_is_cmpd(Obj o) {
 }
 
 
-DEBUG_FN static Bool obj_is_type(Obj o) {
+DBG_FN static Bool obj_is_type(Obj o) {
   return obj_is_ref(o) && ref_is_type(o);
 }
 
@@ -182,7 +182,7 @@ static Obj obj_type(Obj o) {
 }
 
 
-#if OPT_ALLOC_COUNT
+#if OPTION_ALLOC_COUNT
 
 static Counter_index obj_counter_index(Obj o) {
   Obj_tag ot = obj_tag(o);

@@ -67,9 +67,9 @@ static Obj ref_dealloc(Obj r) {
     tail = cmpd_rel_fields(r);
   }
   // ret/rel counter has already been decremented by rc_rel.
-#if !OPT_DEALLOC_PRESERVE
+#if !OPTION_DEALLOC_PRESERVE
   raw_dealloc(r.r, ci_Ref_alloc);
-#elif OPT_ALLOC_COUNT
+#elif OPTION_ALLOC_COUNT
   // manually count for the missing raw_dealloc.
   counter_dec(ci_Ref_alloc);
 #endif
