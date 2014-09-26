@@ -222,7 +222,7 @@ static Obj cmpd_slice(Obj c, Int f, Int t) {
 
 static Obj cmpd_rel_fields(Obj c) {
   Mem m = cmpd_mem(c);
-  if (!m.len) return obj0; // termination sentinel for rc_rel tail loop.
+  if (!m.len) return obj0; // return the termination sentinel for rc_rel tail loop.
   Int last_i = m.len - 1;
   it_mem_to(it, m, last_i) {
     rc_rel(*it);
