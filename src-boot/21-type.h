@@ -80,7 +80,7 @@ TYPE_LIST
 
 
 // in order for type indices to work, the known types must be allocated in a single slab.
-static Type* type_table;
+static Type type_table[ti_END];
 
 
 #define assert_valid_type_index(ti) assert((ti) >= 0 && (ti) < ti_END)
@@ -265,9 +265,8 @@ static void type_add(Obj type, Chars_const c_name, Obj kind) {
 
 
 static void type_init_table() {
-  // the first step is to create the table, a single memory slab of the basic types.
-  // this allows us to map between type pointers and Type_index indices.
-  type_table = raw_alloc(ti_END * size_Type, ci_Type_table);
+  // the type table holds the core types, and is statically allocated,
+  // which allows us to map between type pointers and Type_index indices.
   // even though the contents of the table are not yet initialized,
   // we can now set all of the core type t_<T> c pointer variables,
   // which are necessary for initialization of all other basic ploy objects.
@@ -311,7 +310,6 @@ static void type_cleanup() {
     assert(is(o.t->kind, s_ILLEGAL));
     rc_remove(o);
   }
-  raw_dealloc(type_table, ci_Type_table);
 }
 #endif
 
