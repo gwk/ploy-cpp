@@ -1,9 +1,6 @@
-.PHONY: all clean preprocess cg-view test-dbg test-rel test
-
-all: _bld/ploy _bld/ploy-dbg
-
-clean:
-	rm -rf _bld/*
+# $@: The file name of the target of the rule.
+# $<: The name of the first prerequisite.
+# $^: The names of all the prerequisites, with spaces between them. 
 
 _bld/prof-res-usage: tools/cc.sh tools/prof-res-usage.c
 	tools/cc.sh tools/prof-res-usage.c -o $@
@@ -75,6 +72,13 @@ _bld/ploy-ast-print.txt: _bld/compile_commands.json _bld/ploy-core.h src-boot/*
 
 _bld/ploy-ast-dump.txt: _bld/compile_commands.json _bld/ploy-core.h src-boot/*
 	clang-check -p _bld/compile_commands.json src-boot/ploy.c -ast-dump > $@
+
+.PHONY: all clean preprocess ast cov ll analyze callgraph test-dbg test-rel test perf-test
+
+all: _bld/ploy _bld/ploy-dbg
+
+clean:
+	rm -rf _bld/*
 
 preprocess: _bld/ploy-post-proc-no-libs.c _bld/ploy-dbg-post-proc-no-libs.c
 
