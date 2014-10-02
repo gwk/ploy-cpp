@@ -3,7 +3,7 @@
 
 // type objects.
 
-#include "20-cmpd.h"
+#include "21-global.h"
 
 
 struct _Type {
