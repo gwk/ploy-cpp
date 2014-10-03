@@ -1,0 +1,11 @@
+{
+  'code': 1,
+  'out': '''\
+`Sym `s
+`Int 1
+`Data 'hi'
+''',
+  'err': '''\
+error: dispatcher cannot handle argument type (intentional test error)
+''',
+}

@@ -293,21 +293,19 @@ static Obj type_init_values(Obj env) {
 
 #if OPTION_ALLOC_COUNT
 static void type_cleanup() {
-  // run cleanup in reverse so that Type is cleaned up last.
-  // the type slot is released first, and then rc_remove is called,
-  // so that Type releases itself first and then verifies that its rc count is zero.
   mem_rel_dealloc(global_singletons.mem);
-  for_in_rev(i, ti_END) {
+  for_in(i, ti_END) {
     Obj o = type_for_index(cast(Type_index, i));
     rc_rel(o.t->kind);
-    o.t->kind = s_ILLEGAL; // we do not retain this since it is a temporary marker for debugging.
-  }    
+    o.t->kind = s_DISSOLVED; // not counted; further access is invalid.
+  }
+  // run final cleanup in reverse so that Type is cleaned up last;
+  // the type slot is released first, and then rc_remove is called,
+  // so that Type releases itself first and then verifies that its rc count is zero.
   for_in_rev(i, ti_END) {
     Obj o = type_for_index(cast(Type_index, i));
     rc_rel(o.t->type);
-    rc_rel(o.t->name);
-    // kind has already been released in previous loop; s_ILLEGAL was not retained.
-    assert(is(o.t->kind, s_ILLEGAL));
+    rc_rel_val(o.t->name); // order does not matter as long as name is always a symbol.
     rc_remove(o);
   }
 }

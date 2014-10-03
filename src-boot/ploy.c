@@ -97,6 +97,7 @@ int main(int argc, Chars_const argv[]) {
 
 #if OPTION_ALLOC_COUNT
   // cleanup in reverse order.
+  global_cleanup();
   rc_rel(env);
   env_cleanup();
   // release but do not clear to facilitate debugging during type_cleanup.

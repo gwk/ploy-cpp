@@ -156,6 +156,15 @@ UNUSED_FN static void mem_rel(Mem m) {
 }
 
 
+#if OPTION_ALLOC_COUNT
+static void mem_dissolve(Mem m) {
+  it_mem(it, m) {
+    rc_dissolve(*it);
+  }
+}
+#endif
+
+
 static void mem_dealloc_no_clear(Mem m) {
   raw_dealloc(m.els, ci_Mem);
 }
@@ -177,3 +186,12 @@ static void mem_rel_dealloc(Mem m) {
   mem_rel_no_clear(m);
   mem_dealloc_no_clear(m);
 }
+
+
+#if OPTION_ALLOC_COUNT
+static void mem_dissolve_dealloc(Mem m) {
+  mem_dissolve(m);
+  mem_dealloc_no_clear(m);
+}
+#endif
+

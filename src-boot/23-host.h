@@ -226,10 +226,16 @@ static Obj host_type_of(Trace* t, Obj env) {
 }
 
 
+static Obj host_globalize(Trace* t, Obj env) {
+  GET_A;
+  global_push(a);
+  return rc_ret(s_void);
+}
+
+
 static void write_data(CFile f, Obj d);
 
 static Obj host_dbg(Trace* t, Obj env) {
-  // owns elements of args.
   GET_AB; // label, obj.
   exc_check(is(obj_type(a), t_Data), "dbg expects argument 1 to be Data: %o", a);
   write_data(stderr, a);
@@ -326,6 +332,7 @@ static Obj host_init(Obj env) {
   DEF_FH(1, "exit", host_exit);
   DEF_FH(1, "error", host_error);
   DEF_FH(1, "type-of", host_type_of);
+  DEF_FH(1, "globalize", host_globalize);
   DEF_FH(2, "dbg", host_dbg);
   DEF_FH(1, "_boot-mk-do", host_boot_mk_do);
 #undef DEF_FH

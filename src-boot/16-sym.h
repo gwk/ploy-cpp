@@ -87,6 +87,7 @@ static Obj sym_new_from_c(Chars_const c) {
 // the following "X Macro" is expanded with various temporary definitions of SYM.
 #define SYM_LIST \
 S(ILLEGAL) \
+S(DISSOLVED) \
 S(void) \
 S(nil) \
 S(ENV_END) \

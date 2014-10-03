@@ -4,6 +4,13 @@
 #include "19-env.h"
 
 
+// iterate over a compound.
+#define it_cmpd(it, c) \
+for (Obj *it = cmpd_els(c), *_end_##it = it + cmpd_len(c); \
+it < _end_##it; \
+it++)
+
+
 struct _Cmpd {
   Ref_head head;
   Int len;
@@ -231,6 +238,16 @@ static Obj cmpd_rel_fields(Obj c) {
 }
 
 
+#if OPTION_ALLOC_COUNT
+static void cmpd_dissolve_fields(Obj c) {
+  it_cmpd(it, c) {
+    rc_rel(*it);
+    *it = rc_ret_val(s_DISSOLVED);
+  }
+}
+#endif
+
+
 static Obj t_Unq;
 
 static Bool cmpd_contains_unquote(Obj c) {
@@ -243,11 +260,4 @@ static Bool cmpd_contains_unquote(Obj c) {
   }
   return false;
 }
-
-
-// iterate over a compound.
-#define it_cmpd(it, c) \
-for (Obj *it = cmpd_els(c), *_end_##it = it + cmpd_len(c); \
-it < _end_##it; \
-it++)
 

@@ -327,6 +327,18 @@ static void rc_rel(Obj o) {
 }
 
 
+#if OPTION_ALLOC_COUNT
+static void cmpd_dissolve_fields(Obj c);
+
+static void rc_dissolve(Obj o) {
+  if (obj_is_cmpd(o)) {
+    cmpd_dissolve_fields(o);
+  }
+  rc_rel(o);
+}
+#endif
+
+
 static Obj rc_ret_val(Obj o) {
   // ret counting for non-ref objects. a no-op for optimized builds.
   assert(obj_is_val(o));
