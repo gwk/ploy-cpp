@@ -2,6 +2,9 @@
 # $<: The name of the first prerequisite.
 # $^: The names of all the prerequisites, with spaces between them. 
 
+# first target is the default.
+default: all
+
 _bld/prof-res-usage: tools/cc.sh tools/prof-res-usage.c
 	tools/cc.sh tools/prof-res-usage.c -o $@
 
