@@ -6,7 +6,7 @@
   "patterns": [
 
     { "name": "keyword.control.ploy",
-      "match": "\\b(ILLEGAL|void|nil|VEC0|CHAIN0|END|false|true)\\b" },
+      "match": "\\b(void)\\b" },
 
     { "name": "keyword.operator.ploy",
       "match": "[()<>{}]|\\[|\\]" },
