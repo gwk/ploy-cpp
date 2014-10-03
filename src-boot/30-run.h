@@ -31,7 +31,6 @@ typedef union {
 static Step run_sym(Trace* t, Obj env, Obj code) {
   // owns env.
   assert(obj_is_sym(code));
-  assert(!is(code, s_ILLEGAL)); // anything that returns ILLEGAL should have raised an error.
   if (code.u <= s_END_SPECIAL_SYMS.u) {
     return mk_res(env, rc_ret_val(code)); // special syms are self-evaluating.
   }

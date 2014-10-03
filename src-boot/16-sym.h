@@ -78,15 +78,12 @@ static Obj sym_new_from_c(Chars_const c) {
 #define FMT_SYM(sym) FMT_STR(data_str(sym_data(sym)))
 
 // notes:
-// ILLEGAL is a special value for errors inside of well-formed data structures;
-// in contrast, obj0 is never present inside of valid data structures.
 // syms with index lower than END_SPECIAL_SYMS are self-evaluating;
 // syms after END_SPECIAL_SYMS are looked up.
 // END_SPECIAL_SYMS cannot be evaluated.
 // the special forms are COMMENT...CALL.
 // the following "X Macro" is expanded with various temporary definitions of SYM.
 #define SYM_LIST \
-S(ILLEGAL) \
 S(DISSOLVED) \
 S(void) \
 S(nil) \
