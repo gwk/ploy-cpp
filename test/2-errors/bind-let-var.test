@@ -3,6 +3,6 @@
   'err' : '''\
 symbol is already bound: `x
 trace:
-  {:Bind true `x 1}
+  {:Bind true false `x 1}
 '''
 }

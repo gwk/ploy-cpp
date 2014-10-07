@@ -9,6 +9,7 @@
 (RUN # special call form to run the argument as code in the current environment.
   {:Bind
     false # immutable binding.
+    true # public binding.
     `macro # symbol to bind.
     # the 'macro' macro defines a new macro in the current environment.
     # because we cannot use macro to define itself, we must define it using raw forms.
@@ -21,6 +22,7 @@
       nil # ret.
       `{:Bind # the body of the 'macro' macro is a Bind form.
         false # immutable.
+        false # private.
         sym # the sym parameter that the macro to be created is bound to (not `macro).
         {:Fn # the value of the binding is created by evaluating the FN form;
           # note that this inner FN is inside a vec literal;
@@ -48,7 +50,8 @@
 <macro fn [-sym -pars &body]
   # the 'fn' macro defines a function in the current environment.
   {:Bind
-    false # immutable binding.
+    false # immutable.
+    false # private.
     sym
     {:Fn
       sym
@@ -88,8 +91,8 @@
 
 <macro let [-sym -expr]
   # bind the value of expr to sym in the current environment.
-  {:Bind false sym expr}>
+  {:Bind false false sym expr}>
 
 <macro var [-sym -expr]
   # bind the value of expr to sym in the current environment, but allow the binding to mutate.
-  {:Bind true sym expr}>
+  {:Bind true false sym expr}>

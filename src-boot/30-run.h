@@ -76,7 +76,7 @@ static Step run_Scope(Int d, Trace* t, Obj env, Obj code) {
 
 static Obj bind_val(Trace* t, Bool is_mutable, Obj env, Obj key, Obj val) {
   // owns env, key, val.
-  Obj env1 = env_bind(env, is_mutable, key, val);
+  Obj env1 = env_bind(env, is_mutable, false, key, val);
   exc_check(!is(env1, obj0), "symbol is already bound: %o", key);
   return env1;
 }
@@ -84,13 +84,16 @@ static Obj bind_val(Trace* t, Bool is_mutable, Obj env, Obj key, Obj val) {
 
 static Step run_Bind(Int d, Trace* t, Obj env, Obj code) {
   // owns env.
-  exc_check(cmpd_len(code) == 3, "Bind requires 3 fields; received %i", cmpd_len(code));
+  exc_check(cmpd_len(code) == 4, "Bind requires 4 fields; received %i", cmpd_len(code));
   Obj is_mutable = cmpd_el(code, 0);
-  Obj sym = cmpd_el(code, 1);
-  Obj expr = cmpd_el(code, 2);
+  Obj is_public = cmpd_el(code, 1);
+  Obj sym = cmpd_el(code, 2);
+  Obj expr = cmpd_el(code, 3);
   exc_check(obj_is_bool(is_mutable), "Bind requires argument 1 to be a Bool; received: %o",
     is_mutable);
-  exc_check(obj_is_sym(sym), "Bind requires argument 1 to be a bindable sym; received: %o",
+  exc_check(obj_is_bool(is_public), "Bind requires argument 2 to be a Bool; received: %o",
+    is_public);
+  exc_check(obj_is_sym(sym), "Bind requires argument 3 to be a bindable sym; received: %o",
     sym);
   exc_check(!sym_is_special(sym), "Bind cannot bind to special sym: %o", sym);
   Step step = run(d, t, env, expr);

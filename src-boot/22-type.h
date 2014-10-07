@@ -32,7 +32,7 @@ T(Bang,             struct1, "expr", t_Expr) \
 T(Quo,              struct1, "expr", t_Expr) \
 T(Do,               mem, t_Expr) \
 T(Scope,            struct1, "expr", t_Expr) \
-T(Bind,             struct3, "is-mut", t_Bool, "name", t_Sym, "expr", t_Expr) \
+T(Bind, struct4, "is-mut", t_Bool, "is-pub", t_Bool, "name", t_Sym, "expr", t_Expr) \
 T(If,               struct3, "pred", t_Expr, "then", t_Expr, "else", t_Expr) \
 T(Fn,               struct_fn) \
 T(Syn_struct_typed, mem, t_Expr) \
@@ -285,7 +285,7 @@ static Obj type_init_values(Obj env) {
   #undef T
   for_in(i, ti_END) {
     Obj o = type_for_index((Type_index)i);
-    env = env_bind(env, false, rc_ret(o.t->name), rc_ret(o));
+    env = env_bind(env, false, false, rc_ret(o.t->name), rc_ret(o));
   }
   return env;
 }

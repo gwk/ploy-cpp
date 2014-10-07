@@ -283,7 +283,7 @@ static Obj host_init_func(Obj env, Int len_pars, Chars_const name, Func_host_ptr
     pars,
     rc_ret_val(s_nil), // TODO: specify actual return type?
     ptr_new(cast(Raw, ptr)));
-  return env_bind(env, false, sym, f);
+  return env_bind(env, false, false, sym, f);
 }
 
 
@@ -293,7 +293,7 @@ static Obj host_init_file(Obj env, Chars_const sym_name, Chars_const name, CFile
   Obj sym = sym_new_from_chars(sym_name);
   Obj val = cmpd_new4(rc_ret(t_File), data_new_from_chars(name), ptr_new(f),
     bool_new(r), bool_new(w));
-  return env_bind(env, false, sym, val);
+  return env_bind(env, false, false, sym, val);
 }
 
 
