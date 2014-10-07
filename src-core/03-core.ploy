@@ -11,6 +11,9 @@
   (_host-write (field std-err 1) '\n')
   (exit 1)>
 
+<macro check [-condition -msg]
+  ~<if (not ,condition) (error ,msg)>>
+
 # math functions.
 
 <fn iinc [-i] (iadd i 1)>
