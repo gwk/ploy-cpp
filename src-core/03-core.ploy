@@ -231,3 +231,15 @@
   <if (not objs)
     (write1 std-err '\n')
     (writeRSE std-err '\n' '\n' (hd objs) (mem-next objs))>>
+
+# modules.
+
+<macro pub [-bind-expr]
+  <let bind (EXPAND bind-expr)>
+  <check (is (type-of bind) Bind) "pub: expr did not expand to a Bind">
+  <check (not (.is-mut bind)) "pub: expr did not expand to an immutable Bind">
+  {:Bind
+    false
+    true
+    (.name bind)
+    (.expr bind)}>
