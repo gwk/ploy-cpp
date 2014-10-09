@@ -91,17 +91,18 @@ static Obj env_bind(Obj env, Bool is_mutable, Bool is_public, Obj key, Obj val) 
 }
 
 
-static Obj empty_env;
+static Obj global_env;
+
 
 static void env_init() {
-  empty_env = env_push_frame(rc_ret_val(s_ENV_END));
+  global_env = rc_ret_val(s_ENV_END);
 }
 
 
 #if OPTION_ALLOC_COUNT
 static void env_cleanup() {
-  rc_rel(empty_env);
-  empty_env = obj0;
+  rc_rel(global_env);
+  global_env = obj0;
 }
 #endif
 

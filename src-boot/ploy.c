@@ -39,7 +39,7 @@ int main(int argc, Chars_const argv[]) {
   type_init_table();
   sym_init(); // requires type_init_table.
   env_init();
-  Obj env = type_init_values(rc_ret(empty_env)); // requires sym_init.
+  Obj env = type_init_values(rc_ret(s_ENV_END)); // requires sym_init.
   env = host_init(env);
 
   // parse arguments.
