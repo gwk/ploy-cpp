@@ -415,7 +415,7 @@ static Step run_call_mutator(Int d, Trace* t, Obj env, Obj call, Mem vals) {
 static Step run_call_EXPAND(Int d, Trace* t, Obj env, Obj call, Mem vals) {
   // owns env, vals.
   exc_check(vals.len == 3, "call: %o\n:EXPAND requires 1 argument", call);
-  exc_check(is(mem_el(vals, 1), obj0), "call: %o\n: EXPAND expr is a label", call);
+  exc_check(is(mem_el(vals, 1), obj0), "call: %o\nEXPAND expr is a label", call);
   Obj callee = mem_el_move(vals, 0);
   Obj expr = mem_el_move(vals, 2);
   mem_dealloc(vals);
@@ -428,7 +428,7 @@ static Step run_call_EXPAND(Int d, Trace* t, Obj env, Obj call, Mem vals) {
 static Step run_call_RUN(Int d, Trace* t, Obj env, Obj call, Mem vals) {
   // owns env, vals.
   exc_check(vals.len == 3, "call: %o\n:RUN requires 1 argument", call);
-  exc_check(is(mem_el(vals, 1), obj0), "call: %o\n: RUN expr is a label", call);
+  exc_check(is(mem_el(vals, 1), obj0), "call: %o\nRUN expr is a label", call);
   Obj callee = mem_el_move(vals, 0);
   Obj expr = mem_el_move(vals, 2);
   mem_dealloc(vals);
