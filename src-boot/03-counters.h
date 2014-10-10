@@ -15,6 +15,7 @@ C(RC_bucket) \
 C(Mem) \
 C(Hash_bucket) \
 C(Set) \
+C(Dict) \
 C(Type_table) \
 C(Ptr_rc) \
 C(Int_rc) \

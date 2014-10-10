@@ -159,7 +159,7 @@ static void write_repr_default(CFile f, Obj c, Bool is_quoted, Int depth, Set* s
 
 
 static Bool write_repr_is_quotable(Obj o) {
-  if (!obj_is_valid_ref(o)) return true; // Ptr and obj0 do not have true repr.
+  if (!is(o, obj0) || !obj_is_ref(o)) return true; // Ptr and obj0 do not have true repr.
   Obj type = ref_type(o);
   if (is(type, t_Data) || is(type, t_Env)) return true; // env does not have true repr.
   assert(ref_is_cmpd(o));

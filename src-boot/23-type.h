@@ -42,7 +42,7 @@ T(Func,             struct_func) \
 T(File, struct4, "name", t_Data, "ptr", t_Ptr, "is-readable", t_Bool, "is_writeable", t_Bool) \
 T(Label,            struct3, "name", t_Expr, "type", t_Expr, "expr", t_Expr) \
 T(Variad,           struct2, "name", t_Expr, "type", t_Expr) \
-T(Src,              struct2, "path", t_Data, "src", t_Data) \
+T(Src_loc,          struct_src_loc) \
 T(Expr,             union_expr) \
 T(Par,              struct3, "name", t_Sym, "type", t_Type, "dflt", t_Expr) \
 T(Syn_struct,       mem, t_Expr) \
@@ -204,6 +204,17 @@ static Obj type_kind_init_struct_func() {
     par_new("pars", t_Syn_seq),
     par_new("ret-type", t_Type),
     par_new("body", t_Expr));
+}
+
+
+static Obj type_kind_init_struct_src_loc() {
+  return cmpd_new6(rc_ret(t_Type_kind_struct),
+    par_new("path", t_Data),
+    par_new("src", t_Data),
+    par_new("pos", t_Int),
+    par_new("len", t_Int),
+    par_new("line", t_Int),
+    par_new("col", t_Int));
 }
 
 

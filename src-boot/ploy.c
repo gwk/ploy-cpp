@@ -4,25 +4,24 @@
 #include "32-eval.h"
 
 
-static Obj parse_and_eval(Obj env, Obj path, Obj src, Array* sources, Bool out_val) {
+static Obj parse_and_eval(Dict* src_locs, Obj env, Obj path, Obj src, Bool should_output_val) {
   // owns path, src.
   Chars e = NULL;
-  Obj code = parse_src(path, src, &e);
+  Obj code = parse_src(src_locs, path, src, &e);
+  rc_rel(path);
+  rc_rel(src);
   if (e) {
     err("parse error: ");
     errL(e);
     raw_dealloc(e, ci_Chars);
-    rc_rel(path);
-    rc_rel(src);
     assert(is(code, obj0));
     fail();
   }
 #if VERBOSE_PARSE
   errFL("parse_and_eval: %o\n%o", path, code);
 #endif
-  array_append(sources, cmpd_new2(rc_ret(t_Src), path, src));
   Step step = eval_mem_expr(env, code);
-  if (out_val && !is(step.res.val, s_void)) {
+  if (should_output_val && !is(step.res.val, s_void)) {
     write_repr(stdout, step.res.val);
     fputc('\n', stdout);
   }
@@ -71,41 +70,40 @@ int main(int argc, Chars_const argv[]) {
     }
   }
 
-  // global array of (path, source) objects for error reporting.
-  Array sources = array0;
+  Dict src_locs = dict0;
   Obj path, src;
 
   if (should_load_core) { // run embedded core.ploy file.
     env = env_push_frame(env);
     path = data_new_from_chars("<core>");
     src = data_new_from_chars(core_src);
-    env = parse_and_eval(env, path, src, &sources, false);
+    env = parse_and_eval(&src_locs, env, path, src, false);
   }
   // handle arguments.
   for_in(i, path_count) {
     env = env_push_frame(env);
     path = data_new_from_chars(paths[i]);
     src = data_new_from_path(paths[i]);
-    env = parse_and_eval(env, path, src, &sources, false);
+    env = parse_and_eval(&src_locs, env, path, src, false);
   }
   if (expr) {
     env = env_push_frame(env);
     path = data_new_from_chars("<expr>");
     src = data_new_from_chars(expr);
-    env = parse_and_eval(env, path, src, &sources, should_output_val);
+    env = parse_and_eval(&src_locs, env, path, src, should_output_val);
   }
 
 #if OPTION_ALLOC_COUNT
   // cleanup in reverse order.
+  dict_rel(&src_locs);
+  dict_dealloc(&src_locs);
   global_cleanup();
   rc_rel(env);
   env_cleanup();
   // release but do not clear to facilitate debugging during type_cleanup.
-  mem_rel_no_clear(sources.mem);
   mem_rel_no_clear(global_sym_names.mem);
   type_cleanup();
   rc_cleanup();
-  mem_dealloc_no_clear(sources.mem);
   mem_dealloc_no_clear(global_sym_names.mem);
   counter_stats(should_log_stats);
 #endif

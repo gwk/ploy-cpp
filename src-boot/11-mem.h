@@ -146,7 +146,7 @@ static void mem_rel_no_clear(Mem m) {
 }
 
 
-UNUSED_FN static void mem_rel(Mem m) {
+static void mem_rel(Mem m) {
   it_mem(it, m) {
     rc_rel(*it);
 #if OPTION_MEM_ZERO

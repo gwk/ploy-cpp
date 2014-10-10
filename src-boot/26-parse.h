@@ -12,12 +12,16 @@ typedef struct {
 
 
 typedef struct {
+  Dict* locs; // maps parsed expressions to Src-locs.
   Obj path;
   Obj src;
   Str s;
   Src_pos pos;
   Chars e; // error message.
 } Parser;
+
+
+#define DEF_POS Src_pos pos = p->pos
 
 
 static void parse_err(Parser* p) {
@@ -209,6 +213,7 @@ static Obj parse_sym(Parser* p) {
 static Obj parse_sub_expr(Parser* p);
 
 static Obj parse_comment(Parser* p) {
+  DEF_POS;
   assert(PC == '#');
   P_ADV(1, return parse_error(p, "unterminated comment (add newline)"));
   if (PC == '#') { // double-hash comments out the following expression.
@@ -219,13 +224,12 @@ static Obj parse_comment(Parser* p) {
     return cmpd_new2(rc_ret(t_Comment), rc_ret_val(s_true), expr);
   }
   // otherwise comment out a single line.
-  Src_pos pos_report = p->pos;
   while (PC == ' ') {
-    P_ADV(1, p->pos = pos_report; return parse_error(p, "unterminated comment (add newline)"));
+    P_ADV(1, p->pos = pos; return parse_error(p, "unterminated comment (add newline)"));
   };
   Int off_start = p->pos.off;
   while (PC != '\n') {
-    P_ADV(1, p->pos = pos_report; return parse_error(p, "unterminated comment (add newline)"));
+    P_ADV(1, p->pos = pos; return parse_error(p, "unterminated comment (add newline)"));
   }
   Str s = str_slice(p->s, off_start, p->pos.off);
   Obj d = data_new_from_str(s);
@@ -234,8 +238,8 @@ static Obj parse_comment(Parser* p) {
 
 
 static Obj parse_data(Parser* p, Char q) {
+  DEF_POS;
   assert(PC == q);
-  Src_pos pos = p->pos; // for error reporting.
   Int cap = size_min_alloc;
   Chars chars = chars_alloc(cap);
   Int len = 0;
@@ -524,12 +528,23 @@ static Obj parse_expr_dispatch(Parser* p) {
 
 
 static Obj parse_expr(Parser* p) {
-  Obj o = parse_expr_dispatch(p);
+  DEF_POS;
+  Obj expr = parse_expr_dispatch(p);
 #if VERBOSE_PARSE
   parse_err(p);
-  errFL("%o", o);
+  errFL("%o", expr);
 #endif
-  return o;
+  if (!p->e && obj_is_ref(expr)) {
+    Obj src_loc = cmpd_new6(rc_ret(t_Src_loc),
+      rc_ret(p->path),
+      rc_ret(p->src),
+      int_new(pos.off),
+      int_new(p->pos.off - pos.off),
+      int_new(pos.line),
+      int_new(pos.col));
+    dict_insert(p->locs, rc_ret(expr), src_loc); // dict owns k, v.
+  }
+  return expr;
 }
 
 
@@ -539,9 +554,10 @@ static Obj parse_sub_expr(Parser* p) {
 }
 
 
-static Obj parse_src(Obj path, Obj src, Chars* e) {
+static Obj parse_src(Dict* src_locs, Obj path, Obj src, Chars* e) {
   // caller must free e.
   Parser p = (Parser) {
+    .locs=src_locs,
     .path=path,
     .src=src,
     .s=data_str(src),

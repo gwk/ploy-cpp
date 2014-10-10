@@ -83,6 +83,8 @@ DEF_SIZE(Obj);
 // used as a return value for error conditions and a marker for cleared or invalid memory.
 static const Obj obj0 = (Obj){.u=0};
 
+#define assert_valid(o) assert(!is(o, obj0))
+
 
 static Bool is(Obj a, Obj b) {
   return a.u == b.u;
@@ -90,39 +92,40 @@ static Bool is(Obj a, Obj b) {
 
 
 static Obj_tag obj_tag(Obj o) {
+  assert_valid(o);
   return o.u & obj_tag_mask;
 }
 
 
 static Bool obj_is_val(Obj o) {
+  assert_valid(o);
   return obj_tag(o) != ot_ref;
 }
 
 
 static Bool obj_is_ref(Obj o) {
+  assert_valid(o);
   return obj_tag(o) == ot_ref;
 }
 
 
-static Bool obj_is_valid_ref(Obj o) {
-  return obj_is_ref(o) && !is(o, obj0);
-}
-
-
-#define assert_valid_ref(r) assert(obj_is_valid_ref(r))
+#define assert_valid_ref(r) assert(obj_is_ref(r))
 
 
 static Bool obj_is_ptr(Obj o) {
+  assert_valid(o);
   return obj_tag(o) == ot_ptr;
 }
 
 
 static Bool obj_is_int(Obj o) {
+  assert_valid(o);
   return obj_tag(o) == ot_int;
 }
 
 
 static Bool obj_is_sym(Obj o) {
+  assert_valid(o);
   return obj_tag(o) == ot_sym;
 }
 
@@ -130,6 +133,7 @@ static Bool obj_is_sym(Obj o) {
 static const Obj s_true, s_false;
 
 static Bool obj_is_bool(Obj o) {
+  assert_valid(o);
   return is(o, s_true) || is(o, s_false);
 }
 
