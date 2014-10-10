@@ -12,8 +12,8 @@ typedef struct {
 
 // main parser object holds the input string, parse state, and source location info.
 typedef struct {
-  Str  src;  // input string.
-  Str  path; // input path for error reporting.
+  Str path; // input path for error reporting.
+  Str src;  // input string.
   Src_pos pos;
   Chars e; // error message.
 } Parser;
