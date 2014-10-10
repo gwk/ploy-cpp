@@ -12,7 +12,8 @@ typedef struct {
 
 
 typedef struct {
-  Str path;
+  Obj path;
+  Obj src;
   Str s;
   Src_pos pos;
   Chars e; // error message.
@@ -21,7 +22,7 @@ typedef struct {
 
 static void parse_err(Parser* p) {
   fprintf(stderr, "%.*s:%ld:%ld (%ld): ",
-    FMT_STR(p->path), p->pos.line + 1, p->pos.col + 1, p->pos.off);
+    FMT_STR(data_str(p->path)), p->pos.line + 1, p->pos.col + 1, p->pos.off);
   if (p->e) errF("\nerror: %s\nobj:  ", p->e);
 }
 
@@ -42,7 +43,7 @@ static Obj parse_error(Parser* p, Chars_const fmt, ...) {
   va_end(args);
   check(msg_len >= 0, "parse_error allocation failed: %s", fmt);
   // parser owner must call raw_dealloc on e.
-  p->e = str_src_loc_str(p->s, p->path, p->pos.off, 0, p->pos.line, p->pos.col, msg);
+  p->e = str_src_loc_str(p->s, data_str(p->path), p->pos.off, 0, p->pos.line, p->pos.col, msg);
   free(msg); // matches vasprintf.
   return obj0;
 }
@@ -538,11 +539,12 @@ static Obj parse_sub_expr(Parser* p) {
 }
 
 
-static Obj parse_src(Str path, Str src, Chars* e) {
+static Obj parse_src(Obj path, Obj src, Chars* e) {
   // caller must free e.
   Parser p = (Parser) {
     .path=path,
-    .s=src,
+    .src=src,
+    .s=data_str(src),
     .pos=(Src_pos){.off=0, .line=0, .col=0,},
     .e=NULL,
   };
