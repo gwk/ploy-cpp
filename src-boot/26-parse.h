@@ -5,7 +5,7 @@
 
 
 typedef struct {
-  Int pos;
+  Int off;
   Int line;
   Int col;
 } Src_pos;
@@ -21,7 +21,7 @@ typedef struct {
 
 static void parse_err(Parser* p) {
   fprintf(stderr, "%.*s:%ld:%ld (%ld): ",
-    FMT_STR(p->path), p->sp.line + 1, p->sp.col + 1, p->sp.pos);
+    FMT_STR(p->path), p->sp.line + 1, p->sp.col + 1, p->sp.off);
   if (p->e) errF("\nerror: %s\nobj:  ", p->e);
 }
 
@@ -42,7 +42,7 @@ static Obj parse_error(Parser* p, Chars_const fmt, ...) {
   va_end(args);
   check(msg_len >= 0, "parse_error allocation failed: %s", fmt);
   // parser owner must call raw_dealloc on e.
-  p->e = str_src_loc_str(p->src, p->path, p->sp.pos, 0, p->sp.line, p->sp.col, msg);
+  p->e = str_src_loc_str(p->src, p->path, p->sp.off, 0, p->sp.line, p->sp.col, msg);
   free(msg); // matches vasprintf.
   return obj0;
 }
@@ -52,15 +52,15 @@ static Obj parse_error(Parser* p, Chars_const fmt, ...) {
 if (!(condition)) return parse_error(p, fmt, ##__VA_ARGS__)
 
 
-#define PP  (p->sp.pos < p->src.len)
-#define PP1 (p->sp.pos < p->src.len - 1)
+#define PP  (p->sp.off < p->src.len)
+#define PP1 (p->sp.off < p->src.len - 1)
 
-#define PC  p->src.chars[p->sp.pos]
-#define PC1 p->src.chars[p->sp.pos + 1]
+#define PC  p->src.chars[p->sp.off]
+#define PC1 p->src.chars[p->sp.off + 1]
 
-#define P_ADV(n, ...) { p->sp.pos += n; p->sp.col += n; if (!PP) {__VA_ARGS__;}; } 
+#define P_ADV(n, ...) { p->sp.off += n; p->sp.col += n; if (!PP) {__VA_ARGS__;}; } 
 
-#define P_CHARS (p->src.chars + p->sp.pos)
+#define P_CHARS (p->src.chars + p->sp.off)
 
 
 static Bool char_is_seq_term(Char c) {
@@ -88,7 +88,7 @@ static Bool parse_space(Parser* p) {
         P_ADV(1, break);
        break ;
       case '\n':
-        p->sp.pos++;
+        p->sp.off++;
         p->sp.line++;
         p->sp.col = 0;
         break;
@@ -154,7 +154,7 @@ static U64 parse_U64(Parser* p) {
       base = 10;
     }
   }
-  Chars_const start = p->src.chars + p->sp.pos;
+  Chars_const start = p->src.chars + p->sp.off;
   Chars end;
   // TODO: this appears unsafe; what if strtoull runs off the end of the string?
   U64 u = strtoull(start, &end, base);
@@ -165,7 +165,7 @@ static U64 parse_U64(Parser* p) {
   }
   assert(end > start); // strtoull man page is a bit confusing as to the precise semantics.
   Int n = end - start;
-  assert(p->sp.pos + n <= p->src.len);
+  assert(p->sp.off + n <= p->src.len);
   P_ADV(n, return u);
   if (!char_is_atom_term(PC)) {
     parse_error(p, "invalid number literal terminator: %c", PC);
@@ -194,13 +194,13 @@ static Obj parse_int(Parser* p, Int sign) {
 
 static Obj parse_sym(Parser* p) {
   assert(PC == '_' || isalpha(PC));
-  Int pos = p->sp.pos;
+  Int off = p->sp.off;
   loop {
     P_ADV(1, break);
     Char c = PC;
     if (!(c == '-' || c == '_' || isalnum(c))) break;
   }
-  Str s = str_slice(p->src, pos, p->sp.pos);
+  Str s = str_slice(p->src, off, p->sp.off);
   return sym_new(s);
 }
 
@@ -222,11 +222,11 @@ static Obj parse_comment(Parser* p) {
   while (PC == ' ') {
     P_ADV(1, p->sp = sp_report; return parse_error(p, "unterminated comment (add newline)"));
   };
-  Int pos_start = p->sp.pos;
+  Int off_start = p->sp.off;
   while (PC != '\n') {
     P_ADV(1, p->sp = sp_report; return parse_error(p, "unterminated comment (add newline)"));
   }
-  Str s = str_slice(p->src, pos_start, p->sp.pos);
+  Str s = str_slice(p->src, off_start, p->sp.off);
   Obj d = data_new_from_str(s);
   return cmpd_new2(rc_ret(t_Comment), rc_ret_val(s_false), d);
 }
@@ -542,7 +542,7 @@ static Obj parse_src(Str path, Str src, Chars* e) {
   Parser p = (Parser) {
     .path=path,
     .src=src,
-    .sp=(Src_pos){.pos=0, .line=0, .col=0,},
+    .sp=(Src_pos){.off=0, .line=0, .col=0,},
     .e=NULL,
   };
   Mem m = parse_exprs(&p, 0);
@@ -550,7 +550,7 @@ static Obj parse_src(Str path, Str src, Chars* e) {
   if (p.e) {
     assert(m.len == 0 && m.els == NULL);
     o = obj0;
-  } else if (p.sp.pos != p.src.len) {
+  } else if (p.sp.off != p.src.len) {
     o = parse_error(&p, "parsing terminated early");
     mem_rel_dealloc(m);
   } else {
