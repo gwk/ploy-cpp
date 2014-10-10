@@ -4,7 +4,7 @@
 #include "16-int.h"
 
 
-#define ERR_SYM(s) errFL("SYM %s: u:%lu; si:%li", #s, s.u, sym_index(s));
+#define ERR_SYM(s) errFL("SYM %s: u:%lu; si:%li", #s, s.u, sym_index(s))
 
 static const Int width_sym_tags = width_obj_tag + 1; // extra bit for Data-word flag.
 static const Int sym_index_end = 1L << (size_Int * 8 - width_sym_tags);
