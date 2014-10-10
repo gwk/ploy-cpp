@@ -3,7 +3,7 @@
 
 // type objects.
 
-#include "21-global.h"
+#include "22-global.h"
 
 
 struct _Type {
