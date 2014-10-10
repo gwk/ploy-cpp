@@ -23,7 +23,7 @@ static void assert_array_is_valid(Array* a) {
 static void array_grow_cap(Array* a) {
   assert_array_is_valid(a);
   if (a->cap == 0) {
-    a->cap = 2; // minimum capacity.
+    a->cap = 2; // minimum capacity for 8 byte words with 16 byte min malloc.
   } else {
     a->cap *= 2;
   }
