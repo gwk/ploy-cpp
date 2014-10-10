@@ -42,24 +42,24 @@ static void set_dealloc(Set* s) {
 }
 
 
-static Hash_bucket* set_bucket(Set* s, Obj r) {
+static Hash_bucket* set_bucket(Set* s, Obj o) {
   assert_set_is_valid(s);
   assert(s->len > 0);
-  Uns h = rc_hash(r);
+  Uns h = obj_id_hash(o);
   Uns i = h % cast(Uns, s->len_buckets);
   return s->buckets + i;
 }
 
 
-static Bool set_contains(Set* s, Obj r) {
+static Bool set_contains(Set* s, Obj o) {
   assert_set_is_valid(s);
   if (!s->len) return false;
-  Hash_bucket* b = set_bucket(s, r);
-  return array_contains(b, r);
+  Hash_bucket* b = set_bucket(s, o);
+  return array_contains(b, o);
 }
 
 
-static void set_insert(Set* s, Obj r) {
+static void set_insert(Set* s, Obj o) {
   assert_set_is_valid(s);
   if (s->len == 0) {
     s->len = 1;
@@ -87,24 +87,24 @@ static void set_insert(Set* s, Obj r) {
       }
     }
     // replace set.
-    assert(!set_contains(s, r));
-    assert(!set_contains(&t, r));
+    assert(!set_contains(s, o));
+    assert(!set_contains(&t, o));
     set_dealloc(s);
     *s = t;
   } else {
     assert(s->len < s->len_buckets);
   }
-  Hash_bucket* b = set_bucket(s, r);
-  array_append(b, r);
+  Hash_bucket* b = set_bucket(s, o);
+  array_append(b, o);
 }
 
 
-static void set_remove(Set* s, Obj r) {
-  Hash_bucket* b = set_bucket(s, r);
+static void set_remove(Set* s, Obj o) {
+  Hash_bucket* b = set_bucket(s, o);
   assert_array_is_valid(b);
   for_in(i, b->mem.len) {
-    if (b->mem.els[i].r == r.r) {
-      // replace r with the last element. no-op if len == 1.
+    if (b->mem.els[i].r == o.r) {
+      // replace o with the last element. no-op if len == 1.
       b->mem.els[i] = b->mem.els[b->mem.len - 1];
       b->mem.len--;
       return;

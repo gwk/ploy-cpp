@@ -182,6 +182,18 @@ static Obj obj_type(Obj o) {
 }
 
 
+static const Int width_sym_tags;
+
+static Uns obj_id_hash(Obj o) {
+  switch (obj_tag(o)) {
+    case ot_ref: return o.u >> width_min_alloc;
+    case ot_ptr: return o.u >> width_min_alloc;
+    case ot_int: return o.u >> width_obj_tag;
+    case ot_sym: return o.u >> width_sym_tags;
+  }
+}
+
+
 #if OPTION_ALLOC_COUNT
 
 static Counter_index obj_counter_index(Obj o) {

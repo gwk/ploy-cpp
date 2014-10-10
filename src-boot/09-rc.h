@@ -105,6 +105,7 @@ static void rc_hist_count_moves(Int i) {
 
 static Uns rc_hash(Obj r) {
   // pointer hash simply shifts off the bits that are guaranteed to be zero.
+  assert(obj_is_ref(r));
   return r.u >> width_min_alloc;
 }
 
