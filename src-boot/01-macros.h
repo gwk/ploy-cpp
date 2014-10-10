@@ -90,11 +90,15 @@ for (Int i = (m), _end_##i = (n), _step_##i = (s); i < _end_##i; i += _step_##i)
 #define for_imns_rev(i, m, n, s) \
 for (Int i = (n) - 1, _end_##i = (m), _step_##i = (s); i >= _end_##i; i -= _step_##i)
 
-// equivalent to for_imns(i, m, n, 0).
+// equivalent to for_imns(i, m, n, 1).
 #define for_imn(i, m, n)      for_imns(i, (m), (n), 1)
 #define for_imn_rev(i, m, n)  for_imns_rev(i, (m), (n), 1)
 
-// equivalent to for_imn(i, 0, n).
+// equivalent to for_imns(i, 0, n, s).
+#define for_ins(i, n, s)      for_imns(i, 0, (n), (s))
+#define for_ins_rev(i, n, s)  for_imns_rev(i, 0, (n), (s))
+
+// equivalent to for_imns(i, 0, n, 1).
 #define for_in(i, n)      for_imns(i, 0, (n), 1)
 #define for_in_rev(i, n)  for_imns_rev(i, 0, (n), 1)
 

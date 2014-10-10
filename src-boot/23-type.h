@@ -118,7 +118,7 @@ static Array global_singletons = array0;
 
 static Obj type_unit(Obj type) {
   // TODO: improve performance by using a hash table?
-  for_imns(i, 0, global_singletons.mem.len, 2) {
+  for_ins(i, global_singletons.mem.len, 2) {
     if (is(global_singletons.mem.els[i], type)) {
       return global_singletons.mem.els[i + 1];
     }
