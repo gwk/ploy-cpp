@@ -14,14 +14,14 @@ typedef struct {
 typedef struct {
   Str  src;  // input string.
   Str  path; // input path for error reporting.
-  Src_pos sp;
+  Src_pos pos;
   Chars e; // error message.
 } Parser;
 
 
 static void parse_err(Parser* p) {
   fprintf(stderr, "%.*s:%ld:%ld (%ld): ",
-    FMT_STR(p->path), p->sp.line + 1, p->sp.col + 1, p->sp.off);
+    FMT_STR(p->path), p->pos.line + 1, p->pos.col + 1, p->pos.off);
   if (p->e) errF("\nerror: %s\nobj:  ", p->e);
 }
 
@@ -42,7 +42,7 @@ static Obj parse_error(Parser* p, Chars_const fmt, ...) {
   va_end(args);
   check(msg_len >= 0, "parse_error allocation failed: %s", fmt);
   // parser owner must call raw_dealloc on e.
-  p->e = str_src_loc_str(p->src, p->path, p->sp.off, 0, p->sp.line, p->sp.col, msg);
+  p->e = str_src_loc_str(p->src, p->path, p->pos.off, 0, p->pos.line, p->pos.col, msg);
   free(msg); // matches vasprintf.
   return obj0;
 }
@@ -52,15 +52,15 @@ static Obj parse_error(Parser* p, Chars_const fmt, ...) {
 if (!(condition)) return parse_error(p, fmt, ##__VA_ARGS__)
 
 
-#define PP  (p->sp.off < p->src.len)
-#define PP1 (p->sp.off < p->src.len - 1)
+#define PP  (p->pos.off < p->src.len)
+#define PP1 (p->pos.off < p->src.len - 1)
 
-#define PC  p->src.chars[p->sp.off]
-#define PC1 p->src.chars[p->sp.off + 1]
+#define PC  p->src.chars[p->pos.off]
+#define PC1 p->src.chars[p->pos.off + 1]
 
-#define P_ADV(n, ...) { p->sp.off += n; p->sp.col += n; if (!PP) {__VA_ARGS__;}; } 
+#define P_ADV(n, ...) { p->pos.off += n; p->pos.col += n; if (!PP) {__VA_ARGS__;}; } 
 
-#define P_CHARS (p->src.chars + p->sp.off)
+#define P_CHARS (p->src.chars + p->pos.off)
 
 
 static Bool char_is_seq_term(Char c) {
@@ -88,9 +88,9 @@ static Bool parse_space(Parser* p) {
         P_ADV(1, break);
        break ;
       case '\n':
-        p->sp.off++;
-        p->sp.line++;
-        p->sp.col = 0;
+        p->pos.off++;
+        p->pos.line++;
+        p->pos.col = 0;
         break;
       case '\t':
         parse_error(p, "illegal tab character");
@@ -154,7 +154,7 @@ static U64 parse_U64(Parser* p) {
       base = 10;
     }
   }
-  Chars_const start = p->src.chars + p->sp.off;
+  Chars_const start = p->src.chars + p->pos.off;
   Chars end;
   // TODO: this appears unsafe; what if strtoull runs off the end of the string?
   U64 u = strtoull(start, &end, base);
@@ -165,7 +165,7 @@ static U64 parse_U64(Parser* p) {
   }
   assert(end > start); // strtoull man page is a bit confusing as to the precise semantics.
   Int n = end - start;
-  assert(p->sp.off + n <= p->src.len);
+  assert(p->pos.off + n <= p->src.len);
   P_ADV(n, return u);
   if (!char_is_atom_term(PC)) {
     parse_error(p, "invalid number literal terminator: %c", PC);
@@ -194,13 +194,13 @@ static Obj parse_int(Parser* p, Int sign) {
 
 static Obj parse_sym(Parser* p) {
   assert(PC == '_' || isalpha(PC));
-  Int off = p->sp.off;
+  Int off = p->pos.off;
   loop {
     P_ADV(1, break);
     Char c = PC;
     if (!(c == '-' || c == '_' || isalnum(c))) break;
   }
-  Str s = str_slice(p->src, off, p->sp.off);
+  Str s = str_slice(p->src, off, p->pos.off);
   return sym_new(s);
 }
 
@@ -218,15 +218,15 @@ static Obj parse_comment(Parser* p) {
     return cmpd_new2(rc_ret(t_Comment), rc_ret_val(s_true), expr);
   }
   // otherwise comment out a single line.
-  Src_pos sp_report = p->sp;
+  Src_pos pos_report = p->pos;
   while (PC == ' ') {
-    P_ADV(1, p->sp = sp_report; return parse_error(p, "unterminated comment (add newline)"));
+    P_ADV(1, p->pos = pos_report; return parse_error(p, "unterminated comment (add newline)"));
   };
-  Int off_start = p->sp.off;
+  Int off_start = p->pos.off;
   while (PC != '\n') {
-    P_ADV(1, p->sp = sp_report; return parse_error(p, "unterminated comment (add newline)"));
+    P_ADV(1, p->pos = pos_report; return parse_error(p, "unterminated comment (add newline)"));
   }
-  Str s = str_slice(p->src, off_start, p->sp.off);
+  Str s = str_slice(p->src, off_start, p->pos.off);
   Obj d = data_new_from_str(s);
   return cmpd_new2(rc_ret(t_Comment), rc_ret_val(s_false), d);
 }
@@ -234,14 +234,15 @@ static Obj parse_comment(Parser* p) {
 
 static Obj parse_data(Parser* p, Char q) {
   assert(PC == q);
-  Src_pos sp = p->sp; // for error reporting.
+  Src_pos pos = p->pos; // for error reporting.
   Int cap = size_min_alloc;
   Chars chars = chars_alloc(cap);
   Int len = 0;
   Bool escape = false;
 #define APPEND(c) { len = chars_append(&chars, &cap, len, c); }
   loop {
-    P_ADV(1, p->sp = sp; chars_dealloc(chars); return parse_error(p, "unterminated string literal"));
+    P_ADV(1,
+      p->pos = pos; chars_dealloc(chars); return parse_error(p, "unterminated string literal"));
     Char c = PC;
     if (escape) {
       escape = false;
@@ -441,11 +442,11 @@ static Obj parse_struct(Parser* p) {
     P_ADV(1, return parse_error(p, "unterminated struct"));
     typed = true;
   }
-  Src_pos sp = p->sp;
+  Src_pos pos = p->pos;
   Mem m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR('}');
   if (typed && !m.len) {
-    p->sp = sp;
+    p->pos = pos;
     return parse_error(p, "typed struct requires a type expression");
   }
   Obj s;
@@ -466,11 +467,11 @@ static Obj parse_seq(Parser* p) {
     P_ADV(1, return parse_error(p, "unterminated sequence"));
     typed = true;
   }
-  Src_pos sp = p->sp;
+  Src_pos pos = p->pos;
   Mem m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR(']');
   if (typed && !m.len) {
-    p->sp = sp;
+    p->pos = pos;
     return parse_error(p, "typed sequence requires a type expression");
   }
   Obj s;
@@ -542,7 +543,7 @@ static Obj parse_src(Str path, Str src, Chars* e) {
   Parser p = (Parser) {
     .path=path,
     .src=src,
-    .sp=(Src_pos){.off=0, .line=0, .col=0,},
+    .pos=(Src_pos){.off=0, .line=0, .col=0,},
     .e=NULL,
   };
   Mem m = parse_exprs(&p, 0);
@@ -550,7 +551,7 @@ static Obj parse_src(Str path, Str src, Chars* e) {
   if (p.e) {
     assert(m.len == 0 && m.els == NULL);
     o = obj0;
-  } else if (p.sp.off != p.src.len) {
+  } else if (p.pos.off != p.src.len) {
     o = parse_error(&p, "parsing terminated early");
     mem_rel_dealloc(m);
   } else {
