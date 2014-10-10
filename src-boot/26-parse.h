@@ -10,10 +10,10 @@ typedef struct {
   Int col;
 } Src_pos;
 
-// main parser object holds the input string, parse state, and source location info.
+
 typedef struct {
-  Str path; // input path for error reporting.
-  Str src;  // input string.
+  Str path;
+  Str s;
   Src_pos pos;
   Chars e; // error message.
 } Parser;
@@ -42,7 +42,7 @@ static Obj parse_error(Parser* p, Chars_const fmt, ...) {
   va_end(args);
   check(msg_len >= 0, "parse_error allocation failed: %s", fmt);
   // parser owner must call raw_dealloc on e.
-  p->e = str_src_loc_str(p->src, p->path, p->pos.off, 0, p->pos.line, p->pos.col, msg);
+  p->e = str_src_loc_str(p->s, p->path, p->pos.off, 0, p->pos.line, p->pos.col, msg);
   free(msg); // matches vasprintf.
   return obj0;
 }
@@ -52,15 +52,15 @@ static Obj parse_error(Parser* p, Chars_const fmt, ...) {
 if (!(condition)) return parse_error(p, fmt, ##__VA_ARGS__)
 
 
-#define PP  (p->pos.off < p->src.len)
-#define PP1 (p->pos.off < p->src.len - 1)
+#define PP  (p->pos.off < p->s.len)
+#define PP1 (p->pos.off < p->s.len - 1)
 
-#define PC  p->src.chars[p->pos.off]
-#define PC1 p->src.chars[p->pos.off + 1]
+#define PC  p->s.chars[p->pos.off]
+#define PC1 p->s.chars[p->pos.off + 1]
 
 #define P_ADV(n, ...) { p->pos.off += n; p->pos.col += n; if (!PP) {__VA_ARGS__;}; } 
 
-#define P_CHARS (p->src.chars + p->pos.off)
+#define P_CHARS (p->s.chars + p->pos.off)
 
 
 static Bool char_is_seq_term(Char c) {
@@ -154,7 +154,7 @@ static U64 parse_U64(Parser* p) {
       base = 10;
     }
   }
-  Chars_const start = p->src.chars + p->pos.off;
+  Chars_const start = p->s.chars + p->pos.off;
   Chars end;
   // TODO: this appears unsafe; what if strtoull runs off the end of the string?
   U64 u = strtoull(start, &end, base);
@@ -165,7 +165,7 @@ static U64 parse_U64(Parser* p) {
   }
   assert(end > start); // strtoull man page is a bit confusing as to the precise semantics.
   Int n = end - start;
-  assert(p->pos.off + n <= p->src.len);
+  assert(p->pos.off + n <= p->s.len);
   P_ADV(n, return u);
   if (!char_is_atom_term(PC)) {
     parse_error(p, "invalid number literal terminator: %c", PC);
@@ -200,7 +200,7 @@ static Obj parse_sym(Parser* p) {
     Char c = PC;
     if (!(c == '-' || c == '_' || isalnum(c))) break;
   }
-  Str s = str_slice(p->src, off, p->pos.off);
+  Str s = str_slice(p->s, off, p->pos.off);
   return sym_new(s);
 }
 
@@ -226,7 +226,7 @@ static Obj parse_comment(Parser* p) {
   while (PC != '\n') {
     P_ADV(1, p->pos = pos_report; return parse_error(p, "unterminated comment (add newline)"));
   }
-  Str s = str_slice(p->src, off_start, p->pos.off);
+  Str s = str_slice(p->s, off_start, p->pos.off);
   Obj d = data_new_from_str(s);
   return cmpd_new2(rc_ret(t_Comment), rc_ret_val(s_false), d);
 }
@@ -542,7 +542,7 @@ static Obj parse_src(Str path, Str src, Chars* e) {
   // caller must free e.
   Parser p = (Parser) {
     .path=path,
-    .src=src,
+    .s=src,
     .pos=(Src_pos){.off=0, .line=0, .col=0,},
     .e=NULL,
   };
@@ -551,7 +551,7 @@ static Obj parse_src(Str path, Str src, Chars* e) {
   if (p.e) {
     assert(m.len == 0 && m.els == NULL);
     o = obj0;
-  } else if (p.pos.off != p.src.len) {
+  } else if (p.pos.off != p.s.len) {
     o = parse_error(&p, "parsing terminated early");
     mem_rel_dealloc(m);
   } else {
