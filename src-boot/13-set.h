@@ -6,7 +6,7 @@
 #include "12-array.h"
 
 
-static const Int min_set_len_buckets = 16;
+static const Int min_table_len_buckets = 16;
 
 typedef Array Hash_bucket;
 DEF_SIZE(Hash_bucket);
@@ -61,9 +61,10 @@ static Bool set_contains(Set* s, Obj o) {
 
 static void set_insert(Set* s, Obj o) {
   assert_set_is_valid(s);
+  assert(!set_contains(s, o)); // TODO: support duplicate insert.
   if (s->len == 0) {
     s->len = 1;
-    s->len_buckets = min_set_len_buckets;
+    s->len_buckets = min_table_len_buckets;
     Int size = s->len_buckets * size_Hash_bucket;
     s->buckets = raw_alloc(size, ci_Set);
     memset(s->buckets, 0, cast(Uns, size));
@@ -71,26 +72,24 @@ static void set_insert(Set* s, Obj o) {
     // TODO: assess resize criteria.
     Int len_buckets = s->len_buckets * 2;
     Int size = len_buckets * size_Hash_bucket;
-    Set t = {
+    Set s1 = {
       .len = s->len + 1,
       .len_buckets = len_buckets,
       .buckets = raw_alloc(size, ci_Set),
     };
-    memset(t.buckets, 0, cast(Uns, size));
+    memset(s1.buckets, 0, cast(Uns, size));
     // copy existing elements.
     for_in(i, s->len_buckets) {
       Hash_bucket src = s->buckets[i];
       for_in(j, src.mem.len) {
         Obj el = src.mem.els[j];
-        Hash_bucket* dst = set_bucket(&t, el);
+        Hash_bucket* dst = set_bucket(&s1, el);
         array_append(dst, el);
       }
     }
     // replace set.
-    assert(!set_contains(s, o));
-    assert(!set_contains(&t, o));
     set_dealloc(s);
-    *s = t;
+    *s = s1;
   } else {
     assert(s->len < s->len_buckets);
   }
