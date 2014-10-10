@@ -6,14 +6,14 @@
 
 #define ERR_SYM(s) errFL("SYM %s: u:%lu; si:%li", #s, s.u, sym_index(s));
 
-static const Int shift_sym = width_obj_tag + 1; // extra bit for Data-word flag.
-static const Int sym_index_end = 1L << (size_Int * 8 - shift_sym);
+static const Int width_sym_tags = width_obj_tag + 1; // extra bit for Data-word flag.
+static const Int sym_index_end = 1L << (size_Int * 8 - width_sym_tags);
 
 // each Sym object is an index into this array of strings.
 static Array global_sym_names = array0;
 
 
-#define _sym_with_index(index) (Obj){ .u = (cast(Uns, index) << shift_sym) | ot_sym }
+#define _sym_with_index(index) (Obj){ .u = (cast(Uns, index) << width_sym_tags) | ot_sym }
 
 static Obj sym_with_index(Int i) {
   check(i < sym_index_end, "Sym index is too large: %lx", i);
@@ -23,7 +23,7 @@ static Obj sym_with_index(Int i) {
 
 static Int sym_index(Obj s) {
   assert(obj_is_sym(s));
-  return s.i >> shift_sym;
+  return s.i >> width_sym_tags;
 }
 
 
