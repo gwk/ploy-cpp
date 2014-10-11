@@ -238,6 +238,10 @@ static void write_repr_dispatch(CFile f, Obj s, Bool is_quoted, Int depth, Set* 
 
 static void write_repr_obj(CFile f, Obj o, Bool is_quoted, Int depth, Set* set) {
   // is_quoted indicates that we are writing part of a repr that has already been quoted.
+  if (is(o, obj0)) {
+    fputs(NO_REPR_PO "obj0" NO_REPR_PC, f);
+    return;
+  }
   Obj_tag ot = obj_tag(o);
   if (ot == ot_ptr) {
 #if OPTION_BLANK_PTR_REPR
@@ -257,10 +261,6 @@ static void write_repr_obj(CFile f, Obj o, Bool is_quoted, Int depth, Set* set) 
     }
   } else {
     assert(ot == ot_ref);
-    if (is(o, obj0)) {
-      fputs(NO_REPR_PO "obj0" NO_REPR_PC, f);
-      return;
-    }
     if (depth > 8) {
       fputs("…", f); // ellipsis.
     } else if (set_contains(set, o)) { // cyclic object recursed.
