@@ -35,9 +35,12 @@ static void assert_set_is_valid(Set* s) {
 
 static void set_dealloc(Set* s) {
   assert_set_is_valid(s);
+  Int len = 0;
   for_in(i, s->len_buckets) {
+    len += s->buckets[i].mem.len;
     mem_dealloc(s->buckets[i].mem);
   }
+  assert(len == s->len);
   raw_dealloc(s->buckets, ci_Set);
 }
 
@@ -63,7 +66,6 @@ static void set_insert(Set* s, Obj o) {
   assert_set_is_valid(s);
   assert(!set_contains(s, o)); // TODO: support duplicate insert.
   if (s->len == 0) {
-    s->len = 1;
     s->len_buckets = min_table_len_buckets;
     Int size = s->len_buckets * size_Hash_bucket;
     s->buckets = raw_alloc(size, ci_Set);
@@ -73,7 +75,7 @@ static void set_insert(Set* s, Obj o) {
     Int len_buckets = s->len_buckets * 2;
     Int size = len_buckets * size_Hash_bucket;
     Set s1 = {
-      .len = s->len + 1,
+      .len = s->len,
       .len_buckets = len_buckets,
       .buckets = raw_alloc(size, ci_Set),
     };
@@ -82,7 +84,7 @@ static void set_insert(Set* s, Obj o) {
     for_in(i, s->len_buckets) {
       Hash_bucket src = s->buckets[i];
       for_in(j, src.mem.len) {
-        Obj el = src.mem.els[j];
+        Obj el = mem_el_move(src.mem, j);
         Hash_bucket* dst = set_bucket(&s1, el);
         array_append(dst, el);
       }
@@ -93,6 +95,7 @@ static void set_insert(Set* s, Obj o) {
   } else {
     assert(s->len < s->len_buckets);
   }
+  s->len++;
   Hash_bucket* b = set_bucket(s, o);
   array_append(b, o);
 }
@@ -103,6 +106,8 @@ static void set_remove(Set* s, Obj o) {
   assert_array_is_valid(b);
   for_in(i, b->mem.len) {
     if (is(b->mem.els[i], o)) {
+      assert(s->len > 0);
+      s->len--;
       // replace o with the last element. no-op if len == 1.
       b->mem.els[i] = b->mem.els[b->mem.len - 1];
       b->mem.len--;

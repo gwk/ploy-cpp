@@ -36,9 +36,12 @@ DBG_FN static void dict_rel(Dict* d) {
 
 static void dict_dealloc(Dict* d) {
   assert_dict_is_valid(d);
+  Int len = 0;
   for_in(i, d->len_buckets) {
+    len += d->buckets[i].mem.len / 2;
     mem_dealloc(d->buckets[i].mem);
   }
+  assert(len == d->len);
   raw_dealloc(d->buckets, ci_Dict);
 }
 
@@ -74,7 +77,6 @@ static void dict_insert(Dict* d, Obj k, Obj v) {
   assert_dict_is_valid(d);
   assert(!dict_contains(d, k)); // TODO: support duplicate insert.
   if (d->len == 0) {
-    d->len = 1;
     d->len_buckets = min_table_len_buckets;
     Int size = d->len_buckets * size_Hash_bucket;
     d->buckets = raw_alloc(size, ci_Dict);
@@ -84,7 +86,7 @@ static void dict_insert(Dict* d, Obj k, Obj v) {
     Int len_buckets = d->len_buckets * 2;
     Int size = len_buckets * size_Hash_bucket;
     Dict d1 = {
-      .len = d->len + 1,
+      .len = d->len,
       .len_buckets = len_buckets,
       .buckets = raw_alloc(size, ci_Dict),
     };
@@ -93,8 +95,8 @@ static void dict_insert(Dict* d, Obj k, Obj v) {
     for_in(i, d->len_buckets) {
       Hash_bucket src = d->buckets[i];
       for_ins(j, src.mem.len, 2) {
-        Obj ek = src.mem.els[j];
-        Obj ev = src.mem.els[j + 1];
+        Obj ek = mem_el_move(src.mem, j);
+        Obj ev = mem_el_move(src.mem, j + 1);
         Hash_bucket* dst = dict_bucket(&d1, ek);
         array_append(dst, ek);
         array_append(dst, ev);
@@ -106,6 +108,7 @@ static void dict_insert(Dict* d, Obj k, Obj v) {
   } else {
     assert(d->len < d->len_buckets);
   }
+  d->len++;
   Hash_bucket* b = dict_bucket(d, k);
   array_append(b, k);
   array_append(b, v);
@@ -117,6 +120,8 @@ UNUSED_FN static void dict_remove(Dict* d, Obj k) {
   assert_array_is_valid(b);
   for_ins(i, b->mem.len, 2) {
     if (b->mem.els[i].r == k.r) {
+      assert(d->len > 0);
+      d->len--;
       // replace k,v pair with the last pair. no-op if len == 1.
       b->mem.els[i] = b->mem.els[b->mem.len - 2]; // k.
       b->mem.els[i + 1] = b->mem.els[b->mem.len - 1]; // v.
