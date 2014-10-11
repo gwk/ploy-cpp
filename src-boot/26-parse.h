@@ -24,20 +24,18 @@ typedef struct {
 #define DEF_POS Src_pos pos = p->pos
 
 
-static void parse_err(Parser* p) {
+#if VERBOSE_PARSE
+static void parse_err_prefix(Parser* p) {
   fprintf(stderr, "%.*s:%ld:%ld (%ld): ",
     FMT_STR(data_str(p->path)), p->pos.line + 1, p->pos.col + 1, p->pos.off);
   if (p->e) errF("\nerror: %s\nobj:  ", p->e);
 }
 
-
-UNUSED_FN static void parse_errL(Parser* p) {
-  parse_err(p);
-  err_nl();
-}
+#define parse_errFL(fmt, ...) parse_err_prefix(p); errFL(fmt, ##__VA_ARGS__)
+#endif
 
 
- __attribute__((format (printf, 2, 3)))
+__attribute__((format (printf, 2, 3)))
 static Obj parse_error(Parser* p, Chars_const fmt, ...) {
   assert(!p->e);
   va_list args;
@@ -531,8 +529,7 @@ static Obj parse_expr(Parser* p) {
   DEF_POS;
   Obj expr = parse_expr_dispatch(p);
 #if VERBOSE_PARSE
-  parse_err(p);
-  errFL("%o", expr);
+  parse_errFL("%o", expr);
 #endif
   if (!p->e && obj_is_ref(expr)) {
     Obj src_loc = cmpd_new6(rc_ret(t_Src_loc),
