@@ -1,8 +1,6 @@
 # Copyright 2013 George King.
 # Permission to use this file is granted in ploy/license.txt.
 
-# this depends on the sys-test gloss utility.
-
 set -e
 cd $(dirname "$0")/..
 

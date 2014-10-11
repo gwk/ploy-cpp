@@ -1,4 +1,9 @@
 {
   'code' : 1,
-  'err' : ('match', 'parse error: .*/ploy/test/2-errors/tab.ploy:2:1: illegal tab character'),
+  'err' : '''\
+parse error: test/2-errors/tab.ploy:2:1: illegal tab character
+\t
+^
+
+'''
 }

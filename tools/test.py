@@ -5,9 +5,6 @@
 # forked from gloss python libs.
 # TODO: remove these dependencies.
 
-# system test program
-# see doc/test.txt for more information.
-
 import os
 import re
 import subprocess
@@ -21,18 +18,17 @@ import gloss_fork.func as _func
 import gloss_fork.path as _path
 import gloss_fork.fs as _fs
 import gloss_fork.kv as _kv
-import gloss_fork.gloss_conf as _gloss_conf
 import gloss_fork.ps as _ps
 import gloss_fork.string as _string
 
-from gloss.basic import *
-from gloss.io.sgr import sgr, TR, TG, TB, TY, GR, GG, GB, GY, RT, RG
+from gloss_fork.basic import *
+from gloss_fork.io.sgr import sgr, TR, TG, TB, TY, GR, GG, GB, GY, RT, RG
 
 bar_width = 64
+results_dir = '_bld/test-results'
 
 args = _arg.parse(
   'system test',
-  #_arg.Pattern('-root-dir', help='project root directory'), # not yet supported (must pass to parse_conf())
   # compiler and interpreter options
   _arg.Pattern('-compilers',     nargs='*', help='pairs of [source extension, command string]'),
   _arg.Pattern('-interpreters',  nargs='*', help='pairs of [source extension, command string]'),
@@ -44,25 +40,13 @@ args = _arg.parse(
   paths=True,
 )
 
-
-# options
-conf, root_dir = _gloss_conf.parse_conf('.', all=True)
-errSLD('conf:', root_dir, conf)
-project_name = conf.get('project')
-checkS(root_dir and project_name, Error, 'no configuration file found, searched from:', _fs.current_dir())
-results_dir = _path.join(root_dir, '_bld', 'test-results')
-
-errSLI('project name:', project_name)
-errSLI('test results dir:', results_dir)
-
 if args.debug:
   args.fast = True
   push_vol_err('debug')
-
+  print("DEBUG")
 
 def lex(string):
   return shlex.split(string)
-
 
 # known tools
 tools = {
@@ -75,15 +59,14 @@ tools = {
   },
 }
 
-
 # update tools dict with command options.
 # t is the tool group key; d is the dict of ext : cmd pairs.
 for t, d in tools.items():
   tool_args = args.args[t]
   checkF(len(tool_args) % 2 == 0, Error, 'tool args must be specified as ".ext path" pairs; error in {}: {}', t, tool_args)
   exts = tool_args[0::2]
-  paths = [_fs.abs_path(p) for p in tool_args[1:2]]
-  d.update(dict(zip(exts, paths))) # first add the custom tools specified on command line
+  paths = tool_args[1:2]
+  d.update(dict(zip(exts, paths))) # first add the custom tools specified on command line.
   d.update({ k : lex(v) for k, v in d.items() }) # then lex the tool values for all items.
   if d:
     errLLI('{} ({}):'.format(t, len(d)), *('  {} : {}'.format(*p) for p in sorted(d.items())))
@@ -134,7 +117,6 @@ case_defaults = {
 }
 
 
-
 def run_cmd(cmd, timeout, exp_code, in_path, out_path, err_path, env):
   'run a subprocess; return True if process completed and exit code matched expectation'
 
@@ -174,7 +156,7 @@ def run_cmd(cmd, timeout, exp_code, in_path, out_path, err_path, env):
 
 
 def check_file_exp(path, mode, exp):
-  'return True if file at path matches expecation'
+  'return True if file at path meets expectation.'
   errFLD('check_file_exp: path: {}; mode: {}; exp: {}', path, mode, repr(exp))
   try:
     with open(path) as f:
@@ -189,19 +171,17 @@ def check_file_exp(path, mode, exp):
   outFL('output file {} does not {} expectation:', repr(path), mode)
   for line in exp.split('\n'):
     outL(sgr(GB), line, sgr(RG))
-  test_dir = _fs.current_dir()
-  res_path = _path.join(test_dir, path)
-  if mode == 'equal': # show a diff
+  if mode == 'equal': # show a diff.
     exp_path = path + '-expected'
     with open(exp_path, 'w') as f: # write expectation to file.
       f.write(exp)
-    args = [_path.join(test_dir, exp_path), res_path]
+    args = [exp_path, path]
     diff_cmd = ['dl'] + args
     outSL(*diff_cmd)
     _ps.runC(diff_cmd, interpreter='sh')
   else:
-    outSL('cat', res_path)
-    with open(res_path) as f:
+    outSL('cat', path)
+    with open(path) as f:
       for line in f:
         l = line.rstrip('\n')
         outL(sgr(GR), l, sgr(RG))
@@ -216,54 +196,49 @@ def check_cmd(cmd, timeout, exp_code, exp_triples, in_path, std_file_prefix, env
   out_path = std_file_prefix + 'out'
   err_path = std_file_prefix + 'err'
   code_ok = run_cmd(cmd, timeout, exp_code, in_path, out_path, err_path, env)
-  # use a list comprehension to force evaluation of all triples
+  # use a list comprehension to force evaluation of all triples; avoid break on first failure.
   files_ok = all([check_file_exp(*t) for t in exp_triples])
   return code_ok and files_ok
 
 
-def make_exp_triples(out_val, err_val, files, expand_fn):
-  '''
-  each expectation is structured as (key, mode, expectation).
-  '''
-
+def make_exp_triples(test_dir, out_val, err_val, files, expand_fn):
+  'each expectation is structured as (key, mode, expectation).'
+  errSLD("make_exp_triples:", out_val, err_val)
   exps  = { 'out' : out_val, 'err' : err_val }
-
   for k in exps:
     checkS(k not in files, Error, 'file expectation shadowed by', k)
   _d.set_defaults(exps, files)
   exp_triples = []
   for k, v in sorted(exps.items()):
+    path = os.path.join(test_dir, k)
     mode, exp = ('equal', v) if isinstance(v, str) else v
     if mode == 'equal':
       exp = expand_fn(exp)
-    exp_triples.append((k, mode, exp))
+    exp_triples.append((path, mode, exp))
   errLLD('file exp triples:', *exp_triples)
   return exp_triples
 
 
-def run_case(src_path, case):
+def run_case(case_path, case):
   'execute the test at path in the current directory'
-  outSL('executing:', src_path)
-  # because we recreate the dir structure in the test results dir, parent dirs are forbidden
-  checkS(src_path.find('..') == -1, Error, "path cannot contain '..':", src_path)
-  src_dir, file_name = _path.split_dir(src_path)
-  rel_dir = _string.strip_prefix(src_dir, root_dir + '/')
+  outSL('executing:', case_path)
+  # because we recreate the dir structure in the test results dir, parent dirs are forbidden.
+  checkS(case_path.find('..') == -1, Error, "case path cannot contain '..':", case_path)
+  src_dir, file_name = _path.split_dir(case_path)
   case_name = _path.base(file_name)
-  test_dir = os.path.abspath(_path.join(results_dir, rel_dir, case_name)) # output directory
-  # setup directories
-  errSLI('cd', test_dir)
+  test_dir = _path.join(results_dir, src_dir, case_name) # output directory.
+  # setup directories.
+  errSLD("setting up test directory:", test_dir)
   if _fs.exists(test_dir):
     _fs.remove_contents(test_dir)
   else:
     _fs.make_dirs(test_dir)
-  os.chdir(test_dir)
-  # setup test values
+  # setup test values.
   errLLI(*('  {}: {}'.format(k, repr(v)) for k, v in case.items()))
 
   def expand(string):
     'test environment variable substitution; uses string template $ syntax.'
     test_env_vars = {    
-      'ROOT'    : root_dir, # project root
       'SRC_DIR' : src_dir,  # SRC is a special variable holding the test case source directory; TODO: rename?
     }
     return _string.template(string, **test_env_vars) if string else string
@@ -289,7 +264,7 @@ def run_case(src_path, case):
   timeout = case['timeout']
   checkF(isinstance(timeout, int) and timeout > 0, Error, 'bad timeout: {}; type: {}', repr(timeout), type(timeout))
   args, cmd, env, src_list = (expand_poly(case[k]) for k in ('args', 'cmd', 'env', 'src'))
-  exp_triples = make_exp_triples(case['out'], case['err'], case['files'], expand)
+  exp_triples = make_exp_triples(test_dir, case['out'], case['err'], case['files'], expand)
   
   # defaults
   if not (src_list or cmd): # find default sources
@@ -313,8 +288,8 @@ def run_case(src_path, case):
   errSLI('input path:', in_path)
   # compile sources as necessary
   #if compiler:
-  #  abs_src_list = [os.path.join(src_dir, s) for s in src_list]
-  #  compile_cmd = compiler + ['-o', name] + abs_src_list
+  #  rel_src_list = [os.path.join(src_dir, s) for s in src_list]
+  #  compile_cmd = compiler + ['-o', name] + rel_src_list
   #  ok = check_cmd(
   #    compile_cmd,
   #    timeout,
@@ -332,7 +307,7 @@ def run_case(src_path, case):
   #  n = 'compiled executable'
   #else:
     checkS(len(src_list) == 1, Error, 'multiple interpreted sources:', src_list)
-    cmd = [_path.join(src_dir, src_list[0])]
+    cmd = [src_list[0]]
     if interpreter: # use the interpreter on the source file
       cmd = interpreter + cmd
     errSLI('default cmd:', cmd)
@@ -364,10 +339,10 @@ def read_case(test_path):
 
 # global counts
 
-test_count    = 0 # all tests
-skip_count    = 0 # tests that failed to parse
-ignore_count  = 0 # tests that specified ignore
-fail_count    = 0 # tests that ran but failed
+test_count    = 0 # all tests.
+skip_count    = 0 # tests that failed to read case.
+ignore_count  = 0 # tests that specified ignore.
+fail_count    = 0 # tests that ran but failed.
 
 
 def try_case(path):
@@ -376,7 +351,7 @@ def try_case(path):
   try:
     case = read_case(path)
   except Exception as e:
-    errFLE('ERROR: could not parse test case: {};\nexception: {}', path, e)
+    errFLE('ERROR: could not read test case: {};\nexception: {}', path, e)
     skip_count += 1
     if args.debug:
       raise
@@ -389,7 +364,7 @@ def try_case(path):
   try:
     ok = run_case(path, case)
   except Exception as e:
-    errFLE('ERROR: could not execute test case: {};\nexception: {}', path, e)
+    errFLE('ERROR: could not run test case: {};\nexception: {}', path, e)
     if args.debug:
       raise
     else:
@@ -407,7 +382,7 @@ if not _fs.exists(results_dir):
   _fs.make_dirs(results_dir)
 
 # parse and run tests
-for path in _fs.all_paths(*args.paths, make_abs=True, exts=['.test']):
+for path in _fs.all_paths(*args.paths, exts=['.test']):
   if path == '<stdin>':
     errSLN('reading test case from', path)
   try_case(path)
