@@ -63,7 +63,7 @@ def push_vol_err(vol):
 def push_limit_vol_err(vol):
   '''
   limit the volume of a section of code.
-  pushes an error volume onto the stack if it is less than the current volume and the current volume is less than debug;
+  pushes an error volume onto the stack if it is less than the current volume and the target volume is less than debug;
   otherwise push current volume.
   '''
   v = _vol_err_aliases[vol]
@@ -92,7 +92,7 @@ class set_vol_err():
     push_vol_err(self.vol)
 
   def __exit__(self, xc_type, exc_val, exc_tb):
-    pop_vol_err(self)
+    pop_vol_err()
 
 
 class limit_vol_err():
@@ -110,7 +110,7 @@ class limit_vol_err():
     push_limit_vol_err(self.vol)
 
   def __exit__(self, xc_type, exc_val, exc_tb):
-    pop_vol_err(self)
+    pop_vol_err()
 
 
 def err_flush():

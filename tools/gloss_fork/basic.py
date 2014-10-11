@@ -8,6 +8,6 @@
 basic gloss functionality intended to be imported in most programs.
 '''
 
-from gloss.eh import *
-from gloss.io.std import *
+from gloss_fork.eh import *
+from gloss_fork.io.std import *
 

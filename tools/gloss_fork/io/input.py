@@ -8,8 +8,8 @@ import re as _re
 import sys as _sys
 import os as _os
 
-from gloss.immutable import Immutable as _Immutable
-from gloss.trie import TrieMap as _TrieMap
+from gloss_fork.immutable import Immutable as _Immutable
+from gloss_fork.trie import TrieMap as _TrieMap
 
 class Key(_Immutable):
   

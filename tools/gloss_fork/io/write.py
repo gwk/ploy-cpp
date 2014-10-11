@@ -18,7 +18,7 @@ import gloss_fork.io.cs as _cs
 import gloss_fork.io.sgr as _sgr
 
 from .term import window_size as _term_window_size
-from gloss.string import template as _template
+from gloss_fork.string import template as _template
 
 # basic printing
 

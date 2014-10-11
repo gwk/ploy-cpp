@@ -13,7 +13,7 @@ conceptually, fail and assert are meant to be used in cases where failure is the
 whereas raise and check are meant to handle errors external to the code in question.
 '''
 
-from gloss.string import join_items
+from gloss_fork.string import join_items
 
 
 # exceptions
