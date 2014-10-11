@@ -36,10 +36,24 @@ static void write_repr_Data(CFile f, Obj d, Bool is_quoted, Int depth, Set* set)
 #define NO_REPR_PO "⟮" // U+27EE Mathematical left flattened parenthesis.
 #define NO_REPR_PC "⟯" // U+27EF Mathematical right flattened parenthesis.
 
+
 static void write_repr_Env(CFile f, Obj env, Bool is_quoted, Int depth, Set* set) {
   Obj top_key = env.e->key;
   fputs(NO_REPR_PO "Env ", f);
   write_repr(f, top_key);
+  fputs(NO_REPR_PC, f);
+}
+
+
+static void write_repr_Comment(CFile f, Obj comment, Bool is_quoted, Int depth, Set* set) {
+  assert(cmpd_len(comment) == 2);
+  fputs(NO_REPR_PO "#", f);
+  if (bool_is_true(cmpd_el(comment, 0))) {
+    fputs("#", f);
+  } else {
+    fputs(" ", f);
+  }
+  write_repr(f, cmpd_el(comment, 1));
   fputs(NO_REPR_PC, f);
 }
 
@@ -163,7 +177,8 @@ static Bool write_repr_is_quotable(Obj o) {
   Obj type = ref_type(o);
   if (is(type, t_Data) || is(type, t_Env)) return true; // env does not have true repr.
   assert(ref_is_cmpd(o));
-  if (!(is(type, t_Bang)
+  if (!(is(type, t_Comment)
+    || is(type, t_Bang)
     || is(type, t_Quo)
     || is(type, t_Qua)
     || is(type, t_Unq)
@@ -197,6 +212,7 @@ static void write_repr_dispatch(CFile f, Obj s, Bool is_quoted, Int depth, Set* 
     write_repr_default(f, s, is_quoted, depth, set);
     return;
   }
+  DISP(Comment);
   DISP(Bang);
   DISP(Quo);
   DISP(Qua);
