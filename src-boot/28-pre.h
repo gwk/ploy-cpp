@@ -23,5 +23,5 @@ static Obj preprocess(Obj code) {
   }
   Obj c = cmpd_new_M(rc_ret(ref_type(code)), dst.mem);
   mem_dealloc(dst.mem);
-  return c;
+  return track_src(code, c);
 }

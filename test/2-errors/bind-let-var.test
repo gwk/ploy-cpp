@@ -3,6 +3,8 @@
   'err' : '''\
 symbol is already bound: `x
 trace:
-  {:Bind true false `x 1}
+  test/2-errors/bind-let-var.ploy:2:1:
+    <var x 1>
+    ~~~~~~~~~
 '''
 }

@@ -11,7 +11,7 @@ static Obj expand_quasiquote(Int d, Obj o) {
     OPTION_REC_LIMIT, o);
 #endif
   if (!obj_is_cmpd(o)) { // replace the quasiquote with quote.
-    return cmpd_new1(rc_ret(t_Quo), o);
+    return track_src(o, cmpd_new1(rc_ret(t_Quo), o));
   }
   Obj type = obj_type(o);
   if (!d && is(type, t_Unq)) { // unquote is only performed at the same (innermost) level.
@@ -35,9 +35,9 @@ static Obj expand_quasiquote(Int d, Obj o) {
       dst[i + 1] = expand_quasiquote(d1, rc_ret(e)); // propagate the quotation.
     }
     rc_rel(o);
-    return s;
+    return track_src(o, s);
   } else { // no unquotes in the tree; simply quote the top level.
-    return cmpd_new1(rc_ret(t_Quo), o);
+    return track_src(o, cmpd_new1(rc_ret(t_Quo), o));
   }
 }
 
@@ -68,6 +68,7 @@ static Obj expand(Int d, Obj env, Obj code) {
   }
   if (is(type, t_Expand)) {
     Obj expanded = run_macro(t, rc_ret(env), code); // owns env.
+    track_src(code, expanded);
     rc_rel(code);
     // macro result may contain more expands; recursively expand the result.
     Obj final = expand(d + 1, env, expanded);
@@ -82,6 +83,7 @@ static Obj expand(Int d, Obj env, Obj code) {
     for_in(i, cmpd_len(code)) {
       expanded_els[i] = expand(d + 1, env, rc_ret(cmpd_el(code, i)));
     }
+    track_src(code, expanded);
     rc_rel(code);
     return expanded;
   }

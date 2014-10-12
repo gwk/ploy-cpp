@@ -5,21 +5,43 @@ lookup error: `unbound
 trace:
   `unbound
   … 1
-  `(self (isub n 1))
-  {:Do `(self (isub n 1)) void}
+  test/2-errors/trace.ploy:5:9:
+            (self (isub n 1))
+            ~~~~~~~~~~~~~~~~~
+  test/2-errors/trace.ploy:4:7:
+          <do
+          ~~~-
   … 2
-  `(self (isub n 1))
-  {:Do `(self (isub n 1)) void}
+  test/2-errors/trace.ploy:5:9:
+            (self (isub n 1))
+            ~~~~~~~~~~~~~~~~~
+  test/2-errors/trace.ploy:4:7:
+          <do
+          ~~~-
   … 2
-  `(self (isub n 1))
-  {:Do `(self (isub n 1)) void}
+  test/2-errors/trace.ploy:5:9:
+            (self (isub n 1))
+            ~~~~~~~~~~~~~~~~~
+  test/2-errors/trace.ploy:4:7:
+          <do
+          ~~~-
   … 2
-  `(self (isub n 1))
-  {:Do `(self (isub n 1)) void}
+  test/2-errors/trace.ploy:5:9:
+            (self (isub n 1))
+            ~~~~~~~~~~~~~~~~~
+  test/2-errors/trace.ploy:4:7:
+          <do
+          ~~~-
   … 2
-  `(self (isub n 1))
-  {:Do `(self (isub n 1)) void}
+  test/2-errors/trace.ploy:5:9:
+            (self (isub n 1))
+            ~~~~~~~~~~~~~~~~~
+  test/2-errors/trace.ploy:4:7:
+          <do
+          ~~~-
   … 2
-  `(f 5)
+  test/2-errors/trace.ploy:9:1:
+    (f 5)
+    ~~~~~
 '''
 }

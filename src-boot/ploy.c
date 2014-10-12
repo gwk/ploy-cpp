@@ -12,7 +12,7 @@ static Obj parse_and_eval(Dict* src_locs, Obj env, Obj path, Obj src, Bool shoul
   rc_rel(src);
   if (e) {
     err("parse error: ");
-    errL(e);
+    err(e);
     raw_dealloc(e, ci_Chars);
     assert(is(code, obj0));
     fail();
@@ -70,33 +70,33 @@ int main(int argc, Chars_const argv[]) {
     }
   }
 
-  Dict src_locs = dict0;
+  global_src_locs = dict0;
   Obj path, src;
 
   if (should_load_core) { // run embedded core.ploy file.
     env = env_push_frame(env);
     path = data_new_from_chars("<core>");
     src = data_new_from_chars(core_src);
-    env = parse_and_eval(&src_locs, env, path, src, false);
+    env = parse_and_eval(&global_src_locs, env, path, src, false);
   }
   // handle arguments.
   for_in(i, path_count) {
     env = env_push_frame(env);
     path = data_new_from_chars(paths[i]);
     src = data_new_from_path(paths[i]);
-    env = parse_and_eval(&src_locs, env, path, src, false);
+    env = parse_and_eval(&global_src_locs, env, path, src, false);
   }
   if (expr) {
     env = env_push_frame(env);
     path = data_new_from_chars("<expr>");
     src = data_new_from_chars(expr);
-    env = parse_and_eval(&src_locs, env, path, src, should_output_val);
+    env = parse_and_eval(&global_src_locs, env, path, src, should_output_val);
   }
 
 #if OPTION_ALLOC_COUNT
   // cleanup in reverse order.
-  dict_rel(&src_locs);
-  dict_dealloc(&src_locs);
+  dict_rel(&global_src_locs);
+  dict_dealloc(&global_src_locs);
   global_cleanup();
   rc_rel(env);
   env_cleanup();

@@ -1,8 +1,10 @@
 {
   'code' : 1,
-  'err' : '''\
+  'err' : ('match', '''\
 symbol is already bound: `x
 trace:
-  {:Bind false false `x 1}
-'''
+  test/2-errors/bind-let-let.ploy:2:1:
+    <let x 1>
+    ~~~~~~~~~
+''')
 }

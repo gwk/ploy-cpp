@@ -3,10 +3,16 @@
   'err' : '''\
 iadd requires arg 2 to be a Int; received: 'a'
 trace:
-  `(iadd a b)
+  test/2-errors/trace-host.ploy:2:3:
+      (iadd a b)> # host call in tail position.
+      ~~~~~~~~~~
   … 3
-  `(h)
+  test/2-errors/trace-host.ploy:12:3:
+      (h) # native call in non-tail position.
+      ~~~
   {:Do `(h) void}
-  `(i)
+  test/2-errors/trace-host.ploy:15:1:
+    (i)
+    ~~~
 '''
 }
