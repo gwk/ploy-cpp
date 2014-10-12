@@ -185,7 +185,7 @@ static Obj parse_uns(Parser* p) {
 }
 
 
-static Obj parse_int(Parser* p, Int sign) {
+static Obj parse_Int(Parser* p, Int sign) {
   assert(PC == '-' || PC == '+');
   P_ADV(1, return parse_error(p, "incomplete signed number literal"));
   U64 u = parse_U64(p);
@@ -195,7 +195,7 @@ static Obj parse_int(Parser* p, Int sign) {
 }
 
 
-static Obj parse_sym(Parser* p) {
+static Obj parse_Sym(Parser* p) {
   assert(PC == '_' || isalpha(PC));
   Int off = p->pos.off;
   loop {
@@ -210,7 +210,7 @@ static Obj parse_sym(Parser* p) {
 
 static Obj parse_sub_expr(Parser* p);
 
-static Obj parse_comment(Parser* p) {
+static Obj parse_Comment(Parser* p) {
   DEF_POS;
   assert(PC == '#');
   P_ADV(1, return parse_error(p, "unterminated comment (add newline)"));
@@ -235,7 +235,7 @@ static Obj parse_comment(Parser* p) {
 }
 
 
-static Obj parse_data(Parser* p, Char q) {
+static Obj parse_Data(Parser* p, Char q) {
   DEF_POS;
   assert(PC == q);
   Int cap = size_min_alloc;
@@ -282,7 +282,7 @@ static Obj parse_data(Parser* p, Char q) {
 }
 
 
-static Obj parse_quo(Parser* p) {
+static Obj parse_Quo(Parser* p) {
   assert(PC == '`');
   P_ADV(1);
   Obj o = parse_sub_expr(p);
@@ -291,7 +291,7 @@ static Obj parse_quo(Parser* p) {
 }
 
 
-static Obj parse_qua(Parser* p) {
+static Obj parse_Qua(Parser* p) {
   assert(PC == '~');
   P_ADV(1);
   Obj o = parse_sub_expr(p);
@@ -300,7 +300,7 @@ static Obj parse_qua(Parser* p) {
 }
 
 
-static Obj parse_unq(Parser* p) {
+static Obj parse_Unq(Parser* p) {
   assert(PC == ',');
   P_ADV(1);
   Obj o = parse_sub_expr(p);
@@ -309,7 +309,7 @@ static Obj parse_unq(Parser* p) {
 }
 
 
-static Obj parse_bang(Parser* p) {
+static Obj parse_Bang(Parser* p) {
   assert(PC == '!');
   P_ADV(1);
   Obj o = parse_sub_expr(p);
@@ -318,7 +318,7 @@ static Obj parse_bang(Parser* p) {
 }
 
 
-static Obj parse_splice(Parser* p) {
+static Obj parse_Splice(Parser* p) {
   assert(PC == '*');
   P_ADV(1);
   Obj o = parse_sub_expr(p);
@@ -327,7 +327,7 @@ static Obj parse_splice(Parser* p) {
 }
 
 
-static Obj parse_label(Parser* p) {
+static Obj parse_Label(Parser* p) {
   P_ADV(1, return parse_error(p, "incomplete label name"));
   Obj name = parse_sub_expr(p);
   if (p->e) {
@@ -364,7 +364,7 @@ static Obj parse_label(Parser* p) {
 }
 
 
-static Obj parse_variad(Parser* p) {
+static Obj parse_Variad(Parser* p) {
   P_ADV(1, return parse_error(p, "incomplete variad expression"));
   Obj expr = parse_sub_expr(p);
   if (p->e) {
@@ -388,7 +388,7 @@ static Obj parse_variad(Parser* p) {
 }
 
 
-static Obj parse_accessor(Parser* p) {
+static Obj parse_Accessor(Parser* p) {
   P_ADV(1, return parse_error(p, "incomplete accessor"));
   Obj expr = parse_sub_expr(p);
   if (p->e) {
@@ -399,7 +399,7 @@ static Obj parse_accessor(Parser* p) {
 }
 
 
-static Obj parse_mutator(Parser* p) {
+static Obj parse_Mutator(Parser* p) {
   P_ADV(2, return parse_error(p, "incomplete mutator"));
   Obj expr = parse_sub_expr(p);
   if (p->e) {
@@ -427,7 +427,7 @@ if (p->e || !parse_terminator(p, t)) { \
 }
 
 
-static Obj parse_expand(Parser* p) {
+static Obj parse_Expand(Parser* p) {
   P_ADV(1, return parse_error(p, "unterminated expand"));
   Mem m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR('>');
@@ -437,7 +437,7 @@ static Obj parse_expand(Parser* p) {
 }
 
 
-static Obj parse_call(Parser* p) {
+static Obj parse_Call(Parser* p) {
   P_ADV(1, return parse_error(p, "unterminated call"));
   Mem m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR(')');
@@ -501,35 +501,35 @@ static Obj parse_seq(Parser* p) {
 static Obj parse_expr_dispatch(Parser* p) {
   Char c = PC;
   switch (c) {
-    case '<':   return parse_expand(p);
-    case '(':   return parse_call(p);
+    case '<':   return parse_Expand(p);
+    case '(':   return parse_Call(p);
     case '{':   return parse_struct(p);
     case '[':   return parse_seq(p);
-    case '`':   return parse_quo(p);
-    case '~':   return parse_qua(p);
-    case ',':   return parse_unq(p);
-    case '!':   return parse_bang(p);
-    case '*':   return parse_splice(p);
-    case '\'':  return parse_data(p, '\'');
-    case '"':   return parse_data(p, '"');
-    case '#':   return parse_comment(p);
-    case '&':   return parse_variad(p);
+    case '`':   return parse_Quo(p);
+    case '~':   return parse_Qua(p);
+    case ',':   return parse_Unq(p);
+    case '!':   return parse_Bang(p);
+    case '*':   return parse_Splice(p);
+    case '\'':  return parse_Data(p, '\'');
+    case '"':   return parse_Data(p, '"');
+    case '#':   return parse_Comment(p);
+    case '&':   return parse_Variad(p);
     case '.':
-      if (PP1 && PC1 == '=') return parse_mutator(p);
-      return parse_accessor(p);
+      if (PP1 && PC1 == '=') return parse_Mutator(p);
+      return parse_Accessor(p);
     case '+':
-      if (PP1 && isdigit(PC1)) return parse_int(p, 1);
+      if (PP1 && isdigit(PC1)) return parse_Int(p, 1);
       break;
     case '-':
-      if (PP1 && isdigit(PC1)) return parse_int(p, -1);
-      return parse_label(p);
+      if (PP1 && isdigit(PC1)) return parse_Int(p, -1);
+      return parse_Label(p);
 
   }
   if (isdigit(c)) {
     return parse_uns(p);
   }
   if (c == '_' || isalpha(c)) {
-    return parse_sym(p);
+    return parse_Sym(p);
   }
   return parse_error(p, "unexpected character: '%s'", char_repr(c));
 }
