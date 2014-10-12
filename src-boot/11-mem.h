@@ -56,7 +56,7 @@ static void assert_mem_index_is_valid(Mem m, Int i) {
 }
 
 
-UNUSED_FN static Mem mem_next(Mem m) {
+static Mem mem_next(Mem m) {
   // note: this may produce an invalid mem representing the end of the region;
   // as a minor optimization, we do not set m.els to NULL if len == 0,
   // but we could if it matters.
@@ -105,8 +105,17 @@ static void mem_put(Mem m, Int i, Obj o) {
 static Int mem_append(Mem* m, Obj o) {
   // semantics can be move (owns o) or borrow (must be cleared prior to dealloc).
   Int i = m->len++;
+  // note: unlike mem_put, the memory being overwritten may not have been previously zeroed,
+  // because until now it was outside of the mem range.
+  // during debug it is often the malloc scribble value.
   m->els[i] = o;
   return i;
+}
+
+
+UNUSED_FN static Mem mem_push(Mem m, Obj o) {
+  mem_put(m, 0, o);
+  return mem_next(m);
 }
 
 

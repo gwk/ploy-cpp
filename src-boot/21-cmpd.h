@@ -261,17 +261,3 @@ static void cmpd_dissolve_fields(Obj c) {
 }
 #endif
 
-
-static Obj t_Unq;
-
-static Bool cmpd_contains_unquote(Obj c) {
-  assert(ref_is_cmpd(c));
-  if (is(obj_type(c), t_Unq)) return true;
-  Mem m = cmpd_mem(c);
-  it_mem(it, m) {
-    Obj e = *it;
-    if (obj_is_cmpd(e) && cmpd_contains_unquote(e)) return true;
-  }
-  return false;
-}
-

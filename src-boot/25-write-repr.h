@@ -100,6 +100,16 @@ static void write_repr_Unq(CFile f, Obj o, Bool is_quoted, Int depth, Set* set) 
 }
 
 
+static void write_repr_Splice(CFile f, Obj o, Bool is_quoted, Int depth, Set* set) {
+  assert(cmpd_len(o) == 1);
+  if (!is_quoted) {
+    fputc('`', f);
+  }
+  fputc('*', f);
+  write_repr_obj(f, cmpd_el(o, 0), true, depth, set);
+}
+
+
 static void write_repr_Label(CFile f, Obj o, Bool is_quoted, Int depth, Set* set) {
   assert(cmpd_len(o) == 3);
   if (!is_quoted) {
@@ -183,6 +193,7 @@ static void write_repr_dispatch(CFile f, Obj s, Bool is_quoted, Int depth, Set* 
   DISP(Quo);
   DISP(Qua);
   DISP(Unq);
+  DISP(Splice);
   DISP(Label);
   DISP(Variad);
   #undef DISP

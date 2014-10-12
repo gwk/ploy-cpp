@@ -468,34 +468,47 @@ static Step run_Call(Int d, Trace* t, Obj env, Obj code) {
   // owns env.
   Int len = cmpd_len(code);
   check(len > 0, "call is empty: %o", code);
-  // assemble vals as interleaved name, value pairs.
-  // the callee never has a name, hence the odd number of elements.
+  // assemble vals as an array of interleaved name, value pairs.
+  // the callee never has a name, so there are an odd number of elements.
   // the names are required for dispatch and argument binding.
   // the names are not ref-counted, but the values are.
-  Mem vals = mem_alloc(len * 2 - 1);
-  for_in(i, len) {
+  // the array can grow arbitrarily large due to splice arguments.
+  Array vals = array_alloc_cap(len * 2 - 1);
+  Step step = run(d, t, env, cmpd_el(code, 0)); // callee.
+  env = step.res.env;
+  array_append(&vals, step.res.val);
+  for_imn(i, 1, len) {
     Obj expr = cmpd_el(code, i);
-    Obj expr_type = obj_type(expr);
-    if (i && is(expr_type, t_Label)) {
+    Obj expr_t = obj_type(expr);
+    if (is(expr_t, t_Splice)) {
+      Obj sub_expr = cmpd_el(expr, 0);
+      step = run(d, t, env, sub_expr);
+      env = step.res.env;
+      Obj val = step.res.val;
+      exc_check(obj_is_cmpd(val), "call: %o\nspliced value is not of a compound type: %o", val);
+      it_cmpd(it, val) {
+        array_append(&vals, obj0); // no name.
+        array_append(&vals, rc_ret(*it));
+      }
+      rc_rel(val);
+    } else if (is(expr_t, t_Label)) {
       UNPACK_LABEL(expr);
       exc_check(is(expr_el_type, s_nil),
         "call: %o\nlabeled argument cannot specify a type: %o", code, expr_el_type);
-      Step step = run(d, t, env, expr_el_expr);
-      mem_put(vals, i * 2 - 1, expr_el_name);
-      mem_put(vals, i * 2, step.res.val);
+      step = run(d, t, env, expr_el_expr);
       env = step.res.env;
+      array_append(&vals, expr_el_name);
+      array_append(&vals, step.res.val);
     }
     // TODO: splats; will require that vals grow dynamically.
     else { // unlabeled arg expr.
-      Step step = run(d, t, env, expr);
-      if (i) { // no name for the callee.
-        mem_put(vals, i * 2 - 1, obj0);
-      }
-      mem_put(vals, i * 2, step.res.val);
+      step = run(d, t, env, expr);
       env = step.res.env;
+      array_append(&vals, obj0); // no name.
+      array_append(&vals, step.res.val);
     }
   }
-  return run_Call_disp(d, t, env, code, vals);
+  return run_Call_disp(d, t, env, code, vals.mem);
 }
 
 

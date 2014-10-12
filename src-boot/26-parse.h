@@ -318,6 +318,15 @@ static Obj parse_bang(Parser* p) {
 }
 
 
+static Obj parse_splice(Parser* p) {
+  assert(PC == '*');
+  P_ADV(1);
+  Obj o = parse_sub_expr(p);
+  if (p->e) return obj0;
+  return cmpd_new1(rc_ret(t_Splice), o);
+}
+
+
 static Obj parse_label(Parser* p) {
   P_ADV(1, return parse_error(p, "incomplete label name"));
   Obj name = parse_sub_expr(p);
@@ -500,6 +509,7 @@ static Obj parse_expr_dispatch(Parser* p) {
     case '~':   return parse_qua(p);
     case ',':   return parse_unq(p);
     case '!':   return parse_bang(p);
+    case '*':   return parse_splice(p);
     case '\'':  return parse_data(p, '\'');
     case '"':   return parse_data(p, '"');
     case '#':   return parse_comment(p);

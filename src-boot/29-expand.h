@@ -4,35 +4,44 @@
 #include "28-pre.h"
 
 
-static Obj expand_quasiquote(Int d, Obj o) {
+static Bool cmpd_contains_unquote(Obj c) {
+  // TODO: follow the same depth rule as below.
+  assert(ref_is_cmpd(c));
+  if (is(obj_type(c), t_Unq)) return true;
+  Mem m = cmpd_mem(c);
+  it_mem(it, m) {
+    Obj e = *it;
+    if (obj_is_cmpd(e) && cmpd_contains_unquote(e)) return true;
+  }
+  return false;
+}
+
+
+static Obj expand_quasiquote(Int qua_depth, Obj o) {
   // owns o.
-#if OPTION_REC_LIMIT
-  check(d < OPTION_REC_LIMIT, "quasiquotation exceeded recursion limit: %i\n%o",
-    OPTION_REC_LIMIT, o);
-#endif
   if (!obj_is_cmpd(o)) { // replace the quasiquote with quote.
     return track_src(o, cmpd_new1(rc_ret(t_Quo), o));
   }
   Obj type = obj_type(o);
-  if (!d && is(type, t_Unq)) { // unquote is only performed at the same (innermost) level.
+  if (!qua_depth && is(type, t_Unq)) { // unquote is only performed at the same (innermost) level.
     check(cmpd_len(o) == 1, "malformed Unq: %o", o);
     Obj e = rc_ret(cmpd_el(o, 0));
     rc_rel(o);
     return e;
   }
   if (cmpd_contains_unquote(o)) { // unquote exists somewhere in the tree.
-    Int d1 = d; // count Qua nesting level.
+    Int qd1 = qua_depth; // count Qua nesting level.
     if (is(type, t_Qua)) {
-      d1++;
+      qd1++;
     } else if (is(type, t_Unq)) {
-      d1--;
+      qd1--;
     }
     Obj s = cmpd_new_raw(rc_ret(t_Syn_struct_typed), cmpd_len(o) + 1);
     Obj* dst = cmpd_els(s);
     dst[0] = rc_ret(type_name(type));
     for_in(i, cmpd_len(o)) {
       Obj e = cmpd_el(o, i);
-      dst[i + 1] = expand_quasiquote(d1, rc_ret(e)); // propagate the quotation.
+      dst[i + 1] = expand_quasiquote(qd1, rc_ret(e)); // propagate the quotation.
     }
     rc_rel(o);
     return track_src(o, s);

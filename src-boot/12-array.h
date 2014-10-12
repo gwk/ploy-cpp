@@ -20,6 +20,14 @@ static void assert_array_is_valid(Array* a) {
 }
 
 
+static Array array_alloc_cap(Int cap) {
+  Array a = array0;
+  a.cap = cap;
+  mem_realloc(&a.mem, a.cap);
+  return a;
+}
+
+
 static void array_grow_cap(Array* a) {
   assert_array_is_valid(a);
   if (a->cap == 0) {

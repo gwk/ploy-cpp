@@ -39,6 +39,7 @@ T(Call,             mem, t_Expr) \
 T(Func,             struct_func) \
 T(Accessor,         struct1, "name", t_Sym) \
 T(Mutator,          struct1, "name", t_Sym) \
+T(Splice,           struct1, "expr", t_Expr) \
 T(Label,            struct3, "name", t_Expr, "type", t_Expr, "expr", t_Expr) \
 T(Variad,           struct2, "name", t_Expr, "type", t_Expr) \
 T(Src_loc,          struct_src_loc) \
