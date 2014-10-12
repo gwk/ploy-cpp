@@ -108,6 +108,19 @@ static Obj cmpd_new4(Obj type, Obj a, Obj b, Obj c, Obj d) {
 }
 
 
+static Obj cmpd_new5(Obj type, Obj a, Obj b, Obj c, Obj d, Obj e) {
+  // owns all arguments.
+  Obj o = cmpd_new_raw(type, 5);
+  Obj* els = cmpd_els(o);
+  els[0] = a;
+  els[1] = b;
+  els[2] = c;
+  els[3] = d;
+  els[4] = e;
+  return o;
+}
+
+
 static Obj cmpd_new6(Obj type, Obj a, Obj b, Obj c, Obj d, Obj e, Obj f) {
   // owns all arguments.
   Obj o = cmpd_new_raw(type, 6);
@@ -137,6 +150,7 @@ static Obj cmpd_new7(Obj type, Obj a, Obj b, Obj c, Obj d, Obj e, Obj f, Obj g) 
 }
 
 
+UNUSED_FN
 static Obj cmpd_new8(Obj type, Obj a, Obj b, Obj c, Obj d, Obj e, Obj f, Obj g, Obj h) {
   // owns all arguments.
   Obj o = cmpd_new_raw(type, 8);

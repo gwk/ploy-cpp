@@ -15,7 +15,6 @@
     # because we cannot use macro to define itself, we must define it using raw forms.
     # note the structural similarity between the outer Fn form and the inner struct literal.
     {:Fn # Fn creates both functions and macros.
-      `macro # the sym for this macro is `macro.
       true # is-native.
       true # is-macro.
       `[-sym -pars &body] # the parameter list, which does not get evaluated.
@@ -28,7 +27,6 @@
           # note that this inner FN is inside a vec literal;
           # when the 'macro' macro is expanded, the literal is evaluated,
           # and a {FN ...} form is the resulting code vector.
-          sym
           true
           true
           pars
@@ -38,9 +36,8 @@
 # define macros to wrap the special forms.
 
 <macro fna [-pars &body]
-  # the 'fna' macro defines an anonymous function.
+  # the 'fna' macro creates an anonymous function.
   {:Fn
-    `anon
     true
     false
     pars
@@ -54,7 +51,6 @@
     false # private.
     sym
     {:Fn
-      sym
       true
       false
       pars

@@ -119,14 +119,12 @@ static Step run_If(Int d, Trace* t, Obj env, Obj code) {
 
 static Step run_Fn(Int d, Trace* t, Obj env, Obj code) {
   // owns env.
-  exc_check(cmpd_len(code) == 6, "Fn requires 6 fields; received %i", cmpd_len(code));
-  Obj name      = cmpd_el(code, 0);
-  Obj is_native = cmpd_el(code, 1);
-  Obj is_macro  = cmpd_el(code, 2);
-  Obj pars_syn  = cmpd_el(code, 3);
-  Obj ret_type  = cmpd_el(code, 4);
-  Obj body      = cmpd_el(code, 5);
-  exc_check(obj_is_sym(name),  "Fn: name is not a Sym: %o", name);
+  exc_check(cmpd_len(code) == 5, "Fn requires 5 fields; received %i", cmpd_len(code));
+  Obj is_native = cmpd_el(code, 0);
+  Obj is_macro  = cmpd_el(code, 1);
+  Obj pars_syn  = cmpd_el(code, 2);
+  Obj ret_type  = cmpd_el(code, 3);
+  Obj body      = cmpd_el(code, 4);
   exc_check(obj_is_bool(is_macro), "Fn: is-macro is not a Bool: %o", is_macro);
   exc_check(is(obj_type(pars_syn), t_Syn_seq),
     "Fn: pars is not a sequence literal: %o", pars_syn);
@@ -159,8 +157,7 @@ static Step run_Fn(Int d, Trace* t, Obj env, Obj code) {
       variad = rc_ret(par);
     }
   }
-  Obj f = cmpd_new8(rc_ret(t_Func),
-    rc_ret_val(name),
+  Obj f = cmpd_new7(rc_ret(t_Func),
     rc_ret_val(is_native),
     rc_ret_val(is_macro),
     rc_ret(env),
@@ -298,27 +295,25 @@ static Obj run_bind_vals(Int d, Trace* t, Obj env, Obj call, Obj variad, Obj par
 static Step run_call_func(Int d, Trace* t, Obj env, Obj call, Mem vals, Bool is_call) {
   // owns env, func.
   Obj func = mem_el(vals, 0);
-  assert(cmpd_len(func) == 8);
-  Obj name      = cmpd_el(func, 0);
-  Obj is_native = cmpd_el(func, 1);
-  Obj is_macro  = cmpd_el(func, 2);
-  Obj lex_env   = cmpd_el(func, 3);
-  Obj variad    = cmpd_el(func, 4);
-  Obj pars      = cmpd_el(func, 5);
-  Obj ret_type  = cmpd_el(func, 6);
-  Obj body      = cmpd_el(func, 7);
-  exc_check(obj_is_sym(name), "function name is not a Sym: %o", name);
-  exc_check(obj_is_bool(is_native), "function is-native is not a Bool: %o", is_native);
-  exc_check(obj_is_bool(is_macro), "function is-macro is not a Bool: %o", is_macro);
+  assert(cmpd_len(func) == 7);
+  Obj is_native = cmpd_el(func, 0);
+  Obj is_macro  = cmpd_el(func, 1);
+  Obj lex_env   = cmpd_el(func, 2);
+  Obj variad    = cmpd_el(func, 3);
+  Obj pars      = cmpd_el(func, 4);
+  Obj ret_type  = cmpd_el(func, 5);
+  Obj body      = cmpd_el(func, 6);
+  exc_check(obj_is_bool(is_native), "func: %o\nis-native is not a Bool: %o", func, is_native);
+  exc_check(obj_is_bool(is_macro), "func: %o\nis-macro is not a Bool: %o", func, is_macro);
   // TODO: check that variad is an Expr.
-  exc_check(obj_is_env(lex_env), "function %o env is not an Env: %o", name, lex_env);
-  exc_check(is(obj_type(pars), t_Mem_Par), "function %o pars is not a Mem-Par: %o", name, pars);
+  exc_check(obj_is_env(lex_env), "func: %o\nenv is not an Env: %o", func, lex_env);
+  exc_check(is(obj_type(pars), t_Mem_Par), "func: %o\npars is not a Mem-Par: %o", func, pars);
   // TODO: check that ret-type is a Type.
-  exc_check(is(ret_type, s_nil), "function %o ret-type is non-nil: %o", name, ret_type);
+  exc_check(is(ret_type, s_nil), "func: %o\nret-type is non-nil: %o", func, ret_type);
   if (is_call) {
-    exc_check(!bool_is_true(is_macro), "cannot call macro: %o", name);
+    exc_check(!bool_is_true(is_macro), "cannot call macro: %o", func);
   } else {
-    exc_check(bool_is_true(is_macro), "cannot expand function: %o", name);
+    exc_check(bool_is_true(is_macro), "cannot expand function: %o", func);
   }
   Obj callee_env = env_push_frame(rc_ret(lex_env));
   // NOTE: because func is bound to self in callee_env, and func contains body,
@@ -335,7 +330,7 @@ static Step run_call_func(Int d, Trace* t, Obj env, Obj call, Mem vals, Bool is_
     return mk_res(env, step.res.val); // NO TCO.
 #endif
   } else { // host function.
-    exc_check(obj_is_ptr(body), "host function %o body is not a Ptr: %o", name, body);
+    exc_check(obj_is_ptr(body), "host func: %o\nbody is not a Ptr: %o", func, body);
     Func_host_ptr f_ptr = cast(Func_host_ptr, ptr_val(body));
     Obj res = f_ptr(t, callee_env);
     rc_rel(callee_env);

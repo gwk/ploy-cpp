@@ -274,8 +274,7 @@ static Obj host_init_func(Obj env, Int len_pars, Chars_const name, Func_host_ptr
     default: assert(0);
   }
   #undef PAR
-  Obj f = cmpd_new8(rc_ret(t_Func),
-    rc_ret_val(sym),
+  Obj f = cmpd_new7(rc_ret(t_Func),
     bool_new(false),
     bool_new(false),
     rc_ret(env),
