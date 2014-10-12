@@ -21,13 +21,11 @@ T(Ptr,              prim) \
 T(Int,              prim) \
 T(Sym,              prim) \
 T(Data,             prim) \
-T(Accessor,         struct1, "name", t_Sym) \
-T(Mutator,          struct1, "name", t_Sym) \
 T(Env,              prim) \
-T(Unq,              struct1, "expr", t_Expr) \
-T(Qua,              struct1, "expr", t_Expr) \
-T(Expand,           mem, t_Expr) \
 T(Comment,          struct2, "is-expr", t_Bool, "val", t_Expr) \
+T(Qua,              struct1, "expr", t_Expr) \
+T(Unq,              struct1, "expr", t_Expr) \
+T(Expand,           mem, t_Expr) \
 T(Bang,             struct1, "expr", t_Expr) \
 T(Quo,              struct1, "expr", t_Expr) \
 T(Do,               mem, t_Expr) \
@@ -39,20 +37,19 @@ T(Syn_struct_typed, mem, t_Expr) \
 T(Syn_seq_typed,    mem, t_Expr) \
 T(Call,             mem, t_Expr) \
 T(Func,             struct_func) \
-T(File, struct4, "name", t_Data, "ptr", t_Ptr, "is-readable", t_Bool, "is_writeable", t_Bool) \
+T(Accessor,         struct1, "name", t_Sym) \
+T(Mutator,          struct1, "name", t_Sym) \
 T(Label,            struct3, "name", t_Expr, "type", t_Expr, "expr", t_Expr) \
 T(Variad,           struct2, "name", t_Expr, "type", t_Expr) \
 T(Src_loc,          struct_src_loc) \
-T(Expr,             union_expr) \
 T(Par,              struct3, "name", t_Sym, "type", t_Type, "dflt", t_Expr) \
 T(Syn_struct,       mem, t_Expr) \
 T(Syn_seq,          mem, t_Expr) \
-T(Obj,              class_obj) \
-T(Bool,             class_bool) \
 T(Mem_Type,         mem, t_Type) \
 T(Mem_Par,          mem, t_Par) \
 T(Mem_Obj,          mem, t_Obj) \
 T(Mem_Expr,         mem, t_Expr) \
+T(Expr,             union_expr) \
 T(Type_kind,        union_type_kind) \
 T(Type_kind_unit,   unit) \
 T(Type_kind_prim,   unit) \
@@ -61,7 +58,10 @@ T(Type_kind_struct, struct2, "fields", t_Mem_Par, "dispatcher", t_Dispatcher) \
 T(Type_kind_union,  mem, t_Type) \
 T(Type_kind_class,  unit) \
 T(Type_kind_var,    struct1, "name", t_Sym) \
+T(Obj,              class_obj) \
+T(Bool,             class_bool) \
 T(Dispatcher,       class_dispatcher) \
+T(File, struct4, "name", t_Data, "ptr", t_Ptr, "is-readable", t_Bool, "is_writeable", t_Bool) \
 
 
 // type indices for the basic types allow us to dispatch on type using a single index value,
