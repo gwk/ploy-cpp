@@ -21,7 +21,7 @@ static void write_repr_Sym(CFile f, Obj s, Bool is_quoted) {
 }
 
 
-static void write_repr_Data(CFile f, Obj d, Bool is_quoted, Int depth, Set* set) {
+static void write_repr_Data(CFile f, Obj d) {
   assert(ref_is_data(d));
   Chars p = data_ptr(d);
   fputc('\'', f);
@@ -37,7 +37,7 @@ static void write_repr_Data(CFile f, Obj d, Bool is_quoted, Int depth, Set* set)
 #define NO_REPR_PC "⟯" // U+27EF Mathematical right flattened parenthesis.
 
 
-static void write_repr_Env(CFile f, Obj env, Bool is_quoted, Int depth, Set* set) {
+static void write_repr_Env(CFile f, Obj env) {
   Obj top_key = env.e->key;
   fputs(NO_REPR_PO "Env ", f);
   write_repr(f, top_key);
@@ -45,67 +45,67 @@ static void write_repr_Env(CFile f, Obj env, Bool is_quoted, Int depth, Set* set
 }
 
 
-static void write_repr_Comment(CFile f, Obj comment, Bool is_quoted, Int depth, Set* set) {
-  assert(cmpd_len(comment) == 2);
+static void write_repr_Comment(CFile f, Obj o, Bool is_quoted, Int depth, Set* set) {
+  assert(cmpd_len(o) == 2);
   fputs(NO_REPR_PO "#", f);
-  if (bool_is_true(cmpd_el(comment, 0))) {
+  if (bool_is_true(cmpd_el(o, 0))) {
     fputs("#", f);
   } else {
     fputs(" ", f);
   }
-  write_repr(f, cmpd_el(comment, 1));
+  write_repr(f, cmpd_el(o, 1));
   fputs(NO_REPR_PC, f);
 }
 
 
 static void write_repr_obj(CFile f, Obj o, Bool is_quoted, Int depth, Set* set);
 
-static void write_repr_Bang(CFile f, Obj e, Bool is_quoted, Int depth, Set* set) {
-  assert(cmpd_len(e) == 1);
+static void write_repr_Bang(CFile f, Obj o, Bool is_quoted, Int depth, Set* set) {
+  assert(cmpd_len(o) == 1);
   if (!is_quoted) {
     fputc('`', f);
   }
   fputc('!', f);
-  write_repr_obj(f, cmpd_el(e, 0), true, depth, set);
+  write_repr_obj(f, cmpd_el(o, 0), true, depth, set);
 }
 
 
-static void write_repr_Quo(CFile f, Obj q, Bool is_quoted, Int depth, Set* set) {
-  assert(cmpd_len(q) == 1);
+static void write_repr_Quo(CFile f, Obj o, Bool is_quoted, Int depth, Set* set) {
+  assert(cmpd_len(o) == 1);
   if (!is_quoted) {
     fputc('`', f);
   }
   fputc('`', f);
-  write_repr_obj(f, cmpd_el(q, 0), true, depth, set);
+  write_repr_obj(f, cmpd_el(o, 0), true, depth, set);
 }
 
 
-static void write_repr_Qua(CFile f, Obj q, Bool is_quoted, Int depth, Set* set) {
-  assert(cmpd_len(q) == 1);
+static void write_repr_Qua(CFile f, Obj o, Bool is_quoted, Int depth, Set* set) {
+  assert(cmpd_len(o) == 1);
   if (!is_quoted) {
     fputc('`', f);
   }
   fputc('~', f);
-  write_repr_obj(f, cmpd_el(q, 0), true, depth, set);
+  write_repr_obj(f, cmpd_el(o, 0), true, depth, set);
 }
 
 
-static void write_repr_Unq(CFile f, Obj q, Bool is_quoted, Int depth, Set* set) {
-  assert(cmpd_len(q) == 1);
+static void write_repr_Unq(CFile f, Obj o, Bool is_quoted, Int depth, Set* set) {
+  assert(cmpd_len(o) == 1);
   if (!is_quoted) {
     fputc('`', f);
   }
   fputc(',', f);
-  write_repr_obj(f, cmpd_el(q, 0), true, depth, set);
+  write_repr_obj(f, cmpd_el(o, 0), true, depth, set);
 }
 
 
-static void write_repr_Label(CFile f, Obj p, Bool is_quoted, Int depth, Set* set) {
-  assert(cmpd_len(p) == 3);
+static void write_repr_Label(CFile f, Obj o, Bool is_quoted, Int depth, Set* set) {
+  assert(cmpd_len(o) == 3);
   if (!is_quoted) {
     fputc('`', f);
   }
-  Obj* els = cmpd_els(p);
+  Obj* els = cmpd_els(o);
   Obj name = els[0];
   Obj type = els[1];
   Obj expr = els[2];
@@ -122,12 +122,12 @@ static void write_repr_Label(CFile f, Obj p, Bool is_quoted, Int depth, Set* set
 }
 
 
-static void write_repr_Variad(CFile f, Obj p, Bool is_quoted, Int depth, Set* set) {
-  assert(cmpd_len(p) == 2);
+static void write_repr_Variad(CFile f, Obj o, Bool is_quoted, Int depth, Set* set) {
+  assert(cmpd_len(o) == 2);
   if (!is_quoted) {
     fputc('`', f);
   }
-  Obj* els = cmpd_els(p);
+  Obj* els = cmpd_els(o);
   Obj expr = els[0];
   Obj type = els[1];
   fputc('&', f);
@@ -201,17 +201,17 @@ static Bool write_repr_is_quotable(Obj o) {
 
 static void write_repr_dispatch(CFile f, Obj s, Bool is_quoted, Int depth, Set* set) {
   Obj type = obj_type(s);
+  if (is(type, t_Data)) { write_repr_Data(f, s); return; }
+  if (is(type, t_Env))  { write_repr_Env(f, s); return; }
 
-  #define DISP(t) \
-  if (is(type, t_##t)) { write_repr_##t(f, s, is_quoted, depth, set); return; }
-
-  DISP(Data);
-  DISP(Env);
   if (!write_repr_is_quotable(s)) {
     assert(!is_quoted);
     write_repr_default(f, s, is_quoted, depth, set);
     return;
-  }
+
+  #define DISP(t) \
+  if (is(type, t_##t)) { write_repr_##t(f, s, is_quoted, depth, set); return; }
+
   DISP(Comment);
   DISP(Bang);
   DISP(Quo);
