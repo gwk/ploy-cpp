@@ -157,7 +157,7 @@ static void write_repr_syn_seq(CFile f, Obj s, Bool is_quoted, Int depth, Set* s
 
 static void write_repr_default(CFile f, Obj c, Bool is_quoted, Int depth, Set* set) {
   assert(ref_is_cmpd(c));
-  if (is_quoted) fputs("¿Q?", f);
+  if (is_quoted) fputs("¿", f);
   fputs("{:", f);
   Obj t = obj_type(c);
   assert(obj_is_type(t));
@@ -168,34 +168,6 @@ static void write_repr_default(CFile f, Obj c, Bool is_quoted, Int depth, Set* s
     write_repr_obj(f, cmpd_el(c, i), is_quoted, depth, set);
   }
   fputc('}', f);
-  if (is_quoted) fputs("¿?", f);
-}
-
-
-static Bool write_repr_is_quotable(Obj o) {
-  if (!is(o, obj0) || !obj_is_ref(o)) return true; // Ptr and obj0 do not have true repr.
-  Obj type = ref_type(o);
-  if (is(type, t_Data) || is(type, t_Env)) return true; // env does not have true repr.
-  assert(ref_is_cmpd(o));
-  if (!(is(type, t_Comment)
-    || is(type, t_Bang)
-    || is(type, t_Quo)
-    || is(type, t_Qua)
-    || is(type, t_Unq)
-    || is(type, t_Label)
-    || is(type, t_Variad)
-    || is(type, t_Syn_struct)
-    || is(type, t_Syn_struct_typed)
-    || is(type, t_Syn_seq)
-    || is(type, t_Syn_seq_typed)
-    || is(type, t_Expand)
-    || is(type, t_Call))) {
-    return false; // not an Expr.
-  }
-  it_cmpd(it, o) {
-    if (!write_repr_is_quotable(*it)) return false;
-  }
-  return true;
 }
 
 
@@ -204,14 +176,8 @@ static void write_repr_dispatch(CFile f, Obj s, Bool is_quoted, Int depth, Set* 
   if (is(type, t_Data)) { write_repr_Data(f, s); return; }
   if (is(type, t_Env))  { write_repr_Env(f, s); return; }
 
-  if (!write_repr_is_quotable(s)) {
-    assert(!is_quoted);
-    write_repr_default(f, s, is_quoted, depth, set);
-    return;
-
   #define DISP(t) \
   if (is(type, t_##t)) { write_repr_##t(f, s, is_quoted, depth, set); return; }
-
   DISP(Comment);
   DISP(Bang);
   DISP(Quo);
