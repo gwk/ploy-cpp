@@ -46,7 +46,6 @@ int main(int argc, Chars_const argv[]) {
   Int path_count = 0;
   Chars_const expr = NULL;
   Bool should_output_val = false;
-  Bool should_load_core = true;
   Bool should_log_stats = false;
   for_imn(i, 1, argc) {
     Chars_const arg = argv[i];
@@ -61,8 +60,6 @@ int main(int argc, Chars_const argv[]) {
       check(i < argc, "missing expression argument");
       expr = argv[i];
       should_output_val = chars_eq(arg, "-e");
-    } else if (chars_eq(arg, "-b")) { // bare (do not load core.ploy).
-      should_load_core = false;
     } else {
       check(arg[0] != '-', "unknown option: %s", arg);
       check(path_count < len_buffer, "exceeded max paths: %d", len_buffer);
@@ -73,13 +70,6 @@ int main(int argc, Chars_const argv[]) {
   global_src_locs = dict0;
   Obj path, src;
 
-  if (should_load_core) { // run embedded core.ploy file.
-    env = env_push_frame(env);
-    path = data_new_from_chars("<core>");
-    src = data_new_from_chars(core_src);
-    env = parse_and_eval(&global_src_locs, env, path, src, false);
-  }
-  // handle arguments.
   for_in(i, path_count) {
     env = env_push_frame(env);
     path = data_new_from_chars(paths[i]);

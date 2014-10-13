@@ -6,7 +6,9 @@ cd $(dirname "$0")/..
 
 interpreter=$1; shift
 
-# make sure that ploy can parse an empty file.
-"$interpreter" 'test/0-basic/empty.ploy'
+cmd=$(echo $interpreter src-core/*) # expand wildcard inside string.
 
-tools/test.py -interpreters '.ploy' "$interpreter" - "$@"
+# make sure that ploy can parse an empty file.
+$cmd "test/0-basic/empty.ploy"
+
+tools/test.py -interpreters '.ploy' "$cmd" - "$@"

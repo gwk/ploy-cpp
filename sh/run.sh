@@ -6,6 +6,14 @@ set -e
 
 make -s _bld/ploy-dbg
 
+if [[ $1 == '-b' ]]; then
+  echo "NOTE: run.sh -b will omit core files."
+  shift;
+  core_files=''
+else
+  core_files=src-core/*
+fi
+
 #export MallocLogFile=<f> # create/append messages to file <f> instead of stderr.
 export MallocGuardEdges=1 # add 2 guard pages for each large block.
 #export MallocDoNotProtectPrelude=1 # disable protection (when previous flag set).
@@ -22,4 +30,4 @@ export MallocCheckHeapAbort=1 # abort on heap corruption if <b> is non-zero.
 export MallocErrorAbort=1 # abort on any malloc error, including out of memory
 #export MallocHelp=1 # this help.
 
-_bld/ploy-dbg "$@"
+_bld/ploy-dbg $core_files "$@"

@@ -3,27 +3,18 @@
 # $^: The names of all the prerequisites, with spaces between them. 
 
 # first target is the default.
-default: all
+default: basic
 
 _bld/prof-res-usage: tools/cc.sh tools/prof-res-usage.c
 	tools/cc.sh tools/prof-res-usage.c -o $@
 
-_bld/text-to-c-literal: tools/cc.sh tools/text-to-c-literal.c
-	tools/cc.sh tools/text-to-c-literal.c -o $@
-
-_bld/ploy-core.ploy: src-core/*.ploy
-	cat $^ > $@
-
-_bld/ploy-core.h: _bld/text-to-c-literal _bld/ploy-core.ploy
-	cat _bld/ploy-core.ploy | _bld/text-to-c-literal 'core_src' > $@
-
-_bld/ploy: tools/cc.sh _bld/ploy-core.h src-boot/*
+_bld/ploy: tools/cc.sh src-boot/*
 	tools/cc.sh src-boot/ploy.c -o $@
 
-_bld/ploy-dbg: tools/cc.sh _bld/ploy-core.h src-boot/*
+_bld/ploy-dbg: tools/cc.sh src-boot/*
 	tools/cc.sh -dbg src-boot/ploy.c -o $@
 
-_bld/ploy-cov: tools/cc.sh _bld/ploy-core.h src-boot/*
+_bld/ploy-cov: tools/cc.sh src-boot/*
 	tools/cc.sh -dbg src-boot/ploy.c --coverage -o $@
 	# compiling ploy-cov also produces the .gcno file.
 	mv ploy.gcno _bld/ploy-cov.gcno
@@ -42,17 +33,17 @@ _bld/ploy-cov-summary.txt: tools/gen-cov-summary.py _bld/ploy-cov-summary-raw.tx
 	$^ > $@
 
 # preprocess for viewing macro expansions.
-_bld/ploy-post-proc-no-libs.c: tools/cc.sh _bld/ploy-core.h src-boot/* 
+_bld/ploy-post-proc-no-libs.c: tools/cc.sh src-boot/* 
 	tools/cc.sh src-boot/ploy.c -o $@ -E -D=SKIP_LIB_INCLUDES
 
 # preprocess for viewing macro expansions.
-_bld/ploy-dbg-post-proc-no-libs.c: tools/cc.sh _bld/ploy-core.h src-boot/*
+_bld/ploy-dbg-post-proc-no-libs.c: tools/cc.sh src-boot/*
 	tools/cc.sh -dbg src-boot/ploy.c -o $@ -E -D=SKIP_LIB_INCLUDES
 
-_bld/ploy.ll: tools/cc.sh _bld/ploy-core.h src-boot/* 
+_bld/ploy.ll: tools/cc.sh src-boot/* 
 	tools/cc.sh src-boot/ploy.c -o $@ -S -emit-llvm
 
-_bld/ploy-dbg.ll: tools/cc.sh _bld/ploy-core.h src-boot/* 
+_bld/ploy-dbg.ll: tools/cc.sh src-boot/* 
 	tools/cc.sh -dbg src-boot/ploy.c -o $@ -S -emit-llvm
 
 _bld/compile_commands.json: tools/cdb.sh tools/cc.sh
@@ -70,18 +61,18 @@ _bld/ploy-callgraph.dot: tools/gen-callgraph-dot.py _bld/ploy-callgraph.txt _bld
 _bld/ploy-callgraph.svg: tools/gen-callgraph-svg.sh _bld/ploy-callgraph.dot
 	$^ $@
 
-_bld/ploy-ast-list.txt: _bld/compile_commands.json _bld/ploy-core.h src-boot/*
+_bld/ploy-ast-list.txt: _bld/compile_commands.json src-boot/*
 	clang-check -p _bld/compile_commands.json src-boot/ploy.c -ast-list > $@
 
-_bld/ploy-ast-print.txt: _bld/compile_commands.json _bld/ploy-core.h src-boot/*
+_bld/ploy-ast-print.txt: _bld/compile_commands.json src-boot/*
 	clang-check -p _bld/compile_commands.json src-boot/ploy.c -ast-print > $@
 
-_bld/ploy-ast-dump.txt: _bld/compile_commands.json _bld/ploy-core.h src-boot/*
+_bld/ploy-ast-dump.txt: _bld/compile_commands.json src-boot/*
 	clang-check -p _bld/compile_commands.json src-boot/ploy.c -ast-dump > $@
 
-.PHONY: all clean preprocess ast cov ll analyze callgraph test-dbg test-rel test perf-test
+.PHONY: basic clean preprocess ast cov ll analyze callgraph test-dbg test-rel test perf-test
 
-all: _bld/ploy _bld/ploy-dbg
+basic: _bld/ploy _bld/ploy-dbg
 
 clean:
 	rm -rf _bld/*

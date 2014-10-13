@@ -26,9 +26,6 @@
 #include <stdlib.h>
 #endif
 
-// include the generated source here, before 'char' is disallowed via macros below.
-#include "ploy-core.h"
-
 // enable tail-call optimizations.
 #ifndef OPTION_TCO
 #define OPTION_TCO 1

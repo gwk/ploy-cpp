@@ -54,7 +54,6 @@ $cmd_prefix /usr/local/llvm/bin/clang \
 -std=c11 \
 -Werror \
 -Weverything \
--Wno-overlength-strings \
 -Wno-unused-parameter \
 -Wno-gnu \
 -Wno-covered-switch-default \
