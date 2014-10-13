@@ -185,35 +185,35 @@ static Obj type_kind_init_struct4(Chars_const n0, Obj t0, Chars_const n1, Obj t1
 
 
 static Obj type_kind_init_struct_fn() {
-  return cmpd_new5(rc_ret(t_Type_kind_struct),
+  return type_kind_struct(cmpd_new5(rc_ret(t_Type_kind_struct),
     par_new("is-native", t_Bool),
     par_new("is-macro", t_Bool),
     par_new("pars", t_Syn_seq),
     par_new("ret-type", t_Type),
-    par_new("body", t_Expr));
+    par_new("body", t_Expr)));
 }
 
 
 static Obj type_kind_init_struct_func() {
-  return cmpd_new7(rc_ret(t_Type_kind_struct),
+  return type_kind_struct(cmpd_new7(rc_ret(t_Type_kind_struct),
     par_new("is-native", t_Bool),
     par_new("is-macro", t_Bool),
     par_new("env", t_Env),
     par_new("variad", t_Par),
     par_new("pars", t_Syn_seq),
     par_new("ret-type", t_Type),
-    par_new("body", t_Expr));
+    par_new("body", t_Expr)));
 }
 
 
 static Obj type_kind_init_struct_src_loc() {
-  return cmpd_new6(rc_ret(t_Type_kind_struct),
+  return type_kind_struct(cmpd_new6(rc_ret(t_Type_kind_struct),
     par_new("path", t_Data),
     par_new("src", t_Data),
     par_new("pos", t_Int),
     par_new("len", t_Int),
     par_new("line", t_Int),
-    par_new("col", t_Int));
+    par_new("col", t_Int)));
 }
 
 
