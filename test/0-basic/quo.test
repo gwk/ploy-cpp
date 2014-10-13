@@ -9,14 +9,14 @@
 nil
 nil
 ``nil
-{:Mem-Expr 0 1 nil}
-{:Mem-Expr `x 1 nil}
-{:Mem-Expr ``x ``1 ``nil}
-`{:Mem-Expr x 1 nil}
-`{:Mem-Expr `x `1 `nil}
-`{:Mem-Expr ``x ``1 ``nil}
-``{:Mem-Expr x 1 nil}
-``{:Mem-Expr `x `1 `nil}
-``{:Mem-Expr ``x ``1 ``nil}
+{:Arr-Expr 0 1 nil}
+{:Arr-Expr `x 1 nil}
+{:Arr-Expr ``x ``1 ``nil}
+`{:Arr-Expr x 1 nil}
+`{:Arr-Expr `x `1 `nil}
+`{:Arr-Expr ``x ``1 ``nil}
+``{:Arr-Expr x 1 nil}
+``{:Arr-Expr `x `1 `nil}
+``{:Arr-Expr ``x ``1 ``nil}
 '''
 }

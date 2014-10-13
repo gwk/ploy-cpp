@@ -580,7 +580,7 @@ static Obj parse_src(Dict* src_locs, Obj path, Obj src, Chars* e) {
     o = parse_error(&p, "parsing terminated early");
     mem_rel_dealloc(m);
   } else {
-    o = cmpd_new_M(rc_ret(t_Mem_Expr), m);
+    o = cmpd_new_M(rc_ret(t_Arr_Expr), m);
     mem_dealloc(m);
   }
   *e = p.e;

@@ -254,9 +254,9 @@ static Obj host_init_func(Obj env, Int len_pars, Chars_const name, Func_host_ptr
   #define PAR(s) \
   cmpd_new3(rc_ret(t_Par), rc_ret_val(s), rc_ret_val(s_nil), rc_ret_val(s_void))
   switch (len_pars) {
-    case 1: pars = cmpd_new1(rc_ret(t_Mem_Par), PAR(s_a)); break;
-    case 2: pars = cmpd_new2(rc_ret(t_Mem_Par), PAR(s_a), PAR(s_b)); break;
-    case 3: pars = cmpd_new3(rc_ret(t_Mem_Par), PAR(s_a), PAR(s_b), PAR(s_c)); break;
+    case 1: pars = cmpd_new1(rc_ret(t_Arr_Par), PAR(s_a)); break;
+    case 2: pars = cmpd_new2(rc_ret(t_Arr_Par), PAR(s_a), PAR(s_b)); break;
+    case 3: pars = cmpd_new3(rc_ret(t_Arr_Par), PAR(s_a), PAR(s_b), PAR(s_c)); break;
     default: assert(0);
   }
   #undef PAR

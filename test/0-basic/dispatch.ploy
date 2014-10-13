@@ -3,10 +3,10 @@
 <let T {:Type
   `T
   {:Type-kind-struct
-    {:Mem-Par}
+    {:Arr-Par}
     nil}}> # dispatcher starts as nil.
 
-<let-fn dispatcher [-callee -types:Mem-Types]
+<let-fn dispatcher [-callee -types:Arr-Types]
   # NOTE: specifying correct type T for callee would create a cycle.
   <check (ieq (mlen types) 1) "dispatcher requires 1 argument">
   <let T0 (el types 0)>

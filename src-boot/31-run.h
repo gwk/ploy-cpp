@@ -128,7 +128,7 @@ static Step run_Fn(Int d, Trace* t, Obj env, Obj code) {
   exc_check(obj_is_bool(is_macro), "Fn: is-macro is not a Bool: %o", is_macro);
   exc_check(is(obj_type(pars_syn), t_Syn_seq),
     "Fn: pars is not a sequence literal: %o", pars_syn);
-  Obj pars = cmpd_new_raw(rc_ret(t_Mem_Par), cmpd_len(pars_syn));
+  Obj pars = cmpd_new_raw(rc_ret(t_Arr_Par), cmpd_len(pars_syn));
   Obj variad = rc_ret(s_void);
   for_in(i, cmpd_len(pars)) {
     Obj syn = cmpd_el(pars_syn, i);
@@ -206,7 +206,7 @@ static Step run_Syn_struct_typed(Int d, Trace* t, Obj env, Obj code) {
         cmpd_put(res, j++, step.res.val);
       }
     }
-  } else if (is_kind_mem(kind)) {
+  } else if (is_kind_arr(kind)) {
     Array vals = array0;
     for_imn(i, 1, syn_len) {
       Obj expr = cmpd_el(code, i);
@@ -329,7 +329,7 @@ static Obj bind_variad(Int d, Trace* t, Obj env, Obj call, Obj par, Mem vals, In
   }
   *i_vals = end;
   Int len = (end - start) / 2;
-  Obj vrd = cmpd_new_raw(rc_ret(t_Mem_Obj), len); // TODO: set correct type.
+  Obj vrd = cmpd_new_raw(rc_ret(t_Arr_Obj), len); // TODO: set correct type.
   Int j = 0;
   for_imns(i, start + 1, end, 2) {
     Obj arg = mem_el_move(vals, i);
@@ -379,7 +379,7 @@ static Step run_call_func(Int d, Trace* t, Obj env, Obj call, Mem vals, Bool is_
   exc_check(obj_is_bool(is_macro), "func: %o\nis-macro is not a Bool: %o", func, is_macro);
   // TODO: check that variad is an Expr.
   exc_check(obj_is_env(lex_env), "func: %o\nenv is not an Env: %o", func, lex_env);
-  exc_check(is(obj_type(pars), t_Mem_Par), "func: %o\npars is not a Mem-Par: %o", func, pars);
+  exc_check(is(obj_type(pars), t_Arr_Par), "func: %o\npars is not an Arr-Par: %o", func, pars);
   // TODO: check that ret-type is a Type.
   exc_check(is(ret_type, s_nil), "func: %o\nret-type is non-nil: %o", func, ret_type);
   if (is_call) {
@@ -515,7 +515,7 @@ static Step run_call_dispatcher(Int d, Trace* t, Obj env, Obj call, Mem vals,
   // owns env, vals.
   Obj callee = mem_el_ret(vals, 0);
   Int types_len = (vals.len - 1) / 2;
-  Obj types = cmpd_new_raw(rc_ret(t_Mem_Type), types_len);
+  Obj types = cmpd_new_raw(rc_ret(t_Arr_Type), types_len);
   for_in(i, types_len) {
     Obj val = mem_el(vals, i * 2 + 2);
     cmpd_put(types, i, rc_ret(obj_type(val)));

@@ -25,17 +25,17 @@ T(Env,              prim) \
 T(Comment,          struct2, "is-expr", t_Bool, "val", t_Expr) \
 T(Qua,              struct1, "expr", t_Expr) \
 T(Unq,              struct1, "expr", t_Expr) \
-T(Expand,           mem, t_Expr) \
+T(Expand,           arr, t_Expr) \
 T(Bang,             struct1, "expr", t_Expr) \
 T(Quo,              struct1, "expr", t_Expr) \
-T(Do,               mem, t_Expr) \
+T(Do,               arr, t_Expr) \
 T(Scope,            struct1, "expr", t_Expr) \
 T(Bind, struct4, "is-mut", t_Bool, "is-pub", t_Bool, "name", t_Sym, "expr", t_Expr) \
 T(If,               struct3, "pred", t_Expr, "then", t_Expr, "else", t_Expr) \
 T(Fn,               struct_fn) \
-T(Syn_struct_typed, mem, t_Expr) \
-T(Syn_seq_typed,    mem, t_Expr) \
-T(Call,             mem, t_Expr) \
+T(Syn_struct_typed, arr, t_Expr) \
+T(Syn_seq_typed,    arr, t_Expr) \
+T(Call,             arr, t_Expr) \
 T(Func,             struct_func) \
 T(Accessor,         struct1, "name", t_Sym) \
 T(Mutator,          struct1, "name", t_Sym) \
@@ -44,19 +44,19 @@ T(Label,            struct3, "name", t_Expr, "type", t_Expr, "expr", t_Expr) \
 T(Variad,           struct2, "name", t_Expr, "type", t_Expr) \
 T(Src_loc,          struct_src_loc) \
 T(Par,              struct3, "name", t_Sym, "type", t_Type, "dflt", t_Expr) \
-T(Syn_struct,       mem, t_Expr) \
-T(Syn_seq,          mem, t_Expr) \
-T(Mem_Type,         mem, t_Type) \
-T(Mem_Par,          mem, t_Par) \
-T(Mem_Obj,          mem, t_Obj) \
-T(Mem_Expr,         mem, t_Expr) \
+T(Syn_struct,       arr, t_Expr) \
+T(Syn_seq,          arr, t_Expr) \
+T(Arr_Type,         arr, t_Type) \
+T(Arr_Par,          arr, t_Par) \
+T(Arr_Obj,          arr, t_Obj) \
+T(Arr_Expr,         arr, t_Expr) \
 T(Expr,             union_expr) \
 T(Type_kind,        union_type_kind) \
 T(Type_kind_unit,   unit) \
 T(Type_kind_prim,   unit) \
-T(Type_kind_mem,    struct1, "el-type", t_Type) \
-T(Type_kind_struct, struct2, "fields", t_Mem_Par, "dispatcher", t_Dispatcher) \
-T(Type_kind_union,  mem, t_Type) \
+T(Type_kind_arr,    struct1, "el-type", t_Type) \
+T(Type_kind_struct, struct2, "fields", t_Arr_Par, "dispatcher", t_Dispatcher) \
+T(Type_kind_union,  arr, t_Type) \
 T(Type_kind_class,  unit) \
 T(Type_kind_var,    struct1, "name", t_Sym) \
 T(Obj,              class_obj) \
@@ -118,8 +118,8 @@ static Bool is_kind_struct(Obj kind) {
 }
 
 
-static Bool is_kind_mem(Obj kind) {
-  return is(obj_type(kind), t_Type_kind_mem);
+static Bool is_kind_arr(Obj kind) {
+  return is(obj_type(kind), t_Type_kind_arr);
 }
 
 
@@ -156,8 +156,8 @@ static Obj type_kind_init_prim() {
 }
 
 
-static Obj type_kind_init_mem(Obj el_type) {
-  return cmpd_new1(rc_ret(t_Type_kind_mem), rc_ret(el_type));
+static Obj type_kind_init_arr(Obj el_type) {
+  return cmpd_new1(rc_ret(t_Type_kind_arr), rc_ret(el_type));
 }
 
 
@@ -169,27 +169,27 @@ static Obj type_kind_struct(Obj fields) {
 
 
 static Obj type_kind_init_struct1(Chars_const n0, Obj t0) {
-  return type_kind_struct(cmpd_new1(rc_ret(t_Mem_Par),
+  return type_kind_struct(cmpd_new1(rc_ret(t_Arr_Par),
     par_new(n0, t0)));
 }
 
 
 static Obj type_kind_init_struct2(Chars_const n0, Obj t0, Chars_const n1, Obj t1) {
-  return type_kind_struct(cmpd_new2(rc_ret(t_Mem_Par),
+  return type_kind_struct(cmpd_new2(rc_ret(t_Arr_Par),
     par_new(n0, t0), par_new(n1, t1)));
 }
 
 
 static Obj type_kind_init_struct3(Chars_const n0, Obj t0, Chars_const n1, Obj t1,
   Chars_const n2, Obj t2) {
-  return type_kind_struct(cmpd_new3(rc_ret(t_Mem_Par),
+  return type_kind_struct(cmpd_new3(rc_ret(t_Arr_Par),
     par_new(n0, t0), par_new(n1, t1), par_new(n2, t2)));
 }
 
 
 static Obj type_kind_init_struct4(Chars_const n0, Obj t0, Chars_const n1, Obj t1,
   Chars_const n2, Obj t2, Chars_const n3, Obj t3) {
-  return type_kind_struct(cmpd_new4(rc_ret(t_Mem_Par),
+  return type_kind_struct(cmpd_new4(rc_ret(t_Arr_Par),
     par_new(n0, t0), par_new(n1, t1), par_new(n2, t2), par_new(n3, t3)));
 }
 
@@ -250,7 +250,7 @@ static Obj type_kind_init_union_type_kind() {
   return cmpd_new7(rc_ret(t_Type_kind_struct),
     rc_ret(t_Type_kind_unit),
     rc_ret(t_Type_kind_prim),
-    rc_ret(t_Type_kind_mem),
+    rc_ret(t_Type_kind_arr),
     rc_ret(t_Type_kind_struct),
     rc_ret(t_Type_kind_union),
     rc_ret(t_Type_kind_class),
