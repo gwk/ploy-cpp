@@ -1,4 +1,5 @@
 {
+  'timeout' : 16,
   'out' : '''\
 10000
 {:Mem-Int 1 {:Mem-Int 2 {:Mem-Int 3 {:Mem-Int 4 nil}}}}
