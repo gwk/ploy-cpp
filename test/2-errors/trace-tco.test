@@ -4,7 +4,7 @@
 lookup error: `unbound
 trace:
   `unbound
-  … 21
+  … 32
   test/2-errors/trace-tco.ploy:9:1:
     (f 5)
     ~~~~~

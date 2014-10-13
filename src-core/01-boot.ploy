@@ -31,7 +31,7 @@
           true
           pars
           nil # unspecified ret type.
-          (_boot-mk-do body)}}}})
+          {:Do *body}}}}})
 
 # define macros to wrap the special forms.
 
@@ -42,7 +42,7 @@
     false
     pars
     nil # unspecified ret type.
-    (_boot-mk-do body)}>
+    {:Do *body}}>
 
 <macro fn [-sym -pars &body]
   # the 'fn' macro defines a function in the current environment.
@@ -55,7 +55,7 @@
       false
       pars
       nil # unspecified ret type.
-      (_boot-mk-do body)}}>
+      {:Do *body}}}>
 
 <macro quo [-expr]
   # absolute quotation of an expression.
@@ -79,11 +79,11 @@
   # equivalent to ,expr syntax
   {:Unq expr}>
 
-<macro do [&exprs]
-  (_boot-mk-do exprs)>
+<macro do [&body]
+  {:Do *body}>
 
-<macro scope [&exprs]
-  {:Scope (_boot-mk-do exprs)}>
+<macro scope [&body]
+  {:Scope {:Do *body}}>
 
 <macro let [-sym -expr]
   # bind the value of expr to sym in the current environment.

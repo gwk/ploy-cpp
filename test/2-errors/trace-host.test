@@ -6,7 +6,7 @@ trace:
   test/2-errors/trace-host.ploy:2:3:
       (iadd a b)> # host call in tail position.
       ~~~~~~~~~~
-  … 3
+  … 5
   test/2-errors/trace-host.ploy:12:3:
       (h) # native call in non-tail position.
       ~~~

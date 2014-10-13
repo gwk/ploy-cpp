@@ -71,9 +71,9 @@
         {:If pred then (self (hd rest) (el rest 1) (mem-from rest 2))}>>>
   (f (hd exprs) (el exprs 1) (slice exprs 2 (mlen exprs)))>
 
-<macro when [-pred &exprs]
+<macro when [-pred &body]
   # if 'pred', do 'exprs'. else none.
-  {:If pred (_boot-mk-do exprs) void}> # TODO: eventually this should use splice-unquote.
+  {:If pred {:Do body} void}> # TODO: eventually this should use splice-unquote.
 
 # output functions.
 

@@ -4,13 +4,6 @@
 lookup error: `unbound
 trace:
   `unbound
-  … 1
-  test/2-errors/trace.ploy:5:9:
-            (self (isub n 1))
-            ~~~~~~~~~~~~~~~~~
-  test/2-errors/trace.ploy:4:7:
-          <do
-          ~~~-
   … 2
   test/2-errors/trace.ploy:5:9:
             (self (isub n 1))
@@ -18,28 +11,35 @@ trace:
   test/2-errors/trace.ploy:4:7:
           <do
           ~~~-
-  … 2
+  … 4
   test/2-errors/trace.ploy:5:9:
             (self (isub n 1))
             ~~~~~~~~~~~~~~~~~
   test/2-errors/trace.ploy:4:7:
           <do
           ~~~-
-  … 2
+  … 4
   test/2-errors/trace.ploy:5:9:
             (self (isub n 1))
             ~~~~~~~~~~~~~~~~~
   test/2-errors/trace.ploy:4:7:
           <do
           ~~~-
-  … 2
+  … 4
   test/2-errors/trace.ploy:5:9:
             (self (isub n 1))
             ~~~~~~~~~~~~~~~~~
   test/2-errors/trace.ploy:4:7:
           <do
           ~~~-
-  … 2
+  … 4
+  test/2-errors/trace.ploy:5:9:
+            (self (isub n 1))
+            ~~~~~~~~~~~~~~~~~
+  test/2-errors/trace.ploy:4:7:
+          <do
+          ~~~-
+  … 4
   test/2-errors/trace.ploy:9:1:
     (f 5)
     ~~~~~

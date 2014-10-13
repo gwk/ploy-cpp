@@ -244,20 +244,6 @@ static Obj host_dbg(Trace* t, Obj env) {
 }
 
 
-static Obj host_boot_mk_do(Trace* t, Obj env) {
-  GET_A;
-  if (!obj_is_cmpd(a)) return a;
-  Mem m = cmpd_mem(a);
-  Obj val;
-  if (m.len == 1) {
-    val = rc_ret(m.els[0]);
-  } else {
-     val = cmpd_new_M_ret(rc_ret(t_Do), m);
-  }
-  return val;
-}
-
-
 typedef Obj(*Func_host_ptr)(Trace*, Obj);
 
 
@@ -333,7 +319,6 @@ static Obj host_init(Obj env) {
   DEF_FH(1, "type-of", host_type_of);
   DEF_FH(1, "globalize", host_globalize);
   DEF_FH(2, "dbg", host_dbg);
-  DEF_FH(1, "_boot-mk-do", host_boot_mk_do);
 #undef DEF_FH
 
 #define DEF_FILE(n, f, r, w) env = host_init_file(env, n, "<" n ">", f, r, w);

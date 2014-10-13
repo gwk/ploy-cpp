@@ -42,7 +42,7 @@ static Obj cmpd_new_M(Obj type, Mem m) {
 }
 
 
-static Obj cmpd_new_M_ret(Obj type, Mem m) {
+UNUSED_FN static Obj cmpd_new_M_ret(Obj type, Mem m) {
   // owns type.
   Obj c = cmpd_new_raw(type, m.len);
   Obj* els = cmpd_els(c);

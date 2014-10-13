@@ -113,6 +113,16 @@ static Obj type_kind(Obj t) {
 }
 
 
+static Bool is_kind_struct(Obj kind) {
+  return is(obj_type(kind), t_Type_kind_struct);
+}
+
+
+static Bool is_kind_mem(Obj kind) {
+  return is(obj_type(kind), t_Type_kind_mem);
+}
+
+
 // flat array of unit type, singleton interleaved pairs.
 static Array global_singletons = array0;
 
