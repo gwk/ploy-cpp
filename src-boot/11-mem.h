@@ -120,15 +120,10 @@ UNUSED_FN static Mem mem_push(Mem m, Obj o) {
 
 
 static void mem_realloc(Mem* m, Int len) {
-  // release any truncated elements, realloc memory, and zero any new elements.
-  // note that this function does not set m->len,
+  // realloc memory and zero any new elements.
+  // note: this function does not set m->len,
   // because that reflects the number of elements used, not allocation size.
-  it_mem_from(it, *m, len) { // release any old elements.
-    rc_rel(*it);
-#if OPTION_MEM_ZERO
-    *it = obj0;
-#endif
-  }
+  assert(m->len < len);
   m->els = raw_realloc(m->els, len * size_Obj, ci_Mem);
 #if OPTION_MEM_ZERO
   if (m->len < len) {
