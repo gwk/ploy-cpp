@@ -70,7 +70,9 @@ _bld/ploy-ast-print.txt: _bld/compile_commands.json src-boot/*
 _bld/ploy-ast-dump.txt: _bld/compile_commands.json src-boot/*
 	clang-check -p _bld/compile_commands.json src-boot/ploy.c -ast-dump > $@
 
-.PHONY: basic clean preprocess ast cov ll analyze callgraph test-dbg test-rel test perf-test
+.PHONY: all basic clean preprocess ast cov ll analyze callgraph test-dbg test-rel test perf-test
+
+all: basic preprocess ast cov ll analyze callgraph test perf-test
 
 basic: _bld/ploy _bld/ploy-dbg
 
