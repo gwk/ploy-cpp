@@ -175,7 +175,7 @@ static void write_repr_default(CFile f, Obj c, Bool is_quoted, Int depth, Set* s
   write_repr_obj(f, t.t->name, true, depth, set);
   for_in(i, cmpd_len(c)) {
     fputc(' ', f);
-    write_repr_obj(f, cmpd_el(c, i), is_quoted, depth, set);
+    write_repr_obj(f, cmpd_el(c, i), false, depth, set);
   }
   fputc('}', f);
 }
