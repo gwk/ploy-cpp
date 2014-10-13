@@ -1,6 +1,6 @@
-<fn f [-a]
-  <fn g [-b]
+<let-fn f [-a]
+  <fn [-b]
     (iadd a b)>>
 
-<let f3 (f 1)>
-(outRL (f3 2))
+<let f1 (f 1)>
+(outRL (f1 2))

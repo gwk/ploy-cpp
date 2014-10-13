@@ -3,14 +3,14 @@
 
 <let depth 18>
 
-<fn gen-tree [-n -t]
-    # generate a binary trie of zeros n branches deep.
-    <if (not n) t
-    <do
-    (self (idec n) {:Mem-Int t t})>>>
+<let-fn gen-tree [-n -t]
+  # generate a binary trie of zeros n branches deep.
+  <if (not n) t
+  <do
+  (self (idec n) {:Mem-Int t t})>>>
 
-<fn sum-tree [-t]
- # walk a tree and add all of the leaves.
+<let-fn sum-tree [-t]
+  # walk a tree and add all of the leaves.
   <if (is-int t) t
     (iadd (self (el t 0)) (self (el t 1)))>>
 

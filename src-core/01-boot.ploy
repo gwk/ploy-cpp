@@ -7,55 +7,42 @@
 # they provide a layer of abstraction between ploy code and the exact evaluation semantics.
 
 (RUN # special call form to run the argument as code in the current environment.
+  # the 'macro' macro defines a new macro in the current environment.
+  # because we cannot use macro to define itself, we must define it using raw forms.
+  # note the structural similarity between the outer Fn form and the inner struct literal.
   {:Bind
-    false # immutable binding.
-    true # public binding.
+    false # is-mutable.
+    true # is-public.
     `macro # symbol to bind.
-    # the 'macro' macro defines a new macro in the current environment.
-    # because we cannot use macro to define itself, we must define it using raw forms.
-    # note the structural similarity between the outer Fn form and the inner struct literal.
     {:Fn # Fn creates both functions and macros.
       true # is-native.
       true # is-macro.
       `[-sym -pars &body] # the parameter list, which does not get evaluated.
-      nil # ret.
+      nil # ret-type.
       `{:Bind # the body of the 'macro' macro is a Bind form.
-        false # immutable.
-        false # private.
+        false # is-mutable.
+        true # is-public.
         sym # the sym parameter that the macro to be created is bound to (not `macro).
         {:Fn # the value of the binding is created by evaluating the FN form;
           # note that this inner FN is inside a vec literal;
           # when the 'macro' macro is expanded, the literal is evaluated,
           # and a {FN ...} form is the resulting code vector.
-          true
-          true
+          true # is-native.
+          true # is-macro.
           pars
-          nil # unspecified ret type.
+          nil # ret-type.
           {:Do *body}}}}})
 
 # define macros to wrap the special forms.
 
-<macro fna [-pars &body]
-  # the 'fna' macro creates an anonymous function.
+<macro fn [-pars &body]
+  # create a function.
   {:Fn
-    true
-    false
+    true # is-native.
+    false # is-macro.
     pars
-    nil # unspecified ret type.
+    nil # ret-type.
     {:Do *body}}>
-
-<macro fn [-sym -pars &body]
-  # the 'fn' macro defines a function in the current environment.
-  {:Bind
-    false # immutable.
-    false # private.
-    sym
-    {:Fn
-      true
-      false
-      pars
-      nil # unspecified ret type.
-      {:Do *body}}}>
 
 <macro quo [-expr]
   # absolute quotation of an expression.
@@ -86,9 +73,21 @@
   {:Scope {:Do *body}}>
 
 <macro let [-sym -expr]
-  # bind the value of expr to sym in the current environment.
+  # immutable, private binding.
   {:Bind false false sym expr}>
 
 <macro var [-sym -expr]
-  # bind the value of expr to sym in the current environment, but allow the binding to mutate.
+  # mutable, private binding.
   {:Bind true false sym expr}>
+
+<macro pub [-sym -expr]
+  # immutable, public binding.
+  {:Bind false true sym expr}>
+
+# additional bootstrap macros.
+
+<macro let-fn [-sym -pars &body]
+  ~<let ,sym <fn ,pars ,*body>>>
+
+<macro pub-fn [-sym -pars &body]
+  ~<pub ,sym <fn ,pars ,*body>>>

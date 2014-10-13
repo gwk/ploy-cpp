@@ -1,2 +1,2 @@
-<pub <fn f [-x] x>>
+<pub f <fn [-x] x>>
 (outRL (f 1))

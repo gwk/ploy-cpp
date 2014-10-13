@@ -1,12 +1,11 @@
-<fn fib [-n]
+<let-fn fib [-n]
   <if
     (ieq n 0) 0
     (ieq n 1) 1
-    <do
-      <fn f [-n -a -b]
-        <if (ieq n 1) b
-          (self (isub n 1) b (iadd a b))>>
-      (f n 0 1)>>>
+    (<fn [-n -a -b]
+      <if (ieq n 1) b
+        (self (isub n 1) b (iadd a b))>>
+      n 0 1)>>
 
 # 89 is the max value for 64 bit builds.
 # beyond this requires more than 61 bits which causes overflow and trap.

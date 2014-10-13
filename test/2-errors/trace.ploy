@@ -1,4 +1,4 @@
-<fn f [-n]
+<let-fn f [-n]
   <if n
     <scope
       <do

@@ -6,15 +6,15 @@
     {:Mem-Par}
     nil}}> # dispatcher starts as nil.
 
-<fn dispatcher [-callee -types:Mem-Types] # NOTE: specifying correct type T for callee would create a cycle.
-    <if (ine (mlen types) 1)
-      (error "dispatcher requires 1 argument")>
-    <let T0 (el types 0)>
-    <if
-      (is T0 Sym) <fn a [-obj:Sym]    (outRSL `Sym obj)>
-      (is T0 Int) <fn a [-obj:Int]    (outRSL `Int obj)>
-      (is T0 Data) <fn a [-obj:Data]  (outRSL `Data obj)>
-      (error "dispatcher cannot handle argument type (intentional test error)")>>
+<let-fn dispatcher [-callee -types:Mem-Types]
+  # NOTE: specifying correct type T for callee would create a cycle.
+  <check (ieq (mlen types) 1) "dispatcher requires 1 argument">
+  <let T0 (el types 0)>
+  <if
+    (is T0 Sym)   <fn [-obj:Sym]  (outRSL `Sym obj)>
+    (is T0 Int)   <fn [-obj:Int]  (outRSL `Int obj)>
+    (is T0 Data)  <fn [-obj:Data] (outRSL `Data obj)>
+    (error "dispatcher cannot handle argument type (intentional test error)")>>
 
 (.=dispatcher (.kind T) dispatcher) # set the dispatcher, creating a cycle.
 (globalize T)

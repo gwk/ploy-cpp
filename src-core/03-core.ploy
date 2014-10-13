@@ -4,7 +4,7 @@
 # builtin macros and functions that are available to all programs.
 
 
-<fn error [-msg]
+<pub-fn error [-msg]
   # raise an error. for now we can only print the message and exit.
   (_host-write (field std-err 1) 'error: ')
   (_host-write (field std-err 1) msg)
@@ -16,33 +16,33 @@
 
 # math functions.
 
-<fn iinc [-i] (iadd i 1)>
+<pub-fn iinc [-i] (iadd i 1)>
 
-<fn idec [-i] (isub i 1)>
+<pub-fn idec [-i] (isub i 1)>
 
 # type functions.
 
-<fn is-ptr  [-o] (is (type-of o) Ptr)>
-<fn is-int  [-o] (is (type-of o) Int)>
-<fn is-sym  [-o] (is (type-of o) Sym)>
-<fn is-data [-o] (is (type-of o) Data)>
-<fn is-env  [-o] (is (type-of o) Env)>
-<fn is-type [-o] (is (type-of o) Type)>
+<pub-fn is-ptr  [-o] (is (type-of o) Ptr)>
+<pub-fn is-int  [-o] (is (type-of o) Int)>
+<pub-fn is-sym  [-o] (is (type-of o) Sym)>
+<pub-fn is-data [-o] (is (type-of o) Data)>
+<pub-fn is-env  [-o] (is (type-of o) Env)>
+<pub-fn is-type [-o] (is (type-of o) Type)>
 
 # mem functions.
 
-<fn hd [-mem] (el mem 0)>
+<pub-fn hd [-mem] (el mem 0)>
 
-<fn tl [-mem] (el mem (idec (mlen mem)))>
+<pub-fn tl [-mem] (el mem (idec (mlen mem)))>
 
-<fn mem-next [-mem]
+<pub-fn mem-next [-mem]
   # this a poor substitute for a real Stream iterator.
  (slice mem 1 (mlen mem))>
 
-<fn mem-from [-mem -from]
+<pub-fn mem-from [-mem -from]
   (slice mem from (mlen mem))>
 
-<fn mem-to [-mem -to]
+<pub-fn mem-to [-mem -to]
   (slice mem 0 to)>
 
 # control flow.
@@ -58,7 +58,7 @@
 <macro if [&exprs]
   # generic 'if'. inspired by paul graham's arc-lisp.
   <_if-then (ilt (mlen exprs) 2) (error "degenerate if form")>
-  <fn f [-pred -then -rest]
+  <let-fn f [-pred -then -rest]
     <let l (mlen rest)>
     #(_errR1L 'f l: ' l)
     #(_errR1L 'f pred: ' pred)
@@ -77,19 +77,19 @@
 
 # output functions.
 
-<fn write1 [-file -str]
+<let-fn write1 [-file -str]
   # write a single string.
   # TODO: support other types.
   (_host-write (field file 1) str)>
 
-<fn writeR1 [-file -obj]
+<let-fn writeR1 [-file -obj]
   # write a single repr.
   (_host-write-repr (field file 1) obj)>
 
 # TODO: this is a temporary, halfway solution to the desired printing functions.
 # would be better to use a macro to generate each function with no subcalls.
 
-<fn writeSE [-file -sep -end -first -rest]
+<pub-fn writeSE [-file -sep -end -first -rest]
   # write strings with separator and end strings.
   #(_errR1L 'writeSE f: ' first)
   #(_errR1L 'writeSE r: ' rest)
@@ -100,7 +100,7 @@
       (write1 file sep)
       (self file sep end (hd rest) (mem-next rest))>>>
 
-<fn writeRSE [-file -sep -end -first -rest]
+<pub-fn writeRSE [-file -sep -end -first -rest]
   # write reprs with separator and end strings.
   (writeR1 file first)
   <if (not rest)
@@ -109,137 +109,125 @@
       (write1 file sep)
       (self file sep end (hd rest) (mem-next rest))>>>
 
-<fn out [&objs]
+<pub-fn out [&objs]
   <if (not objs)
     void
     (writeSE std-out '' '' (hd objs) (mem-next objs))>>
 
-<fn outS [&objs]
+<pub-fn outS [&objs]
   <if (not objs)
     void
     (writeSE std-out ' ' '' (hd objs) (mem-next objs))>>
 
-<fn outL [&objs]
+<pub-fn outL [&objs]
   <if (not objs)
     (write1 std-out '\n')
     (writeSE std-out '' '\n' (hd objs) (mem-next objs))>>
 
-<fn outSL [&objs]
+<pub-fn outSL [&objs]
   <if (not objs)
     (write1 std-out '\n')
     (writeSE std-out ' ' '\n' (hd objs) (mem-next objs))>>
 
-<fn outSS [&objs]
+<pub-fn outSS [&objs]
   <if (not objs)
     (write1 std-out ' ')
     (writeSE std-out ' ' ' ' (hd objs) (mem-next objs))>>
 
-<fn outLL [&objs]
+<pub-fn outLL [&objs]
   <if (not objs)
     (write1 std-out '\n')
     (writeSE std-out '\n' '\n' (hd objs) (mem-next objs))>>
 
 
-<fn err [&objs]
+<pub-fn err [&objs]
   <if (not objs)
     void
     (writeSE std-err '' '' (hd objs) (mem-next objs))>>
 
-<fn errS [&objs]
+<pub-fn errS [&objs]
   <if (not objs)
     void
     (writeSE std-err ' ' '' (hd objs) (mem-next objs))>>
 
-<fn errL [&objs]
+<pub-fn errL [&objs]
   <if (not objs)
     (write1 std-err '\n')
     (writeSE std-err '' '\n' (hd objs) (mem-next objs))>>
 
-<fn errSS [&objs]
+<pub-fn errSS [&objs]
   <if (not objs)
     (write1 std-err ' ')
     (writeSE std-err ' ' ' ' (hd objs) (mem-next objs))>>
 
-<fn errSL [&objs]
+<pub-fn errSL [&objs]
   <if (not objs)
     (write1 std-err '\n')
     (writeSE std-err ' ' '\n' (hd objs) (mem-next objs))>>
 
-<fn errLL [&objs]
+<pub-fn errLL [&objs]
   <if (not objs)
     (write1 std-err '\n')
     (writeSE std-err '\n' '\n' (hd objs) (mem-next objs))>>
 
 
-<fn outR [&objs]
+<pub-fn outR [&objs]
   <if (not objs)
     void
     (writeSE std-out '' '' (hd objs) (mem-next objs))>>
 
-<fn outRS [&objs]
+<pub-fn outRS [&objs]
   <if (not objs)
     void
     (writeSE std-out ' ' '' (hd objs) (mem-next objs))>>
 
-<fn outRL [&objs]
+<pub-fn outRL [&objs]
   <if (not objs)
     (write1 std-out '\n')
     (writeRSE std-out '' '\n' (hd objs) (mem-next objs))>>
 
-<fn outRSS [&objs]
+<pub-fn outRSS [&objs]
   <if (not objs)
     (write1 std-out ' ')
     (writeRSE std-out ' ' ' ' (hd objs) (mem-next objs))>>
 
-<fn outRSL [&objs]
+<pub-fn outRSL [&objs]
   <if (not objs)
     (write1 std-out '\n')
     (writeRSE std-out ' ' '\n' (hd objs) (mem-next objs))>>
 
-<fn outRLL [&objs]
+<pub-fn outRLL [&objs]
   <if (not objs)
     (write1 std-out '\n')
     (writeRSE std-out '\n' '\n' (hd objs) (mem-next objs))>>
 
 
-<fn errR [&objs]
+<pub-fn errR [&objs]
   <if (not objs)
     void
     (writeRSE std-err '' '' (hd objs) (mem-next objs))>>
 
-<fn errRS [&objs]
+<pub-fn errRS [&objs]
   <if (not objs)
     void
     (writeRSE std-err ' ' '' (hd objs) (mem-next objs))>>
 
-<fn errRL [&objs]
+<pub-fn errRL [&objs]
   <if (not objs)
     (write1 std-err '\n')
     (writeRSE std-err '' '\n' (hd objs) (mem-next objs))>>
 
-<fn errRSS [&objs]
+<pub-fn errRSS [&objs]
   <if (not objs)
     (write1 std-err ' ')
     (writeRSE std-err ' ' ' ' (hd objs) (mem-next objs))>>
 
-<fn errRSL [&objs]
+<pub-fn errRSL [&objs]
   <if (not objs)
     (write1 std-err '\n')
     (writeRSE std-err ' ' '\n' (hd objs) (mem-next objs))>>
 
-<fn errRLL [&objs]
+<pub-fn errRLL [&objs]
   <if (not objs)
     (write1 std-err '\n')
     (writeRSE std-err '\n' '\n' (hd objs) (mem-next objs))>>
-
-# modules.
-
-<macro pub [-bind-expr]
-  <let bind (EXPAND bind-expr)>
-  <check (is (type-of bind) Bind) "pub: expr did not expand to a Bind">
-  <check (not (.is-mut bind)) "pub: expr did not expand to an immutable Bind">
-  {:Bind
-    false
-    true
-    (.name bind)
-    (.expr bind)}>
