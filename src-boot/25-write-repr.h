@@ -149,6 +149,26 @@ static void write_repr_Variad(CFile f, Obj o, Bool is_quoted, Int depth, Set* se
 }
 
 
+static void write_repr_Accessor(CFile f, Obj o, Bool is_quoted, Int depth, Set* set) {
+  assert(cmpd_len(o) == 1);
+  if (!is_quoted) {
+    fputc('`', f);
+  }
+  fputc('.', f);
+  write_repr_obj(f, cmpd_el(o, 0), true, depth, set);
+}
+
+
+static void write_repr_Mutator(CFile f, Obj o, Bool is_quoted, Int depth, Set* set) {
+  assert(cmpd_len(o) == 1);
+  if (!is_quoted) {
+    fputc('`', f);
+  }
+  fputs(".=", f);
+  write_repr_obj(f, cmpd_el(o, 0), true, depth, set);
+}
+
+
 static void write_repr_syn_seq(CFile f, Obj s, Bool is_quoted, Int depth, Set* set,
   Chars_const chars_open, Char char_close) {
 
@@ -196,6 +216,8 @@ static void write_repr_dispatch(CFile f, Obj s, Bool is_quoted, Int depth, Set* 
   DISP(Splice);
   DISP(Label);
   DISP(Variad);
+  DISP(Accessor);
+  DISP(Mutator);
   #undef DISP
 
   #define DISP_SEQ(t, o, c) \
