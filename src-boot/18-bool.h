@@ -12,7 +12,8 @@ static Obj bool_new(Int i) {
 static Bool bool_is_true(Obj b) {
   if (is(b, s_true)) return true;
   if (is(b, s_false)) return false;
-  error("obj is not a Bool: %o", b);
+  assert(0);
+  exit(1);
 }
 
 

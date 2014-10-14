@@ -40,10 +40,12 @@ static void write_repr_Data(CFile f, Obj d) {
 static void write_repr_Env(CFile f, Obj env) {
   Obj top_key = env.e->key;
   fputs(NO_REPR_PO "Env ", f);
-  write_repr(f, top_key);
+  write_repr_Sym(f, top_key, true);
   fputs(NO_REPR_PC, f);
 }
 
+
+static void write_repr_obj(CFile f, Obj o, Bool is_quoted, Int depth, Set* set);
 
 static void write_repr_Comment(CFile f, Obj o, Bool is_quoted, Int depth, Set* set) {
   assert(cmpd_len(o) == 2);
@@ -53,12 +55,10 @@ static void write_repr_Comment(CFile f, Obj o, Bool is_quoted, Int depth, Set* s
   } else {
     fputs(" ", f);
   }
-  write_repr(f, cmpd_el(o, 1));
+  write_repr_obj(f, cmpd_el(o, 1), false, depth, set);
   fputs(NO_REPR_PC, f);
 }
 
-
-static void write_repr_obj(CFile f, Obj o, Bool is_quoted, Int depth, Set* set);
 
 static void write_repr_Bang(CFile f, Obj o, Bool is_quoted, Int depth, Set* set) {
   assert(cmpd_len(o) == 1);
