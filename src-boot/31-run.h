@@ -51,17 +51,19 @@ static Step run(Int depth, Trace* parent_trace, Obj env, Obj code);
 
 static Step run_Do(Int d, Trace* t, Obj env, Obj code) {
   // owns env.
-  Int len = cmpd_len(code);
+  assert(cmpd_len(code) == 1);
+  Obj exprs = cmpd_el(code, 0);
+  Int len = cmpd_len(exprs);
   if (!len) {
     return mk_res(env, rc_ret_val(s_void));
   }
   Int last = len - 1;
   for_in(i, last) {
-    Step step = run(d, t, env, cmpd_el(code, i));
+    Step step = run(d, t, env, cmpd_el(exprs, i));
     env = step.res.env;
     rc_rel(step.res.val); // value ignored.
   };
-  return mk_tail(.env=env, .callee_env=env, .code=cmpd_el(code, last));
+  return mk_tail(.env=env, .callee_env=env, .code=cmpd_el(exprs, last));
 }
 
 
@@ -122,16 +124,18 @@ static Step run_Fn(Int d, Trace* t, Obj env, Obj code) {
   exc_check(cmpd_len(code) == 5, "Fn requires 5 fields; received %i", cmpd_len(code));
   Obj is_native = cmpd_el(code, 0);
   Obj is_macro  = cmpd_el(code, 1);
-  Obj pars_syn  = cmpd_el(code, 2);
+  Obj pars_seq  = cmpd_el(code, 2);
   Obj ret_type  = cmpd_el(code, 3);
   Obj body      = cmpd_el(code, 4);
   exc_check(obj_is_bool(is_macro), "Fn: is-macro is not a Bool: %o", is_macro);
-  exc_check(is(obj_type(pars_syn), t_Syn_seq),
-    "Fn: pars is not a sequence literal: %o", pars_syn);
-  Obj pars = cmpd_new_raw(rc_ret(t_Arr_Par), cmpd_len(pars_syn));
+  exc_check(is(obj_type(pars_seq), t_Syn_seq),
+    "Fn: pars is not a sequence literal: %o", pars_seq);
+  assert(cmpd_len(pars_seq) == 1);
+  Obj pars_exprs = cmpd_el(pars_seq, 0);
+  Obj pars = cmpd_new_raw(rc_ret(t_Arr_Par), cmpd_len(pars_exprs));
   Obj variad = rc_ret(s_void);
-  for_in(i, cmpd_len(pars)) {
-    Obj syn = cmpd_el(pars_syn, i);
+  for_in(i, cmpd_len(pars_exprs)) {
+    Obj syn = cmpd_el(pars_exprs, i);
     Obj syn_type = obj_type(syn);
     Obj par_name;
     Obj par_type;
@@ -171,9 +175,11 @@ static Step run_Fn(Int d, Trace* t, Obj env, Obj code) {
 
 static Step run_Syn_struct_typed(Int d, Trace* t, Obj env, Obj code) {
   // owns env.
-  Int syn_len = cmpd_len(code);
+  assert(cmpd_len(code) == 1);
+  Obj exprs = cmpd_el(code, 0);
+  Int syn_len = cmpd_len(exprs);
   exc_check(syn_len > 0, "constructor is empty: %o", code);
-  Step step = run(d, t, env, cmpd_el(code, 0)); // evaluate the type.
+  Step step = run(d, t, env, cmpd_el(exprs, 0)); // evaluate the type.
   env = step.res.env;
   Obj type = step.res.val;
   Obj kind = type_kind(type);
@@ -184,7 +190,7 @@ static Step run_Syn_struct_typed(Int d, Trace* t, Obj env, Obj code) {
     res = cmpd_new_raw(type, len);
     Int j = 0;
     for_imn(i, 1, syn_len) {
-      Obj expr = cmpd_el(code, i);
+      Obj expr = cmpd_el(exprs, i);
       Obj expr_t = obj_type(expr);
       if (is(expr_t, t_Splice)) {
         Obj sub_expr = cmpd_el(expr, 0);
@@ -209,7 +215,7 @@ static Step run_Syn_struct_typed(Int d, Trace* t, Obj env, Obj code) {
   } else if (is_kind_arr(kind)) {
     Array vals = array0;
     for_imn(i, 1, syn_len) {
-      Obj expr = cmpd_el(code, i);
+      Obj expr = cmpd_el(exprs, i);
       Obj expr_t = obj_type(expr);
       if (is(expr_t, t_Splice)) {
         Obj sub_expr = cmpd_el(expr, 0);
@@ -239,16 +245,18 @@ static Step run_Syn_struct_typed(Int d, Trace* t, Obj env, Obj code) {
 
 static Step run_Syn_seq_typed(Int d, Trace* t, Obj env, Obj code) {
   // owns env.
-  Int syn_len = cmpd_len(code);
+  assert(cmpd_len(code) == 1);
+  Obj exprs = cmpd_el(code, 0);
+  Int syn_len = cmpd_len(exprs);
   check(syn_len > 0, "Syn-seq-typed is empty");
-  Step step = run(d, t, env, cmpd_el(code, 0)); // evaluate the type.
+  Step step = run(d, t, env, cmpd_el(exprs, 0)); // evaluate the type.
   env = step.res.env;
   //Obj el_type = step.res.val;
   Obj type = obj0;
   exc_raise("seq constructor: %o\ntype derivation not yet implemented");
   Array vals = array0;
   for_imn(i, 1, syn_len) {
-    Obj expr = cmpd_el(code, i);
+    Obj expr = cmpd_el(exprs, i);
     Obj expr_t = obj_type(expr);
     if (is(expr_t, t_Splice)) {
       Obj sub_expr = cmpd_el(expr, 0);
@@ -538,7 +546,9 @@ static Step run_call_dispatcher(Int d, Trace* t, Obj env, Obj call, Mem vals,
 
 static Step run_Call(Int d, Trace* t, Obj env, Obj code) {
   // owns env.
-  Int len = cmpd_len(code);
+  assert(cmpd_len(code) == 1);
+  Obj exprs = cmpd_el(code, 0);
+  Int len = cmpd_len(exprs);
   check(len > 0, "call is empty: %o", code);
   // assemble vals as an array of interleaved name, value pairs.
   // the callee never has a name, so there are an odd number of elements.
@@ -546,11 +556,11 @@ static Step run_Call(Int d, Trace* t, Obj env, Obj code) {
   // the names are not ref-counted, but the values are.
   // the array can grow arbitrarily large due to splice arguments.
   Array vals = array_alloc_cap(len * 2 - 1);
-  Step step = run(d, t, env, cmpd_el(code, 0)); // callee.
+  Step step = run(d, t, env, cmpd_el(exprs, 0)); // callee.
   env = step.res.env;
   array_append(&vals, step.res.val);
   for_imn(i, 1, len) {
-    Obj expr = cmpd_el(code, i);
+    Obj expr = cmpd_el(exprs, i);
     Obj expr_t = obj_type(expr);
     if (is(expr_t, t_Splice)) {
       Obj sub_expr = cmpd_el(expr, 0);
@@ -572,7 +582,6 @@ static Step run_Call(Int d, Trace* t, Obj env, Obj code) {
       array_append(&vals, expr_el_name);
       array_append(&vals, step.res.val);
     }
-    // TODO: splats; will require that vals grow dynamically.
     else { // unlabeled arg expr.
       step = run(d, t, env, expr);
       env = step.res.env;
@@ -750,9 +759,11 @@ static Step run_code(Obj env, Obj code) {
 static Obj run_macro(Trace* t, Obj env, Obj code) {
   // owns env.
   run_err_trace(0, trace_expand_prefix, code);
-  Int len = cmpd_len(code); 
+  assert(cmpd_len(code) == 1);
+  Obj exprs = cmpd_el(code, 0);
+  Int len = cmpd_len(exprs); 
   check(len > 0, "expand: %o\nempty", code);
-  Obj macro_sym = cmpd_el(code, 0);
+  Obj macro_sym = cmpd_el(exprs, 0);
   check(obj_is_sym(macro_sym), "expand: %o\nargument 0 must be a Sym; found: %o",
     code, macro_sym);
   Obj macro = env_get(env, macro_sym);
@@ -762,7 +773,7 @@ static Obj run_macro(Trace* t, Obj env, Obj code) {
   Mem vals = mem_alloc(len * 2 - 1);
   mem_put(vals, 0, rc_ret(macro));
   for_imn(i, 1, len) {
-    Obj expr = cmpd_el(code, i);
+    Obj expr = cmpd_el(exprs, i);
     mem_put(vals, i * 2 - 1, obj0);
     mem_put(vals, i * 2, rc_ret(expr));
   }

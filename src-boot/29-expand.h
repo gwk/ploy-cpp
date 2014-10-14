@@ -36,15 +36,15 @@ static Obj expand_quasiquote(Int qua_depth, Obj o) {
     } else if (is(type, t_Unq)) {
       qd1--;
     }
-    Obj s = cmpd_new_raw(rc_ret(t_Syn_struct_typed), cmpd_len(o) + 1);
-    Obj* dst = cmpd_els(s);
-    dst[0] = rc_ret(type_name(type));
+    Obj exprs = cmpd_new_raw(rc_ret(t_Arr_Expr), cmpd_len(o) + 1);
+    cmpd_put(exprs, 0, rc_ret(type_name(type)));
     for_in(i, cmpd_len(o)) {
       Obj e = cmpd_el(o, i);
-      dst[i + 1] = expand_quasiquote(qd1, rc_ret(e)); // propagate the quotation.
+      cmpd_put(exprs, i + 1, expand_quasiquote(qd1, rc_ret(e))); // propagate the quotation.
     }
+    Obj cons = track_src(o, cmpd_new1(rc_ret(t_Syn_struct_typed), exprs));
     rc_rel(o);
-    return track_src(o, s);
+    return cons;
   } else { // no unquotes in the tree; simply quote the top level.
     return track_src(o, cmpd_new1(rc_ret(t_Quo), o));
   }

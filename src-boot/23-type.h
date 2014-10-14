@@ -25,17 +25,17 @@ T(Env,              prim) \
 T(Comment,          struct2, "is-expr", t_Bool, "val", t_Expr) \
 T(Qua,              struct1, "expr", t_Expr) \
 T(Unq,              struct1, "expr", t_Expr) \
-T(Expand,           arr, t_Expr) \
+T(Expand,           struct1, "exprs", t_Arr_Expr) \
 T(Bang,             struct1, "expr", t_Expr) \
 T(Quo,              struct1, "expr", t_Expr) \
-T(Do,               arr, t_Expr) \
+T(Do,               struct1, "exprs", t_Arr_Expr) \
 T(Scope,            struct1, "expr", t_Expr) \
 T(Bind, struct4, "is-mut", t_Bool, "is-pub", t_Bool, "name", t_Sym, "expr", t_Expr) \
 T(If,               struct3, "pred", t_Expr, "then", t_Expr, "else", t_Expr) \
 T(Fn,               struct_fn) \
-T(Syn_struct_typed, arr, t_Expr) \
-T(Syn_seq_typed,    arr, t_Expr) \
-T(Call,             arr, t_Expr) \
+T(Syn_struct_typed, struct1, "exprs", t_Arr_Expr) \
+T(Syn_seq_typed,    struct1, "exprs", t_Arr_Expr) \
+T(Call,             struct1, "exprs", t_Arr_Expr) \
 T(Func,             struct_func) \
 T(Accessor,         struct1, "name", t_Sym) \
 T(Mutator,          struct1, "name", t_Sym) \
@@ -44,8 +44,8 @@ T(Label,            struct3, "name", t_Expr, "type", t_Expr, "expr", t_Expr) \
 T(Variad,           struct2, "name", t_Expr, "type", t_Expr) \
 T(Src_loc,          struct_src_loc) \
 T(Par,              struct3, "name", t_Sym, "type", t_Type, "dflt", t_Expr) \
-T(Syn_struct,       arr, t_Expr) \
-T(Syn_seq,          arr, t_Expr) \
+T(Syn_struct,       struct1, "exprs", t_Arr_Expr) \
+T(Syn_seq,          struct1, "exprs", t_Arr_Expr) \
 T(Arr_Type,         arr, t_Type) \
 T(Arr_Par,          arr, t_Par) \
 T(Arr_Obj,          arr, t_Obj) \

@@ -431,7 +431,7 @@ static Obj parse_Expand(Parser* p) {
   P_ADV(1, return parse_error(p, "unterminated expand"));
   Mem m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR('>');
-  Obj e = cmpd_new_M(rc_ret(t_Expand), m);
+  Obj e = cmpd_new1(rc_ret(t_Expand), cmpd_new_M(rc_ret(t_Arr_Expr), m));
   mem_dealloc(m);
   return e;
 }
@@ -441,17 +441,17 @@ static Obj parse_Call(Parser* p) {
   P_ADV(1, return parse_error(p, "unterminated call"));
   Mem m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR(')');
-  Obj c = cmpd_new_M(rc_ret(t_Call), m);
+  Obj c = cmpd_new1(rc_ret(t_Call), cmpd_new_M(rc_ret(t_Arr_Expr), m));
   mem_dealloc(m);
   return c;
 }
 
 
 static Obj parse_struct(Parser* p) {
-  P_ADV(1, return parse_error(p, "unterminated struct"));
+  P_ADV(1, return parse_error(p, "unterminated constructor"));
   Bool typed = false;
   if (PC == ':') {
-    P_ADV(1, return parse_error(p, "unterminated struct"));
+    P_ADV(1, return parse_error(p, "unterminated constructor"));
     typed = true;
   }
   Src_pos pos = p->pos;
@@ -459,14 +459,10 @@ static Obj parse_struct(Parser* p) {
   P_CONSUME_TERMINATOR('}');
   if (typed && !m.len) {
     p->pos = pos;
-    return parse_error(p, "typed struct requires a type expression");
+    return parse_error(p, "typed constructor requires a type expression");
   }
-  Obj s;
-  if (typed) {
-    s = cmpd_new_M(rc_ret(t_Syn_struct_typed), m);
-  } else {
-    s = cmpd_new_M(rc_ret(t_Syn_struct), m);
-  }
+  Obj t = (typed ? t_Syn_struct_typed : t_Syn_struct);
+  Obj s = cmpd_new1(rc_ret(t), cmpd_new_M(rc_ret(t_Arr_Expr), m));
   mem_dealloc(m);
   return s;
 }
@@ -486,12 +482,8 @@ static Obj parse_seq(Parser* p) {
     p->pos = pos;
     return parse_error(p, "typed sequence requires a type expression");
   }
-  Obj s;
-  if (typed) {
-    s = cmpd_new_M(rc_ret(t_Syn_seq_typed), m);
-  } else {
-    s = cmpd_new_M(rc_ret(t_Syn_seq), m);
-  }
+  Obj t = (typed ? t_Syn_seq_typed : t_Syn_seq);
+  Obj s = cmpd_new1(rc_ret(t), cmpd_new_M(rc_ret(t_Arr_Expr), m));
   mem_dealloc(m);
   return s;
 }

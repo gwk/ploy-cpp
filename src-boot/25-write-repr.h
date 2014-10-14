@@ -171,15 +171,15 @@ static void write_repr_Mutator(CFile f, Obj o, Bool is_quoted, Int depth, Set* s
 
 static void write_repr_syn_seq(CFile f, Obj s, Bool is_quoted, Int depth, Set* set,
   Chars_const chars_open, Char char_close) {
-
-  assert(ref_is_cmpd(s));
+  assert(cmpd_len(s) == 1);
+  Obj exprs = cmpd_el(s, 0);
   if (!is_quoted) {
     fputc('`', f);
   }
   fputs(chars_open, f);
-  for_in(i, cmpd_len(s)) {
+  for_in(i, cmpd_len(exprs)) {
     if (i) fputc(' ', f);
-    write_repr_obj(f, cmpd_el(s, i), true, depth, set);
+    write_repr_obj(f, cmpd_el(exprs, i), true, depth, set);
   }
   fputc(char_close, f);
 }

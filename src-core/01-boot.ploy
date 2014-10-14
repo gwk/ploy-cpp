@@ -13,7 +13,7 @@
   {:Bind
     false # is-mutable.
     true # is-public.
-    `macro # symbol to bind.
+    `macro # name.
     {:Fn # Fn creates both functions and macros.
       true # is-native.
       true # is-macro.
@@ -22,16 +22,13 @@
       `{:Bind # the body of the 'macro' macro is a Bind form.
         false # is-mutable.
         true # is-public.
-        sym # the sym parameter that the macro to be created is bound to (not `macro).
-        {:Fn # the value of the binding is created by evaluating the FN form;
-          # note that this inner FN is inside a vec literal;
-          # when the 'macro' macro is expanded, the literal is evaluated,
-          # and a {FN ...} form is the resulting code vector.
+        sym # name.
+        {:Fn # the value of the binding is created by evaluating the Fn form.
           true # is-native.
           true # is-macro.
           pars
           nil # ret-type.
-          {:Do *body}}}}})
+          {:Do {:Arr-Expr *body}}}}}})
 
 # define macros to wrap the special forms.
 
@@ -42,7 +39,7 @@
     false # is-macro.
     pars
     nil # ret-type.
-    {:Do *body}}>
+    {:Do {:Arr-Expr *body}}}>
 
 <macro quo [-expr]
   # absolute quotation of an expression.
@@ -67,10 +64,10 @@
   {:Unq expr}>
 
 <macro do [&body]
-  {:Do *body}>
+  {:Do {:Arr-Expr *body}}>
 
 <macro scope [&body]
-  {:Scope {:Do *body}}>
+  {:Scope {:Do {:Arr-Expr *body}}}>
 
 <macro let [-sym -expr]
   # immutable, private binding.
