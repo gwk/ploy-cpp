@@ -60,6 +60,18 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
+            argument = "$(PROJECT_DIR)/src-core/01-boot.ploy"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "$(PROJECT_DIR)/src-core/02-types.ploy"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "$(PROJECT_DIR)/src-core/03-core.ploy"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
             argument = "$(PROJECT_DIR)/_repro.ploy"
             isEnabled = "YES">
          </CommandLineArgument>
