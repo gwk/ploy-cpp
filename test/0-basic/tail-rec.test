@@ -2,6 +2,6 @@
   'timeout' : 16,
   'out' : '''\
 10000
-{:Mem-Int 1 {:Mem-Int 2 {:Mem-Int 3 {:Mem-Int 4 nil}}}}
+{:Arr-Int 1 {:Arr-Int 2 {:Arr-Int 3 {:Arr-Int 4 nil}}}}
 '''
 }

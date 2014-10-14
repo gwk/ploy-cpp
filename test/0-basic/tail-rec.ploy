@@ -5,6 +5,6 @@
 
 # tail recursive data structure.
 <let-fn g [-n -tl]
-  <if (not n) tl (self (idec n) {:Mem-Int n tl})>>
+  <if (not n) tl (self (idec n) {:Arr-Int n tl})>>
 (outRL (g 4 nil))
 (g 40000 nil) # requires that release/dealloc are tail-optimized.

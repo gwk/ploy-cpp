@@ -10,4 +10,4 @@
   # Type-kind is a union of the various Type-kind-*.
   ~<let ,name {:Type `,name ,kind}>>
 
-<mk-type Mem-Int {:Type-kind-arr Int}>
+<mk-type Arr-Int {:Type-kind-arr Int}>

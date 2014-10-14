@@ -7,7 +7,7 @@
   # generate a binary trie of zeros n branches deep.
   <if (not n) t
   <do
-  (self (idec n) {:Mem-Int t t})>>>
+  (self (idec n) {:Arr-Int t t})>>>
 
 <let-fn sum-tree [-t]
   # walk a tree and add all of the leaves.
