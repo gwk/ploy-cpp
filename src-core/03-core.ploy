@@ -37,7 +37,7 @@
 
 <pub-fn arr-next [-arr]
   # this a poor substitute for a real Stream iterator.
- (slice arr 1 (mlen arr))>
+  (slice arr 1 (mlen arr))>
 
 <pub-fn arr-from [-arr -from]
   (slice arr from (mlen arr))>
