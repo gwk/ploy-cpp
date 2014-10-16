@@ -767,9 +767,7 @@ static Obj run_macro(Trace* t, Obj env, Obj code) {
   check(obj_is_sym(macro_sym), "expand: %o\nargument 0 must be a Sym; found: %o",
     code, macro_sym);
   Obj macro = env_get(env, macro_sym);
-  if (is(macro, obj0)) { // lookup failed.
-    error("expand: %o\nmacro lookup error: %o", code, macro_sym);
-  }
+  exc_check(!is(macro, obj0), "expand: %o\nmacro lookup error: %o", code, macro_sym);
   Mem vals = mem_alloc(len * 2 - 1);
   mem_put(vals, 0, rc_ret(macro));
   for_imn(i, 1, len) {
