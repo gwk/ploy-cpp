@@ -99,9 +99,9 @@
 
 <pub-fn error [-msg]
   # raise an error. for now we can only print the message and exit.
-  (_host-write (field std-err 1) 'error: ')
-  (_host-write (field std-err 1) msg)
-  (_host-write (field std-err 1) '\n')
+  (_host-write (.ptr std-err) 'error: ')
+  (_host-write (.ptr std-err) msg)
+  (_host-write (.ptr std-err) '\n')
   (exit 1)>
 
 <macro check [-condition -msg]
@@ -173,11 +173,11 @@
 <let-fn write1 [-file -str]
   # write a single string.
   # TODO: support other types.
-  (_host-write (field file 1) str)>
+  (_host-write (.ptr file) str)>
 
 <let-fn writeR1 [-file -obj]
   # write a single repr.
-  (_host-write-repr (field file 1) obj)>
+  (_host-write-repr (.ptr file) obj)>
 
 # TODO: this is a temporary, halfway solution to the desired printing functions.
 # would be better to use a macro to generate each function with no subcalls.

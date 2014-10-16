@@ -113,18 +113,6 @@ static Obj host_mlen(Trace* t, Obj env) {
 }
 
 
-static Obj host_field(Trace* t, Obj env) {
-  GET_AB;
-  exc_check(obj_is_cmpd(a), "field requires arg 1 to be a Struct; received: %o", a);
-  exc_check(obj_is_int(b), "field requires arg 2 to be a Int; received: %o", b);
-  Int l = cmpd_len(a);
-  Int i = int_val(b);
-  exc_check(i >= 0 && i < l, "field index out of range; index: %i; len: %i", i, l);
-  Obj field = cmpd_el(a, i);
-  return rc_ret(field);
-}
-
-
 static Obj host_el(Trace* t, Obj env) {
   GET_AB;
   exc_check(obj_is_cmpd(a), "el requires arg 1 to be a Mem; received: %o", a);
@@ -306,7 +294,6 @@ static Obj host_init(Obj env) {
   DEF_FH(2, "ige", host_ige);
   DEF_FH(1, "dlen", host_dlen);
   DEF_FH(1, "mlen", host_mlen);
-  DEF_FH(2, "field", host_field);
   DEF_FH(2, "el", host_el);
   DEF_FH(3, "slice", host_slice);
   DEF_FH(2, "prepend", host_prepend);
