@@ -105,9 +105,9 @@ static Obj host_dlen(Trace* t, Obj env) {
 }
 
 
-static Obj host_mlen(Trace* t, Obj env) {
+static Obj host_alen(Trace* t, Obj env) {
   GET_A;
-  exc_check(obj_is_cmpd(a), "mlen requires Cmpd; received: %o", a);
+  exc_check(obj_is_cmpd(a), "alen requires Cmpd; received: %o", a);
   Int l = cmpd_len(a);
   return int_new(l);
 }
@@ -293,7 +293,7 @@ static Obj host_init(Obj env) {
   DEF_FH(2, "igt", host_igt);
   DEF_FH(2, "ige", host_ige);
   DEF_FH(1, "dlen", host_dlen);
-  DEF_FH(1, "mlen", host_mlen);
+  DEF_FH(1, "alen", host_alen);
   DEF_FH(2, "el", host_el);
   DEF_FH(3, "slice", host_slice);
   DEF_FH(2, "prepend", host_prepend);

@@ -126,14 +126,14 @@
 
 <pub-fn hd [-arr] (el arr 0)>
 
-<pub-fn tl [-arr] (el arr (idec (mlen arr)))>
+<pub-fn tl [-arr] (el arr (idec (alen arr)))>
 
 <pub-fn arr-next [-arr]
   # this a poor substitute for a real Stream iterator.
-  (slice arr 1 (mlen arr))>
+  (slice arr 1 (alen arr))>
 
 <pub-fn arr-from [-arr -from]
-  (slice arr from (mlen arr))>
+  (slice arr from (alen arr))>
 
 <pub-fn arr-to [-arr -to]
   (slice arr 0 to)>
@@ -150,9 +150,9 @@
 
 <macro if [&exprs]
   # generic 'if'. inspired by paul graham's arc-lisp.
-  <_if-then (ilt (mlen exprs) 2) (error "degenerate if form")>
+  <_if-then (ilt (alen exprs) 2) (error "degenerate if form")>
   <let-fn f [-pred -then -rest]
-    <let l (mlen rest)>
+    <let l (alen rest)>
     #(_errR1L 'f l: ' l)
     #(_errR1L 'f pred: ' pred)
     #(_errR1L 'f then: ' then)
@@ -162,7 +162,7 @@
       <_if-then-else (ieq l 1)
         {:If pred then (hd rest)} # final clause is an unconditional else.
         {:If pred then (self (hd rest) (el rest 1) (arr-from rest 2))}>>>
-  (f (hd exprs) (el exprs 1) (slice exprs 2 (mlen exprs)))>
+  (f (hd exprs) (el exprs 1) (slice exprs 2 (alen exprs)))>
 
 <macro when [-pred &body]
   # if 'pred', do 'exprs'. else none.
