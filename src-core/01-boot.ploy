@@ -152,11 +152,11 @@
 <pub-fn iter-head [-iter:Iter]
   (ael (.arr iter) (.index iter))>
 
-<pub-fn is-iter-done [-iter:Iter]
+<pub-fn iter-is-done [-iter:Iter]
   (ieq (.index iter) (alen (.arr iter)))>
 
 <pub-fn iter-next [-iter:Iter]
-  <_if-then (is-iter-done iter) (error "iterator exhausted")>
+  <_if-then (iter-is-done iter) (error "iterator exhausted")>
   {:Iter (.arr iter) (iinc (.index iter))}>
 
 <pub-fn arr-head [-arr]
@@ -178,16 +178,15 @@
     #(_errR1L 'f pred: ' pred)
     #(_errR1L 'f then: ' then)
     #(_errR1L 'f rest: ' rest)
-    <_if-then-else (is-iter-done rest)
+    <_if-then-else (iter-is-done rest)
       {:If pred then void} # final if-else.
       <do
         <let hd (iter-head rest)>
         <let rest1 (iter-next rest)>
-        <_if-then-else (is-iter-done rest1)
+        <_if-then-else (iter-is-done rest1)
           {:If pred then hd} # final clause is an unconditional else.
           {:If pred then (self hd (iter-head rest1) (iter-next rest1))}>>>>
     (f (arr-head exprs) (ael exprs 1) (arr-iter-from exprs 2))>
-
 
 <macro when [-pred &body]
   # if 'pred', do 'exprs'. else none.
@@ -212,7 +211,7 @@
   #(_errR1L 'writeSE f: ' first)
   #(_errR1L 'writeSE r: ' rest)
   (write1 file first)
-  <if (is-iter-done rest)
+  <if (iter-is-done rest)
     (write1 file end)
     <do
       (write1 file sep)
@@ -221,7 +220,7 @@
 <pub-fn writeRSE [-file -sep -end -first -rest]
   # write reprs with separator and end strings.
   (writeR1 file first)
-  <if (is-iter-done rest)
+  <if (iter-is-done rest)
     (write1 file end)
     <do
       (write1 file sep)
