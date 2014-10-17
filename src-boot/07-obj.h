@@ -168,7 +168,7 @@ static Bool obj_is_cmpd(Obj o) {
 }
 
 
-DBG_FN static Bool obj_is_type(Obj o) {
+static Bool obj_is_type(Obj o) {
   return obj_is_ref(o) && ref_is_type(o);
 }
 

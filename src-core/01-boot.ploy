@@ -148,7 +148,7 @@
 <pub-fn arr-iter [-array] {:Iter array 0}>
 
 <pub-fn iter-head [-iter:Iter]
-  (el (.arr iter) (.index iter))>
+  (ael (.arr iter) (.index iter))>
 
 <pub-fn is-iter-done [-iter:Iter]
   (ieq (.index iter) (alen (.arr iter)))>
@@ -158,13 +158,13 @@
   {:Iter (.arr iter) (iinc (.index iter))}>
 
 <pub-fn arr-head [-arr]
-  (el arr 0)>
+  (ael arr 0)>
 
 <pub-fn arr-from [-arr -from]
-  (slice arr from (alen arr))>
+  (aslice arr from (alen arr))>
 
 <pub-fn arr-to [-arr -to]
-  (slice arr 0 to)>
+  (aslice arr 0 to)>
 
 # control flow.
 

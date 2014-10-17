@@ -9,7 +9,7 @@
 <let-fn dispatcher [-callee -types:Arr-Types]
   # NOTE: specifying correct type T for callee would create a cycle.
   <check (ieq (alen types) 1) "dispatcher requires 1 argument">
-  <let T0 (el types 0)>
+  <let T0 (ael types 0)>
   <if
     (is T0 Sym)   <fn [-obj:Sym]  (outRSL `Sym obj)>
     (is T0 Int)   <fn [-obj:Int]  (outRSL `Int obj)>

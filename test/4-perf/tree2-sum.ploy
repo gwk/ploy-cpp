@@ -12,7 +12,7 @@
 <let-fn sum-tree [-t]
   # walk a tree and add all of the leaves.
   <if (is-int t) t
-    (iadd (self (el t 0)) (self (el t 1)))>>
+    (iadd (self (ael t 0)) (self (ael t 1)))>>
 
 
 <let leaf 1>

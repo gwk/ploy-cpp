@@ -34,7 +34,7 @@ static Obj host_not(Trace* t, Obj env) {
 
 static Obj host_ineg(Trace* t, Obj env) {
   GET_A;
-  exc_check(obj_is_int(a), "neg requires Int; received: %o", a);
+  exc_check(obj_is_int(a), "ineg requires Int; received: %o", a);
   Int i = int_val(a);
   return int_new(-i);
 }
@@ -42,7 +42,7 @@ static Obj host_ineg(Trace* t, Obj env) {
 
 static Obj host_iabs(Trace* t, Obj env) {
   GET_A;
-  exc_check(obj_is_int(a), "abs requires Int; received: %o", a);
+  exc_check(obj_is_int(a), "iabs requires Int; received: %o", a);
   Int i = int_val(a);
   return int_new(i < 0 ? -i : i);
 }
@@ -98,7 +98,7 @@ static Obj host_dlen(Trace* t, Obj env) {
   if (is(a, blank)) {
     l = 0;
   } else {
-    exc_check(obj_is_data(a), "data-len requires Data; received: %o", a);
+    exc_check(obj_is_data(a), "dlen requires Data; received: %o", a);
     l = data_len(a);
   }
   return int_new(l);
@@ -113,55 +113,54 @@ static Obj host_alen(Trace* t, Obj env) {
 }
 
 
-static Obj host_el(Trace* t, Obj env) {
+static Obj host_ael(Trace* t, Obj env) {
   GET_AB;
-  exc_check(obj_is_cmpd(a), "el requires arg 1 to be a Mem; received: %o", a);
-  exc_check(obj_is_int(b), "el requires arg 2 to be a Int; received: %o", b);
+  exc_check(obj_is_cmpd(a), "ael requires arg 1 to be an Arr; received: %o", a);
+  exc_check(obj_is_int(b), "ael requires arg 2 to be a Int; received: %o", b);
   Int l = cmpd_len(a);
   Int i = int_val(b);
-  exc_check(i >= 0 && i < l, "el index out of range; index: %i; len: %i", i, l);
+  exc_check(i >= 0 && i < l, "ael index out of range; index: %i; len: %i", i, l);
   Obj el = cmpd_el(a, i);
   return rc_ret(el);
 }
 
 
-static Obj host_slice(Trace* t, Obj env) {
+static Obj host_anew(Trace* t, Obj env) {
+  GET_AB;
+  exc_check(obj_is_type(a), "anew requires arg 1 to be a Type; received: %o", a);
+  exc_check(obj_is_int(b), "anew requires arg 2 to be an Int; received: %o", b);
+  Int len = int_val(b);
+  Obj res = cmpd_new_raw(rc_ret(a), len);
+  for_in(i, len) {
+    cmpd_put(res, i, rc_ret_val(s_UNINIT));
+  }
+  return res;
+}
+
+
+static Obj host_aput(Trace* t, Obj env) {
   GET_ABC;
-  exc_check(obj_is_cmpd(a), "el requires arg 1 to be a Mem; received: %o", a);
+  exc_check(obj_is_cmpd(a), "el requires arg 1 to be a Arr; received: %o", a);
+  exc_check(obj_is_int(b), "el requires arg 2 to be a Int; received: %o", b);
+  Int l = cmpd_len(a);
+  Int i = int_val(b);
+  exc_check(i >= 0 && i < l, "el index out of range; index: %i; len: %i", i, l);
+  Mem m = cmpd_mem(a);
+  rc_rel(mem_el_move(m, i));
+  mem_put(m, i, rc_ret(c));
+  return rc_ret_val(s_void);
+}
+
+
+static Obj host_aslice(Trace* t, Obj env) {
+  GET_ABC;
+  exc_check(obj_is_cmpd(a), "el requires arg 1 to be a Arr; received: %o", a);
   exc_check(obj_is_int(b), "el requires arg 2 to be a Int; received: %o", b);
   exc_check(obj_is_int(c), "el requires arg 3 to be a Int; received: %o", c);
   Int fr = int_val(b);
   Int to = int_val(c);
   return cmpd_slice(a, fr, to);
 }
-
-
-static Obj host_prepend(Trace* t, Obj env) {
-  GET_AB;
-  exc_check(obj_is_cmpd(b), "prepend requires arg 2 to be a Mem; received: %o", b);
-  Obj res = cmpd_new_raw(rc_ret(ref_type(b)), cmpd_len(b) + 1);
-  cmpd_put(res, 0, rc_ret(a));
-  for_in(i, cmpd_len(b)) {
-    cmpd_put(res, i + 1, rc_ret(cmpd_el(b, i)));
-  }
-  return res;
-}
-
-
-static Obj host_append(Trace* t, Obj env) {
-  GET_AB;
-  exc_check(obj_is_cmpd(a), "append requires arg 1 to be a Mem; received: %o", a);
-  Int l = cmpd_len(a);
-  Obj res = cmpd_new_raw(rc_ret(ref_type(a)), l + 1);
-  for_in(i, l) {
-    cmpd_put(res, i, rc_ret(cmpd_el(a, i)));
-  }
-  cmpd_put(res, l, rc_ret(b));
-  return res;
-}
-
-
-// TODO: host_cat
 
 
 static Obj host_write(Trace* t, Obj env) {
@@ -294,10 +293,10 @@ static Obj host_init(Obj env) {
   DEF_FH(2, "ige", host_ige);
   DEF_FH(1, "dlen", host_dlen);
   DEF_FH(1, "alen", host_alen);
-  DEF_FH(2, "el", host_el);
-  DEF_FH(3, "slice", host_slice);
-  DEF_FH(2, "prepend", host_prepend);
-  DEF_FH(2, "append", host_append);
+  DEF_FH(2, "ael", host_ael);
+  DEF_FH(2, "anew", host_anew);
+  DEF_FH(3, "aput", host_aput);
+  DEF_FH(3, "aslice", host_aslice);
   DEF_FH(2, "_host-write", host_write);
   DEF_FH(2, "_host-write-repr", host_write_repr);
   DEF_FH(1, "_host-flush", host_flush);
