@@ -147,6 +147,8 @@
 
 <pub-fn arr-iter [-array] {:Iter array 0}>
 
+<pub-fn arr-iter-from [-array -from] {:Iter array from}>
+
 <pub-fn iter-head [-iter:Iter]
   (ael (.arr iter) (.index iter))>
 
@@ -184,9 +186,7 @@
         <_if-then-else (is-iter-done rest1)
           {:If pred then hd} # final clause is an unconditional else.
           {:If pred then (self hd (iter-head rest1) (iter-next rest1))}>>>>
-    <let iter (arr-iter exprs)>
-    <let next (iter-next iter)>
-    (f (iter-head iter) (iter-head next) (iter-next next))>
+    (f (arr-head exprs) (ael exprs 1) (arr-iter-from exprs 2))>
 
 
 <macro when [-pred &body]
