@@ -20,6 +20,12 @@ static Obj host_is(Trace* t, Obj env) {
 }
 
 
+static Obj host_is_ref(Trace* t, Obj env) {
+  GET_A;
+  return bool_new(obj_is_ref(a));
+}
+
+
 static Obj host_is_true(Trace* t, Obj env) {
   GET_A;
   return bool_new(is_true(a));
@@ -279,6 +285,7 @@ static Obj host_init(Obj env) {
 #define DEF_FH(len_pars, n, f) env = host_init_func(env, len_pars, n, f)
   DEF_FH(1, "identity", host_identity);
   DEF_FH(2, "is", host_is);
+  DEF_FH(1, "is-ref", host_is_ref);
   DEF_FH(1, "is-true", host_is_true);
   DEF_FH(1, "not", host_not);
   DEF_FH(1, "id-hash", host_id_hash);
