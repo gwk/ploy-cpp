@@ -188,12 +188,12 @@ static Obj obj_type(Obj o) {
 
 static const Int width_sym_tags;
 
-static Uns obj_id_hash(Obj o) {
+static Int obj_id_hash(Obj o) {
   switch (obj_tag(o)) {
-    case ot_ref: return o.u >> width_min_alloc;
-    case ot_ptr: return o.u >> width_min_alloc;
-    case ot_int: return o.u >> width_obj_tag;
-    case ot_sym: return o.u >> width_sym_tags;
+    case ot_ref: return cast(Int, o.u >> width_min_alloc);
+    case ot_ptr: return cast(Int, o.u >> width_min_alloc);
+    case ot_int: return cast(Int, o.u >> width_obj_tag);
+    case ot_sym: return cast(Int, o.u >> width_sym_tags);
   }
 }
 
