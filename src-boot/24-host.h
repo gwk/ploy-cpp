@@ -32,6 +32,12 @@ static Obj host_not(Trace* t, Obj env) {
 }
 
 
+static Obj host_id_hash(Trace* t, Obj env) {
+  GET_A;
+  return int_new(obj_id_hash(a));
+}
+
+
 static Obj host_ineg(Trace* t, Obj env) {
   GET_A;
   exc_check(obj_is_int(a), "ineg requires Int; received: %o", a);
@@ -63,7 +69,7 @@ static Int iadd(Int a, Int b)  { return a + b; }
 static Int isub(Int a, Int b)  { return a - b; }
 static Int imul(Int a, Int b)  { return a * b; }
 static Int idiv(Int a, Int b)  { return a / b; }
-static Int imod(Int a, Int b)  { return a % b; }
+static Int imod(Int a, Int b)  { return (a % b + b) % b; }
 static Int ipow(Int a, Int b)  { return cast(Int, pow(a, b)); } // TODO: check for overflow.
 static Int ishl(Int a, Int b)  { return a << b; }
 static Int ishr(Int a, Int b)  { return a >> b; }
@@ -275,6 +281,7 @@ static Obj host_init(Obj env) {
   DEF_FH(2, "is", host_is);
   DEF_FH(1, "is-true", host_is_true);
   DEF_FH(1, "not", host_not);
+  DEF_FH(1, "id-hash", host_id_hash);
   DEF_FH(1, "ineg", host_ineg);
   DEF_FH(1, "iabs", host_iabs);
   DEF_FH(2, "iadd", host_iadd);
