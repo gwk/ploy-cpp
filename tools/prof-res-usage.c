@@ -33,7 +33,10 @@ int main(int argc, char* argv[]) {
     error("wait failed.");
   }
   struct rusage u;
-  getrusage(RUSAGE_CHILDREN, &u);
+  int ru_error = !getrusage(RUSAGE_CHILDREN, &u);
+  if (ru_error) {
+    error("getrusage failed: %d", ru_error);
+  }
   long max_resident = u.ru_maxrss;
 #if defined(__APPLE__)
   max_resident >>= 10; // darwin returns bytes; convert to kilobytes.
