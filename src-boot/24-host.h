@@ -117,11 +117,23 @@ static Obj host_dlen(Trace* t, Obj env) {
 }
 
 
-static Obj host_alen(Trace* t, Obj env) {
+static Obj host_cmpd_len(Trace* t, Obj env) {
   GET_A;
-  exc_check(obj_is_cmpd(a), "alen requires Cmpd; received: %o", a);
+  exc_check(obj_is_cmpd(a), "cmpd-len requires Cmpd; received: %o", a);
   Int l = cmpd_len(a);
   return int_new(l);
+}
+
+
+static Obj host_cmpd_field(Trace* t, Obj env) {
+  GET_AB;
+  exc_check(obj_is_cmpd(a), "field requires arg 1 to be a Cmpd; received: %o", a);
+  exc_check(obj_is_int(b), "field requires arg 2 to be an Int; received: %o", b);
+  Int l = cmpd_len(a);
+  Int i = int_val(b);
+  exc_check(i >= 0 && i < l, "field index out of range; index: %i; len: %i", i, l);
+  Obj field = cmpd_el(a, i);
+  return rc_ret(field);
 }
 
 
@@ -306,7 +318,8 @@ static Obj host_init(Obj env) {
   DEF_FH(2, "igt", host_igt);
   DEF_FH(2, "ige", host_ige);
   DEF_FH(1, "dlen", host_dlen);
-  DEF_FH(1, "alen", host_alen);
+  DEF_FH(1, "cmpd-len", host_cmpd_len);
+  DEF_FH(2, "cmpd-field", host_cmpd_field);
   DEF_FH(2, "ael", host_ael);
   DEF_FH(2, "anew", host_anew);
   DEF_FH(3, "aput", host_aput);

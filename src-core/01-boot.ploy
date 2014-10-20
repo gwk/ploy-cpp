@@ -88,6 +88,8 @@
 <macro pub-fn [-sym -pars &body]
   ~<pub ,sym <fn ,pars ,*body>>>
 
+<let alen cmpd-len> # for now use a simple alias.
+
 # math functions.
 
 <pub-fn iinc [-i] (iadd i 1)>
