@@ -96,29 +96,6 @@
 
 <pub-fn idec [-i] (isub i 1)>
 
-# type bootstrapping.
-
-<macro let-type [-name -kind]
-  # type instances are structs of -name:Expr -kind:Type-kind.
-  # note that the type of name is Expr, not Sym,
-  # because the name of a derived type might be the expression used to derive it.
-  # Type-kind is a union of the various Type-kind-*.
-  ~<let ,name {:Type `,name ,kind}>>
-
-<macro let-struct [-name &fields]
-  ~<let-type ,name {:Type-kind-struct
-      {:Arr-Par ,*fields} # pars
-      nil}>> # dispatcher
-
-<let-type Arr-Int {:Type-kind-arr Int}>
-
-<pub-fn error [-msg]
-  # raise an error. for now we can only print the message and exit.
-  (_host-write (.ptr std-err) 'error: ')
-  (_host-write (.ptr std-err) msg)
-  (_host-write (.ptr std-err) '\n')
-  (exit 1)>
-
 # type functions.
 
 <pub-fn is-ptr  [-o] (is (type-of o) Ptr)>
@@ -129,6 +106,13 @@
 <pub-fn is-type [-o] (is (type-of o) Type)>
 
 # control flow.
+
+<pub-fn error [-msg]
+  # raise an error. for now we can only print the message and exit.
+  (_host-write (.ptr std-err) 'error: ')
+  (_host-write (.ptr std-err) msg)
+  (_host-write (.ptr std-err) '\n')
+  (exit 1)>
 
 <macro recur [-name -init &body]
   ~(<fn [-,name] ,*body> ,init)>
@@ -205,3 +189,38 @@
 <pub-writer errRL  writeR1 std-err '' '\n'>
 <pub-writer errRSL writeR1 std-err ' ' '\n'>
 <pub-writer errRLL writeR1 std-err '\n' '\n'>
+
+# type bootstrapping.
+
+<macro let-type [-name -kind]
+  # type instances are structs of -name:Expr -kind:Type-kind.
+  # note that the type of name is Expr, not Sym,
+  # because the name of a derived type might be the expression used to derive it.
+  # Type-kind is a union of the various Type-kind-*.
+  ~<let ,name {:Type `,name ,kind}>>
+
+# idiomatic type vars.
+<let-type T {:Type-kind-var `T}>
+<let-type K {:Type-kind-var `K}>
+<let-type V {:Type-kind-var `V}>
+
+<let-type Arr {:Type-kind-arr T}>
+
+<let-type Arr-Int {:Type-kind-arr Int}>
+
+<let-fn arr-resize [-arr:Arr -len:len]
+  # create a new array with elements copied from arr; further elements remain UNINIT.
+  <let res (anew (type-of arr) len)>
+  (<fn [-i]
+    <if (ieq i len) res
+      <do
+        (aput res i (ael arr i))
+        (self (iinc i))>>> 0)>
+
+<pub-fn arr-map [-arr -ret-type:Type -f]
+  <let res (anew ret-type (alen arr))>
+  (<fn [-i]
+    <if (ieq i (alen arr)) res
+      <do
+        (aput res i (f (ael arr i)))
+        (self (iinc i))>>> 0)>

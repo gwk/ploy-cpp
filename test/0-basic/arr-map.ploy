@@ -1,0 +1,2 @@
+(outRL (arr-map {:Arr-Int 1 2 3} Arr-Int <fn [-x] (iinc x)>))
+  
