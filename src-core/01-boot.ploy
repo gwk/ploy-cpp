@@ -224,3 +224,24 @@
       <do
         (aput res i (f (ael arr i)))
         (self (iinc i))>>> 0)>
+
+# comparison.
+
+<pub-fn iso [-a -b]
+  <let t (type-of a)>
+  <if (not (is t (type-of b))) false
+    (not (is-ref a)) (is a b)
+    (is-data a) (data-ref-iso a b)
+    <do
+      <let len (cmpd-len a)>
+      <if (ine len (cmpd-len b)) false
+        (not len) true
+        <do
+          <let last (idec len)>
+          <let iso self>
+          <recur i 0
+            <let ai (cmpd-field a i)>
+            <let bi (cmpd-field b i)>
+            <if (ieq i last) (iso ai bi) # tail optimized.
+              (not (iso ai bi)) false
+              (self (iinc i))>>>>>>>

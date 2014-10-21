@@ -1,0 +1,7 @@
+(outRLL
+  (iso 0 0)
+  (iso 0 1)
+  (iso 0 false)
+  (iso {:Arr-Int} {:Arr-Int})
+  (iso {:Arr-Int 1 2} {:Arr-Int 1 2})
+  (iso {:Arr-Int 1} {:Arr-Int 1 2}))

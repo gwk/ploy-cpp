@@ -45,6 +45,12 @@ static Str data_str(Obj d) {
 }
 
 
+static Bool data_ref_iso(Obj a, Obj b) {
+  Int len = data_ref_len(a);
+  return len == data_ref_len(b) && !memcmp(data_ref_ptr(a), data_ref_ptr(b), cast(Uns, len));
+}
+
+
 static Obj data_new_empty(Int len) {
   Obj d = ref_new(size_Data + len, rc_ret(t_Data));
   d.d->len = len;
