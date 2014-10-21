@@ -109,10 +109,7 @@
 
 <pub-fn error [-msg]
   # raise an error. for now we can only print the message and exit.
-  (_host-write (.ptr std-err) 'error: ')
-  (_host-write (.ptr std-err) msg)
-  (_host-write (.ptr std-err) '\n')
-  (exit 1)>
+  (raise msg)>
 
 <macro recur [-name -init &body]
   ~(<fn [-,name] ,*body> ,init)>
@@ -245,3 +242,12 @@
             <if (ieq i last) (iso ai bi) # tail optimized.
               (not (iso ai bi)) false
               (self (iinc i))>>>>>>>
+
+# unit tests.
+
+<macro utest [-expectation &body]
+  ~<do
+    <let result <do ,*body>>
+    <check (iso ,expectation result) "utest failure.">>>
+
+<utest 0 0>

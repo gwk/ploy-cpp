@@ -6,6 +6,14 @@
 `Data 'hi'
 ''',
   'err': '''\
-error: dispatcher cannot handle argument type (intentional test error)
+raised: 'dispatcher cannot handle argument type (intentional test error)'
+trace:
+  src-core/01-boot.ploy:112:3:
+      (raise msg)>
+      ~~~~~~~~~~~
+  … 6
+  test/0-basic/dispatch-error.ploy:26:1:
+    (i T)
+    ~~~~~
 ''',
 }

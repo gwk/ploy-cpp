@@ -234,9 +234,9 @@ static Obj host_exit(Trace* t, Obj env) {
 }
 
 
-static Obj host_error(Trace* t, Obj env) {
+static Obj host_raise(Trace* t, Obj env) {
   GET_A;
-  exc_raise("error: %o", a);
+  exc_raise("raised: %o", a);
 }
 
 
@@ -339,7 +339,7 @@ static Obj host_init(Obj env) {
   DEF_FH(2, "_host-write-repr", host_write_repr);
   DEF_FH(1, "_host-flush", host_flush);
   DEF_FH(1, "exit", host_exit);
-  DEF_FH(1, "error", host_error);
+  DEF_FH(1, "raise", host_raise);
   DEF_FH(1, "type-of", host_type_of);
   DEF_FH(1, "globalize", host_globalize);
   DEF_FH(2, "dbg", host_dbg);
