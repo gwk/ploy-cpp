@@ -56,7 +56,7 @@ T(Type_kind_unit,   unit) \
 T(Type_kind_prim,   unit) \
 T(Type_kind_arr,    struct1, "el-type", t_Type) \
 T(Type_kind_struct, struct2, "fields", t_Arr_Par, "dispatcher", t_Dispatcher) \
-T(Type_kind_union,  arr, t_Type) \
+T(Type_kind_union,  struct1, "variants", t_Arr_Type) \
 T(Type_kind_class,  unit) \
 T(Type_kind_var,    struct1, "name", t_Sym) \
 T(Obj,              class_obj) \
@@ -228,33 +228,35 @@ static Obj type_kind_init_struct_src_loc() {
 
 
 static Obj type_kind_init_union_expr() {
-  return cmpd_new14(rc_ret(t_Type_kind_struct),
-    rc_ret(t_Int),
-    rc_ret(t_Sym),
-    rc_ret(t_Data),
-    rc_ret(t_Bang),
-    rc_ret(t_Quo),
-    rc_ret(t_Do),
-    rc_ret(t_Scope),
-    rc_ret(t_Bind),
-    rc_ret(t_If),
-    rc_ret(t_Fn),
-    rc_ret(t_Syn_struct_typed),
-    rc_ret(t_Syn_seq_typed),
-    rc_ret(t_Call),
-    rc_ret(t_Expand));
+  return cmpd_new1(rc_ret(t_Type_kind_struct),
+      cmpd_new14(rc_ret(t_Arr_Type),
+      rc_ret(t_Int),
+      rc_ret(t_Sym),
+      rc_ret(t_Data),
+      rc_ret(t_Bang),
+      rc_ret(t_Quo),
+      rc_ret(t_Do),
+      rc_ret(t_Scope),
+      rc_ret(t_Bind),
+      rc_ret(t_If),
+      rc_ret(t_Fn),
+      rc_ret(t_Syn_struct_typed),
+      rc_ret(t_Syn_seq_typed),
+      rc_ret(t_Call),
+      rc_ret(t_Expand)));
 }
 
 
 static Obj type_kind_init_union_type_kind() {
-  return cmpd_new7(rc_ret(t_Type_kind_struct),
-    rc_ret(t_Type_kind_unit),
-    rc_ret(t_Type_kind_prim),
-    rc_ret(t_Type_kind_arr),
-    rc_ret(t_Type_kind_struct),
-    rc_ret(t_Type_kind_union),
-    rc_ret(t_Type_kind_class),
-    rc_ret(t_Type_kind_var));
+  return cmpd_new1(rc_ret(t_Type_kind_struct),
+    cmpd_new7(rc_ret(t_Arr_Type),
+      rc_ret(t_Type_kind_unit),
+      rc_ret(t_Type_kind_prim),
+      rc_ret(t_Type_kind_arr),
+      rc_ret(t_Type_kind_struct),
+      rc_ret(t_Type_kind_union),
+      rc_ret(t_Type_kind_class),
+      rc_ret(t_Type_kind_var)));
 }
 
 

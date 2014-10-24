@@ -253,7 +253,7 @@
         (aput res i (f (ael arr i)))
         (self (iinc i))>>> 0)>
 
-# structs.
+# type declarations.
 
 <macro let-struct [-name &fields]
   <let pars (arr-map fields Arr-Par <fn [-field]
@@ -261,6 +261,9 @@
   ~<let-type ,name {:Type-kind-struct
       `,pars
       nil}>> # dispatcher
+
+<macro let-union [-name &variants]
+  ~<let-type ,name {:Type-kind-struct `,(arr-map variants Arr-Type identity)}>>
 
 # List (untyped).
 
