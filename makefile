@@ -102,7 +102,7 @@ test-dbg: tools/run-tests.sh _bld/ploy-dbg
 
 test-rel: tools/run-tests.sh _bld/ploy
 	@echo "\ntest-rel:"
-	$^ test/*
+	$^ test/[0-3]-*
 
 test: test-dbg test-rel
 
