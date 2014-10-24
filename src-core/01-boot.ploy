@@ -292,4 +292,37 @@
   <let index (.len list)>
   (.=len list (iinc index))
   (aput (.arr list) index el)>
-  
+
+<let-fn list-contains [-list:List -el:T]
+
+
+# Set (untyped, naive).
+
+<let-struct Set -list:List> # naive implementation wraps List.
+
+<let-fn set-new [] {:Set (list-new)}>
+
+<let-fn set-contains[-list:List -index:Int]
+  <check (ilt index (.len list)) "index out of bounds">
+  (ael (.arr list) index)>
+
+<let-fn list-put [-list:list -index:Int -el:T]
+  check((ilt index (.len list)) "index out of bounds")
+  (aput (.arr list) index el)>
+
+<let-fn list-is-full [-list:List] (ieq (.len list) (alen (.arr list)))>
+
+<let-fn list-grow [-list:List]
+  <check (list-is-full list) "list should not grow unless arr is full">
+  <let len (.len list)>
+  <let cap <if len (imul len 2) 2>>
+  (.=arr list (arr-resize (.arr list) cap))>
+
+<let-fn list-append [-list:List -el:T]
+  <if (list-is-full list) (list-grow list)>
+  <let index (.len list)>
+  (.=len list (iinc index))
+  (aput (.arr list) index el)>
+
+
+# Dict (untyped, naive).
