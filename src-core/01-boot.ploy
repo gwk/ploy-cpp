@@ -225,7 +225,13 @@
 # unit tests.
 
 <macro utest [-expectation &body]
-  ~<check (iso ,expectation <do ,*body>) "utest failure.">>
+  ~<scope
+    <let exp ,expectation>
+    <let act <do ,*body>>
+    <when (not (iso exp act))
+      (outRSL 'expect:' exp)
+      (outRSL 'actual:' act)
+      (error "utest failure.")>>>
 
 <utest 0 0>
 
