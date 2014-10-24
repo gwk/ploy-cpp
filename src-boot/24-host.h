@@ -268,6 +268,11 @@ static Obj host_dbg(Trace* t, Obj env) {
 typedef Obj(*Func_host_ptr)(Trace*, Obj);
 
 
+static Obj host_init_const(Obj env, Chars_const name, Obj val) {
+  return env_bind(env, false, false, sym_new_from_c(name), val);
+}
+
+
 static Obj host_init_func(Obj env, Int len_pars, Chars_const name, Func_host_ptr ptr) {
   // owns env.
   Obj sym = sym_new_from_chars(name);
@@ -304,6 +309,11 @@ static Obj host_init_file(Obj env, Chars_const sym_name, Chars_const name, CFile
 
 
 static Obj host_init(Obj env) {
+
+#define DEF_CONST(c) env = host_init_const(env, #c, int_new(c))
+  DEF_CONST(OPTION_REC_LIMIT);
+#undef DEF_CONST
+
 #define DEF_FH(len_pars, n, f) env = host_init_func(env, len_pars, n, f)
   DEF_FH(1, "identity", host_identity);
   DEF_FH(2, "is", host_is);
@@ -346,7 +356,6 @@ static Obj host_init(Obj env) {
 #undef DEF_FH
 
 #define DEF_FILE(n, f, r, w) env = host_init_file(env, n, "<" n ">", f, r, w);
-  
   DEF_FILE("std-in", stdin, true, false)
   DEF_FILE("std-out", stdout, false, true)
   DEF_FILE("std-err", stderr, false, true)

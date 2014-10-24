@@ -1,10 +1,4 @@
-# tail recursive function.
+# tail recursive function; this should fail if OPTION_TCO == 0.
 <let-fn f [-n -i]
   <if (not n) i (self (idec n) (iinc i))>>
-(outRL (f 10000 0))
-
-# tail recursive data structure.
-<let-fn g [-n -tl]
-  <if (not n) tl (self (idec n) {:Arr-Int n tl})>>
-(outRL (g 4 nil))
-(g 40000 nil) # requires that release/dealloc are tail-optimized.
+(f OPTION-REC-LIMIT 0)

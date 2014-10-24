@@ -25,7 +25,12 @@ static Obj env_rel_fields(Obj o) {
   // returns last element for release by parent; this is a c tail call optimization.
   rc_rel(o.e->key);
   rc_rel(o.e->val);
+#if OPTION_TCO
   return o.e->tl;
+#else
+  rc_rel(o.e->tl);
+  return obj0;
+#endif
 }
 
 

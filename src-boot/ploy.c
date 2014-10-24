@@ -31,9 +31,24 @@ static Obj parse_and_eval(Dict* src_locs, Obj env, Obj path, Obj src, Bool shoul
 }
 
 
+static void reduce_stack_limit() {
+  // reduce the maximum stack size to make runaway recursion fail faster.
+  struct rlimit rl;
+#if 0
+  // use this to inspect the default limits.
+  Bool get_ok = !getrlimit(RLIMIT_STACK, &rl); assert(get_ok);
+  errFL("rlimit: soft: %u; hard: %u", rl.rlim_cur, rl.rlim_max);
+#endif
+  rl.rlim_cur = 1<<21; // 2mb stack.
+  rl.rlim_max = 1<<21;
+  Bool ok = !setrlimit(RLIMIT_STACK, &rl);
+  check(ok, "setrlimit failed");
+}
+
 int main(int argc, Chars_const argv[]) {
   assert_host_basic();
   assert(size_Obj == size_Word);
+  reduce_stack_limit();
   rc_init();
   type_init_table();
   sym_init(); // requires type_init_table.

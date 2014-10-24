@@ -248,7 +248,12 @@ static Obj cmpd_rel_fields(Obj c) {
   it_mem_to(it, m, last_i) {
     rc_rel(*it);
   }
+#if OPTION_TCO
   return m.els[last_i];
+#else
+  rc_rel(m.els[last_i]);
+  return obj0;
+#endif
 }
 
 

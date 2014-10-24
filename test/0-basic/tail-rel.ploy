@@ -1,0 +1,14 @@
+# tail recursive data structure requires that release/dealloc are tail-optimized.
+<var chain nil>
+# avoid deep recursion with repeated recurs.
+<macro grow []
+  `<recur i (isub OPTION-REC-LIMIT 4) # just under the recursion limit.
+    <when i
+      <var chain {:Arr-Obj i chain}>
+      (self (idec i))>>>
+<grow>
+<grow>
+<grow>
+<grow>
+<grow>
+<grow>
