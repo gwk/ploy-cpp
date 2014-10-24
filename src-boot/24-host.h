@@ -61,13 +61,13 @@ static Obj host_iabs(Trace* t, Obj env) {
 
 
 // TODO: check for overflow. currently we rely on clang to insert overflow traps.
-#define HOST_BIN_OP(op) \
+#define HOST_BIN_OP(type_name, op) \
 static Obj host_##op(Trace* t, Obj env) { \
   GET_AB; \
   exc_check(obj_is_int(a), #op " requires arg 1 to be a Int; received: %o", a); \
   exc_check(obj_is_int(b), #op " requires arg 2 to be a Int; received: %o", b); \
   Int i = op(int_val(a), int_val(b)); \
-  return int_new(i); \
+  return type_name##_new(i); \
 }
 
 
@@ -87,21 +87,21 @@ static Int igt(Int a, Int b)   { return a > b; }
 static Int ile(Int a, Int b)   { return a <= b; }
 static Int ige(Int a, Int b)   { return a >= b; }
 
-HOST_BIN_OP(iadd)
-HOST_BIN_OP(isub)
-HOST_BIN_OP(imul)
-HOST_BIN_OP(idiv)
-HOST_BIN_OP(imod)
-HOST_BIN_OP(ipow)
-HOST_BIN_OP(ishl)
-HOST_BIN_OP(ishr)
+HOST_BIN_OP(int, iadd)
+HOST_BIN_OP(int, isub)
+HOST_BIN_OP(int, imul)
+HOST_BIN_OP(int, idiv)
+HOST_BIN_OP(int, imod)
+HOST_BIN_OP(int, ipow)
+HOST_BIN_OP(int, ishl)
+HOST_BIN_OP(int, ishr)
 
-HOST_BIN_OP(ieq)
-HOST_BIN_OP(ine)
-HOST_BIN_OP(ilt)
-HOST_BIN_OP(igt)
-HOST_BIN_OP(ile)
-HOST_BIN_OP(ige)
+HOST_BIN_OP(bool, ieq)
+HOST_BIN_OP(bool, ine)
+HOST_BIN_OP(bool, ilt)
+HOST_BIN_OP(bool, igt)
+HOST_BIN_OP(bool, ile)
+HOST_BIN_OP(bool, ige)
 
 
 static Obj host_dlen(Trace* t, Obj env) {
