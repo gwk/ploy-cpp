@@ -300,35 +300,41 @@
   (aput (.arr list) index el)>
 
 <let-fn list-contains [-list:List -el:T]
+  <recur i 0
+    <if (ieq i (.len list)) false
+      (iso el (list-el list i)) true
+      (self (iinc i))>>>
 
+# List as Set.
 
-# Set (untyped, naive).
+<let-fn list-set-put [-set:List -el:T]
+  <if (not (list-contains set el))
+    (list-append set el)>>
 
-<let-struct Set -list:List> # naive implementation wraps List.
+# List as Dict.
 
-<let-fn set-new [] {:Set (list-new)}>
+<let-struct Dict-entry -key:K -val:V>
 
-<let-fn set-contains[-list:List -index:Int]
-  <check (ilt index (.len list)) "index out of bounds">
-  (ael (.arr list) index)>
+<let-fn list-dict-contains [-dict:List -key:K]
+  <recur i 0
+    <if (ieq i (.len dict)) false
+      <do
+        <let e (list-el dict i)>
+        <if (iso (.key e) key) true
+          (self (iinc i))>>>>>
 
-<let-fn list-put [-list:list -index:Int -el:T]
-  check((ilt index (.len list)) "index out of bounds")
-  (aput (.arr list) index el)>
+<let-fn list-dict-fetch [-dict:List -key:K]
+  <recur i 0
+    <if (ieq i (.len dict)) nil # signal missing key with nil.
+      <do
+        <let e (list-el dict i)>
+        <if (iso (.key e) key) (.val e)
+          (self (iinc i))>>>>>
 
-<let-fn list-is-full [-list:List] (ieq (.len list) (alen (.arr list)))>
-
-<let-fn list-grow [-list:List]
-  <check (list-is-full list) "list should not grow unless arr is full">
-  <let len (.len list)>
-  <let cap <if len (imul len 2) 2>>
-  (.=arr list (arr-resize (.arr list) cap))>
-
-<let-fn list-append [-list:List -el:T]
-  <if (list-is-full list) (list-grow list)>
-  <let index (.len list)>
-  (.=len list (iinc index))
-  (aput (.arr list) index el)>
-
-
-# Dict (untyped, naive).
+<let-fn list-dict-put [-dict:List -key:K -val:V]
+  <recur i 0
+    <if (ieq i (.len dict)) (list-append dict {:Dict-entry key val})
+      <do
+        <let e (list-el dict i)>
+        <if (iso (.key e) key) (.=val e val)
+          (self (iinc i))>>>>>
