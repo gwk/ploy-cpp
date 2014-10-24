@@ -391,9 +391,9 @@ static Step run_call_func(Int d, Trace* t, Obj env, Obj call, Mem vals, Bool is_
   // TODO: check that ret-type is a Type.
   exc_check(is(ret_type, s_nil), "func: %o\nret-type is non-nil: %o", func, ret_type);
   if (is_call) {
-    exc_check(!bool_is_true(is_macro), "cannot call macro: %o", func);
+    exc_check(!bool_is_true(is_macro), "cannot call macro");
   } else {
-    exc_check(bool_is_true(is_macro), "cannot expand function: %o", func);
+    exc_check(bool_is_true(is_macro), "cannot expand function");
   }
   Obj callee_env = env_push_frame(rc_ret(lex_env));
   // NOTE: because func is bound to self in callee_env, and func contains body,
@@ -433,6 +433,7 @@ static Step run_call_accessor(Int d, Trace* t, Obj env, Obj call, Mem vals) {
   Obj type = obj_type(accessee);
   assert(is(obj_type(type), t_Type));
   Obj kind = cmpd_el(type, 1);
+  exc_check(is_kind_struct(kind), "call: %o\naccessee is not a struct: %o", call, accessee);
   Obj fields = cmpd_el(kind, 0);
   assert(cmpd_len(fields) == cmpd_len(accessee));
   for_in(i, cmpd_len(fields)) {
