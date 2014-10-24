@@ -200,7 +200,7 @@ static Step run_Syn_struct_typed(Int d, Trace* t, Obj env, Obj code) {
         exc_check(obj_is_cmpd(val),
           "constructor: %o\nsplice: %o\nvalue is not of a compound type: %o", code, expr, val);
         it_cmpd(it, val) {
-          check(j < len, "constructor: %o\nexcessive elements in splice: %o\nvalue: %o",
+          exc_check(j < len, "constructor: %o\nexcessive elements in splice: %o\nvalue: %o",
             code, expr, val);
           cmpd_put(res, j++, rc_ret(*it));
         }
@@ -248,7 +248,7 @@ static Step run_Syn_seq_typed(Int d, Trace* t, Obj env, Obj code) {
   assert(cmpd_len(code) == 1);
   Obj exprs = cmpd_el(code, 0);
   Int syn_len = cmpd_len(exprs);
-  check(syn_len > 0, "Syn-seq-typed is empty");
+  exc_check(syn_len > 0, "Syn-seq-typed is empty");
   Step step = run(d, t, env, cmpd_el(exprs, 0)); // evaluate the type.
   env = step.res.env;
   //Obj el_type = step.res.val;
@@ -316,7 +316,7 @@ static Obj bind_par(Int d, Trace* t, Obj env, Obj call, Obj par, Mem vals, Int* 
     env = step.res.env;
     val = step.res.val;
   } else {
-    error("call: %o\nreceived too few arguments", call);
+    exc_raise("call: %o\nreceived too few arguments", call);
   }
   env = bind_val(t, false, env, rc_ret_val(par_el_name), val);
   return env;
@@ -367,7 +367,7 @@ static Obj run_bind_vals(Int d, Trace* t, Obj env, Obj call, Obj variad, Obj par
       env = bind_par(d, t, env, call, par, vals, &i_vals);
     }
   }
-  check(i_vals == vals.len, "call: %o\nreceived too many arguments", call);
+  exc_check(i_vals == vals.len, "call: %o\nreceived too many arguments", call);
   return env;
 }
 
@@ -550,7 +550,7 @@ static Step run_Call(Int d, Trace* t, Obj env, Obj code) {
   assert(cmpd_len(code) == 1);
   Obj exprs = cmpd_el(code, 0);
   Int len = cmpd_len(exprs);
-  check(len > 0, "call is empty: %o", code);
+  exc_check(len > 0, "call is empty: %o", code);
   // assemble vals as an array of interleaved name, value pairs.
   // the callee never has a name, so there are an odd number of elements.
   // the names are required for dispatch and argument binding.
@@ -763,9 +763,9 @@ static Obj run_macro(Trace* t, Obj env, Obj code) {
   assert(cmpd_len(code) == 1);
   Obj exprs = cmpd_el(code, 0);
   Int len = cmpd_len(exprs); 
-  check(len > 0, "expand: %o\nempty", code);
+  exc_check(len > 0, "expand: %o\nempty", code);
   Obj macro_sym = cmpd_el(exprs, 0);
-  check(obj_is_sym(macro_sym), "expand: %o\nargument 0 must be a Sym; found: %o",
+  exc_check(obj_is_sym(macro_sym), "expand: %o\nargument 0 must be a Sym; found: %o",
     code, macro_sym);
   Obj macro = env_get(env, macro_sym);
   exc_check(!is(macro, obj0), "expand: %o\nmacro lookup error: %o", code, macro_sym);
