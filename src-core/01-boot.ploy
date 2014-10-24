@@ -143,11 +143,11 @@
 <let-fn write1 [-file -str]
   # write a single string.
   # TODO: support other types.
-  (_host-write (.ptr file) str)>
+  (write (.ptr file) str)>
 
 <let-fn writeR1 [-file -obj]
   # write a single repr.
-  (_host-write-repr (.ptr file) obj)>
+  (write-repr (.ptr file) obj)>
 
 <macro pub-writer [-name -writer1 -file -sep -end]
   ~<pub-fn ,name [&items]

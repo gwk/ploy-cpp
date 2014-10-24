@@ -199,8 +199,8 @@ static Obj host_aslice(Trace* t, Obj env) {
 
 static Obj host_write(Trace* t, Obj env) {
   GET_AB;
-  exc_check(obj_is_ptr(a), "_host-write requires arg 1 to be a File; received: %o", a);
-  exc_check(obj_is_data(b), "_host-write requires arg 2 to be a Data; received: %o", b);
+  exc_check(obj_is_ptr(a), "write requires arg 1 to be a File; received: %o", a);
+  exc_check(obj_is_data(b), "write requires arg 2 to be a Data; received: %o", b);
   CFile file = ptr_val(a);
   // for now, ignore the return value.
   fwrite(data_ptr(b), size_Char, cast(Uns, data_len(b)), file);
@@ -210,7 +210,7 @@ static Obj host_write(Trace* t, Obj env) {
 
 static Obj host_write_repr(Trace* t, Obj env) {
   GET_AB;
-  exc_check(obj_is_ptr(a), "_host-write-repr requires arg 1 to be a File; received: %o", a);
+  exc_check(obj_is_ptr(a), "write-repr requires arg 1 to be a File; received: %o", a);
   CFile file = ptr_val(a);
   write_repr(file, b);
   return rc_ret_val(s_void);
@@ -219,7 +219,7 @@ static Obj host_write_repr(Trace* t, Obj env) {
 
 static Obj host_flush(Trace* t, Obj env) {
   GET_A;
-  exc_check(obj_is_ptr(a), "_host-flush requires arg 1 to be a File; received: %o", a);
+  exc_check(obj_is_ptr(a), "flush requires arg 1 to be a File; received: %o", a);
   CFile file = ptr_val(a);
   fflush(file);
   return rc_ret_val(s_void);
@@ -345,9 +345,9 @@ static Obj host_init(Obj env) {
   DEF_FH(2, "anew", host_anew);
   DEF_FH(3, "aput", host_aput);
   DEF_FH(3, "aslice", host_aslice);
-  DEF_FH(2, "_host-write", host_write);
-  DEF_FH(2, "_host-write-repr", host_write_repr);
-  DEF_FH(1, "_host-flush", host_flush);
+  DEF_FH(2, "write", host_write);
+  DEF_FH(2, "write-repr", host_write_repr);
+  DEF_FH(1, "flush", host_flush);
   DEF_FH(1, "exit", host_exit);
   DEF_FH(1, "raise", host_raise);
   DEF_FH(1, "type-of", host_type_of);
