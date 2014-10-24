@@ -1,0 +1,22 @@
+
+<scope # iso.
+  <utest true (iso 0 0)>
+  <utest false (iso 0 1)>
+  <utest false (iso 0 false)>
+  <utest true (iso {:Arr-Int} {:Arr-Int})>
+  <utest true (iso {:Arr-Int 1 2} {:Arr-Int 1 2})>
+  <utest false (iso {:Arr-Int 1} {:Arr-Int 1 2})>
+>
+
+<scope # List.
+  <let a (list-new)>
+  (list-append a 0)
+  (list-append a 1)
+  (list-append a 2)
+  (list-append a 3)
+  <utest 0 (list-el a 0)>
+  <utest 1 (list-el a 1)>
+  <utest 2 (list-el a 2)>
+  <utest 3 (list-el a 3)>
+  <utest true (list-is-full a)>
+>

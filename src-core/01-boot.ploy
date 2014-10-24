@@ -133,10 +133,10 @@
 
 <macro when [-pred &body]
   # if 'pred', do 'exprs'. else none.
-  {:If pred {:Do body} void}> # TODO: eventually this should use splice-unquote.
+  {:If pred {:Do body} void}>
 
 <macro check [-condition -msg]
-  ~<if (not ,condition) (error ,msg)>>
+  ~<do <if (not ,condition) (error ,msg)> void>> # void foils TCO so that trace reveals test.
 
 # output functions.
 
@@ -201,27 +201,6 @@
 <let-type K {:Type-kind-var `K}>
 <let-type V {:Type-kind-var `V}>
 
-<let-type Arr {:Type-kind-arr T}>
-
-<let-type Arr-Int {:Type-kind-arr Int}>
-
-<let-fn arr-resize [-arr:Arr -len:len]
-  # create a new array with elements copied from arr; further elements remain UNINIT.
-  <let res (anew (type-of arr) len)>
-  (<fn [-i]
-    <if (ieq i len) res
-      <do
-        (aput res i (ael arr i))
-        (self (iinc i))>>> 0)>
-
-<pub-fn arr-map [-arr -ret-type:Type -f]
-  <let res (anew ret-type (alen arr))>
-  (<fn [-i]
-    <if (ieq i (alen arr)) res
-      <do
-        (aput res i (f (ael arr i)))
-        (self (iinc i))>>> 0)>
-
 # comparison.
 
 <pub-fn iso [-a -b]
@@ -246,8 +225,68 @@
 # unit tests.
 
 <macro utest [-expectation &body]
-  ~<do
-    <let result <do ,*body>>
-    <check (iso ,expectation result) "utest failure.">>>
+  ~<check (iso ,expectation <do ,*body>) "utest failure.">>
 
 <utest 0 0>
+
+# Arr.
+
+<let-type Arr {:Type-kind-arr T}>
+
+<let-type Arr-Int {:Type-kind-arr Int}>
+
+<let-fn arr-resize [-arr:Arr -len:len]
+  # create a new array with elements copied from arr; further elements remain UNINIT.
+  <let res (anew Arr len)>
+  (<fn [-i]
+    <if (ieq i (alen arr)) res
+      <do
+        (aput res i (ael arr i))
+        (self (iinc i))>>> 0)>
+
+<let-fn arr-map [-arr -ret-type:Type -f]
+  <let l (alen arr)>
+  <let res (anew ret-type l)>
+  (<fn [-i]
+    <if (ieq i l) res
+      <do
+        (aput res i (f (ael arr i)))
+        (self (iinc i))>>> 0)>
+
+# structs.
+
+<macro let-struct [-name &fields]
+  <let pars (arr-map fields Arr-Par <fn [-field]
+    {:Par (.name field) (.type field) (.expr field)}>)>
+  ~<let-type ,name {:Type-kind-struct
+      `,pars
+      nil}>> # dispatcher
+
+# List (untyped).
+
+<let-struct List -len:Int -arr:Arr> # resizable array.
+
+<let-fn list-new [] {:List 0 {:Arr}}>
+
+<let-fn list-el [-list:List -index:Int]
+  <check (ilt index (.len list)) "index out of bounds">
+  (ael (.arr list) index)>
+
+<let-fn list-put [-list:list -index:Int -el:T]
+  check((ilt index (.len list)) "index out of bounds")
+  (aput (.arr list) index el)>
+
+<let-fn list-is-full [-list:List] (ieq (.len list) (alen (.arr list)))>
+
+<let-fn list-grow [-list:List]
+  <check (list-is-full list) "list should not grow unless arr is full">
+  <let len (.len list)>
+  <let cap <if len (imul len 2) 2>>
+  (.=arr list (arr-resize (.arr list) cap))>
+
+<let-fn list-append [-list:List -el:T]
+  <if (list-is-full list) (list-grow list)>
+  <let index (.len list)>
+  (.=len list (iinc index))
+  (aput (.arr list) index el)>
+  
