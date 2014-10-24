@@ -18,8 +18,9 @@ static Dict global_src_locs;
 static Obj track_src(Obj original, Obj derived) {
   if (!obj_is_ref(original) || !obj_is_ref(derived)) return derived;
   Obj src_loc = dict_fetch(&global_src_locs, original);
-  if (is(src_loc, obj0)) return derived;
-  dict_insert(&global_src_locs, rc_ret(derived), rc_ret(src_loc));
+  if (!is(src_loc, obj0) && !dict_contains(&global_src_locs, derived)) {
+    dict_insert(&global_src_locs, rc_ret(derived), rc_ret(src_loc));
+  }
   return derived;
 }
 

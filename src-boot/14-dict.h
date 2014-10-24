@@ -68,14 +68,16 @@ static Obj dict_fetch(Dict* d, Obj k) {
 }
 
 
-DBG_FN static Bool dict_contains(Dict* d, Obj k) {
+static Bool dict_contains(Dict* d, Obj k) {
   return !is(dict_fetch(d, k), obj0);
 }
 
 
 static void dict_insert(Dict* d, Obj k, Obj v) {
   assert_dict_is_valid(d);
-  assert(!dict_contains(d, k)); // TODO: support duplicate insert.
+  Obj existing = dict_fetch(d, k);
+  if (is(v, existing)) return;
+  assert(is(existing, obj0));
   if (d->len == 0) {
     d->len_buckets = min_table_len_buckets;
     Int size = d->len_buckets * size_Hash_bucket;
