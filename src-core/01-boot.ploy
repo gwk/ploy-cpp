@@ -111,8 +111,8 @@
   # raise an error. for now we can only print the message and exit.
   (raise msg)>
 
-<macro recur [-name -init &body]
-  ~(<fn [-,name] ,*body> ,init)>
+<macro recur [-pars &body]
+  ~(<fn ,pars ,*body>)>
 
 <macro _if [-pred -then -else]
   # bootstrap 'if' that takes exactly three expressions.
@@ -121,7 +121,7 @@
 <macro if [&exprs]
   # generic 'if'. inspired by paul graham's arc-lisp.
   <_if (ilt (alen exprs) 2) (error "degenerate if form")
-    <recur i 0
+    <recur [-i=0]
       <let len (alen exprs)>
       <let pred (ael exprs i)>
       <let then (ael exprs (iinc i))>
@@ -151,7 +151,7 @@
 
 <macro pub-writer [-name -writer1 -file -sep -end]
   ~<pub-fn ,name [&items]
-    <recur i 0
+    <recur [-i=0]
       <if (ieq i (alen items))
         (write1 ,file ,end)
         <do
@@ -215,7 +215,7 @@
         <do
           <let last (idec len)>
           <let iso self>
-          <recur i 0
+          <recur [-i=0]
             <let ai (cmpd-field a i)>
             <let bi (cmpd-field b i)>
             <if (ieq i last) (iso ai bi) # tail optimized.
@@ -244,20 +244,20 @@
 <let-fn arr-resize [-arr:Arr -len:len]
   # create a new array with elements copied from arr; further elements remain UNINIT.
   <let res (anew Arr len)>
-  (<fn [-i]
+  <recur [-i=0]
     <if (ieq i (alen arr)) res
       <do
         (aput res i (ael arr i))
-        (self (iinc i))>>> 0)>
+        (self (iinc i))>>>>
 
 <let-fn arr-map [-arr -ret-type:Type -f]
   <let l (alen arr)>
   <let res (anew ret-type l)>
-  (<fn [-i]
+  <recur [-i=0]
     <if (ieq i l) res
       <do
         (aput res i (f (ael arr i)))
-        (self (iinc i))>>> 0)>
+        (self (iinc i))>>>>
 
 # type declarations.
 
@@ -300,7 +300,7 @@
   (aput (.arr list) index el)>
 
 <let-fn list-contains [-list:List -el:T]
-  <recur i 0
+  <recur [-i=0]
     <if (ieq i (.len list)) false
       (iso el (list-el list i)) true
       (self (iinc i))>>>
@@ -316,7 +316,7 @@
 <let-struct Dict-entry -key:K -val:V>
 
 <let-fn list-dict-contains [-dict:List -key:K]
-  <recur i 0
+  <recur [-i=0]
     <if (ieq i (.len dict)) false
       <do
         <let e (list-el dict i)>
@@ -324,7 +324,7 @@
           (self (iinc i))>>>>>
 
 <let-fn list-dict-fetch [-dict:List -key:K]
-  <recur i 0
+  <recur [-i=0]
     <if (ieq i (.len dict)) nil # signal missing key with nil.
       <do
         <let e (list-el dict i)>
@@ -332,7 +332,7 @@
           (self (iinc i))>>>>>
 
 <let-fn list-dict-put [-dict:List -key:K -val:V]
-  <recur i 0
+  <recur [-i=0]
     <if (ieq i (.len dict)) (list-append dict {:Dict-entry key val})
       <do
         <let e (list-el dict i)>
