@@ -275,7 +275,7 @@ static Obj host_init_const(Obj env, Chars_const name, Obj val) {
 
 static Obj host_init_func(Obj env, Int len_pars, Chars_const name, Func_host_ptr ptr) {
   // owns env.
-  Obj sym = sym_new_from_chars(name);
+  Obj sym = sym_new_from_c(name);
   Obj pars; // TODO: add real types; unique value for expression default?
   #define PAR(s) \
   cmpd_new3(rc_ret(t_Par), rc_ret_val(s), rc_ret_val(s_nil), rc_ret_val(s_void))
@@ -314,45 +314,45 @@ static Obj host_init(Obj env) {
   DEF_CONST(OPTION_REC_LIMIT);
 #undef DEF_CONST
 
-#define DEF_FH(len_pars, n, f) env = host_init_func(env, len_pars, n, f)
-  DEF_FH(1, "identity", host_identity);
-  DEF_FH(2, "is", host_is);
-  DEF_FH(1, "is-ref", host_is_ref);
-  DEF_FH(1, "is-true", host_is_true);
-  DEF_FH(1, "not", host_not);
-  DEF_FH(1, "id-hash", host_id_hash);
-  DEF_FH(1, "ineg", host_ineg);
-  DEF_FH(1, "iabs", host_iabs);
-  DEF_FH(2, "iadd", host_iadd);
-  DEF_FH(2, "isub", host_isub);
-  DEF_FH(2, "imul", host_imul);
-  DEF_FH(2, "idiv", host_idiv);
-  DEF_FH(2, "imod", host_imod);
-  DEF_FH(2, "ipow", host_ipow);
-  DEF_FH(2, "ishl", host_ishl);
-  DEF_FH(2, "ishr", host_ishr);
-  DEF_FH(2, "ieq", host_ieq);
-  DEF_FH(2, "ine", host_ine);
-  DEF_FH(2, "ilt", host_ilt);
-  DEF_FH(2, "ile", host_ile);
-  DEF_FH(2, "igt", host_igt);
-  DEF_FH(2, "ige", host_ige);
-  DEF_FH(1, "dlen", host_dlen);
-  DEF_FH(1, "cmpd-len", host_cmpd_len);
-  DEF_FH(2, "data-ref-iso", host_data_ref_iso);
-  DEF_FH(2, "cmpd-field", host_cmpd_field);
-  DEF_FH(2, "ael", host_ael);
-  DEF_FH(2, "anew", host_anew);
-  DEF_FH(3, "aput", host_aput);
-  DEF_FH(3, "aslice", host_aslice);
-  DEF_FH(2, "write", host_write);
-  DEF_FH(2, "write-repr", host_write_repr);
-  DEF_FH(1, "flush", host_flush);
-  DEF_FH(1, "exit", host_exit);
-  DEF_FH(1, "raise", host_raise);
-  DEF_FH(1, "type-of", host_type_of);
-  DEF_FH(1, "globalize", host_globalize);
-  DEF_FH(2, "dbg", host_dbg);
+#define DEF_FH(len_pars, n) env = host_init_func(env, len_pars, #n, host_##n)
+  DEF_FH(1, identity);
+  DEF_FH(2, is);
+  DEF_FH(1, is_ref);
+  DEF_FH(1, is_true);
+  DEF_FH(1, not);
+  DEF_FH(1, id_hash);
+  DEF_FH(1, ineg);
+  DEF_FH(1, iabs);
+  DEF_FH(2, iadd);
+  DEF_FH(2, isub);
+  DEF_FH(2, imul);
+  DEF_FH(2, idiv);
+  DEF_FH(2, imod);
+  DEF_FH(2, ipow);
+  DEF_FH(2, ishl);
+  DEF_FH(2, ishr);
+  DEF_FH(2, ieq);
+  DEF_FH(2, ine);
+  DEF_FH(2, ilt);
+  DEF_FH(2, ile);
+  DEF_FH(2, igt);
+  DEF_FH(2, ige);
+  DEF_FH(1, dlen);
+  DEF_FH(1, cmpd_len);
+  DEF_FH(2, data_ref_iso);
+  DEF_FH(2, cmpd_field);
+  DEF_FH(2, ael);
+  DEF_FH(2, anew);
+  DEF_FH(3, aput);
+  DEF_FH(3, aslice);
+  DEF_FH(2, write);
+  DEF_FH(2, write_repr);
+  DEF_FH(1, flush);
+  DEF_FH(1, exit);
+  DEF_FH(1, raise);
+  DEF_FH(1, type_of);
+  DEF_FH(1, globalize);
+  DEF_FH(2, dbg);
 #undef DEF_FH
 
 #define DEF_FILE(n, f, r, w) env = host_init_file(env, n, "<" n ">", f, r, w);
