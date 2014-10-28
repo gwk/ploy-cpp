@@ -240,14 +240,22 @@
 
 <let-type Arr-Int {:Type-kind-arr Int}>
 
+<let-fn arr-copy-to [-dst:Arr -src:Arr -to:Int]
+  <check (ige (alen dst) to) "dst is smaller than end index 'to'">
+  <check (ige (alen src) to) "src is smaller than end index 'to'">
+  <recur [-i=0]
+    <if (ieq i to) dst
+      <do
+        (aput dst i (ael src i))
+        (self (iinc i))>>>>
+
+<let-fn arr-copy [-dst:Arr -src:Arr] (arr-copy-to dst src (alen src))>
+
+<let-fn arr-clone [-arr:Arr] (arr-copy (anew (alen src)) src)>
+
 <let-fn arr-resize [-arr:Arr -len:len]
   # create a new array with elements copied from arr; further elements remain UNINIT.
-  <let res (anew Arr len)>
-  <recur [-i=0]
-    <if (ieq i (alen arr)) res
-      <do
-        (aput res i (ael arr i))
-        (self (iinc i))>>>>
+  (arr-copy-to (anew Arr len) arr (alen arr))>
 
 <let-fn arr-map [-arr -ret-type:Type -f]
   <let l (alen arr)>
@@ -304,6 +312,14 @@
       (iso el (list-el list i)) true
       (self (iinc i))>>>
 
+<let-fn list-lit [&els]
+  <let l (list-new)>
+  <recur [-i=0]
+    <if (ieq i (alen els)) l
+      <do
+        (list-append l (ael els i))
+        (self (iinc i))>>>>
+
 # List as Set.
 
 <let-fn list-set-put [-set:List -el:T]
@@ -337,3 +353,51 @@
         <let e (list-el dict i)>
         <if (iso (.key e) key) (.=val e val)
           (self (iinc i))>>>>>
+
+# type derivation.
+
+<let-fn derive-type [-type:Type -dict:Dict]
+  <let k (.kind type)>
+  <let tk (type-of k)>
+  <if
+    (is tk Type-kind-var)
+    <if (list-dict-contains dict type) (list-dict-fetch dict type) type>
+    (is tk Type-kind-arr)
+    <do
+      <let orig (.el-type k)>
+      <let derived (derive-type orig dict)>
+      <if (is derived orig) type {:Type `DERIVED-ARR {:Type-kind-arr derived}}>>
+    (is tk Type-kind-struct)
+    <recur [-i=0 -t=type]
+      <let kind (.kind t)>
+      <let fields (.fields kind)>
+      <let field (ael fields i)>
+      <let orig (.type field)>
+      <let derived (derive-type orig dict)>
+      <if (is derived orig) (self (iinc i) t) # no change to result t.
+        <do
+          <let field-derived {:Par (.name field) derived (.dflt)}>
+          (self
+            (iinc i)
+            <if (is t type) # identical thus far; clone and alter.
+              {:Type `DERIVED-STRUCT {:Type-kind-struct
+                (aput (arr-clone fields) i field-derived)
+                (.dispatcher type)}}
+              <do # already cloned.
+                (aput fields i field-derived)
+                t>>)>>>
+    (is tk Type-kind-union)
+    <recur [-i=0 -t=type]
+      <let kind (.kind t)>
+      <let variants (.variants kind)>
+      <let orig (ael variants i)>
+      <let derived (derive-type orig dict)>
+      (self
+        (iinc i)
+        <if (is derived orig) t # no change to result t.
+          (is t type) # identical thus far; clone and alter.
+          {:Type `DERIVED-UNION {:Type-kind-union
+            (aput (arr-clone variants) i derived)}}
+            (aput i t derived)>)>
+    type>> # default case returns type unaltered.
+

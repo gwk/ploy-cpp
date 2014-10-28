@@ -57,4 +57,7 @@
   <utest `vb1 (list-dict-fetch d `kb)>
   <utest nil (list-dict-fetch d `kc)>>
 
-
+<scope # derive-type.
+  <utest
+    {:Type `DERIVED-ARR {:Type-kind-arr Int}}
+    (derive-type Arr (list-lit {:Dict-entry T Int}))>>
