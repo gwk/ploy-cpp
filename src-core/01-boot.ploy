@@ -83,10 +83,10 @@
 # the raw forms are now available through macros.
 
 <macro let-fn [-sym -pars &body]
-  ~<let ,sym <fn ,pars ,*body>>>
+  ~<let ,sym <fn ,pars <let ,sym self> ,*body>>>
 
 <macro pub-fn [-sym -pars &body]
-  ~<pub ,sym <fn ,pars ,*body>>>
+  ~<pub ,sym <fn ,pars <let ,sym self> ,*body>>>
 
 <let alen cmpd-len> # for now use a simple alias.
 
@@ -214,7 +214,6 @@
         (not len) true
         <do
           <let last (idec len)>
-          <let iso self>
           <recur [-i=0]
             <let ai (cmpd-field a i)>
             <let bi (cmpd-field b i)>
