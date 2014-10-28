@@ -182,7 +182,7 @@ static Obj host_aput(Trace* t, Obj env) {
   Mem m = cmpd_mem(a);
   rc_rel(mem_el_move(m, i));
   mem_put(m, i, rc_ret(c));
-  return rc_ret_val(s_void);
+  return rc_ret(a);
 }
 
 
