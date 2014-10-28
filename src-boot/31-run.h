@@ -446,7 +446,12 @@ static Step run_call_accessor(Int d, Trace* t, Obj env, Obj call, Mem vals) {
       return mk_res(env, val);
     }
   }
-  exc_raise("call: %o\naccessor field not found: %o", call, name);
+  errFL("call: %o\naccessor field not found: %o\ntype: %o\nfields:",
+    call, name, type_name(type));
+  it_cmpd(it, fields) {
+    errFL("  %o", cmpd_el(*it, 0));
+  }
+  exc_raise("");
 }
 
 
