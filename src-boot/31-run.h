@@ -560,7 +560,8 @@ static Step run_Call(Int d, Trace* t, Obj env, Obj code) {
   // the callee never has a name, so there are an odd number of elements.
   // the names are required for dispatch and argument binding.
   // the names are not ref-counted, but the values are.
-  // the array can grow arbitrarily large due to splice arguments.
+  // the array can grow arbitrarily large due to splice arguments;
+  // allocate an initial capacity sufficient for the non-splice case.
   Array vals = array_alloc_cap(len * 2 - 1);
   Step step = run(d, t, env, cmpd_el(exprs, 0)); // callee.
   env = step.res.env;
