@@ -98,7 +98,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "set -ex\nmake _bld/ploy\nmkdir -p $BUILT_PRODUCTS_DIR\ncp _bld/ploy $BUILT_PRODUCTS_DIR/$FULL_PRODUCT_NAME\n";
+			shellScript = "set -ex\nexport PATH=/usr/local/llvm/3.5.0/bin:$PATH\nmake _bld/ploy\nmkdir -p $BUILT_PRODUCTS_DIR\ncp _bld/ploy $BUILT_PRODUCTS_DIR/$FULL_PRODUCT_NAME\n";
 			showEnvVarsInLog = 0;
 		};
 		ECAAB2871993C16D00AF9057 /* ShellScript */ = {
@@ -112,7 +112,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "set -ex\nmake _bld/ploy-dbg\nmkdir -p $BUILT_PRODUCTS_DIR\ncp _bld/ploy-dbg $BUILT_PRODUCTS_DIR/$FULL_PRODUCT_NAME\n\n";
+			shellScript = "set -ex\nexport PATH=/usr/local/llvm/3.5.0/bin:$PATH\nmake _bld/ploy-dbg\nmkdir -p $BUILT_PRODUCTS_DIR\ncp _bld/ploy-dbg $BUILT_PRODUCTS_DIR/$FULL_PRODUCT_NAME\n\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */

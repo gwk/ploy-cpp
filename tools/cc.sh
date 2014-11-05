@@ -50,7 +50,7 @@ set -e
 
 mkdir -p _bld
 
-$cmd_prefix /usr/local/llvm/bin/clang \
+$cmd_prefix clang \
 -std=c11 \
 -Werror \
 -Weverything \
