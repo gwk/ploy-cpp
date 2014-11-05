@@ -226,7 +226,7 @@
 <macro utest [-expectation &body]
   ~<scope
     <let exp ,expectation>
-    <let act <do ,*body>>
+    <let act <scope ,*body>>
     <when (not (iso exp act))
       (outRSL 'expect:' exp)
       (outRSL 'actual:' act)
