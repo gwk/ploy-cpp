@@ -449,20 +449,9 @@ static Obj parse_Call(Parser* p) {
 
 static Obj parse_struct(Parser* p) {
   P_ADV(1, return parse_error(p, "unterminated constructor"));
-  Bool typed = false;
-  if (PC == ':') {
-    P_ADV(1, return parse_error(p, "unterminated constructor"));
-    typed = true;
-  }
-  Src_pos pos = p->pos;
   Mem m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR('}');
-  if (typed && !m.len) {
-    p->pos = pos;
-    return parse_error(p, "typed constructor requires a type expression");
-  }
-  Obj t = (typed ? t_Syn_struct_typed : t_Syn_struct);
-  Obj s = cmpd_new1(rc_ret(t), cmpd_new_M(rc_ret(t_Arr_Expr), m));
+  Obj s = cmpd_new1(rc_ret(t_Syn_struct), cmpd_new_M(rc_ret(t_Arr_Expr), m));
   mem_dealloc(m);
   return s;
 }
@@ -470,20 +459,9 @@ static Obj parse_struct(Parser* p) {
 
 static Obj parse_seq(Parser* p) {
   P_ADV(1, return parse_error(p, "unterminated sequence"));
-  Bool typed = false;
-  if (PC == ':') {
-    P_ADV(1, return parse_error(p, "unterminated sequence"));
-    typed = true;
-  }
-  Src_pos pos = p->pos;
   Mem m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR(']');
-  if (typed && !m.len) {
-    p->pos = pos;
-    return parse_error(p, "typed sequence requires a type expression");
-  }
-  Obj t = (typed ? t_Syn_seq_typed : t_Syn_seq);
-  Obj s = cmpd_new1(rc_ret(t), cmpd_new_M(rc_ret(t_Arr_Expr), m));
+  Obj s = cmpd_new1(rc_ret(t_Syn_seq), cmpd_new_M(rc_ret(t_Arr_Expr), m));
   mem_dealloc(m);
   return s;
 }

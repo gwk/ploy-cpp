@@ -149,7 +149,7 @@ static Step run_Fn(Int d, Trace* t, Obj env, Obj code) {
       is_variad = true;
       par_name = rc_ret(cmpd_el(syn, 0));
       par_type = rc_ret(cmpd_el(syn, 1));
-      par_dflt = rc_ret_val(s_void); // TODO: ? cmpd_new1(rc_ret(t_Syn_seq_typed), rc_ret(par_type));
+      par_dflt = rc_ret_val(s_void); // TODO?
     } else {
       exc_raise("Fn: parameter %i is malformed: %o", i, syn);
     }
@@ -170,115 +170,6 @@ static Step run_Fn(Int d, Trace* t, Obj env, Obj code) {
     rc_ret(ret_type),
     rc_ret(body));
   return mk_res(env, f);
-}
-
-
-static Step run_Syn_struct_typed(Int d, Trace* t, Obj env, Obj code) {
-  // owns env.
-  assert(cmpd_len(code) == 1);
-  Obj exprs = cmpd_el(code, 0);
-  Int syn_len = cmpd_len(exprs);
-  exc_check(syn_len > 0, "constructor is empty: %o", code);
-  Step step = run(d, t, env, cmpd_el(exprs, 0)); // evaluate the type.
-  env = step.res.env;
-  Obj type = step.res.val;
-  Obj kind = type_kind(type);
-  Obj res;
-  if (is_kind_struct(kind)) {
-    Obj fields = cmpd_el(kind, 0);
-    Int len = cmpd_len(fields);
-    res = cmpd_new_raw(type, len);
-    Int j = 0;
-    for_imn(i, 1, syn_len) {
-      Obj expr = cmpd_el(exprs, i);
-      Obj expr_t = obj_type(expr);
-      if (is(expr_t, t_Splice)) {
-        Obj sub_expr = cmpd_el(expr, 0);
-        step = run(d, t, env, sub_expr);
-        env = step.res.env;
-        Obj val = step.res.val;
-        exc_check(obj_is_cmpd(val),
-          "constructor: %o\nsplice: %o\nvalue is not of a compound type: %o", code, expr, val);
-        it_cmpd(it, val) {
-          exc_check(j < len, "constructor: %o\nexcessive elements in splice: %o\nvalue: %o",
-            code, expr, val);
-          cmpd_put(res, j++, rc_ret(*it));
-        }
-        rc_rel(val);
-      } else {
-        exc_check(j < len, "constructor: %o\nexcessive element: %o\n", code, expr);
-        step = run(d, t, env, expr);
-        env = step.res.env;
-        cmpd_put(res, j++, step.res.val);
-      }
-    }
-  } else if (is_kind_arr(kind)) {
-    Array vals = array0;
-    for_imn(i, 1, syn_len) {
-      Obj expr = cmpd_el(exprs, i);
-      Obj expr_t = obj_type(expr);
-      if (is(expr_t, t_Splice)) {
-        Obj sub_expr = cmpd_el(expr, 0);
-        step = run(d, t, env, sub_expr);
-        env = step.res.env;
-        Obj val = step.res.val;
-        exc_check(obj_is_cmpd(val),
-          "constructor: %o\nsplice: %o\nvalue is not of a compound type: %o", code, expr, val);
-        it_cmpd(it, val) {
-          array_append(&vals, rc_ret(*it));
-        }
-        rc_rel(val);
-      } else {
-        step = run(d, t, env, expr);
-        env = step.res.env;
-        array_append(&vals, step.res.val);
-      }
-    }
-    res = cmpd_new_M(type, vals.mem);
-    mem_dealloc(vals.mem);
-  } else {
-    exc_raise("constructor: %o\ntype is not a struct or mem type: %o", code, type);
-  }
-  return mk_res(env, res);
-}
-
-
-static Step run_Syn_seq_typed(Int d, Trace* t, Obj env, Obj code) {
-  // owns env.
-  assert(cmpd_len(code) == 1);
-  Obj exprs = cmpd_el(code, 0);
-  Int syn_len = cmpd_len(exprs);
-  exc_check(syn_len > 0, "Syn-seq-typed is empty");
-  Step step = run(d, t, env, cmpd_el(exprs, 0)); // evaluate the type.
-  env = step.res.env;
-  //Obj el_type = step.res.val;
-  Obj type = obj0;
-  exc_raise("seq constructor: %o\ntype derivation not yet implemented");
-  Array vals = array0;
-  for_imn(i, 1, syn_len) {
-    Obj expr = cmpd_el(exprs, i);
-    Obj expr_t = obj_type(expr);
-    if (is(expr_t, t_Splice)) {
-      Obj sub_expr = cmpd_el(expr, 0);
-      step = run(d, t, env, sub_expr);
-      env = step.res.env;
-      Obj val = step.res.val;
-      exc_check(obj_is_cmpd(val),
-        "seq constructor: %o\nsplice: %o\nvalue is not of a compound type: %o",
-         code, expr, val);
-      it_cmpd(it, val) {
-        array_append(&vals, rc_ret(*it));
-      }
-      rc_rel(val);
-    } else {
-      step = run(d, t, env, expr);
-      env = step.res.env;
-      array_append(&vals, step.res.val);
-    }
-  }
-  Obj res = cmpd_new_M(type, vals.mem);
-  mem_dealloc(vals.mem);
-  return mk_res(env, res);
 }
 
 
@@ -714,8 +605,6 @@ static Step run_step_disp(Int d, Trace* t, Obj env, Obj code) {
     RUN(Bind);
     RUN(If);
     RUN(Fn);
-    RUN(Syn_struct_typed);
-    RUN(Syn_seq_typed);
     RUN(Call);
   }
 #undef RUN

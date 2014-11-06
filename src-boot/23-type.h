@@ -33,8 +33,6 @@ T(Scope,            struct1, "expr", t_Expr) \
 T(Bind, struct4, "is-mut", t_Bool, "is-pub", t_Bool, "name", t_Sym, "expr", t_Expr) \
 T(If,               struct3, "pred", t_Expr, "then", t_Expr, "else", t_Expr) \
 T(Fn,               struct_fn) \
-T(Syn_struct_typed, struct1, "exprs", t_Arr_Expr) \
-T(Syn_seq_typed,    struct1, "exprs", t_Arr_Expr) \
 T(Call,             struct1, "exprs", t_Arr_Expr) \
 T(Func,             struct_func) \
 T(Accessor,         struct1, "name", t_Sym) \
@@ -252,8 +250,8 @@ static Obj type_kind_init_union_expr() {
       rc_ret(t_Bind),
       rc_ret(t_If),
       rc_ret(t_Fn),
-      rc_ret(t_Syn_struct_typed),
-      rc_ret(t_Syn_seq_typed),
+      rc_ret(t_Syn_struct),
+      rc_ret(t_Syn_seq),
       rc_ret(t_Call),
       rc_ret(t_Expand)));
 }

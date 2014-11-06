@@ -188,7 +188,7 @@ static void write_repr_syn_seq(CFile f, Obj s, Bool is_quoted, Int depth, Set* s
 static void write_repr_default(CFile f, Obj c, Bool is_quoted, Int depth, Set* set) {
   assert(ref_is_cmpd(c));
   if (is_quoted) fputs("¿", f);
-  fputs("{:", f);
+  fputs("(CONS ", f);
   Obj t = obj_type(c);
   assert(obj_is_type(t));
   assert(obj_is_sym(t.t->name));
@@ -197,7 +197,7 @@ static void write_repr_default(CFile f, Obj c, Bool is_quoted, Int depth, Set* s
     fputc(' ', f);
     write_repr_obj(f, cmpd_el(c, i), false, depth, set);
   }
-  fputc('}', f);
+  fputc(')', f);
 }
 
 
@@ -224,9 +224,7 @@ static void write_repr_dispatch(CFile f, Obj s, Bool is_quoted, Int depth, Set* 
   if (is(type, t_##t)) { write_repr_syn_seq(f, s, is_quoted, depth, set, o, c); return; }
 
   DISP_SEQ(Syn_struct, "{", '}');
-  DISP_SEQ(Syn_struct_typed, "{:", '}');
   DISP_SEQ(Syn_seq, "[", ']');
-  DISP_SEQ(Syn_seq_typed, "[:", ']');
   DISP_SEQ(Expand, "<", '>');
   DISP_SEQ(Call, "(", ')');
   #undef DISP_SEQ
