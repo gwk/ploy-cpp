@@ -282,8 +282,6 @@
 
 <let-struct List -len:Int -arr:Arr> # resizable array.
 
-<let-fn list-new [] (CONS List 0 (CONS Arr))>
-
 <let-fn list-el [-list:List -index:Int]
   <check (ilt index (.len list)) "index out of bounds">
   (ael (.arr list) index)>
@@ -312,8 +310,8 @@
       (iso el (list-el list i)) true
       (self (iinc i))>>>
 
-<let-fn list-lit [&els]
-  <let l (list-new)>
+<let-fn list-new [&els]
+  <let l (CONS List 0 (CONS Arr))>
   <recur [-i=0]
     <if (ieq i (alen els)) l
       <do
@@ -354,50 +352,70 @@
         <if (iso (.key e) key) (.=val e val)
           (self (iinc i))>>>>>
 
+<let-fn list-dict-new [&kv]
+  <check (not (imod (alen kv) 2)) "dangling key">
+  <let d (list-new)>
+  <recur [-i=0]
+    <if (ieq i (alen kv)) d
+      <do
+        (list-dict-put d (ael kv i) (ael kv (iinc i)))
+        (self (iadd i 2))>>>>
+
 # type derivation.
 
+<let-struct Type-derivation-key -type:Type -dict:Dict>
+
+<let derived-type-memo (list-new)>
+
 <let-fn derive-type [-type:Type -dict:Dict]
+  # NOTE: dict entries must be in some canonical order or else memo fetch will fail.
   <let k (.kind type)>
   <let tk (type-of k)>
-  <if
-    (is tk Type-kind-var)
+  <if (is tk Type-kind-var)
     <if (list-dict-contains dict type) (list-dict-fetch dict type) type>
-    (is tk Type-kind-arr)
     <do
-      <let orig (.el-type k)>
-      <let derived (derive-type orig dict)>
-      <if (is derived orig) type (CONS Type `DERIVED-ARR (CONS Type-kind-arr derived))>>
-    (is tk Type-kind-struct)
-    <recur [-i=0 -t=type]
-      <let kind (.kind t)>
-      <let fields (.fields kind)>
-      <let field (ael fields i)>
-      <let orig (.type field)>
-      <let derived (derive-type orig dict)>
-      <if (is derived orig) (self (iinc i) t) # no change to result t.
+      <let memo-key (CONS Type-derivation-key type dict)>
+      <let memoized (list-dict-fetch derived-type-memo memo-key)>
+      <if (not (is memoized nil)) memoized
         <do
-          <let field-derived (CONS Par (.name field) derived (.dflt))>
-          (self
-            (iinc i)
-            <if (is t type) # identical thus far; clone and alter.
-              (CONS Type `DERIVED-STRUCT (CONS Type-kind-struct
-                (aput (arr-clone fields) i field-derived)
-                (.dispatcher type)))
-              <do # already cloned.
-                (aput fields i field-derived)
-                t>>)>>>
-    (is tk Type-kind-union)
-    <recur [-i=0 -t=type]
-      <let kind (.kind t)>
-      <let variants (.variants kind)>
-      <let orig (ael variants i)>
-      <let derived (derive-type orig dict)>
-      (self
-        (iinc i)
-        <if (is derived orig) t # no change to result t.
-          (is t type) # identical thus far; clone and alter.
-          (CONS Type `DERIVED-UNION (CONS Type-kind-union
-            (aput (arr-clone variants) i derived)))
-            (aput i t derived)>)>
-    type>> # default case returns type unaltered.
-
+          <let res <if
+            (is tk Type-kind-arr)
+            <do
+              <let orig (.el-type k)>
+              <let derived (derive-type orig dict)>
+              <if (is derived orig) type (CONS Type `DERIVED-ARR (CONS Type-kind-arr derived))>>
+            (is tk Type-kind-struct)
+            <recur [-i=0 -t=type]
+              <let kind (.kind t)>
+              <let fields (.fields kind)>
+              <let field (ael fields i)>
+              <let orig (.type field)>
+              <let derived (derive-type orig dict)>
+              <if (is derived orig) (self (iinc i) t) # no change to result t.
+                <do
+                  <let field-derived (CONS Par (.name field) derived (.dflt))>
+                  (self
+                    (iinc i)
+                    <if (is t type) # identical thus far; clone and alter.
+                      (CONS Type `DERIVED-STRUCT (CONS Type-kind-struct
+                        (aput (arr-clone fields) i field-derived)
+                        (.dispatcher type)))
+                      <do # already cloned.
+                        (aput fields i field-derived)
+                        t>>)>>>
+            (is tk Type-kind-union)
+            <recur [-i=0 -t=type]
+              <let kind (.kind t)>
+              <let variants (.variants kind)>
+              <let orig (ael variants i)>
+              <let derived (derive-type orig dict)>
+              (self
+                (iinc i)
+                <if (is derived orig) t # no change to result t.
+                  (is t type) # identical thus far; clone and alter.
+                  (CONS Type `DERIVED-UNION (CONS Type-kind-union
+                    (aput (arr-clone variants) i derived)))
+                    (aput i t derived)>)>
+          type>> # default case returns type unaltered.
+        (list-dict-put derived-type-memo memo-key res)
+        res>>>>>

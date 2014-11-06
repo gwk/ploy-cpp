@@ -60,4 +60,9 @@
 <scope # derive-type.
   <utest
     (CONS Type `DERIVED-ARR (CONS Type-kind-arr Int))
-    (derive-type Arr (list-lit (CONS Dict-entry T Int)))>>
+    (derive-type Arr (list-dict-new T Int))>
+  <utest
+    true
+    <let A (derive-type Arr (list-dict-new T Int))>
+    <let B (derive-type Arr (list-dict-new T Int))>
+    (is A B)>>
