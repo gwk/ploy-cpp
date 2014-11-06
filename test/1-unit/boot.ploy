@@ -3,9 +3,9 @@
   <utest true (iso 0 0)>
   <utest false (iso 0 1)>
   <utest false (iso 0 false)>
-  <utest true (iso {:Arr-Int} {:Arr-Int})>
-  <utest true (iso {:Arr-Int 1 2} {:Arr-Int 1 2})>
-  <utest false (iso {:Arr-Int 1} {:Arr-Int 1 2})>>
+  <utest true (iso (CONS Arr-Int) (CONS Arr-Int))>
+  <utest true (iso (CONS Arr-Int 1 2) (CONS Arr-Int 1 2))>
+  <utest false (iso (CONS Arr-Int 1) (CONS Arr-Int 1 2))>>
 
 <scope # List.
   <let l (list-new)>
@@ -59,5 +59,5 @@
 
 <scope # derive-type.
   <utest
-    {:Type `DERIVED-ARR {:Type-kind-arr Int}}
-    (derive-type Arr (list-lit {:Dict-entry T Int}))>>
+    (CONS Type `DERIVED-ARR (CONS Type-kind-arr Int))
+    (derive-type Arr (list-lit (CONS Dict-entry T Int)))>>

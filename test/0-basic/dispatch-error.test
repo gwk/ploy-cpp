@@ -13,7 +13,7 @@ trace:
       ~~~~~~~~~~~
   … 6
   test/0-basic/dispatch-error.ploy:26:1:
-    (i T)
-    ~~~~~
+    (i Test)
+    ~~~~~~~~
 ''',
 }

@@ -9,13 +9,13 @@
   nil
   `nil
   ``nil
-  {:Arr-Expr x 1 nil}
-  {:Arr-Expr `x `1 `nil}
-  {:Arr-Expr ``x ``1 ``nil}
-  `{:Arr-Expr x 1 nil}
-  `{:Arr-Expr `x `1 `nil}
-  `{:Arr-Expr ``x ``1 ``nil}
-  ``{:Arr-Expr x 1 nil}
-  ``{:Arr-Expr `x `1 `nil}
-  ``{:Arr-Expr ``x ``1 ``nil}
+  (CONS Arr-Expr x 1 nil)
+  (CONS Arr-Expr `x `1 `nil)
+  (CONS Arr-Expr ``x ``1 ``nil)
+  `(CONS Arr-Expr x 1 nil)
+  `(CONS Arr-Expr `x `1 `nil)
+  `(CONS Arr-Expr ``x ``1 ``nil)
+  ``(CONS Arr-Expr x 1 nil)
+  ``(CONS Arr-Expr `x `1 `nil)
+  ``(CONS Arr-Expr ``x ``1 ``nil)
 )

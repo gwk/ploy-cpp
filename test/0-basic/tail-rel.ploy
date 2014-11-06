@@ -4,7 +4,7 @@
 <macro grow []
   `<recur [-i=(isub OPTION-REC-LIMIT 4)] # just under the recursion limit.
     <when i
-      <var chain {:Arr-Obj i chain}>
+      <var chain (CONS Arr-Obj i chain)>
       (self (idec i))>>>
 <grow>
 <grow>

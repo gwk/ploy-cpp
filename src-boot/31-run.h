@@ -521,6 +521,46 @@ static Step run_call_RUN(Int d, Trace* t, Obj env, Obj call, Mem vals) {
 }
 
 
+static Step run_call_CONS(Int d, Trace* t, Obj env, Obj call, Mem vals) {
+  exc_check(vals.len >= 3, "call: %o\nCONS requires a type argument", call);
+  exc_check(is(mem_el(vals, 1), obj0), "call: %o\nCONS type argument is a label", call);
+  Obj callee = mem_el_move(vals, 0);
+  rc_rel_val(callee);
+  Obj type = mem_el_move(vals, 2);
+  Obj kind = type_kind(type);
+  Int len = (vals.len - 3) / 2;
+  Obj res = cmpd_new_raw(type, len);
+  if (is_kind_struct(kind)) {
+    Obj fields = kind_fields(kind);
+    // TODO: support field defaults.
+    exc_check(cmpd_len(fields) == len, "call: %o\nCONS: type %o expects %i fields; received %i",
+      call, type, len, cmpd_len(fields));
+    for_in(i, len) {
+      Obj field = cmpd_el(fields, i);
+      Obj field_name = cmpd_el(field, 0);
+      Obj sym = mem_el_move(vals, i * 2 + 3);
+      Obj val = mem_el_move(vals, i * 2 + 4);
+      if (!is(sym, obj0)) {
+        exc_check(is(sym, field_name), "call: %o\nCONS: expected field label: %o; received: %o",
+          call, field_name, sym);
+      }
+      cmpd_put(res, i, val);
+    }
+  } else if (is_kind_arr(kind)) {
+    for_in(i, len) {
+      Obj sym = mem_el_move(vals, i * 2 + 3);
+      Obj val = mem_el_move(vals, i * 2 + 4);
+      exc_check(is(sym, obj0), "call: %o\nCONS: unexpected element label: %o", call, sym);
+      cmpd_put(res, i, val);
+    }
+  } else {
+    exc_raise("call: %o\nCONS type is not a struct or arr type", call);
+  }
+  mem_dealloc(vals);
+  return mk_res(env, res);
+}
+
+
 static Step run_Call_disp(Int d, Trace* t, Obj env, Obj code, Mem vals);
 static Step run_tail(Int d, Trace* parent_trace, Step step);
 
@@ -612,6 +652,7 @@ static Step run_Call_disp(Int d, Trace* t, Obj env, Obj code, Mem vals) {
       switch (sym_index(callee)) {
         case si_EXPAND: return run_call_EXPAND(d, t, env, code, vals);
         case si_RUN:    return run_call_RUN(d, t, env, code, vals);
+        case si_CONS:   return run_call_CONS(d, t, env, code, vals);
       }
   }
   Obj kind = type_kind(type);

@@ -1,2 +1,2 @@
-<let T {:Type `T `nil}>
+<let T (CONS Type `T `nil)>
 (outRL (.=name T `U))

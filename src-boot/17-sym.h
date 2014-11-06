@@ -98,6 +98,7 @@ S(INFER_SEQ) \
 S(INFER_EXPR) \
 S(EXPAND) \
 S(RUN) \
+S(CONS) \
 S(HALT) \
 S(END_SPECIAL_SYMS) \
 S(self) \

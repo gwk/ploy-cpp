@@ -123,6 +123,18 @@ static Bool is_kind_arr(Obj kind) {
 }
 
 
+UNUSED_FN static Obj kind_el_type(Obj kind) {
+  assert(is_kind_arr(kind));
+  return cmpd_el(kind, 0);
+}
+
+
+static Obj kind_fields(Obj kind) {
+  assert(is_kind_struct(kind));
+  return cmpd_el(kind, 0);
+}
+
+
 // flat array of unit type, singleton interleaved pairs.
 static Array global_singletons = array0;
 

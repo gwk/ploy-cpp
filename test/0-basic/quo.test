@@ -12,11 +12,11 @@ nil
 {:Arr-Expr 0 1 nil}
 {:Arr-Expr `x 1 nil}
 {:Arr-Expr ``x ``1 ``nil}
-`{:Arr-Expr x 1 nil}
-`{:Arr-Expr `x `1 `nil}
-`{:Arr-Expr ``x ``1 ``nil}
-``{:Arr-Expr x 1 nil}
-``{:Arr-Expr `x `1 `nil}
-``{:Arr-Expr ``x ``1 ``nil}
+`(CONS Arr-Expr x 1 nil)
+`(CONS Arr-Expr `x `1 `nil)
+`(CONS Arr-Expr ``x ``1 ``nil)
+``(CONS Arr-Expr x 1 nil)
+``(CONS Arr-Expr `x `1 `nil)
+``(CONS Arr-Expr ``x ``1 ``nil)
 '''
 }

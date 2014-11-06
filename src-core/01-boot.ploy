@@ -9,41 +9,41 @@
   # the 'macro' macro defines a new macro in the current environment.
   # because we cannot use macro to define itself, we must define it using raw forms.
   # note the structural similarity between the outer Fn form and the inner struct literal.
-  {:Bind
+  (CONS Bind
     false # is-mutable.
     true # is-public.
     `macro # name.
-    {:Fn # Fn creates both functions and macros.
+    (CONS Fn # Fn creates both functions and macros.
       true # is-native.
       true # is-macro.
       `[-sym -pars &body] # the parameter list, which does not get evaluated.
       nil # ret-type.
-      `{:Bind # the body of the 'macro' macro is a Bind form.
+      `(CONS Bind # the body of the 'macro' macro is a Bind form.
         false # is-mutable.
         true # is-public.
         sym # name.
-        {:Fn # the value of the binding is created by evaluating the Fn form.
+        (CONS Fn # the value of the binding is created by evaluating the Fn form.
           true # is-native.
           true # is-macro.
           pars
           nil # ret-type.
-          {:Do {:Arr-Expr *body}}}}}})
+          (CONS Do (CONS Arr-Expr *body)))))))
 
 # define macros to wrap the special forms.
 
 <macro fn [-pars &body]
   # create a function.
-  {:Fn
+  (CONS Fn
     true # is-native.
     false # is-macro.
     pars
     nil # ret-type.
-    {:Do {:Arr-Expr *body}}}>
+    (CONS Do (CONS Arr-Expr *body)))>
 
 <macro quo [-expr]
   # absolute quotation of an expression.
   # evaluating a QUO form simply yields the contained expression, unevaluated.
-  {:Quo expr}>
+  (CONS Quo expr)>
 
 <macro qua [-expr]
   # quasiquotation of an expression.
@@ -52,7 +52,7 @@
   # QUA forms themselves do not evaluate; they are converted by the preprocessor.
   # equivalent to `expr syntax.
   # TODO: implement quasiquotation as a macro instead of in the preprocessor?
-  {:Qua expr}>
+  (CONS Qua expr)>
 
 <macro unq [-expr]
   # unquotation of an expression.
@@ -60,25 +60,25 @@
   # this for does not evaluate, and therefore must be inside of a qua,
   # where it will get transformed appropriately.
   # equivalent to ,expr syntax
-  {:Unq expr}>
+  (CONS Unq expr)>
 
 <macro do [&body]
-  {:Do {:Arr-Expr *body}}>
+  (CONS Do (CONS Arr-Expr *body))>
 
 <macro scope [&body]
-  {:Scope {:Do {:Arr-Expr *body}}}>
+  (CONS Scope (CONS Do (CONS Arr-Expr *body)))>
 
 <macro let [-sym -expr]
   # immutable, private binding.
-  {:Bind false false sym expr}>
+  (CONS Bind false false sym expr)>
 
 <macro var [-sym -expr]
   # mutable, private binding.
-  {:Bind true false sym expr}>
+  (CONS Bind true false sym expr)>
 
 <macro pub [-sym -expr]
   # immutable, public binding.
-  {:Bind false true sym expr}>
+  (CONS Bind false true sym expr)>
 
 # the raw forms are now available through macros.
 
@@ -116,7 +116,7 @@
 
 <macro _if [-pred -then -else]
   # bootstrap 'if' that takes exactly three expressions.
-  {:If pred then else}>
+  (CONS If pred then else)>
 
 <macro if [&exprs]
   # generic 'if'. inspired by paul graham's arc-lisp.
@@ -126,14 +126,14 @@
       <let pred (ael exprs i)>
       <let then (ael exprs (iinc i))>
       <_if (ieq (iadd i 2) len)
-        {:If pred then void} # final if-else.
+        (CONS If pred then void) # final if-else.
         <_if (ieq (iadd i 3) len)
-          {:If pred then (ael exprs (iadd i 2))} # final clause is an unconditional else.
-          {:If pred then (self (iadd i 2))}>>>>>
+          (CONS If pred then (ael exprs (iadd i 2))) # final clause is an unconditional else.
+          (CONS If pred then (self (iadd i 2)))>>>>>
 
 <macro when [-pred &body]
   # if 'pred', do 'exprs'. else none.
-  {:If pred {:Do body} void}>
+  (CONS If pred (CONS Do body) void)>
 
 <macro check [-condition -msg]
   ~<do <if (not ,condition) (error ,msg)> void>> # void foils TCO so that trace reveals test.
@@ -194,12 +194,12 @@
   # note that the type of name is Expr, not Sym,
   # because the name of a derived type might be the expression used to derive it.
   # Type-kind is a union of the various Type-kind-*.
-  ~<let ,name {:Type `,name ,kind}>>
+  ~<let ,name (CONS Type `,name ,kind)>>
 
 # idiomatic type vars.
-<let-type T {:Type-kind-var `T}>
-<let-type K {:Type-kind-var `K}>
-<let-type V {:Type-kind-var `V}>
+<let-type T (CONS Type-kind-var `T)>
+<let-type K (CONS Type-kind-var `K)>
+<let-type V (CONS Type-kind-var `V)>
 
 # comparison.
 
@@ -236,9 +236,9 @@
 
 # Arr.
 
-<let-type Arr {:Type-kind-arr T}>
+<let-type Arr (CONS Type-kind-arr T)>
 
-<let-type Arr-Int {:Type-kind-arr Int}>
+<let-type Arr-Int (CONS Type-kind-arr Int)>
 
 <let-fn arr-copy-to [-dst:Arr -src:Arr -to:Int]
   <check (ige (alen dst) to) "dst is smaller than end index 'to'">
@@ -270,19 +270,19 @@
 
 <macro let-struct [-name &fields]
   <let pars (arr-map fields Arr-Par <fn [-field]
-    {:Par (.name field) (.type field) (.expr field)}>)>
-  ~<let-type ,name {:Type-kind-struct
+    (CONS Par (.name field) (.type field) (.expr field))>)>
+  ~<let-type ,name (CONS Type-kind-struct
       `,pars
-      nil}>> # dispatcher
+      nil)>> # dispatcher
 
 <macro let-union [-name &variants]
-  ~<let-type ,name {:Type-kind-struct `,(arr-map variants Arr-Type identity)}>>
+  ~<let-type ,name (CONS Type-kind-struct `,(arr-map variants Arr-Type identity))>>
 
 # List (untyped).
 
 <let-struct List -len:Int -arr:Arr> # resizable array.
 
-<let-fn list-new [] {:List 0 {:Arr}}>
+<let-fn list-new [] (CONS List 0 (CONS Arr))>
 
 <let-fn list-el [-list:List -index:Int]
   <check (ilt index (.len list)) "index out of bounds">
@@ -348,7 +348,7 @@
 
 <let-fn list-dict-put [-dict:List -key:K -val:V]
   <recur [-i=0]
-    <if (ieq i (.len dict)) (list-append dict {:Dict-entry key val})
+    <if (ieq i (.len dict)) (list-append dict (CONS Dict-entry key val))
       <do
         <let e (list-el dict i)>
         <if (iso (.key e) key) (.=val e val)
@@ -366,7 +366,7 @@
     <do
       <let orig (.el-type k)>
       <let derived (derive-type orig dict)>
-      <if (is derived orig) type {:Type `DERIVED-ARR {:Type-kind-arr derived}}>>
+      <if (is derived orig) type (CONS Type `DERIVED-ARR (CONS Type-kind-arr derived))>>
     (is tk Type-kind-struct)
     <recur [-i=0 -t=type]
       <let kind (.kind t)>
@@ -376,13 +376,13 @@
       <let derived (derive-type orig dict)>
       <if (is derived orig) (self (iinc i) t) # no change to result t.
         <do
-          <let field-derived {:Par (.name field) derived (.dflt)}>
+          <let field-derived (CONS Par (.name field) derived (.dflt))>
           (self
             (iinc i)
             <if (is t type) # identical thus far; clone and alter.
-              {:Type `DERIVED-STRUCT {:Type-kind-struct
+              (CONS Type `DERIVED-STRUCT (CONS Type-kind-struct
                 (aput (arr-clone fields) i field-derived)
-                (.dispatcher type)}}
+                (.dispatcher type)))
               <do # already cloned.
                 (aput fields i field-derived)
                 t>>)>>>
@@ -396,8 +396,8 @@
         (iinc i)
         <if (is derived orig) t # no change to result t.
           (is t type) # identical thus far; clone and alter.
-          {:Type `DERIVED-UNION {:Type-kind-union
-            (aput (arr-clone variants) i derived)}}
+          (CONS Type `DERIVED-UNION (CONS Type-kind-union
+            (aput (arr-clone variants) i derived)))
             (aput i t derived)>)>
     type>> # default case returns type unaltered.
 
