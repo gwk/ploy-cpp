@@ -188,7 +188,7 @@ static void write_repr_syn_seq(CFile f, Obj s, Bool is_quoted, Int depth, Set* s
 static void write_repr_default(CFile f, Obj c, Bool is_quoted, Int depth, Set* set) {
   assert(ref_is_cmpd(c));
   if (is_quoted) fputs("¿", f);
-  fputs("(CONS ", f);
+  fputs("(", f);
   Obj t = obj_type(c);
   assert(obj_is_type(t));
   assert(obj_is_sym(t.t->name));
