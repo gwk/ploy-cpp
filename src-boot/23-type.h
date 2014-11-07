@@ -73,7 +73,7 @@ typedef enum {
 #undef T
 
 // the basic types are prefixed with t_.
-#define T(t, ...) static Obj t_##t;
+#define T(t, ...) Obj t_##t;
 TYPE_LIST
 #undef T
 

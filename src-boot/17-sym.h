@@ -6,7 +6,6 @@
 
 #define ERR_SYM(s) errFL("SYM %s: u:%lu; si:%li", #s, s.u, sym_index(s))
 
-static const Int width_sym_tags = width_obj_tag + 1; // extra bit for Data-word flag.
 static const Int sym_index_end = 1L << (size_Int * 8 - width_sym_tags);
 
 // each Sym object is an index into this array of strings.
@@ -124,7 +123,7 @@ static Chars_const sym_index_names[] = {
 #undef S
 
 // sym Obj constants.
-#define S(s) static const Obj s_##s = _sym_with_index(si_##s);
+#define S(s) const Obj s_##s = _sym_with_index(si_##s);
 SYM_LIST
 #undef S
 

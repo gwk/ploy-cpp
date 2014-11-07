@@ -5,17 +5,17 @@
 # first target is the default.
 default: basic
 
-_bld/prof-res-usage: tools/cc.sh tools/prof-res-usage.c
-	tools/cc.sh tools/prof-res-usage.c -o $@
+_bld/prof-res-usage: tools/cc.sh tools/prof-res-usage.cpp
+	$^ -o $@
 
 _bld/ploy: tools/cc.sh src-boot/*
-	tools/cc.sh src-boot/ploy.c -o $@
+	tools/cc.sh src-boot/ploy.cpp -o $@
 
 _bld/ploy-dbg: tools/cc.sh src-boot/*
-	tools/cc.sh -dbg src-boot/ploy.c -o $@
+	tools/cc.sh -dbg src-boot/ploy.cpp -o $@
 
 _bld/ploy-cov: tools/cc.sh src-boot/*
-	tools/cc.sh -dbg src-boot/ploy.c --coverage -o $@
+	tools/cc.sh -dbg src-boot/ploy.cpp --coverage -o $@
 	# compiling ploy-cov also produces the .gcno file.
 	mv ploy.gcno _bld/ploy-cov.gcno
 
@@ -33,18 +33,18 @@ _bld/ploy-cov-summary.txt: tools/gen-cov-summary.py _bld/ploy-cov-summary-raw.tx
 	$^ > $@
 
 # preprocess for viewing macro expansions.
-_bld/ploy-post-proc-no-libs.c: tools/cc.sh src-boot/* 
-	tools/cc.sh src-boot/ploy.c -o $@ -E -D=SKIP_LIB_INCLUDES
+_bld/ploy-post-proc-no-libs.cpp: tools/cc.sh src-boot/* 
+	tools/cc.sh src-boot/ploy.cpp -o $@ -E -D=SKIP_LIB_INCLUDES
 
 # preprocess for viewing macro expansions.
-_bld/ploy-dbg-post-proc-no-libs.c: tools/cc.sh src-boot/*
-	tools/cc.sh -dbg src-boot/ploy.c -o $@ -E -D=SKIP_LIB_INCLUDES
+_bld/ploy-dbg-post-proc-no-libs.cpp: tools/cc.sh src-boot/*
+	tools/cc.sh -dbg src-boot/ploy.cpp -o $@ -E -D=SKIP_LIB_INCLUDES
 
 _bld/ploy.ll: tools/cc.sh src-boot/* 
-	tools/cc.sh src-boot/ploy.c -o $@ -S -emit-llvm
+	tools/cc.sh src-boot/ploy.cpp -o $@ -S -emit-llvm
 
 _bld/ploy-dbg.ll: tools/cc.sh src-boot/* 
-	tools/cc.sh -dbg src-boot/ploy.c -o $@ -S -emit-llvm
+	tools/cc.sh -dbg src-boot/ploy.cpp -o $@ -S -emit-llvm
 
 _bld/compile_commands.json: tools/cdb.sh tools/cc.sh
 	$^ $@
@@ -62,13 +62,13 @@ _bld/ploy-callgraph.svg: tools/gen-callgraph-svg.sh _bld/ploy-callgraph.dot
 	$^ $@
 
 _bld/ploy-ast-list.txt: _bld/compile_commands.json src-boot/*
-	clang-check -p _bld/compile_commands.json src-boot/ploy.c -ast-list > $@
+	clang-check -p _bld/compile_commands.json src-boot/ploy.cpp -ast-list > $@
 
 _bld/ploy-ast-print.txt: _bld/compile_commands.json src-boot/*
-	clang-check -p _bld/compile_commands.json src-boot/ploy.c -ast-print > $@
+	clang-check -p _bld/compile_commands.json src-boot/ploy.cpp -ast-print > $@
 
 _bld/ploy-ast-dump.txt: _bld/compile_commands.json src-boot/*
-	clang-check -p _bld/compile_commands.json src-boot/ploy.c -ast-dump > $@
+	clang-check -p _bld/compile_commands.json src-boot/ploy.cpp -ast-dump > $@
 
 .PHONY: all basic clean preprocess ast cov ll analyze callgraph test-dbg test-rel test perf-test
 
@@ -79,7 +79,7 @@ basic: _bld/ploy _bld/ploy-dbg
 clean:
 	rm -rf _bld/*
 
-preprocess: _bld/ploy-post-proc-no-libs.c _bld/ploy-dbg-post-proc-no-libs.c
+preprocess: _bld/ploy-post-proc-no-libs.cpp _bld/ploy-dbg-post-proc-no-libs.cpp
 
 ast: _bld/ploy-ast-list.txt _bld/ploy-ast-print.txt _bld/ploy-ast-dump.txt
 
@@ -90,7 +90,7 @@ ll: _bld/ploy.ll _bld/ploy-dbg.ll
 
 # output the useless plist to /dev/null.
 analyze: tools/cc.sh src-boot/*	
-	tools/cc.sh -dbg src-boot/ploy.c --analyze -o /dev/null
+	tools/cc.sh -dbg src-boot/ploy.cpp --analyze -o /dev/null
 
 callgraph: _bld/ploy-callgraph.svg
 	open -a Safari _bld/ploy-callgraph.svg

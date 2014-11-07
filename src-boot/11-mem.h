@@ -124,7 +124,7 @@ static void mem_realloc(Mem* m, Int len) {
   // note: this function does not set m->len,
   // because that reflects the number of elements used, not allocation size.
   assert(m->len < len);
-  m->els = raw_realloc(m->els, len * size_Obj, ci_Mem);
+  m->els = cast(Obj*, raw_realloc(m->els, len * size_Obj, ci_Mem));
 #if OPTION_MEM_ZERO
   if (m->len < len) {
     // zero all new, uninitialized els to catch illegal derefernces.

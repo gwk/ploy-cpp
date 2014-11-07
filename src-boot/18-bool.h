@@ -17,7 +17,7 @@ static Bool bool_is_true(Obj b) {
 }
 
 
-static const Obj blank;
+extern const Obj blank;
 static Int cmpd_len(Obj c);
 
 static Bool is_true(Obj o) {

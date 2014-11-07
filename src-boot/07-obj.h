@@ -52,6 +52,8 @@ UNUSED_VAR(flt_body_mask)
 // this implies that Obj_tag must be at most 4 bits wide (4 + 1 + 3 == 8 bits in the low byte).
 static const Uns data_word_bit = (1 << width_obj_tag);
 
+static const Int width_sym_tags = width_obj_tag + 1; // extra bit for Data-word flag.
+
 static Chars_const obj_tag_names[] = {
   "Ref",
   "Ptr",
@@ -93,7 +95,7 @@ static Bool is(Obj a, Obj b) {
 
 static Obj_tag obj_tag(Obj o) {
   assert_valid(o);
-  return o.u & obj_tag_mask;
+  return cast(Obj_tag, o.u & obj_tag_mask);
 }
 
 
@@ -130,7 +132,7 @@ static Bool obj_is_sym(Obj o) {
 }
 
 
-static const Obj s_true, s_false;
+extern const Obj s_true, s_false;
 
 static Bool obj_is_bool(Obj o) {
   assert_valid(o);
@@ -174,7 +176,7 @@ static Bool obj_is_type(Obj o) {
 
 
 static Obj ref_type(Obj r);
-static Obj t_Ptr, t_Int, t_Data, t_Sym;
+extern Obj t_Ptr, t_Int, t_Data, t_Sym;
 
 static Obj obj_type(Obj o) {
   switch (obj_tag(o)) {
@@ -185,8 +187,6 @@ static Obj obj_type(Obj o) {
   }
 }
 
-
-static const Int width_sym_tags;
 
 static Int obj_id_hash(Obj o) {
   switch (obj_tag(o)) {

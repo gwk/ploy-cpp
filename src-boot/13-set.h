@@ -68,7 +68,7 @@ static void set_insert(Set* s, Obj o) {
   if (s->len == 0) {
     s->len_buckets = min_table_len_buckets;
     Int size = s->len_buckets * size_Hash_bucket;
-    s->buckets = raw_alloc(size, ci_Set);
+    s->buckets = cast(Hash_bucket*, raw_alloc(size, ci_Set));
     memset(s->buckets, 0, cast(Uns, size));
   } else if (s->len + 1 == s->len_buckets) { // load factor == 1.0.
     // TODO: assess resize criteria.
@@ -77,7 +77,7 @@ static void set_insert(Set* s, Obj o) {
     Set s1 = {
       .len = s->len,
       .len_buckets = len_buckets,
-      .buckets = raw_alloc(size, ci_Set),
+      .buckets = cast(Hash_bucket*, raw_alloc(size, ci_Set)),
     };
     memset(s1.buckets, 0, cast(Uns, size));
     // copy existing elements.

@@ -6,7 +6,7 @@
     (CONS Arr-Par)
     nil))> # dispatcher starts as nil.
 
-<let-fn dispatcher [-callee -types:Arr-Types]
+<let-fn dispatcher [-callee:Test -types:Arr-Types]
   # NOTE: specifying correct type T for callee would create a cycle.
   <check (ieq (alen types) 1) "dispatcher requires 1 argument">
   <let T0 (ael types 0)>
@@ -24,3 +24,4 @@
 (i 1)
 (i "hi")
 (i Test)
+

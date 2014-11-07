@@ -133,7 +133,7 @@ static void rc_bucket_append(RC_bucket* b, Obj r, Uns c) {
 #endif
   if (b->len == b->cap) { // grow.
     b->cap = (b->cap ? b->cap * 2 : min_rc_len_bucket);
-    b->items = raw_realloc(b->items, size_RC_item * b->cap, ci_RC_bucket);
+    b->items = cast(RC_item*, raw_realloc(b->items, size_RC_item * b->cap, ci_RC_bucket));
     rc_hist_count_grows(b->cap);
   }
   check(b->len < max_U32, "RC_bucket overflowed");
@@ -157,7 +157,7 @@ static void rc_resize(Int len_buckets) {
   RC_bucket* old_buckets = rc_table.buckets;
   rc_table.len_buckets = len_buckets;
   Int size = size_RC_bucket * len_buckets;
-  rc_table.buckets = raw_alloc(size, ci_RC_table);
+  rc_table.buckets = cast(RC_bucket*, raw_alloc(size, ci_RC_table));
   memset(rc_table.buckets, 0, cast(Uns, size));
   // copy existing elements.
   for_in(i, old_len_buckets) {

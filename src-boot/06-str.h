@@ -90,7 +90,7 @@ static Str str_line_at_pos_exc(Str s, Int pos) {
 
 
 static Chars str_src_loc_str(Str path, Str src, Int pos, Int len, Int line_num, Int col,
-  Chars msg) {
+  Chars_const msg) {
   // get source line.
   // caller is responsible for raw_dealloc of returned Chars.
   Str line = str_line_at_pos_exc(src, pos);

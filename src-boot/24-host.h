@@ -201,7 +201,7 @@ static Obj host_write(Trace* t, Obj env) {
   GET_AB;
   exc_check(obj_is_ptr(a), "write requires arg 1 to be a File; received: %o", a);
   exc_check(obj_is_data(b), "write requires arg 2 to be a Data; received: %o", b);
-  CFile file = ptr_val(a);
+  CFile file = cast(CFile, ptr_val(a));
   // for now, ignore the return value.
   fwrite(data_ptr(b), size_Char, cast(Uns, data_len(b)), file);
   return rc_ret_val(s_void);
@@ -211,7 +211,7 @@ static Obj host_write(Trace* t, Obj env) {
 static Obj host_write_repr(Trace* t, Obj env) {
   GET_AB;
   exc_check(obj_is_ptr(a), "write-repr requires arg 1 to be a File; received: %o", a);
-  CFile file = ptr_val(a);
+  CFile file = cast(CFile, ptr_val(a));
   write_repr(file, b);
   return rc_ret_val(s_void);
 }
@@ -220,7 +220,7 @@ static Obj host_write_repr(Trace* t, Obj env) {
 static Obj host_flush(Trace* t, Obj env) {
   GET_A;
   exc_check(obj_is_ptr(a), "flush requires arg 1 to be a File; received: %o", a);
-  CFile file = ptr_val(a);
+  CFile file = cast(CFile, ptr_val(a));
   fflush(file);
   return rc_ret_val(s_void);
 }

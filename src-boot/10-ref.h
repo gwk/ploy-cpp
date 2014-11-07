@@ -22,7 +22,7 @@ static Bool ref_is_data(Obj d) {
 }
 
 
-static Obj t_Env;
+extern Obj t_Env;
 
 static Bool ref_is_env(Obj r) {
   return is(ref_type(r), t_Env);
@@ -34,7 +34,7 @@ static Bool ref_is_cmpd(Obj r) {
 }
 
 
-static Obj t_Type;
+extern Obj t_Type;
 
 static Bool ref_is_type(Obj r) {
   return is(ref_type(r), t_Type);

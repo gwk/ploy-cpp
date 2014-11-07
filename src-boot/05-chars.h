@@ -58,7 +58,7 @@ static void chars_dealloc(Chars c) {
 
 
 static Chars chars_alloc(Int len) {
-  return raw_alloc(len, ci_Chars);
+  return cast(Chars, raw_alloc(len, ci_Chars));
 }
 
 
@@ -68,7 +68,7 @@ static Int chars_append(Chars* p, Int* cap, Int len, Char c) {
   if (len == *cap) {
     assert(*cap > 0);
     *cap *= 2;
-    *p = raw_realloc(*p, *cap, ci_Chars);
+    *p = cast(Chars, raw_realloc(*p, *cap, ci_Chars));
   }
   Chars chars = *p;
   chars[len] = c;

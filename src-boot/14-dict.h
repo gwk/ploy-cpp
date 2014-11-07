@@ -81,7 +81,7 @@ static void dict_insert(Dict* d, Obj k, Obj v) {
   if (d->len == 0) {
     d->len_buckets = min_table_len_buckets;
     Int size = d->len_buckets * size_Hash_bucket;
-    d->buckets = raw_alloc(size, ci_Dict);
+    d->buckets = cast(Hash_bucket*, raw_alloc(size, ci_Dict));
     memset(d->buckets, 0, cast(Uns, size));
   } else if (d->len + 1 == d->len_buckets) { // load factor == 1.0.
     // TODO: assess resize criteria.
@@ -90,7 +90,7 @@ static void dict_insert(Dict* d, Obj k, Obj v) {
     Dict d1 = {
       .len = d->len,
       .len_buckets = len_buckets,
-      .buckets = raw_alloc(size, ci_Dict),
+      .buckets = cast(Hash_bucket*, raw_alloc(size, ci_Dict)),
     };
     memset(d1.buckets, 0, cast(Uns, size));
     // copy existing elements.
