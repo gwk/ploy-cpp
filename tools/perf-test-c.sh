@@ -2,5 +2,5 @@
 # Permission to use this file is granted in ploy/license.txt.
 
 set -e
-root=$(dirname "$0")/..
-"$root/tools/perf-test.sh" c 'clang -Ofast' '' "$@"
+cd $(dirname "$0")/..
+tools/perf-test.sh c 'clang -Ofast' '' "$@"

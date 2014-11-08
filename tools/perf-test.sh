@@ -3,11 +3,13 @@
 
 set -e
 
-root=$(dirname "$0")/..
+cd $(dirname "$0")/..
 
 lang=$1; shift;
 compiler=$1; shift;
 interpreter=$1; shift;
+
+make -s _bld/prof-res-usage
 
 for src_path in "$@"; do
   name=$(basename "$src_path")
@@ -16,16 +18,13 @@ for src_path in "$@"; do
   echo
   echo $name
   if [[ -n "$compiler" ]]; then # compile.
-    bin_path="$root/_bld/${name/./-}"
+    bin_path="_bld/${name/./-}"
     $compiler -o "$bin_path" "$src_path"
     cmd="${bin_path//sh\/..\//}"
   else
     cmd="${interpreter//sh\/..\//} $src_path"
   fi
-  res="$root/_bld/perf-res-${name/./-}.txt"
-  [[ -f "$res" ]] && rm "$res"
   for i in $(seq 0 3); do
-    _bld/prof-res-usage $cmd 2>> "$res"
+    _bld/prof-res-usage $cmd
   done
-  cat "$res"
 done

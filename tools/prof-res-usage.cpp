@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <errno.h>
 #include <sys/resource.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -33,9 +34,13 @@ int main(int argc, char* argv[]) {
     error("wait failed.");
   }
   struct rusage u;
-  int ru_error = !getrusage(RUSAGE_CHILDREN, &u);
+  int ru_error = getrusage(RUSAGE_CHILDREN, &u);
   if (ru_error) {
-    error("getrusage failed: %d", ru_error);
+    errFL("getrusage failed: %d", ru_error);
+    switch (errno) {
+      case EFAULT: error("EFAULT: bad rusage struct address: %p", &u);
+      case EINVAL: error("EINVAL: invalid who parameter");
+    }
   }
   long max_resident = u.ru_maxrss;
 #if defined(__APPLE__)
@@ -43,7 +48,7 @@ int main(int argc, char* argv[]) {
 #elif defined(__linux__)
   // linux returns kilobytes.
 #else
-#error "please add appropriate conversion for your operating system according to 'man getrusage'.
+#error "please add appropriate conversion for your operating system according to 'man getrusage'."
 #endif
   errF(
     "status:%3d;  "

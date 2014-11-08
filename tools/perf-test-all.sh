@@ -2,7 +2,7 @@
 # Permission to use this file is granted in ploy/license.txt.
 
 set -e
-root=$(dirname "$0")/..
+cd $(dirname "$0")/..
 
 paths="$@"
 if [[ -z "$paths" ]]; then
@@ -10,5 +10,5 @@ if [[ -z "$paths" ]]; then
 fi
 
 for lang in c py ploy; do
-  "$root/tools/perf-test-$lang.sh" $paths
+  "tools/perf-test-$lang.sh" $paths
 done
