@@ -4,7 +4,7 @@
 #include "18-bool.h"
 
 
-struct _Data {
+struct Data {
   Ref_head head;
   Int len;
 } ALIGNED_TO_WORD;

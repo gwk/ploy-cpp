@@ -32,17 +32,17 @@ typedef void* Raw;
 typedef Char* Chars;
 typedef const Char* Chars_const;
 
-typedef union {
+union W32 { // 32 bit generic word.
   I32 i;
   U32 u;
   F32 f;
-} W32; // 32 bit generic word.
+};
 
-typedef union {
+union W64 { // 64 bit generic word.
   I64 i;
   U64 u;
   F64 f;
-} W64; // 64 bit generic word.
+};
 
 #if ARCH_32_WORD
 typedef float Flt;
@@ -50,12 +50,12 @@ typedef float Flt;
 typedef double Flt;
 #endif
 
-typedef union {
+union Word { // generic word.
   Int i;
   Uns u;
   Flt f;
   Raw r;
-} Word; // generic word.
+};
 
 // enforce usage of custom types defined above.
 #undef bool
@@ -128,8 +128,8 @@ static void fmt_to_file(CFile f, Chars_const fmt, Chars_const args_str, ...);
   fail(); \
 }
 
-typedef union _Obj Obj;
-typedef struct _Trace Trace;
+union Obj;
+struct Trace;
 
 static NO_RETURN _exc_raise(Trace* trace, Obj env, Chars_const fmt, Chars_const args_str, ...);
 

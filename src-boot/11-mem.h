@@ -6,10 +6,10 @@
 #include "10-ref.h"
 
 
-typedef struct {
+struct Mem {
   Int len;
   Obj* els; // TODO: union with Obj el to optimize the len == 1 case?
-} Mem;
+};
 
 
 #define mem0 (Mem){.len=0, .els=NULL}

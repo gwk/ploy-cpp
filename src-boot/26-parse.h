@@ -4,21 +4,21 @@
 #include "25-write-repr.h"
 
 
-typedef struct {
+struct Src_pos {
   Int off;
   Int line;
   Int col;
-} Src_pos;
+};
 
 
-typedef struct {
+struct Parser {
   Dict* locs; // maps parsed expressions to Src-locs.
   Obj path;
   Obj src;
   Str s;
   Src_pos pos;
   Chars e; // error message.
-} Parser;
+};
 
 
 #define DEF_POS Src_pos pos = p->pos

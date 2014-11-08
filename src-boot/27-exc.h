@@ -6,11 +6,11 @@
 #include "26-parse.h"
 
 
-typedef struct _Trace {
+struct Trace {
   Obj code;
   Int elided_step_count;
-  struct _Trace* next;
-} Trace; // Trace objects are live on the stack only.
+  Trace* next;
+}; // Trace objects are live on the stack only.
 
 
 static Dict global_src_locs;

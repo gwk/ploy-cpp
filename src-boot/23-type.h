@@ -6,7 +6,7 @@
 #include "22-global.h"
 
 
-struct _Type {
+struct Type {
   Obj type;
   Int len;
   Obj name;

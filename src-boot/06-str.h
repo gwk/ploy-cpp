@@ -8,10 +8,10 @@
 #include "05-chars.h"
 
 
-typedef struct {
+struct Str {
   Int len;
   Chars_const chars;
-} Str;
+};
 
 #define str0 (Str){.len=0, .chars=NULL}
 

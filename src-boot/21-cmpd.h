@@ -11,7 +11,7 @@ it < _end_##it; \
 it++)
 
 
-struct _Cmpd {
+struct Cmpd {
   Ref_head head;
   Int len;
 } ALIGNED_TO_WORD;

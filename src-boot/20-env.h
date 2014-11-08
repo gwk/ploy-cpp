@@ -8,7 +8,7 @@
 #include "19-data.h"
 
 
-struct _Env {
+struct Env {
   Ref_head head;
   Bool is_mutable: 1;
   Bool is_public : 1;

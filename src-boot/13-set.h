@@ -13,11 +13,11 @@ DEF_SIZE(Hash_bucket);
 static const Hash_bucket hash_bucket0 = array0;
 
 
-typedef struct {
+struct Set {
   Int len;
   Int len_buckets;
   Hash_bucket* buckets;
-} Set;
+};
 DEF_SIZE(Set);
 
 static const Set set0 = {.len=0, .len_buckets=0, .buckets=NULL};

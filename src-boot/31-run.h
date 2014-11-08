@@ -4,22 +4,22 @@
 #include "30-compile.h"
 
 // struct representing the result of a step of computation.
-typedef struct {
+struct Res {
   Obj env; // the env to be passed to the next step.
   Obj val; // the result from the step just performed.
   Obj empty0; // padding; must be obj0 for polymorph test.
-} Res;
+};
 
-typedef struct {
+struct Tail {
   Obj env; // the caller env; this struct slot must match that of Res.
   Obj callee_env; // the callee_env, to be used for the next tail step.
   Obj code; // code for the TCO step.
-} Tail;
+};
 
-typedef union {
+union Step {
   Res res;
   Tail tail;
-} Step;
+};
 
 #define mk_res(e, v) (Step){.res={.env=(e), .val=(v), .empty0=obj0}}
 #define mk_tail(caller, callee, code) (Step){.tail={caller, callee, code}}

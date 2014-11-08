@@ -61,13 +61,13 @@ static Chars_const obj_tag_names[] = {
   "Sym",
 };
 
-typedef struct _Ref_head Ref_head;
-typedef struct _Data Data;
-typedef struct _Env Env;
-typedef struct _Cmpd Cmpd;
-typedef struct _Type Type;
+struct Ref_head;
+struct Data;
+struct Env;
+struct Cmpd;
+struct Type;
 
-union _Obj {
+union Obj {
   Int i;
   Uns u;
   Raw r;

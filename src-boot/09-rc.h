@@ -12,29 +12,29 @@ static const Int load_factor_numer = 1;
 static const Int load_factor_denom = 1;
 
 
-typedef struct _RC_item {
+struct RC_item {
   Obj r;
   union { // if the low bit is set, then it is a count; otherwise, it is a pointer to a count.
     Uns c; // count.
-    struct _RC_item* p;
+    RC_item* p;
   };
-} RC_item;
+};
 DEF_SIZE(RC_item);
 
 
-typedef struct {
+struct RC_bucket {
   U32 len;
   U32 cap;
   RC_item* items;
-} RC_bucket;
+};
 DEF_SIZE(RC_bucket);
 
 
-typedef struct {
+struct RC_table {
   Int len;
   Int len_buckets;
   RC_bucket* buckets;
-} RC_table;
+};
 DEF_SIZE(RC_table);
 
 
@@ -212,11 +212,11 @@ static RC_item* rc_resolve_item(RC_item* item) {
 }
 
 
-typedef struct {
+struct RC_BII {
   RC_bucket* bucket;
   RC_item* item;
   Int index;
-} RC_BII;
+};
 
 static RC_BII rc_get_BII(Obj r) {
   // returns the resolved item but the original bucket and item index.

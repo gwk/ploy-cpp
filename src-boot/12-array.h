@@ -6,10 +6,10 @@
 #include "11-mem.h"
 
 
-typedef struct {
+struct Array {
   Mem mem;
   Int cap;
-} Array;
+};
 
 #define array0 (Array){.mem=mem0, .cap=0}
 

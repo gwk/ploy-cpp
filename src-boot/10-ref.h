@@ -6,7 +6,7 @@
 #include "09-rc.h"
 
 
-struct _Ref_head {
+struct Ref_head {
   Obj type;
 };
 
