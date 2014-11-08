@@ -47,7 +47,7 @@ static void reduce_stack_limit() {
 
 int main(int argc, Chars_const argv[]) {
   assert_host_basic();
-  assert(size_Obj == size_Word);
+  assert(size_Obj == size_Raw);
   reduce_stack_limit();
   rc_init();
   type_init_table();

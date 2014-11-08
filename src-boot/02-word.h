@@ -32,30 +32,11 @@ typedef void* Raw;
 typedef Char* Chars;
 typedef const Char* Chars_const;
 
-union W32 { // 32 bit generic word.
-  I32 i;
-  U32 u;
-  F32 f;
-};
-
-union W64 { // 64 bit generic word.
-  I64 i;
-  U64 u;
-  F64 f;
-};
-
 #if ARCH_32_WORD
 typedef float Flt;
 #elif ARCH_64_WORD
 typedef double Flt;
 #endif
-
-union Word { // generic word.
-  Int i;
-  Uns u;
-  Flt f;
-  Raw r;
-};
 
 // enforce usage of custom types defined above.
 #undef bool
@@ -96,7 +77,6 @@ DEF_SIZE(Int);
 DEF_SIZE(Uns);
 DEF_SIZE(Flt);
 DEF_SIZE(Raw);
-DEF_SIZE(Word);
 DEF_SIZE(CFile);
 
 // the assumed heap pointer alignment is based on the OSX malloc man page,
@@ -149,17 +129,10 @@ NO_RETURN fail() {
 
 static void assert_host_basic() {
   // a few sanity checks; called by main.
-  assert(size_Word == size_Int);
-  assert(size_Word == size_Uns);
-  assert(size_Word == size_Flt);
-  assert(size_Word == size_Raw);
+  assert(size_Raw == size_Int);
+  assert(size_Raw == size_Uns);
+  assert(size_Raw == size_Raw);
 }
-
-
-UNUSED_FN static Word word_with_Int(Int i) { return (Word){.i=i}; }
-UNUSED_FN static Word word_with_Uns(Uns u) { return (Word){.u=u}; }
-UNUSED_FN static Word word_with_Flt(Flt f) { return (Word){.f=f}; }
-UNUSED_FN static Word word_with_Raw(Raw r) { return (Word){.r=r}; }
 
 
 static Int int_min(Int a, Int b) {
