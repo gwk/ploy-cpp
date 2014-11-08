@@ -17,7 +17,7 @@ struct _Branch {
 };
 
 
-static const Int depth = 18;
+static const Int depth = 16;
 
 Node gen_tree(Int n, Node t) {
   if (!n) {

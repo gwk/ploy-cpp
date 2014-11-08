@@ -1,5 +1,5 @@
 {
   'src': '$SRC_DIR/fib-dumb.ploy',
-  'out': '317811\n',
+  'out': '121393\n',
   'timeout': 10,
 }

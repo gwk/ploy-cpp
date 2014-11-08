@@ -1,4 +1,4 @@
-<let n 28>
+<let n 26>
 
 <let-fn fib-dumb [-n]
   <if

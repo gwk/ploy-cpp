@@ -1,5 +1,5 @@
 {
   'src': '$SRC_DIR/tree2-sum.ploy',
-  'out' :'262144\n',
+  'out' :'65536\n',
   'timeout': 10,
 }

@@ -1,4 +1,4 @@
-n = 28
+n = 26
 
 def fib_dumb(n):
   if n == 0: return 0
