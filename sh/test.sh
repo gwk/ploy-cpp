@@ -4,4 +4,11 @@
 set -e
 [[ $(dirname "$0") == sh ]] || { echo "error: must run from root dir" 1>&2; exit 1; }
 
-tools/run-tests.sh _bld/ploy-dbg "$@"
+if [[ "$1" == "-dbg" ]]; then
+  suffix=$1
+  shift;
+else
+  suffix=''
+fi
+
+tools/run-tests.sh _bld/ploy$suffix "$@"
