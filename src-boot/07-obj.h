@@ -27,12 +27,12 @@ static const Uns max_Uns_tagged  = max_Int_tagged;
 // we cannot shift signed values in C so we use multiplication by powers of 2 instead.
 static const Int shift_factor_Int = 1L << width_obj_tag;
 
-typedef enum {
+enum Obj_tag {
   ot_ref = 0,  // pointer to managed object.
   ot_ptr = 1,  // Host pointer.
   ot_int = 2,  // val; 30/62 bit signed int; 30 bits gives a range of  +/-536M.
   ot_sym = 3,  // Sym values are indices into global_sym_table, interleaved with Data words.
-} Obj_tag;
+};
 
 // note: previously there was a scheme to have a 31/63 bit float type;
 // the low tag bit indicated 32/64 bit IEEE 754 float with low bit rounded to even.

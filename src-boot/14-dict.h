@@ -6,11 +6,11 @@
 #include "13-set.h"
 
 
-typedef struct {
+struct Dict {
   Int len;
   Int len_buckets;
   Hash_bucket* buckets;
-} Dict;
+};
 DEF_SIZE(Dict);
 
 static const Dict dict0 = {.len=0, .len_buckets=0, .buckets=NULL};

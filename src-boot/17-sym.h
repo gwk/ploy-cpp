@@ -110,10 +110,10 @@ S(types) \
 
 // sym indices.
 #define S(s) si_##s,
-typedef enum {
+enum Sym_index {
   SYM_LIST
   si_END,
-} Sym_index;
+};
 #undef S
 
 #define S(s) #s,

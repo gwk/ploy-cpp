@@ -26,12 +26,12 @@ C(Ref_alloc) \
 
 
 // index enum for the counters.
-typedef enum {
+enum Counter_index {
 #define C(c) ci_##c,
 COUNTER_LIST
 #undef C
   ci_end
-} Counter_index;
+};
 
 
 #if OPTION_ALLOC_COUNT

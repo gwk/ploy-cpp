@@ -66,10 +66,10 @@ T(File, struct4, "name", t_Data, "ptr", t_Ptr, "is-readable", t_Bool, "is_writea
 // type indices for the basic types allow us to dispatch on type using a single index value,
 // rather than multiple pointer comparisons.
 #define T(t, ...) ti_##t,
-typedef enum {
+enum Type_index {
   TYPE_LIST
   ti_END
-} Type_index;
+};
 #undef T
 
 // the basic types are prefixed with t_.
