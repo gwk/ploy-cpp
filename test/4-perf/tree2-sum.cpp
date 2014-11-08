@@ -5,14 +5,15 @@
 #include <stdlib.h>
 
 typedef long Int;
-typedef struct _Branch Branch;
 
-typedef union {
+struct Branch;
+
+union Node {
   Int leaf; // leaf.
   Branch* branch; // branch.
-} Node;
+};
 
-struct _Branch {
+struct Branch {
   Node els[2];
 };
 

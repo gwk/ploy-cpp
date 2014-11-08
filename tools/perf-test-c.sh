@@ -3,4 +3,4 @@
 
 set -e
 cd $(dirname "$0")/..
-tools/perf-test.sh c 'clang -Ofast' '' "$@"
+tools/perf-test.sh c 'clang++ -Ofast' '' "$@"
