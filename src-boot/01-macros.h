@@ -117,7 +117,7 @@ for (Int i = (n) - 1, _end_##i = (m), _step_##i = (s); i >= _end_##i; i -= _step
 #define STRING_FROM_TOKEN(x) #x
 #define UNUSED_VAR(x) _Pragma(STRING_FROM_TOKEN(unused(x)))
 
-// force struct alignment. ex: typedef struct { I32 a, b; } ALIGNED_8 S;
+// force struct alignment. ex: typedef struct { I32 a, b; } ALIGNED_TO_8 S;
 #define ALIGNED_TO_4 __attribute__((__aligned__(4)))
 #define ALIGNED_TO_8 __attribute__((__aligned__(8)))
 
