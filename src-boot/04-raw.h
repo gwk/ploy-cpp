@@ -33,7 +33,7 @@ static void raw_dealloc(Raw p, Counter_index ci) {
 
 static Raw raw_realloc(Raw p, Int size, Counter_index ci) {
   assert(size >= 0);
-  if (!p) { // old size is 0, so treate this as an initial alloc.
+  if (!p) { // old size is 0, so treate this as an initial alloc for accounting.
     return raw_alloc(size, ci);
   }
   if (size) {
