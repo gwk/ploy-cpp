@@ -26,6 +26,11 @@ if [[ "$1" == "-dbg" ]]; then
 -O0
 "
 #-fsanitize=address # fails on clang 3.5: linker error for libclang_rt.asan_osx_dynamic.dylib.
+#-fsanitize-memory-track-origins  Enable origins tracking in MemorySanitizer
+#-fstandalone-debug         Emit full debug info for all types used by the program
+#-fstack-protector-strong   Use a strong heuristic to apply stack protectors to functions
+#-fstack-protector-all      Force the usage of stack protectors for all functions
+#-ftrapv-handler=func-name  Specify the function to be called on overflow
 
 else
   opts="\
@@ -38,7 +43,7 @@ else
 #-fvectorize                Enable the loop vectorization passes
 #-fslp-vectorize            Enable the superword-level parallelism vectorization passes
 #-fslp-vectorize-aggressive Enable the BB vectorization passes
-#-fstrict-enums             Enable optimizations based on the strict definition of an enum's value range
+
 fi
 
 if [[ "$#" == 0 ]]; then
@@ -65,20 +70,12 @@ $cmd_prefix clang++ \
 -Wno-class-varargs \
 -fstrict-aliasing \
 -ftrapv \
+-fno-cxx-exceptions \
 -g \
--ferror-limit=4 \
+-ferror-limit=1 \
 $opts \
 -I _bld \
 "$@"
 
-#-fstandalone-debug      Emit full debug info for all types used by the program
-
-#-fstack-protector-strong   Use a strong heuristic to apply stack protectors to functions
-#-fstack-protector-all      Force the usage of stack protectors for all functions
-#-fsanitize-memory-track-origins  Enable origins tracking in MemorySanitizer
-
-#-ftrapv-handler=func-name  Specify the function to be called on overflow
-
-#-foptimize-sibling-calls   tail call elimination
-#-mllvm -tailcallelim       tail calls?
-
+#-fno-rtti
+#-fstrict-enums   Enable optimizations based on the strict definition of an enum's value range
