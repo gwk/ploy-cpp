@@ -77,13 +77,18 @@ union Obj {
   Env* e;
   Cmpd* c;
   Type* t;
+  Obj(): r(NULL) {}
+  Obj(Int _i): i(_i) {} // TODO: change semantics to shift?
+  Obj(Uns _u): u(_u) {} // TODO: change semantics to shift?
+  Obj(Raw _r): r(_r) {}
+  Obj(Type* _t): t(_t) {}
 };
 DEF_SIZE(Obj);
 
 
 // invalid object; essentially the NULL pointer.
 // used as a return value for error conditions and a marker for cleared or invalid memory.
-static const Obj obj0 = (Obj){.u=0};
+static const Obj obj0;
 
 #define assert_valid(o) assert(!is(o, obj0))
 

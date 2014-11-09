@@ -9,9 +9,10 @@
 struct Array {
   Mem mem;
   Int cap;
+  Array(Mem m, Int c): mem(m), cap(c) {}
 };
 
-#define array0 (Array){.mem=mem0, .cap=0}
+#define array0 Array(mem0, 0)
 
 
 static void assert_array_is_valid(Array* a) {

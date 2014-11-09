@@ -8,6 +8,7 @@
 
 struct Ref_head {
   Obj type;
+  Ref_head(Obj t): type(t) {}
 };
 
 
@@ -44,7 +45,7 @@ static Bool ref_is_type(Obj r) {
 static Obj ref_new(Int size, Obj type) {
   assert(size >= size_Raw * 2);
   counter_inc(ci_Ref_rc); // ret/rel counter.
-  Obj r = (Obj){.r=raw_alloc(size, ci_Ref_alloc)}; // alloc counter also incremented.
+  Obj r = Obj(raw_alloc(size, ci_Ref_alloc)); // alloc counter also incremented.
   assert(!obj_tag(r)); // check that alloc is sufficiently aligned for pointer tagging.
   rc_insert(r);
   r.h->type = type;

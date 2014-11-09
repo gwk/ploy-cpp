@@ -11,16 +11,17 @@
 struct Str {
   Int len;
   Chars_const chars;
+  Str(Int l, Chars_const c): len(l), chars(c) {}
 };
 
-#define str0 (Str){.len=0, .chars=NULL}
+#define str0 Str(0, NULL)
 
 // for use with "%.*s" formatter.
 #define FMT_STR(str) cast(I32, (str).len), (str).chars
 
 
 static Str str_mk(Int len, Chars_const chars) {
-  return (Str){.len=len, .chars=chars};
+  return Str(len, chars);
 }
 
 

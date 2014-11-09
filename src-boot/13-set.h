@@ -17,10 +17,11 @@ struct Set {
   Int len;
   Int len_buckets;
   Hash_bucket* buckets;
+  Set(Int l, Int lb, Hash_bucket* b): len(l), len_buckets(lb), buckets(b) {}
 };
 DEF_SIZE(Set);
 
-static const Set set0 = {.len=0, .len_buckets=0, .buckets=NULL};
+#define set0 Set(0, 0, NULL)
 
 
 static void assert_set_is_valid(Set* s) {
@@ -74,11 +75,7 @@ static void set_insert(Set* s, Obj o) {
     // TODO: assess resize criteria.
     Int len_buckets = s->len_buckets * 2;
     Int size = len_buckets * size_Hash_bucket;
-    Set s1 = {
-      .len = s->len,
-      .len_buckets = len_buckets,
-      .buckets = cast(Hash_bucket*, raw_alloc(size, ci_Set)),
-    };
+    Set s1 = Set(s->len, len_buckets, cast(Hash_bucket*, raw_alloc(size, ci_Set)));
     memset(s1.buckets, 0, cast(Uns, size));
     // copy existing elements.
     for_in(i, s->len_buckets) {

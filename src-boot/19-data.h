@@ -12,7 +12,7 @@ DEF_SIZE(Data);
 
 
 // zero length data word.
-const Obj blank = (Obj){.u = ot_sym | data_word_bit};
+const Obj blank = Obj((Uns)(ot_sym | data_word_bit));
 
 
 static Int data_ref_len(Obj d) {

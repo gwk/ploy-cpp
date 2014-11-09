@@ -7,24 +7,26 @@
 struct Res {
   Obj env; // the env to be passed to the next step.
   Obj val; // the result from the step just performed.
-  Obj empty0; // padding; must be obj0 for polymorph test.
+  Obj empty; // padding; must be obj0 for polymorph test.
+  Res(Obj e, Obj v): env(e), val(v), empty(obj0) {}
 };
 
 struct Tail {
   Obj env; // the caller env; this struct slot must match that of Res.
   Obj callee_env; // the callee_env, to be used for the next tail step.
   Obj code; // code for the TCO step.
+  Tail(Obj e, Obj ce, Obj c): env(e), callee_env(ce), code(c) {}
 };
 
 union Step {
   Res res;
   Tail tail;
+  Step(Obj e, Obj v): res(e, v) {}
+  Step(Obj e, Obj ce, Obj c): tail(e, ce, c) {}
 };
 
-#define mk_res(e, v) (Step){.res={.env=(e), .val=(v), .empty0=obj0}}
-#define mk_tail(caller, callee, code) (Step){.tail={caller, callee, code}}
 
-#define is_step_res(step) is(step.res.empty0, obj0)
+#define is_step_res(step) is(step.res.empty, obj0)
 #define is_step_tail(step) !is_step_res(step)
 
 
@@ -32,18 +34,18 @@ static Step run_sym(Trace* t, Obj env, Obj code) {
   // owns env.
   assert(obj_is_sym(code));
   if (code.u <= s_END_SPECIAL_SYMS.u) {
-    return mk_res(env, rc_ret_val(code)); // special syms are self-evaluating.
+    return Step(env, rc_ret_val(code)); // special syms are self-evaluating.
   }
   Obj val = env_get(env, code);
   exc_check(!is(val, obj0), "lookup error: %o", code); // lookup failed.
-  return mk_res(env, rc_ret(val));
+  return Step(env, rc_ret(val));
 }
 
 
 static Step run_Quo(Int d, Trace* t, Obj env, Obj code) {
   // owns env.
   exc_check(cmpd_len(code) == 1, "Quo requires 1 field; received %i", cmpd_len(code));
-  return mk_res(env, rc_ret(cmpd_el(code, 0)));
+  return Step(env, rc_ret(cmpd_el(code, 0)));
 }
 
 
@@ -55,7 +57,7 @@ static Step run_Do(Int d, Trace* t, Obj env, Obj code) {
   Obj exprs = cmpd_el(code, 0);
   Int len = cmpd_len(exprs);
   if (!len) {
-    return mk_res(env, rc_ret_val(s_void));
+    return Step(env, rc_ret_val(s_void));
   }
   Int last = len - 1;
   for_in(i, last) {
@@ -63,7 +65,7 @@ static Step run_Do(Int d, Trace* t, Obj env, Obj code) {
     env = step.res.env;
     rc_rel(step.res.val); // value ignored.
   };
-  return mk_tail(.env=env, .callee_env=env, .code=cmpd_el(exprs, last));
+  return Step(env, env, cmpd_el(exprs, last));
 }
 
 
@@ -72,7 +74,7 @@ static Step run_Scope(Int d, Trace* t, Obj env, Obj code) {
   exc_check(cmpd_len(code) == 1, "Scope requires 1 field; received %i", cmpd_len(code));
   Obj expr = cmpd_el(code, 0);
   Obj sub_env = env_push_frame(rc_ret(env));
-  return mk_tail(.env=env, .callee_env=sub_env, .code=expr);
+  return Step(env, sub_env, expr);
 }
 
 
@@ -101,7 +103,7 @@ static Step run_Bind(Int d, Trace* t, Obj env, Obj code) {
   Step step = run(d, t, env, expr);
   Obj env1 = bind_val(t, bool_is_true(is_mutable), step.res.env, rc_ret_val(sym),
     rc_ret(step.res.val));
-  return mk_res(env1, step.res.val);
+  return Step(env1, step.res.val);
 }
 
 
@@ -115,7 +117,7 @@ static Step run_If(Int d, Trace* t, Obj env, Obj code) {
   env = step.res.env;
   Obj branch = is_true(step.res.val) ? then : else_;
   rc_rel(step.res.val);
-  return mk_tail(.env=env, .callee_env=env, .code=branch);
+  return Step(env, env, branch);
 }
 
 
@@ -169,7 +171,7 @@ static Step run_Fn(Int d, Trace* t, Obj env, Obj code) {
     pars,
     rc_ret(ret_type),
     rc_ret(body));
-  return mk_res(env, f);
+  return Step(env, f);
 }
 
 
@@ -293,19 +295,19 @@ static Step run_call_func(Int d, Trace* t, Obj env, Obj call, Mem vals, Bool is_
   mem_dealloc(vals);
   if (bool_is_true(is_native)) {
 #if OPTION_TCO
-    // caller will own .env, .callee_env, but not .code.
-    return mk_tail(.env=env, .callee_env=callee_env, .code=body);
+    // caller will own env, callee_env, but not .code.
+    return Step(env, callee_env, body);
 #else // NO TCO.
     Step step = run(d, t, callee_env, body); // owns callee_env.
     rc_rel(step.res.env);
-    return mk_res(env, step.res.val); // NO TCO.
+    return Step(env, step.res.val); // NO TCO.
 #endif
   } else { // host function.
     exc_check(obj_is_ptr(body), "host func: %o\nbody is not a Ptr: %o", func, body);
     Func_host_ptr f_ptr = cast(Func_host_ptr, ptr_val(body));
     Obj res = f_ptr(t, callee_env);
     rc_rel(callee_env);
-    return mk_res(env, res); // NO TCO.
+    return Step(env, res); // NO TCO.
   }
 }
 
@@ -334,7 +336,7 @@ static Step run_call_accessor(Int d, Trace* t, Obj env, Obj call, Mem vals) {
       Obj val = rc_ret(cmpd_el(accessee, i));
       rc_rel(accessor);
       rc_rel(accessee);
-      return mk_res(env, val);
+      return Step(env, val);
     }
   }
   errFL("call: %o\naccessor field not found: %o\ntype: %o\nfields:",
@@ -372,7 +374,7 @@ static Step run_call_mutator(Int d, Trace* t, Obj env, Obj call, Mem vals) {
       rc_rel(m.els[i]);
       m.els[i] = val;
       rc_rel(mutator);
-      return mk_res(env, mutatee);
+      return Step(env, mutatee);
     }
   }
   errFL("call: %o\nmutator field not found: %o\ntype: %o\nfields:",
@@ -393,7 +395,7 @@ static Step run_call_EXPAND(Int d, Trace* t, Obj env, Obj call, Mem vals) {
   mem_dealloc(vals);
   rc_rel_val(callee);
   Obj res = expand(0, env, expr);
-  return mk_res(env, res);
+  return Step(env, res);
 }
 
 
@@ -448,7 +450,7 @@ static Step run_call_CONS(Int d, Trace* t, Obj env, Obj call, Mem vals) {
     exc_raise("call: %o\nCONS type is not a struct or arr type", call);
   }
   mem_dealloc(vals);
-  return mk_res(env, res);
+  return Step(env, res);
 }
 
 
@@ -581,11 +583,11 @@ static Step run_step_disp(Int d, Trace* t, Obj env, Obj code) {
     exc_raise("cannot run Ptr object: %o", code);
   }
   if (ot == ot_int) {
-    return mk_res(env, rc_ret_val(code)); // self-evaluating.
+    return Step(env, rc_ret_val(code)); // self-evaluating.
   }
   if (ot == ot_sym) {
     if (obj_is_data_word(code)) {
-      return mk_res(env, rc_ret_val(code)); // self-evaluating.
+      return Step(env, rc_ret_val(code)); // self-evaluating.
     } else {
       return run_sym(t, env, code);
     }
@@ -598,7 +600,7 @@ static Step run_step_disp(Int d, Trace* t, Obj env, Obj code) {
     case ti_Data:
     case ti_Accessor:
     case ti_Mutator:
-      return mk_res(env, rc_ret(code)); // self-evaluating.
+      return Step(env, rc_ret(code)); // self-evaluating.
     RUN(Quo);
     RUN(Do);
     RUN(Scope);
@@ -643,7 +645,7 @@ static Step run_tail(Int d, Trace* parent_trace, Step step) {
   }
   Obj base_env = step.tail.env; // hold onto the 'next' env for the topmost caller.
   Bool update_base_env = true; // false once any tail code creates a new scope.
-  Trace t = {.code=obj0, .elided_step_count=-1, .next=parent_trace};
+  Trace t(obj0, -1, parent_trace);
   do { // TCO step.
     run_err_trace(d, trace_tail_prefix, step.tail.code);
     // if the tail step is a scope or call, then a new callee environment is introduced.
@@ -681,7 +683,7 @@ static Step run_tail(Int d, Trace* parent_trace, Step step) {
 static Step run(Int depth, Trace* parent_trace, Obj env, Obj code) {
   // owns env.
   Int d = depth + 1;
-  Trace t = {.code=code, .elided_step_count=0, .next=parent_trace};
+  Trace t(code, 0, parent_trace);
   Step step = run_step(d, &t, env, code);
   return run_tail(d, &t, step);
 }

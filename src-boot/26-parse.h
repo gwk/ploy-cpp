@@ -8,6 +8,7 @@ struct Src_pos {
   Int off;
   Int line;
   Int col;
+  Src_pos(Int o, Int l, Int c): off(o), line(l), col(c) {}
 };
 
 
@@ -18,6 +19,8 @@ struct Parser {
   Str s;
   Src_pos pos;
   Chars e; // error message.
+  Parser(Dict* _locs, Obj _path, Obj _src, Str _s, Src_pos _pos, Chars _e):
+  locs(_locs), path(_path), src(_src), s(_s), pos(_pos), e(_e) {}
 };
 
 
@@ -533,14 +536,7 @@ static Obj parse_sub_expr(Parser* p) {
 
 static Obj parse_src(Dict* src_locs, Obj path, Obj src, Chars* e) {
   // caller must free e.
-  Parser p = (Parser) {
-    .locs=src_locs,
-    .path=path,
-    .src=src,
-    .s=data_str(src),
-    .pos=(Src_pos){.off=0, .line=0, .col=0,},
-    .e=NULL,
-  };
+  Parser p = Parser(src_locs, path, src, data_str(src),Src_pos(0, 0, 0), NULL);
   Mem m = parse_exprs(&p, 0);
   Obj o;
   if (p.e) {

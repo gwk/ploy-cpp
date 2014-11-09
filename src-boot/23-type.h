@@ -7,10 +7,12 @@
 
 
 struct Type {
-  Obj type;
+  Ref_head head;
   Int len;
   Obj name;
   Obj kind;
+  Type(): head(obj0), len(0), name(NULL), kind(obj0) {}
+  Type(Ref_head h, Int l, Obj n, Obj k): head(h), len(l), name(n), kind(k) {}
 } ALIGNED_TO_WORD;
 DEF_SIZE(Type);
 
@@ -86,7 +88,7 @@ static Type type_table[ti_END];
 
 static Obj type_for_index(Type_index ti) {
   assert_valid_type_index(ti);
-  return (Obj){.t=type_table + ti};
+  return Obj(type_table + ti);
 }
 
 
@@ -287,12 +289,7 @@ static Obj type_kind_init_class_dispatcher() {
 
 static void type_add(Obj type, Chars_const c_name, Obj kind) {
   Obj name = sym_new_from_c(c_name);
-  *type.t = (Type){
-    .type=rc_ret(t_Type),
-    .len=2,
-    .name=name,
-    .kind=kind
-  };
+  *type.t = Type(Ref_head(rc_ret(t_Type)), 2, name, kind);
 }
 
 
@@ -303,7 +300,7 @@ static void type_init_table() {
   // we can now set all of the core type t_<T> c pointer variables,
   // which are necessary for initialization of all other basic ploy objects.
   // we must also insert these objects into the rc table using the special rc_insert function.
-#define T(type, ...) t_##type = rc_insert((Obj){.t=(type_table + ti_##type)});
+#define T(type, ...) t_##type = rc_insert(Obj(type_table + ti_##type));
   TYPE_LIST
 #undef T
 }
@@ -336,7 +333,7 @@ static void type_cleanup() {
   // so that Type releases itself first and then verifies that its rc count is zero.
   for_in_rev(i, ti_END) {
     Obj o = type_for_index(cast(Type_index, i));
-    rc_rel(o.t->type);
+    rc_rel(o.h->type);
     rc_rel_val(o.t->name); // order does not matter as long as name is always a symbol.
     rc_remove(o);
   }

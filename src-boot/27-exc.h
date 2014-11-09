@@ -10,10 +10,11 @@ struct Trace {
   Obj code;
   Int elided_step_count;
   Trace* next;
+  Trace(Obj c, Int e, Trace* n): code(c), elided_step_count(e), next(n) {}
 }; // Trace objects are live on the stack only.
 
 
-static Dict global_src_locs;
+static Dict global_src_locs = dict0;
 
 static Obj track_src(Obj original, Obj derived) {
   if (!obj_is_ref(original) || !obj_is_ref(derived)) return derived;

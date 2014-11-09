@@ -9,10 +9,11 @@
 struct Mem {
   Int len;
   Obj* els; // TODO: union with Obj el to optimize the len == 1 case?
+  Mem(Int l, Obj* e): len(l), els(e) {}
 };
 
 
-#define mem0 (Mem){.len=0, .els=NULL}
+#define mem0 Mem(0, NULL)
 
 
 // iterate over mem using pointer Obj pointer e, start index m, end index n.
@@ -29,11 +30,6 @@ it++)
 #define it_mem_to(it, mem, to) it_mem_from_to(it, mem, 0, to)
 #define it_mem_from(it, mem, from) it_mem_from_to(it, mem, from, (mem).len)
 #define it_mem(it, mem) it_mem_from(it, mem, 0)
-
-
-static Mem mem_mk(Int len, Obj* els) {
-  return (Mem){.len=len, .els=els};
-}
 
 
 UNUSED_FN static Bool mem_eq(Mem a, Mem b) {
@@ -61,7 +57,7 @@ static Mem mem_next(Mem m) {
   // as a minor optimization, we do not set m.els to NULL if len == 0,
   // but we could if it matters.
   assert(m.len > 0 && m.els);
-  return mem_mk(m.len - 1, m.els + 1);
+  return Mem(m.len - 1, m.els + 1);
 }
 
 

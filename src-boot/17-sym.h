@@ -12,7 +12,7 @@ static const Int sym_index_end = 1L << (size_Int * 8 - width_sym_tags);
 static Array global_sym_names = array0;
 
 
-#define _sym_with_index(index) (Obj){ .u = (cast(Uns, index) << width_sym_tags) | ot_sym }
+#define _sym_with_index(index) Obj((Uns)((cast(Uns, index) << width_sym_tags) | ot_sym))
 
 static Obj sym_with_index(Int i) {
   check(i < sym_index_end, "Sym index is too large: %lx", i);

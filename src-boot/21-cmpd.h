@@ -204,7 +204,7 @@ static Obj* cmpd_els(Obj c) {
 
 
 static Mem cmpd_mem(Obj c) {
-  return mem_mk(cmpd_len(c), cmpd_els(c));
+  return Mem(cmpd_len(c), cmpd_els(c));
 }
 
 

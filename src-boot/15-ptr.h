@@ -9,7 +9,7 @@
 static Obj ptr_new(Raw p) {
   Uns u = cast(Uns, p);
   assert(!(u & obj_tag_mask));
-  return rc_ret_val((Obj){.u=(u | ot_ptr)});
+  return rc_ret_val(Obj((Uns)(u | ot_ptr)));
 }
 
 

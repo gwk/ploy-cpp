@@ -10,10 +10,11 @@ struct Dict {
   Int len;
   Int len_buckets;
   Hash_bucket* buckets;
+  Dict(Int l, Int lb, Hash_bucket* b): len(l), len_buckets(lb), buckets(b) {}
 };
 DEF_SIZE(Dict);
 
-static const Dict dict0 = {.len=0, .len_buckets=0, .buckets=NULL};
+#define dict0 Dict(0, 0, NULL)
 
 
 static void assert_dict_is_valid(Dict* d) {
@@ -87,11 +88,7 @@ static void dict_insert(Dict* d, Obj k, Obj v) {
     // TODO: assess resize criteria.
     Int len_buckets = d->len_buckets * 2;
     Int size = len_buckets * size_Hash_bucket;
-    Dict d1 = {
-      .len = d->len,
-      .len_buckets = len_buckets,
-      .buckets = cast(Hash_bucket*, raw_alloc(size, ci_Dict)),
-    };
+    Dict d1 = Dict(d->len, len_buckets, cast(Hash_bucket*, raw_alloc(size, ci_Dict)));
     memset(d1.buckets, 0, cast(Uns, size));
     // copy existing elements.
     for_in(i, d->len_buckets) {

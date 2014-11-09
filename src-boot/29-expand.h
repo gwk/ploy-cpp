@@ -60,7 +60,7 @@ static Obj expand(Int d, Obj env, Obj code) {
   check(d < OPTION_REC_LIMIT, "macro expansion exceeded recursion limit: %i\n%o",
     OPTION_REC_LIMIT, code);
 #endif
-  Trace trace = {.code=code, .elided_step_count=0, .next=NULL};
+  Trace trace(code, 0, NULL);
   Trace* t = &trace;
   if (!obj_is_cmpd(code)) {
     return code;
