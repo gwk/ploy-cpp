@@ -3,7 +3,7 @@
 # $^: The names of all the prerequisites, with spaces between them. 
 
 # first target is the default.
-default: basic
+default: parse
 
 _bld/prof-res-usage: tools/cc.sh tools/prof-res-usage.cpp
 	$^ -o $@
@@ -76,12 +76,12 @@ all: basic preprocess ast cov ll analyze callgraph test perf-test
 
 basic: _bld/ploy _bld/ploy-dbg
 
+clean:
+	rm -rf _bld/*
+
 parse:
 	tools/cc.sh -dbg src-boot/ploy.cpp -fsyntax-only
 	tools/cc.sh src-boot/ploy.cpp -fsyntax-only
-
-clean:
-	rm -rf _bld/*
 
 preprocess: _bld/ploy-post-proc-no-libs.cpp _bld/ploy-dbg-post-proc-no-libs.cpp
 
