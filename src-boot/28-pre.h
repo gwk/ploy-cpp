@@ -11,13 +11,13 @@ static Obj preprocess(Obj code) {
   if (!obj_is_cmpd(code)) {
     return rc_ret(code);
   }
-  if (is(ref_type(code), t_Comment)) {
+  if (ref_type(code) == t_Comment) {
     return obj0;
   }
   Array dst = array0;
   it_mem(it, cmpd_mem(code)) {
     Obj o = preprocess(*it);
-    if (!is(o, obj0)) {
+    if (o.vld()) {
       array_append(&dst, o); // owns o.
     }
   }

@@ -14,14 +14,14 @@ static Obj parse_and_eval(Dict* src_locs, Obj env, Obj path, Obj src, Bool shoul
     err("parse error: ");
     err(e);
     raw_dealloc(e, ci_Chars);
-    assert(is(code, obj0));
+    assert(!code.vld());
     fail();
   }
 #if VERBOSE_PARSE
   errFL("parse_and_eval: %o\n%o", path, code);
 #endif
   Step step = eval_mem_expr(env, code);
-  if (should_output_val && !is(step.res.val, s_void)) {
+  if (should_output_val && step.res.val != s_void) {
     write_repr(stdout, step.res.val);
     fputc('\n', stdout);
   }

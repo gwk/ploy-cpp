@@ -10,15 +10,13 @@ struct Array {
   Mem mem;
   Int cap;
   Array(Mem m, Int c): mem(m), cap(c) {}
+
+  Bool vld() {
+    return mem.vld() && cap >= 0 && mem.len <= cap;
+  }
 };
 
 #define array0 Array(mem0, 0)
-
-
-static void assert_array_is_valid(Array* a) {
-  assert_mem_is_valid(a->mem);
-  assert(a->cap >= 0 && a->mem.len <= a->cap);
-}
 
 
 static Array array_alloc_cap(Int cap) {
@@ -30,7 +28,7 @@ static Array array_alloc_cap(Int cap) {
 
 
 static void array_grow_cap(Array* a) {
-  assert_array_is_valid(a);
+  assert(a->vld());
   if (a->cap == 0) {
     a->cap = 2; // minimum capacity for 8 byte words with 16 byte min malloc.
   } else {
@@ -42,7 +40,7 @@ static void array_grow_cap(Array* a) {
 
 static Int array_append(Array* a, Obj o) {
   // semantics can be move (owns o) or borrow (must be cleared prior to dealloc).
-  assert_array_is_valid(a);
+  assert(a->vld());
   if (a->mem.len == a->cap) {
     array_grow_cap(a);
   }
@@ -51,7 +49,7 @@ static Int array_append(Array* a, Obj o) {
 
 
 static Bool array_contains(Array* a, Obj r) {
-  assert_array_is_valid(a);
+  assert(a->vld());
   it_mem(it, a->mem) {
     if (it->u == r.u) {
       return true;

@@ -7,7 +7,7 @@
 static Step eval(Obj env, Obj code) {
   //Trace t = (Trace){.call=code, .next=NULL};
   Obj preprocessed = preprocess(code); // borrows code.
-  if (is(preprocessed, obj0)) {
+  if (!preprocessed.vld()) {
     return Step(env, rc_ret_val(s_void)); // TODO: document why this is necessary.
   }
   Obj expanded = expand(0, env, preprocessed); // owns preprocessed.
@@ -23,14 +23,14 @@ static Step eval_mem_expr(Obj env, Obj exprs) {
   // this is quite different than calling eval on a Do instance;
   // besides evaluating a different, non-Expr type,
   // it also does the complete eval cycle on each item in turn.
-  assert(is(obj_type(exprs), t_Arr_Expr));
+  assert(obj_type(exprs) == t_Arr_Expr);
   Mem m = cmpd_mem(exprs);
   if (m.len == 0) {
     return Step(env, rc_ret_val(s_void));
   }
   Int last = m.len - 1;
   it_mem_to(it, m, last) {
-    if (is(*it, s_HALT)) {
+    if (*it == s_HALT) {
       return Step(env, rc_ret_val(s_HALT));
     }
     Step step = eval(env, *it);

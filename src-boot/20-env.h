@@ -37,7 +37,7 @@ static Obj env_rel_fields(Obj o) {
 static Obj env_new(Bool is_mutable, Bool is_public, Obj key, Obj val, Obj tl) {
   // owns key, val, tl.
   assert(obj_is_sym(key));
-  assert(is(tl, s_ENV_END) || obj_is_env(tl));
+  assert(tl == s_ENV_END || obj_is_env(tl));
   Obj o = ref_new(size_Env, rc_ret(t_Env));
   o.e->is_mutable = is_mutable;
   o.e->is_public = is_public;
@@ -50,9 +50,9 @@ static Obj env_new(Bool is_mutable, Bool is_public, Obj key, Obj val, Obj tl) {
 
 static Obj env_get(Obj env, Obj key) {
   assert(!sym_is_special(key));
-  while (!is(env, s_ENV_END)) {
+  while (env != s_ENV_END) {
     assert(obj_is_env(env));
-    if (is(env.e->key, key)) { // key is never ENV_FRAME_KEY, since marker is special.
+    if (env.e->key == key) { // key is never ENV_FRAME_KEY, since marker is special.
       return env.e->val;
     }
     env = env.e->tl;
@@ -72,12 +72,12 @@ static Obj env_bind(Obj env, Bool is_mutable, Bool is_public, Obj key, Obj val) 
   // returns obj0 on failure.
   assert(!sym_is_special(key));
   Obj e = env;
-  while (!is(e, s_ENV_END)) { // check that symbol is not already bound.
+  while (e != s_ENV_END) { // check that symbol is not already bound.
     assert(obj_is_env(e));
     Obj k = e.e->key;
-    if (!is_mutable && is(k, s_ENV_FRAME_KEY)) { // frame boundary; check is complete.
+    if (!is_mutable && k == s_ENV_FRAME_KEY) { // frame boundary; check is complete.
       break;
-    } else if (is(k, key)) { // symbol is already bound.
+    } else if (k == key) { // symbol is already bound.
       if (is_mutable && e.e->is_mutable) { // mutate the mutable binding.
         rc_rel(key);
         rc_rel(e.e->val);

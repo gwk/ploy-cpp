@@ -13,20 +13,20 @@ struct Ref_head {
 
 
 static Obj ref_type(Obj r) {
-  assert_valid_ref(r);
+  assert(obj_is_ref(r));
   return r.h->type;
 }
 
 
 static Bool ref_is_data(Obj d) {
-  return is(ref_type(d), t_Data);
+  return ref_type(d) == t_Data;
 }
 
 
 extern Obj t_Env;
 
 static Bool ref_is_env(Obj r) {
-  return is(ref_type(r), t_Env);
+  return ref_type(r) == t_Env;
 }
 
 
@@ -38,7 +38,7 @@ static Bool ref_is_cmpd(Obj r) {
 extern Obj t_Type;
 
 static Bool ref_is_type(Obj r) {
-  return is(ref_type(r), t_Type);
+  return ref_type(r) == t_Type;
 }
 
 

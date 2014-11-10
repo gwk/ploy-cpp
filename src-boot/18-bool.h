@@ -10,8 +10,8 @@ static Obj bool_new(Int i) {
 
 
 static Bool bool_is_true(Obj b) {
-  if (is(b, s_true)) return true;
-  if (is(b, s_false)) return false;
+  if (b == s_true) return true;
+  if (b == s_false) return false;
   assert(0);
   exit(1);
 }
@@ -24,14 +24,14 @@ static Bool is_true(Obj o) {
   switch (obj_tag(o)) {
     case ot_ref: {
       Obj t = ref_type(o);
-      if (is(t, t_Data)) return !is(o, blank);
-      if (is(t, t_Env)) return true;
+      if (t == t_Data) return o != blank;
+      if (t == t_Env) return true;
       return !!cmpd_len(o);
     }
     case ot_ptr:
       return (ptr_val(o) != NULL);
     case ot_int:
-      return (!is(o, int0));
+      return o != int0;
     case ot_sym:
       return (sym_index(o) >= si_true);
   }

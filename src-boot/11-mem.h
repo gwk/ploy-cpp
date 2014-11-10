@@ -10,6 +10,14 @@ struct Mem {
   Int len;
   Obj* els; // TODO: union with Obj el to optimize the len == 1 case?
   Mem(Int l, Obj* e): len(l), els(e) {}
+
+  Bool vld() {
+    if (els) {
+      return len >= 0;
+    } else {
+      return !len;
+    }
+  }
 };
 
 
@@ -37,21 +45,6 @@ UNUSED_FN static Bool mem_eq(Mem a, Mem b) {
 }
 
 
-static void assert_mem_is_valid(Mem m) {
-  if (m.els) {
-    assert(m.len >= 0);
-  } else {
-    assert(m.len == 0);
-  }
-}
-
-
-static void assert_mem_index_is_valid(Mem m, Int i) {
-  assert_mem_is_valid(m);
-  assert(i >= 0 && i < m.len);
-}
-
-
 static Mem mem_next(Mem m) {
   // note: this may produce an invalid mem representing the end of the region;
   // as a minor optimization, we do not set m.els to NULL if len == 0,
@@ -68,7 +61,7 @@ UNUSED_FN static Obj* mem_end(Mem m) {
 
 static Obj mem_el(Mem m, Int i) {
   // return element i in m with no ownership changes.
-  assert_mem_index_is_valid(m, i);
+  assert(m.vld() && i >= 0 && i < m.len);
   return m.els[i];
 }
 
@@ -90,9 +83,9 @@ static Obj mem_el_move(Mem m, Int i) {
 
 
 static void mem_put(Mem m, Int i, Obj o) {
-  assert_mem_index_is_valid(m, i);
+  assert(m.vld() && i >= 0 && i < m.len);
 #if OPTION_MEM_ZERO
-  assert(is(m.els[i], obj0));
+  assert(!m.els[i].vld());
 #endif
   m.els[i] = o;
 }
@@ -174,7 +167,7 @@ static void mem_dealloc(Mem m) {
   // elements must have been previously moved or cleared.
 #if OPTION_MEM_ZERO
   it_mem(it, m) {
-    assert(is(*it, obj0));
+    assert(!it->vld());
   }
 #endif
   mem_dealloc_no_clear(m);

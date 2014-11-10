@@ -11,24 +11,22 @@ struct Dict {
   Int len_buckets;
   Hash_bucket* buckets;
   Dict(Int l, Int lb, Hash_bucket* b): len(l), len_buckets(lb), buckets(b) {}
+
+  Bool vld() {
+    if (buckets) {
+      return len >= 0 && len < len_buckets;
+    } else {
+      return !len && !len_buckets;
+    }
+  }
 };
 DEF_SIZE(Dict);
 
 #define dict0 Dict(0, 0, NULL)
 
 
-static void assert_dict_is_valid(Dict* d) {
-  assert(d);
-  if (d->buckets) {
-    assert(d->len >= 0 && d->len < d->len_buckets);
-  } else {
-    assert(d->len == 0 && d->len_buckets == 0);
-  }
-}
-
-
 DBG_FN static void dict_rel(Dict* d) {
-  assert_dict_is_valid(d);
+  assert(d->vld());
   for_in(i, d->len_buckets) {
     mem_rel(d->buckets[i].mem);
   }
@@ -36,7 +34,7 @@ DBG_FN static void dict_rel(Dict* d) {
 
 
 static void dict_dealloc(Dict* d) {
-  assert_dict_is_valid(d);
+  assert(d->vld());
   Int len = 0;
   for_in(i, d->len_buckets) {
     len += d->buckets[i].mem.len / 2;
@@ -48,7 +46,7 @@ static void dict_dealloc(Dict* d) {
 
 
 static Hash_bucket* dict_bucket(Dict* d, Obj k) {
-  assert_dict_is_valid(d);
+  assert(d->vld());
   assert(d->len > 0);
   Int h = obj_id_hash(k);
   Int i = h % d->len_buckets;
@@ -57,11 +55,11 @@ static Hash_bucket* dict_bucket(Dict* d, Obj k) {
 
 
 static Obj dict_fetch(Dict* d, Obj k) {
-  assert_dict_is_valid(d);
+  assert(d->vld());
   if (!d->len) return obj0;
   Hash_bucket* b = dict_bucket(d, k);
   for_ins(i, b->mem.len, 2) {
-    if (is(b->mem.els[i], k)) {
+    if (b->mem.els[i] == k) {
       return b->mem.els[i + 1];
     }
   }
@@ -70,15 +68,15 @@ static Obj dict_fetch(Dict* d, Obj k) {
 
 
 static Bool dict_contains(Dict* d, Obj k) {
-  return !is(dict_fetch(d, k), obj0);
+  return dict_fetch(d, k).vld();
 }
 
 
 static void dict_insert(Dict* d, Obj k, Obj v) {
-  assert_dict_is_valid(d);
+  assert(d->vld());
   Obj existing = dict_fetch(d, k);
-  if (is(v, existing)) return;
-  assert(is(existing, obj0));
+  if (v == existing) return;
+  assert(!existing.vld());
   if (d->len == 0) {
     d->len_buckets = min_table_len_buckets;
     Int size = d->len_buckets * size_Hash_bucket;
@@ -116,7 +114,7 @@ static void dict_insert(Dict* d, Obj k, Obj v) {
 
 UNUSED_FN static void dict_remove(Dict* d, Obj k) {
   Hash_bucket* b = dict_bucket(d, k);
-  assert_array_is_valid(b);
+  assert(b->vld());
   for_ins(i, b->mem.len, 2) {
     if (b->mem.els[i].r == k.r) {
       assert(d->len > 0);

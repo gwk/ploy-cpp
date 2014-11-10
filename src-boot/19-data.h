@@ -23,7 +23,7 @@ static Int data_ref_len(Obj d) {
 
 
 static Int data_len(Obj d) {
-  if (is(d, blank)) return 0; // TODO: support all data-word values.
+  if (d == blank) return 0; // TODO: support all data-word values.
   return data_ref_len(d);
 }
 
@@ -41,7 +41,7 @@ static CharsM data_ref_charsM(Obj d) {
 
 
 static Chars data_chars(Obj d) {
-  if (is(d, blank)) return NULL; // TODO: support all data-word values.
+  if (d == blank) return NULL; // TODO: support all data-word values.
   return data_ref_chars(d);
 }
 

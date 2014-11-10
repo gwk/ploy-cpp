@@ -7,7 +7,7 @@
 static Bool cmpd_contains_unquote(Obj c) {
   // TODO: follow the same depth rule as below.
   assert(ref_is_cmpd(c));
-  if (is(obj_type(c), t_Unq)) return true;
+  if (obj_type(c) == t_Unq) return true;
   Mem m = cmpd_mem(c);
   it_mem(it, m) {
     Obj e = *it;
@@ -23,7 +23,7 @@ static Obj expand_quasiquote(Int qua_depth, Obj o) {
     return track_src(o, cmpd_new1(rc_ret(t_Quo), o));
   }
   Obj type = obj_type(o);
-  if (!qua_depth && is(type, t_Unq)) { // unquote is only performed at the same (innermost) level.
+  if (!qua_depth && type == t_Unq) { // unquote is only performed at the same (innermost) level.
     check(cmpd_len(o) == 1, "malformed Unq: %o", o);
     Obj e = rc_ret(cmpd_el(o, 0));
     rc_rel(o);
@@ -31,9 +31,9 @@ static Obj expand_quasiquote(Int qua_depth, Obj o) {
   }
   if (cmpd_contains_unquote(o)) { // unquote exists somewhere in the tree.
     Int qd1 = qua_depth; // count Qua nesting level.
-    if (is(type, t_Qua)) {
+    if (type == t_Qua) {
       qd1++;
-    } else if (is(type, t_Unq)) {
+    } else if (type == t_Unq) {
       qd1--;
     }
     Obj exprs = cmpd_new_raw(rc_ret(t_Arr_Expr), cmpd_len(o) + 2);
@@ -66,17 +66,17 @@ static Obj expand(Int d, Obj env, Obj code) {
     return code;
   }
   Obj type = ref_type(code);
-  if (is(type, t_Quo)) {
+  if (type == t_Quo) {
     exc_check(cmpd_len(code) == 1, "malformed Quo: %o", code);
     return code;
   }
-  if (is(type, t_Qua)) {
+  if (type == t_Qua) {
     exc_check(cmpd_len(code) == 1, "malformed Qua: %o", code);
     Obj expr = rc_ret(cmpd_el(code, 0));
     rc_rel(code);
     return expand_quasiquote(0, expr);
   }
-  if (is(type, t_Expand)) {
+  if (type == t_Expand) {
     Obj expanded = run_macro(t, rc_ret(env), code); // owns env.
     track_src(code, expanded);
     rc_rel(code);

@@ -128,7 +128,7 @@ static Mem parse_exprs(Parser* p, Char term) {
     if (term && PC == term) break;
     Obj o = parse_expr(p);
     if (p->e) {
-      assert(is(o, obj0));
+      assert(!o.vld());
       break;
     }
     array_append(&a, o);
@@ -334,7 +334,7 @@ static Obj parse_Label(Parser* p) {
   P_ADV(1, return parse_error(p, "incomplete label name"));
   Obj name = parse_sub_expr(p);
   if (p->e) {
-    assert(is(name, obj0));
+    assert(!name.vld());
     return obj0;
   }
   Char c = PC;
@@ -344,7 +344,7 @@ static Obj parse_Label(Parser* p) {
     type = parse_sub_expr(p);
     if (p->e) {
       rc_rel(name);
-      assert(is(type, obj0));
+      assert(!type.vld());
       return obj0;
     }
   } else {
@@ -357,7 +357,7 @@ static Obj parse_Label(Parser* p) {
     if (p->e) {
       rc_rel(name);
       rc_rel(type);
-      assert(is(expr, obj0));
+      assert(!expr.vld());
       return obj0;
     }
   } else {
@@ -371,7 +371,7 @@ static Obj parse_Variad(Parser* p) {
   P_ADV(1, return parse_error(p, "incomplete variad expression"));
   Obj expr = parse_sub_expr(p);
   if (p->e) {
-    assert(is(expr, obj0));
+    assert(!expr.vld());
     return obj0;
   }
   Char c = PC;
@@ -381,7 +381,7 @@ static Obj parse_Variad(Parser* p) {
     type = parse_sub_expr(p);
     if (p->e) {
       rc_rel(expr);
-      assert(is(type, obj0));
+      assert(!type.vld());
       return obj0;
     }
   } else {
@@ -395,7 +395,7 @@ static Obj parse_Accessor(Parser* p) {
   P_ADV(1, return parse_error(p, "incomplete accessor"));
   Obj expr = parse_sub_expr(p);
   if (p->e) {
-    assert(is(expr, obj0));
+    assert(!expr.vld());
     return obj0;
   }
   return cmpd_new1(rc_ret(t_Accessor), expr);
@@ -406,7 +406,7 @@ static Obj parse_Mutator(Parser* p) {
   P_ADV(2, return parse_error(p, "incomplete mutator"));
   Obj expr = parse_sub_expr(p);
   if (p->e) {
-    assert(is(expr, obj0));
+    assert(!expr.vld());
     return obj0;
   }
   return cmpd_new1(rc_ret(t_Mutator), expr);

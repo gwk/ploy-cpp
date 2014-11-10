@@ -114,12 +114,12 @@ static Obj type_kind(Obj t) {
 
 
 static Bool is_kind_struct(Obj kind) {
-  return is(obj_type(kind), t_Type_kind_struct);
+  return obj_type(kind) == t_Type_kind_struct;
 }
 
 
 static Bool is_kind_arr(Obj kind) {
-  return is(obj_type(kind), t_Type_kind_arr);
+  return obj_type(kind) == t_Type_kind_arr;
 }
 
 
@@ -142,7 +142,7 @@ static Array global_singletons = array0;
 static Obj type_unit(Obj type) {
   // TODO: improve performance by using a hash table?
   for_ins(i, global_singletons.mem.len, 2) {
-    if (is(global_singletons.mem.els[i], type)) {
+    if (global_singletons.mem.els[i] == type) {
       return global_singletons.mem.els[i + 1];
     }
   }

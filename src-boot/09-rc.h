@@ -128,7 +128,7 @@ static void rc_bucket_append(RC_bucket* b, Obj r, Uns c) {
 #if !OPT // check that r is not already in b.
   for_in(i, b->len) {
     RC_item* item = b->items + i;
-    assert(!is(item->r, r));
+    assert(item->r != r);
   }
 #endif
   if (b->len == b->cap) { // grow.
@@ -220,11 +220,11 @@ struct RC_BII {
 
 static RC_BII rc_get_BII(Obj r) {
   // returns the resolved item but the original bucket and item index.
-  assert_valid_ref(r);
+  assert(obj_is_ref(r));
   RC_bucket* b = rc_bucket_ptr(r);
   for_in(i, b->len) {
     RC_item* item = b->items + i;
-    if (is(item->r, r)) {
+    if (item->r == r) {
       rc_hist_count_gets(i);
       return (RC_BII){.bucket=b, .item=item, .index=i};
     }
@@ -286,7 +286,7 @@ static Uns rc_get(Obj o) {
 
 static Obj rc_ret(Obj o) {
   // increase the object's retain count by one.
-  assert(!is(o, obj0));
+  assert(o.vld());
   counter_inc(obj_counter_index(o));
   if (obj_is_val(o)) return o;
   RC_item* item = rc_get_item(o);
@@ -302,7 +302,7 @@ static Obj ref_dealloc(Obj o);
 
 static void rc_rel(Obj o) {
   // decrease the object's retain count by one, or deallocate it.
-  assert(!is(o, obj0));
+  assert(o.vld());
   do {
     if (obj_is_val(o)) {
       counter_dec(obj_counter_index(o));
@@ -324,7 +324,7 @@ static void rc_rel(Obj o) {
       item->c -= 2; // decrement by two to leave the flag bit intact.
       o = obj0;
     }
-  } while (!is(o, obj0));
+  } while (o.vld());
 }
 
 

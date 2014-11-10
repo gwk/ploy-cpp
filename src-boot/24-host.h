@@ -16,7 +16,7 @@ static Obj host_identity(Trace* t, Obj env) {
 
 static Obj host_is(Trace* t, Obj env) {
   GET_AB;
-  return bool_new(is(a, b));
+  return bool_new(a == b);
 }
 
 
@@ -107,7 +107,7 @@ HOST_BIN_OP(bool, ige)
 static Obj host_dlen(Trace* t, Obj env) {
   GET_A;
   Int l;
-  if (is(a, blank)) {
+  if (a == blank) {
     l = 0;
   } else {
     exc_check(obj_is_data(a), "dlen requires Data; received: %o", a);
@@ -258,7 +258,7 @@ static void write_data(CFile f, Obj d);
 
 static Obj host_dbg(Trace* t, Obj env) {
   GET_AB; // label, obj.
-  exc_check(is(obj_type(a), t_Data), "dbg expects argument 1 to be Data: %o", a);
+  exc_check(obj_type(a) == t_Data, "dbg expects argument 1 to be Data: %o", a);
   write_data(stderr, a);
   errFL(": %p rc:%u %o", b, rc_get(b), b);
   return rc_ret_val(s_void);

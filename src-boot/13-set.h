@@ -17,25 +17,24 @@ struct Set {
   Int len;
   Int len_buckets;
   Hash_bucket* buckets;
+
   Set(Int l, Int lb, Hash_bucket* b): len(l), len_buckets(lb), buckets(b) {}
+
+  Bool vld() {
+    if (buckets) {
+      return len >= 0 && len < len_buckets;
+    } else {
+      return !len && !len_buckets;
+    }
+  }
 };
 DEF_SIZE(Set);
 
 #define set0 Set(0, 0, NULL)
 
 
-static void assert_set_is_valid(Set* s) {
-  assert(s);
-  if (s->buckets) {
-    assert(s->len >= 0 && s->len < s->len_buckets);
-  } else {
-    assert(s->len == 0 && s->len_buckets == 0);
-  }
-}
-
-
 static void set_dealloc(Set* s) {
-  assert_set_is_valid(s);
+  assert(s->vld());
   Int len = 0;
   for_in(i, s->len_buckets) {
     len += s->buckets[i].mem.len;
@@ -47,7 +46,7 @@ static void set_dealloc(Set* s) {
 
 
 static Hash_bucket* set_bucket(Set* s, Obj o) {
-  assert_set_is_valid(s);
+  assert(s->vld());
   assert(s->len > 0);
   Int h = obj_id_hash(o);
   Int i = h % s->len_buckets;
@@ -56,7 +55,7 @@ static Hash_bucket* set_bucket(Set* s, Obj o) {
 
 
 static Bool set_contains(Set* s, Obj o) {
-  assert_set_is_valid(s);
+  assert(s->vld());
   if (!s->len) return false;
   Hash_bucket* b = set_bucket(s, o);
   return array_contains(b, o);
@@ -64,7 +63,7 @@ static Bool set_contains(Set* s, Obj o) {
 
 
 static void set_insert(Set* s, Obj o) {
-  assert_set_is_valid(s);
+  assert(s->vld());
   assert(!set_contains(s, o)); // TODO: support duplicate insert.
   if (s->len == 0) {
     s->len_buckets = min_table_len_buckets;
@@ -100,9 +99,9 @@ static void set_insert(Set* s, Obj o) {
 
 static void set_remove(Set* s, Obj o) {
   Hash_bucket* b = set_bucket(s, o);
-  assert_array_is_valid(b);
+  assert(b->vld());
   for_in(i, b->mem.len) {
-    if (is(b->mem.els[i], o)) {
+    if (b->mem.els[i] == o) {
       assert(s->len > 0);
       s->len--;
       // replace o with the last element. no-op if len == 1.

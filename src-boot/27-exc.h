@@ -19,7 +19,7 @@ static Dict global_src_locs = dict0;
 static Obj track_src(Obj original, Obj derived) {
   if (!obj_is_ref(original) || !obj_is_ref(derived)) return derived;
   Obj src_loc = dict_fetch(&global_src_locs, original);
-  if (!is(src_loc, obj0) && !dict_contains(&global_src_locs, derived)) {
+  if (src_loc.vld() && !dict_contains(&global_src_locs, derived)) {
     dict_insert(&global_src_locs, rc_ret(derived), rc_ret(src_loc));
   }
   return derived;
@@ -36,7 +36,7 @@ static NO_RETURN _exc_raise(Trace* trace, Obj env, Chars fmt, Chars args_str, ..
   errL("\ntrace:");
   while (trace) {
     Obj loc = dict_fetch(&global_src_locs, trace->code);
-    if (is(loc, obj0)) {
+    if (!loc.vld()) {
       errFL("  %o", trace->code);
     } else {
       Obj path = cmpd_el(loc, 0);

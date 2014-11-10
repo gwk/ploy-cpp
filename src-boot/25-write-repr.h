@@ -120,11 +120,11 @@ static void write_repr_Label(CFile f, Obj o, Bool is_quoted, Int depth, Set* set
   Obj expr = els[2];
   fputc('-', f);
   write_repr_obj(f, name, true, depth, set);
-  if (!is(type, s_nil)) {
+  if (type != s_nil) {
     fputc(':', f);
     write_repr_obj(f, type, true, depth, set);
   }
-  if (!is(expr, s_void)) {
+  if (expr != s_void) {
     fputc('=', f);
     write_repr_obj(f, expr, true, depth, set);
   }
@@ -141,7 +141,7 @@ static void write_repr_Variad(CFile f, Obj o, Bool is_quoted, Int depth, Set* se
   Obj type = els[1];
   fputc('&', f);
   write_repr_obj(f, expr, true, depth, set);
-  if (!is(type, s_nil)) {
+  if (type != s_nil) {
     fputc(':', f);
     write_repr_obj(f, type, true, depth, set);
   }
@@ -202,11 +202,11 @@ static void write_repr_default(CFile f, Obj c, Bool is_quoted, Int depth, Set* s
 
 static void write_repr_dispatch(CFile f, Obj s, Bool is_quoted, Int depth, Set* set) {
   Obj type = obj_type(s);
-  if (is(type, t_Data)) { write_repr_Data(f, s); return; }
-  if (is(type, t_Env))  { write_repr_Env(f, s); return; }
+  if (type == t_Data) { write_repr_Data(f, s); return; }
+  if (type == t_Env)  { write_repr_Env(f, s); return; }
 
   #define DISP(t) \
-  if (is(type, t_##t)) { write_repr_##t(f, s, is_quoted, depth, set); return; }
+  if (type == t_##t) { write_repr_##t(f, s, is_quoted, depth, set); return; }
   DISP(Comment);
   DISP(Bang);
   DISP(Quo);
@@ -220,7 +220,7 @@ static void write_repr_dispatch(CFile f, Obj s, Bool is_quoted, Int depth, Set* 
   #undef DISP
 
   #define DISP_SEQ(t, o, c) \
-  if (is(type, t_##t)) { write_repr_syn_seq(f, s, is_quoted, depth, set, o, c); return; }
+  if (type == t_##t) { write_repr_syn_seq(f, s, is_quoted, depth, set, o, c); return; }
 
   DISP_SEQ(Syn_struct, "{", '}');
   DISP_SEQ(Syn_seq, "[", ']');
@@ -234,7 +234,7 @@ static void write_repr_dispatch(CFile f, Obj s, Bool is_quoted, Int depth, Set* 
 
 static void write_repr_obj(CFile f, Obj o, Bool is_quoted, Int depth, Set* set) {
   // is_quoted indicates that we are writing part of a repr that has already been quoted.
-  if (is(o, obj0)) {
+  if (!o.vld()) {
     fputs(NO_REPR_PO "obj0" NO_REPR_PC, f);
     return;
   }
@@ -250,7 +250,7 @@ static void write_repr_obj(CFile f, Obj o, Bool is_quoted, Int depth, Set* set) 
   } else if (ot == ot_sym) {
     if (obj_is_data_word(o)) {
       // TODO: support all word values.
-      assert(is(o, blank));
+      assert(o == blank);
       fputs("''", f);
     } else {
       write_repr_Sym(f, o, is_quoted);
