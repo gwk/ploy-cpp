@@ -203,7 +203,7 @@ static Obj host_write(Trace* t, Obj env) {
   exc_check(obj_is_data(b), "write requires arg 2 to be a Data; received: %o", b);
   CFile file = cast(CFile, ptr_val(a));
   // for now, ignore the return value.
-  fwrite(data_ptr(b), size_Char, cast(Uns, data_len(b)), file);
+  fwrite(data_chars(b), size_Char, cast(Uns, data_len(b)), file);
   return rc_ret_val(s_void);
 }
 

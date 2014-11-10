@@ -33,8 +33,6 @@ static Obj sym_data(Obj s) {
 
 
 static Str data_str(Obj d);
-static Int data_len(Obj d);
-static Chars data_ptr(Obj d);
 static Obj data_new_from_str(Str s);
 
 static Obj sym_new(Str s) {

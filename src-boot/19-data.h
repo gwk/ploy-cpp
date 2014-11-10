@@ -28,7 +28,7 @@ static Int data_len(Obj d) {
 }
 
 
-static Chars data_ref_ptr(Obj d) {
+static Chars data_ref_chars(Obj d) {
   assert(ref_is_data(d));
   return cast(Chars, d.d + 1); // address past data header.
 }
@@ -40,20 +40,21 @@ static CharsM data_ref_charsM(Obj d) {
 }
 
 
-static Chars data_ptr(Obj d) {
+static Chars data_chars(Obj d) {
   if (is(d, blank)) return NULL; // TODO: support all data-word values.
-  return data_ref_ptr(d);
+  return data_ref_chars(d);
 }
 
 
 static Str data_str(Obj d) {
-  return str_mk(data_len(d), data_ptr(d));
+  return str_mk(data_len(d), data_chars(d));
 }
 
 
 static Bool data_ref_iso(Obj a, Obj b) {
   Int len = data_ref_len(a);
-  return len == data_ref_len(b) && !memcmp(data_ref_ptr(a), data_ref_ptr(b), cast(Uns, len));
+  return len == data_ref_len(b)
+    && !memcmp(data_ref_chars(a), data_ref_chars(b), cast(Uns, len));
 }
 
 
