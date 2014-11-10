@@ -13,7 +13,7 @@ struct Str {
   Chars chars;
   Str(Int l, Chars c): len(l), chars(c) { assert(l > 0 || (!l && !c)); }
   
-  Str(Chars c) {
+  explicit Str(Chars c) {
     Uns l = strnlen(c, max_Int);
     check(l <= max_Int, "Str: Chars overflowed max_Int; len: %u", l);
     chars = l ? c : NULL;
