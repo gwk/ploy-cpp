@@ -77,41 +77,47 @@ union Obj {
   Env* e;
   Cmpd* c;
   Type* t;
-  Obj(): r(NULL) {}
+
+  Obj(): r(NULL) {} // constructs the invalid object; essentially the NULL pointer.
+  // this works because references have the zero tag.
+  
+#define obj0 Obj()
+
   Obj(Int _i): i(_i) {} // TODO: change semantics to shift?
   Obj(Uns _u): u(_u) {} // TODO: change semantics to shift?
   Obj(Raw _r): r(_r) {}
   Obj(Type* _t): t(_t) {}
+
+  Bool operator==(Obj o) { return u == o.u; }
+  Bool operator!=(Obj o) { return u != o.u; }
+
+  Bool valid() { return *this != obj0; }
+ 
+  void assert_valid() { assert(valid()); }
+
 };
 DEF_SIZE(Obj);
 
 
-// invalid object; essentially the NULL pointer.
-// used as a return value for error conditions and a marker for cleared or invalid memory.
-static const Obj obj0;
-
-#define assert_valid(o) assert(!is(o, obj0))
-
-
 static Bool is(Obj a, Obj b) {
-  return a.u == b.u;
+  return a == b;
 }
 
 
 static Obj_tag obj_tag(Obj o) {
-  assert_valid(o);
+  o.assert_valid();
   return cast(Obj_tag, o.u & obj_tag_mask);
 }
 
 
 static Bool obj_is_val(Obj o) {
-  assert_valid(o);
+  o.assert_valid();
   return obj_tag(o) != ot_ref;
 }
 
 
 static Bool obj_is_ref(Obj o) {
-  assert_valid(o);
+  o.assert_valid();
   return obj_tag(o) == ot_ref;
 }
 
@@ -120,19 +126,19 @@ static Bool obj_is_ref(Obj o) {
 
 
 static Bool obj_is_ptr(Obj o) {
-  assert_valid(o);
+  o.assert_valid();
   return obj_tag(o) == ot_ptr;
 }
 
 
 static Bool obj_is_int(Obj o) {
-  assert_valid(o);
+  o.assert_valid();
   return obj_tag(o) == ot_int;
 }
 
 
 static Bool obj_is_sym(Obj o) {
-  assert_valid(o);
+  o.assert_valid();
   return obj_tag(o) == ot_sym;
 }
 
@@ -140,7 +146,7 @@ static Bool obj_is_sym(Obj o) {
 extern const Obj s_true, s_false;
 
 static Bool obj_is_bool(Obj o) {
-  assert_valid(o);
+  o.assert_valid();
   return is(o, s_true) || is(o, s_false);
 }
 
