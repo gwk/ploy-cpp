@@ -62,6 +62,10 @@
 // verbose logging to aid debugging.
 #define VERBOSE_PARSE 0
 
+// disallow use of NULL in favor of nullptr, which we shorten to null.
+#undef NULL
+#define null nullptr
+
 // wherever possible, we use types that are the natural word size.
 #if __SIZEOF_POINTER__ == 4
 #define ARCH_32_WORD 1

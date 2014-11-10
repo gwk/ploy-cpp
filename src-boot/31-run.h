@@ -689,7 +689,7 @@ static Step run(Int depth, Trace* parent_trace, Obj env, Obj code) {
 
 static Step run_code(Obj env, Obj code) {
   // owns env.
-  return run(-1, NULL, env, code);
+  return run(-1, null, env, code);
 }
 
 

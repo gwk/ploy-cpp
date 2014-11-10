@@ -22,7 +22,7 @@ struct Dict {
 };
 DEF_SIZE(Dict);
 
-#define dict0 Dict(0, 0, NULL)
+#define dict0 Dict(0, 0, null)
 
 
 DBG_FN static void dict_rel(Dict* d) {

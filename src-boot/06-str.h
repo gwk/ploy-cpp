@@ -16,12 +16,12 @@ struct Str {
   explicit Str(Chars c) {
     Uns l = strnlen(c, max_Int);
     check(l <= max_Int, "Str: Chars overflowed max_Int; len: %u", l);
-    chars = l ? c : NULL;
+    chars = l ? c : null;
     len = Int(l);
   }
 };
 
-#define str0 Str(0, NULL)
+#define str0 Str(0, null)
 
 // for use with "%.*s" formatter.
 #define FMT_STR(str) cast(I32, (str).len), (str).chars

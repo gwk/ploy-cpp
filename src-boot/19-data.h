@@ -41,7 +41,7 @@ static CharsM data_ref_charsM(Obj d) {
 
 
 static Chars data_chars(Obj d) {
-  if (d == blank) return NULL; // TODO: support all data-word values.
+  if (d == blank) return null; // TODO: support all data-word values.
   return data_ref_chars(d);
 }
 

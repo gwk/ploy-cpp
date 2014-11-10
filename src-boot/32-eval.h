@@ -5,7 +5,6 @@
 
 
 static Step eval(Obj env, Obj code) {
-  //Trace t = (Trace){.call=code, .next=NULL};
   Obj preprocessed = preprocess(code); // borrows code.
   if (!preprocessed.vld()) {
     return Step(env, rc_ret_val(s_void)); // TODO: document why this is necessary.

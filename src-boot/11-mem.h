@@ -21,7 +21,7 @@ struct Mem {
 };
 
 
-#define mem0 Mem(0, NULL)
+#define mem0 Mem(0, null)
 
 
 // iterate over mem using pointer Obj pointer e, start index m, end index n.
@@ -47,7 +47,7 @@ UNUSED_FN static Bool mem_eq(Mem a, Mem b) {
 
 static Mem mem_next(Mem m) {
   // note: this may produce an invalid mem representing the end of the region;
-  // as a minor optimization, we do not set m.els to NULL if len == 0,
+  // as a minor optimization, we do not set m.els to null if len == 0,
   // but we could if it matters.
   assert(m.len > 0 && m.els);
   return Mem(m.len - 1, m.els + 1);

@@ -30,7 +30,7 @@ struct Set {
 };
 DEF_SIZE(Set);
 
-#define set0 Set(0, 0, NULL)
+#define set0 Set(0, 0, null)
 
 
 static void set_dealloc(Set* s) {

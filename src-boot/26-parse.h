@@ -254,14 +254,14 @@ static Obj parse_Data(Parser* p, Char q) {
       escape = false;
       Char ce = c;
       switch (c) {
-        case '0': ce = 0;     break; // NULL
-        case 'a': ce = '\a';  break; // bell - BEL
-        case 'b': ce = '\b';  break; // backspace - BS
-        case 'f': ce = '\f';  break; // form feed - FF
-        case 'n': ce = '\n';  break; // line feed - LF
-        case 'r': ce = '\r';  break; // carriage return - CR
-        case 't': ce = '\t';  break; // horizontal tab - TAB
-        case 'v': ce = '\v';  break; // vertical tab - VT
+        case '0': ce = 0;     break; // null terminator.
+        case 'a': ce = '\a';  break; // bell - BEL.
+        case 'b': ce = '\b';  break; // backspace - BS.
+        case 'f': ce = '\f';  break; // form feed - FF.
+        case 'n': ce = '\n';  break; // line feed - LF.
+        case 'r': ce = '\r';  break; // carriage return - CR.
+        case 't': ce = '\t';  break; // horizontal tab - TAB.
+        case 'v': ce = '\v';  break; // vertical tab - VT.
         case '\\':  break; // keep c as is.
         case '\'':  break;
         case '"':   break;
@@ -279,7 +279,7 @@ static Obj parse_Data(Parser* p, Char q) {
   }
   #undef APPEND
   P_ADV(1); // past closing quote.
-  Obj d = data_new_from_str(Str(len, len ? chars: NULL));
+  Obj d = data_new_from_str(Str(len, len ? chars: null));
   chars_dealloc(chars);
   return d;
 }
@@ -536,11 +536,11 @@ static Obj parse_sub_expr(Parser* p) {
 
 static Obj parse_src(Dict* src_locs, Obj path, Obj src, CharsM* e) {
   // caller must free e.
-  Parser p = Parser(src_locs, path, src, data_str(src),Src_pos(0, 0, 0), NULL);
+  Parser p = Parser(src_locs, path, src, data_str(src),Src_pos(0, 0, 0), null);
   Mem m = parse_exprs(&p, 0);
   Obj o;
   if (p.e) {
-    assert(m.len == 0 && m.els == NULL);
+    assert(m.len == 0 && m.els == null);
     o = obj0;
   } else if (p.pos.off != p.s.len) {
     o = parse_error(&p, "parsing terminated early");

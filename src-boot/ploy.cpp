@@ -6,7 +6,7 @@
 
 static Obj parse_and_eval(Dict* src_locs, Obj env, Obj path, Obj src, Bool should_output_val) {
   // owns path, src.
-  CharsM e = NULL;
+  CharsM e = null;
   Obj code = parse_src(src_locs, path, src, &e);
   rc_rel(path);
   rc_rel(src);
@@ -59,7 +59,7 @@ int main(int argc, Chars argv[]) {
   // parse arguments.
   Chars paths[len_buffer];
   Int path_count = 0;
-  Chars expr = NULL;
+  Chars expr = null;
   Bool should_output_val = false;
   Bool should_log_stats = false;
   for_imn(i, 1, argc) {

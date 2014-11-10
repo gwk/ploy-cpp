@@ -78,7 +78,7 @@ union Obj {
   Cmpd* c;
   Type* t;
 
-  Obj(): r(NULL) {} // constructs the invalid object; essentially the NULL pointer.
+  Obj(): r(null) {} // constructs the invalid object; essentially the null pointer.
   // this works because references have the zero tag.
   
   explicit Obj(Int _i): i(_i) {} // TODO: change semantics to shift?

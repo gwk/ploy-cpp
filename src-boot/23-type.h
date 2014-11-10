@@ -11,7 +11,7 @@ struct Type {
   Int len;
   Obj name;
   Obj kind;
-  Type(): head(obj0), len(0), name(NULL), kind(obj0) {}
+  Type(): head(obj0), len(0), name(obj0), kind(obj0) {} // TODO: remove this if possible.
   Type(Ref_head h, Int l, Obj n, Obj k): head(h), len(l), name(n), kind(k) {}
 } ALIGNED_TO_WORD;
 DEF_SIZE(Type);
