@@ -6,7 +6,7 @@
 
 static Obj parse_and_eval(Dict* src_locs, Obj env, Obj path, Obj src, Bool should_output_val) {
   // owns path, src.
-  Chars e = NULL;
+  CharsM e = NULL;
   Obj code = parse_src(src_locs, path, src, &e);
   rc_rel(path);
   rc_rel(src);

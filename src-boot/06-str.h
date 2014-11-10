@@ -90,10 +90,10 @@ static Str str_line_at_pos_exc(Str s, Int pos) {
 }
 
 
-static Chars str_src_loc_str(Str path, Str src, Int pos, Int len, Int line_num, Int col,
+static CharsM str_src_loc_str(Str path, Str src, Int pos, Int len, Int line_num, Int col,
   Chars_const msg) {
   // get source line.
-  // caller is responsible for raw_dealloc of returned Chars.
+  // caller is responsible for raw_dealloc of returned CharsM.
   Str line = str_line_at_pos_exc(src, pos);
   Chars_const opt_sp = (*msg ? " " : ""); // no space for empty message.
   // create underline.
@@ -116,7 +116,7 @@ static Chars str_src_loc_str(Str path, Str src, Int pos, Int len, Int line_num, 
     }
   }
   // create result.
-  Chars s;
+  CharsM s;
   Int s_len = asprintf(&s, "%.*s:%ld:%ld:%s%s\n    %.*s\n    %s\n",
     FMT_STR(path), line_num + 1, col + 1, opt_sp, msg, FMT_STR(line), under);
   counter_inc(ci_Chars); // matches asprinf.

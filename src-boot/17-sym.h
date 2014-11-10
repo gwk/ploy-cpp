@@ -34,7 +34,7 @@ static Obj sym_data(Obj s) {
 
 static Str data_str(Obj d);
 static Int data_len(Obj d);
-static Chars data_ptr(Obj d);
+static CharsM data_ptr(Obj d);
 static Obj data_new_from_str(Str s);
 
 static Obj sym_new(Str s) {
@@ -63,7 +63,7 @@ static Obj sym_new_from_c(Chars_const c) {
   assert(obj_is_val(sym)); // TODO: support all data-word values.
   Obj data = sym_data(sym);
   Int len = data_len(data);
-  Chars p = data_ptr(data);
+  CharsM p = data_ptr(data);
   for_in(i, len) {
     if (p[i] == '_') {
       p[i] = '-';

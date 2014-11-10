@@ -45,7 +45,7 @@ static NO_RETURN _exc_raise(Trace* trace, Obj env, Chars_const fmt, Chars_const 
       Obj len = cmpd_el(loc, 3);
       Obj line = cmpd_el(loc, 4);
       Obj col = cmpd_el(loc, 5);
-      Chars msg = str_src_loc_str(data_str(path), data_str(src),
+      CharsM msg = str_src_loc_str(data_str(path), data_str(src),
         int_val(pos), int_val(len), int_val(line), int_val(col), "");
       fputs("  ", stderr);
       fputs(msg, stderr);

@@ -29,7 +29,7 @@ typedef double    F64;
 
 typedef void* Raw;
 
-typedef Char* Chars;
+typedef Char* CharsM;
 typedef const Char* Chars_const;
 
 #if ARCH_32_WORD

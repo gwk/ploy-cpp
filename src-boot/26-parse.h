@@ -18,8 +18,8 @@ struct Parser {
   Obj src;
   Str s;
   Src_pos pos;
-  Chars e; // error message.
-  Parser(Dict* _locs, Obj _path, Obj _src, Str _s, Src_pos _pos, Chars _e):
+  CharsM e; // error message.
+  Parser(Dict* _locs, Obj _path, Obj _src, Str _s, Src_pos _pos, CharsM _e):
   locs(_locs), path(_path), src(_src), s(_s), pos(_pos), e(_e) {}
 };
 
@@ -43,7 +43,7 @@ static Obj parse_error(Parser* p, Chars_const fmt, ...) {
   assert(!p->e);
   va_list args;
   va_start(args, fmt);
-  Chars msg;
+  CharsM msg;
   Int msg_len = vasprintf(&msg, fmt, args);
   va_end(args);
   check(msg_len >= 0, "parse_error allocation failed: %s", fmt);
@@ -161,7 +161,7 @@ static U64 parse_U64(Parser* p) {
     }
   }
   Chars_const start = p->s.chars + p->pos.off;
-  Chars end;
+  CharsM end;
   // TODO: this appears unsafe; what if strtoull runs off the end of the string?
   U64 u = strtoull(start, &end, base);
   int en = errno;
@@ -242,7 +242,7 @@ static Obj parse_Data(Parser* p, Char q) {
   DEF_POS;
   assert(PC == q);
   Int cap = size_min_alloc;
-  Chars chars = chars_alloc(cap);
+  CharsM chars = chars_alloc(cap);
   Int len = 0;
   Bool escape = false;
 #define APPEND(c) { len = chars_append(&chars, &cap, len, c); }
@@ -534,7 +534,7 @@ static Obj parse_sub_expr(Parser* p) {
 }
 
 
-static Obj parse_src(Dict* src_locs, Obj path, Obj src, Chars* e) {
+static Obj parse_src(Dict* src_locs, Obj path, Obj src, CharsM* e) {
   // caller must free e.
   Parser p = Parser(src_locs, path, src, data_str(src),Src_pos(0, 0, 0), NULL);
   Mem m = parse_exprs(&p, 0);

@@ -28,13 +28,13 @@ static Int data_len(Obj d) {
 }
 
 
-static Chars data_ref_ptr(Obj d) {
+static CharsM data_ref_ptr(Obj d) {
   assert(ref_is_data(d));
-  return cast(Chars, d.d + 1); // address past data header.
+  return cast(CharsM, d.d + 1); // address past data header.
 }
 
 
-static Chars data_ptr(Obj d) {
+static CharsM data_ptr(Obj d) {
   if (is(d, blank)) return NULL; // TODO: support all data-word values.
   return data_ref_ptr(d);
 }

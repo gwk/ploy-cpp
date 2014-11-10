@@ -2,7 +2,6 @@
 // Permission to use this file is granted in ploy/license.txt.
 
 // null-terminated c string and file types.
-// in general we ignore const correctness, casting const strings to Chars immediately.
 
 #include "04-raw.h"
 
@@ -25,9 +24,9 @@ UNUSED_FN static Chars_const chars_path_base(Chars_const path) {
 }
 
 
-static Chars char_repr(Char c) {
+static CharsM char_repr(Char c) {
   static Char reprs[256][8] = {};
-  Chars r = reprs[cast(Int, c)];
+  CharsM r = reprs[cast(Int, c)];
   if (*r) return r;
   switch (c) {
     case '\a': strcpy(r, "\\a");   break; // bell - BEL
@@ -52,25 +51,25 @@ static Chars char_repr(Char c) {
 }
 
 
-static void chars_dealloc(Chars c) {
+static void chars_dealloc(CharsM c) {
   raw_dealloc(c, ci_Chars);
 }
 
 
-static Chars chars_alloc(Int len) {
-  return cast(Chars, raw_alloc(len, ci_Chars));
+static CharsM chars_alloc(Int len) {
+  return cast(CharsM, raw_alloc(len, ci_Chars));
 }
 
 
-static Int chars_append(Chars* p, Int* cap, Int len, Char c) {
+static Int chars_append(CharsM* p, Int* cap, Int len, Char c) {
   // returns updated len.
   assert(len <= *cap);
   if (len == *cap) {
     assert(*cap > 0);
     *cap *= 2;
-    *p = cast(Chars, raw_realloc(*p, *cap, ci_Chars));
+    *p = cast(CharsM, raw_realloc(*p, *cap, ci_Chars));
   }
-  Chars chars = *p;
+  CharsM chars = *p;
   chars[len] = c;
   return len + 1;
 }
