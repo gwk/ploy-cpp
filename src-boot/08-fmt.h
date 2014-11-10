@@ -8,7 +8,7 @@
 
 static void write_repr(CFile f, Obj o);
 
-static void fmt_list_to_file(CFile f, Chars_const fmt, Chars_const args_str, va_list args_list) {
+static void fmt_list_to_file(CFile f, Chars fmt, Chars args_str, va_list args_list) {
   // the format syntax is similar to printf, but simplified and extended to handle ploy objects.
   // %o: Obj.
   // %i: Int.
@@ -19,7 +19,7 @@ static void fmt_list_to_file(CFile f, Chars_const fmt, Chars_const args_str, va_
   // for safety and debug convenience, the function takes an additional string argument,
   // which should be provided by a wrapper macro that passes the format #__VA_ARGS__.
   // this facilitates a runtime check that the format matches the argument count.
-  Chars_const pa = args_str;
+  Chars pa = args_str;
   Int arg_count = bit(*pa);
   Int level = 0;
   while (*pa) {
@@ -30,7 +30,7 @@ static void fmt_list_to_file(CFile f, Chars_const fmt, Chars_const args_str, va_
     }
   }
   Int i = 0;
-  Chars_const pf = fmt;
+  Chars pf = fmt;
   Char c;
   while ((c = *pf++)) {
     if (c == '%') {
@@ -57,7 +57,7 @@ static void fmt_list_to_file(CFile f, Chars_const fmt, Chars_const args_str, va_
 }
 
 
-static void fmt_to_file(CFile f, Chars_const fmt, Chars_const args_str, ...) {
+static void fmt_to_file(CFile f, Chars fmt, Chars args_str, ...) {
   va_list args_list;
   va_start(args_list, args_str);
   fmt_list_to_file(f, fmt, args_str, args_list);

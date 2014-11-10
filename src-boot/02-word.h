@@ -30,7 +30,7 @@ typedef double    F64;
 typedef void* Raw;
 
 typedef Char* CharsM;
-typedef const Char* Chars_const;
+typedef const Char* Chars;
 
 #if ARCH_32_WORD
 typedef float Flt;
@@ -94,7 +94,7 @@ static const Int size_min_alloc = 1 << width_min_alloc; // in bytes.
 #define err_flush() fflush(stderr)
 #define errL(s) { err(s); err_nl(); }
 
-static void fmt_to_file(CFile f, Chars_const fmt, Chars_const args_str, ...);
+static void fmt_to_file(CFile f, Chars fmt, Chars args_str, ...);
 
 // note: the final token pasting is between the comma and __VA_ARGS__.
 // this is a gnu extension to elide the comma in the case where __VA_ARGS__ is empty.
@@ -111,7 +111,7 @@ static void fmt_to_file(CFile f, Chars_const fmt, Chars_const args_str, ...);
 union Obj;
 struct Trace;
 
-static NO_RETURN _exc_raise(Trace* trace, Obj env, Chars_const fmt, Chars_const args_str, ...);
+static NO_RETURN _exc_raise(Trace* trace, Obj env, Chars fmt, Chars args_str, ...);
 
 // check that a condition is true; otherwise error.
 #define check(condition, fmt, ...) { if (!(condition)) error(fmt, ## __VA_ARGS__); }

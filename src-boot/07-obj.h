@@ -54,7 +54,7 @@ static const Uns data_word_bit = (1 << width_obj_tag);
 
 static const Int width_sym_tags = width_obj_tag + 1; // extra bit for Data-word flag.
 
-static Chars_const obj_tag_names[] = {
+static Chars obj_tag_names[] = {
   "Ref",
   "Ptr",
   "Int",
@@ -71,7 +71,7 @@ union Obj {
   Int i;
   Uns u;
   Raw r;
-  Chars_const chars; // no valid object can be cast to chars; this for the exc_raise formatter.
+  Chars chars; // no valid object can be cast to chars; this for the exc_raise formatter.
   Ref_head* h; // common to all ref types.
   Data* d;
   Env* e;

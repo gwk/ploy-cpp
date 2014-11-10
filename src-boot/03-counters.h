@@ -39,7 +39,7 @@ COUNTER_LIST
 // the global array of inc/dec counter pairs.
 static Int counters[ci_end][2] = {};
 
-static Chars_const counter_names[] = {
+static Chars counter_names[] = {
 #define C(c) #c,
 COUNTER_LIST
 #undef C

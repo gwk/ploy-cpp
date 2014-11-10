@@ -153,7 +153,7 @@ static Obj type_unit(Obj type) {
 }
 
 
-static Obj par_new(Chars_const n, Obj t) {
+static Obj par_new(Chars n, Obj t) {
   return cmpd_new3(rc_ret(t_Par), sym_new_from_chars(n), rc_ret(t), rc_ret_val(s_void));
 }
 
@@ -180,27 +180,27 @@ static Obj type_kind_struct(Obj fields) {
 }
 
 
-static Obj type_kind_init_struct1(Chars_const n0, Obj t0) {
+static Obj type_kind_init_struct1(Chars n0, Obj t0) {
   return type_kind_struct(cmpd_new1(rc_ret(t_Arr_Par),
     par_new(n0, t0)));
 }
 
 
-static Obj type_kind_init_struct2(Chars_const n0, Obj t0, Chars_const n1, Obj t1) {
+static Obj type_kind_init_struct2(Chars n0, Obj t0, Chars n1, Obj t1) {
   return type_kind_struct(cmpd_new2(rc_ret(t_Arr_Par),
     par_new(n0, t0), par_new(n1, t1)));
 }
 
 
-static Obj type_kind_init_struct3(Chars_const n0, Obj t0, Chars_const n1, Obj t1,
-  Chars_const n2, Obj t2) {
+static Obj type_kind_init_struct3(Chars n0, Obj t0, Chars n1, Obj t1,
+  Chars n2, Obj t2) {
   return type_kind_struct(cmpd_new3(rc_ret(t_Arr_Par),
     par_new(n0, t0), par_new(n1, t1), par_new(n2, t2)));
 }
 
 
-static Obj type_kind_init_struct4(Chars_const n0, Obj t0, Chars_const n1, Obj t1,
-  Chars_const n2, Obj t2, Chars_const n3, Obj t3) {
+static Obj type_kind_init_struct4(Chars n0, Obj t0, Chars n1, Obj t1,
+  Chars n2, Obj t2, Chars n3, Obj t3) {
   return type_kind_struct(cmpd_new4(rc_ret(t_Arr_Par),
     par_new(n0, t0), par_new(n1, t1), par_new(n2, t2), par_new(n3, t3)));
 }
@@ -287,7 +287,7 @@ static Obj type_kind_init_class_dispatcher() {
 }
 
 
-static void type_add(Obj type, Chars_const c_name, Obj kind) {
+static void type_add(Obj type, Chars c_name, Obj kind) {
   Obj name = sym_new_from_c(c_name);
   *type.t = Type(Ref_head(rc_ret(t_Type)), 2, name, kind);
 }

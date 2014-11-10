@@ -6,13 +6,13 @@
 #include "04-raw.h"
 
 
-static Bool chars_eq(Chars_const a, Chars_const b) {
+static Bool chars_eq(Chars a, Chars b) {
   return strcmp(a, b) == 0;
 }
 
 
 // get the base name of the path argument.
-UNUSED_FN static Chars_const chars_path_base(Chars_const path) {
+UNUSED_FN static Chars chars_path_base(Chars path) {
   Int offset = 0;
   Int i = 0;
   loop {

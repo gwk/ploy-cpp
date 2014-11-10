@@ -268,12 +268,12 @@ static Obj host_dbg(Trace* t, Obj env) {
 typedef Obj(*Func_host_ptr)(Trace*, Obj);
 
 
-static Obj host_init_const(Obj env, Chars_const name, Obj val) {
+static Obj host_init_const(Obj env, Chars name, Obj val) {
   return env_bind(env, false, false, sym_new_from_c(name), val);
 }
 
 
-static Obj host_init_func(Obj env, Int len_pars, Chars_const name, Func_host_ptr ptr) {
+static Obj host_init_func(Obj env, Int len_pars, Chars name, Func_host_ptr ptr) {
   // owns env.
   Obj sym = sym_new_from_c(name);
   Obj pars; // TODO: add real types; unique value for expression default?
@@ -298,7 +298,7 @@ static Obj host_init_func(Obj env, Int len_pars, Chars_const name, Func_host_ptr
 }
 
 
-static Obj host_init_file(Obj env, Chars_const sym_name, Chars_const name, CFile f, Bool r,
+static Obj host_init_file(Obj env, Chars sym_name, Chars name, CFile f, Bool r,
   Bool w) {
   // owns env.
   Obj sym = sym_new_from_chars(sym_name);

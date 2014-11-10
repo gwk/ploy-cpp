@@ -66,7 +66,7 @@ static Obj data_new_from_str(Str s) {
 }
 
 
-static Obj data_new_from_chars(Chars_const c) {
+static Obj data_new_from_chars(Chars c) {
   Uns len = strnlen(c, max_Int);
   check(len <= max_Int, "data_new_from_chars: string exceeded max length");
   Obj d = data_new_empty(cast(Int, len));
@@ -75,7 +75,7 @@ static Obj data_new_from_chars(Chars_const c) {
 }
 
 
-static Obj data_new_from_path(Chars_const path) {
+static Obj data_new_from_path(Chars path) {
   CFile f = fopen(path, "r");
   check(f, "could not open file: %s", path);
   fseek(f, 0, SEEK_END);

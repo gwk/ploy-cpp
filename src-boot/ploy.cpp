@@ -45,7 +45,7 @@ static void reduce_stack_limit() {
   check(ok, "setrlimit failed");
 }
 
-int main(int argc, Chars_const argv[]) {
+int main(int argc, Chars argv[]) {
   assert_host_basic();
   assert(size_Obj == size_Raw);
   reduce_stack_limit();
@@ -57,13 +57,13 @@ int main(int argc, Chars_const argv[]) {
   env = host_init(env);
 
   // parse arguments.
-  Chars_const paths[len_buffer];
+  Chars paths[len_buffer];
   Int path_count = 0;
-  Chars_const expr = NULL;
+  Chars expr = NULL;
   Bool should_output_val = false;
   Bool should_log_stats = false;
   for_imn(i, 1, argc) {
-    Chars_const arg = argv[i];
+    Chars arg = argv[i];
     check(arg[0], "empty argument");
     if (chars_eq(arg, "-t")) { // verbose eval.
       trace_eval = true;

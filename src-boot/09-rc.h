@@ -356,7 +356,7 @@ static Obj rc_rel_val(Obj o) {
 }
 
 
-UNUSED_FN static void rc_dump(Chars_const identifier) {
+UNUSED_FN static void rc_dump(Chars identifier) {
   errFL("**** RC DUMP %s ****", identifier);
   for_in(i, rc_table.len_buckets) {
     for_in(j, rc_table.buckets[i].len) {

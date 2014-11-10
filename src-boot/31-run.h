@@ -560,19 +560,19 @@ static Step run_Call_disp(Int d, Trace* t, Obj env, Obj code, Mem vals) {
 
 
 // printed before each run step; white_down_pointing_small_triangle.
-static const Chars_const trace_run_prefix = "▿ ";
+static const Chars trace_run_prefix = "▿ ";
 
 // printed before each run tail step; white_right_pointing_small_triangle.
-static const Chars_const trace_tail_prefix  = "▹ ";
+static const Chars trace_tail_prefix  = "▹ ";
 
 // printed after each run step; white_bullet.
-static const Chars_const trace_val_prefix = "◦ ";
+static const Chars trace_val_prefix = "◦ ";
 
 // printed before each macro expand step; white_diamond.
-static const Chars_const trace_expand_prefix = "◇ ";
+static const Chars trace_expand_prefix = "◇ ";
 
 // printed after each macro expand step; white_small_square.
-static const Chars_const trace_expand_val_prefix = "▫ ";
+static const Chars trace_expand_val_prefix = "▫ ";
 
 
 
@@ -616,7 +616,7 @@ static Step run_step_disp(Int d, Trace* t, Obj env, Obj code) {
 
 static Bool trace_eval = false;
 
-static void run_err_trace(Int d, Chars_const p, Obj o) {
+static void run_err_trace(Int d, Chars p, Obj o) {
   if (trace_eval) {
     for_in(i, d) err(i % 4 ? " " : "|");
     errFL("%s %o", p, o);

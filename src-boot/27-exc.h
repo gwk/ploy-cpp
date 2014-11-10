@@ -26,7 +26,7 @@ static Obj track_src(Obj original, Obj derived) {
 }
 
 
-static NO_RETURN _exc_raise(Trace* trace, Obj env, Chars_const fmt, Chars_const args_str, ...) {
+static NO_RETURN _exc_raise(Trace* trace, Obj env, Chars fmt, Chars args_str, ...) {
   // raise an exception.
   // NOTE: there is not yet any exception unwind mechanism, so this just calls exit.
   va_list args_list;

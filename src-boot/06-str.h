@@ -10,8 +10,8 @@
 
 struct Str {
   Int len;
-  Chars_const chars;
-  Str(Int l, Chars_const c): len(l), chars(c) {}
+  Chars chars;
+  Str(Int l, Chars c): len(l), chars(c) {}
 };
 
 #define str0 Str(0, NULL)
@@ -20,12 +20,12 @@ struct Str {
 #define FMT_STR(str) cast(I32, (str).len), (str).chars
 
 
-static Str str_mk(Int len, Chars_const chars) {
+static Str str_mk(Int len, Chars chars) {
   return Str(len, chars);
 }
 
 
-static Str str_from_chars(Chars_const c) {
+static Str str_from_chars(Chars c) {
   Uns len = strnlen(c, max_Int);
   check(len <= max_Int, "str_from_chars: string exceeded max length");
   return str_mk(cast(Int, len), c);
@@ -91,11 +91,11 @@ static Str str_line_at_pos_exc(Str s, Int pos) {
 
 
 static CharsM str_src_loc_str(Str path, Str src, Int pos, Int len, Int line_num, Int col,
-  Chars_const msg) {
+  Chars msg) {
   // get source line.
   // caller is responsible for raw_dealloc of returned CharsM.
   Str line = str_line_at_pos_exc(src, pos);
-  Chars_const opt_sp = (*msg ? " " : ""); // no space for empty message.
+  Chars opt_sp = (*msg ? " " : ""); // no space for empty message.
   // create underline.
   Char under[len_buffer] = {}; // zeroes all elements.
   if (line.len < len_buffer) { // draw underline

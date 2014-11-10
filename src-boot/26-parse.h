@@ -39,7 +39,7 @@ static void parse_err_prefix(Parser* p) {
 
 
 __attribute__((format (printf, 2, 3)))
-static Obj parse_error(Parser* p, Chars_const fmt, ...) {
+static Obj parse_error(Parser* p, Chars fmt, ...) {
   assert(!p->e);
   va_list args;
   va_start(args, fmt);
@@ -160,7 +160,7 @@ static U64 parse_U64(Parser* p) {
       base = 10;
     }
   }
-  Chars_const start = p->s.chars + p->pos.off;
+  Chars start = p->s.chars + p->pos.off;
   CharsM end;
   // TODO: this appears unsafe; what if strtoull runs off the end of the string?
   U64 u = strtoull(start, &end, base);
