@@ -11,25 +11,20 @@
 struct Str {
   Int len;
   Chars chars;
-  Str(Int l, Chars c): len(l), chars(c) {}
+  Str(Int l, Chars c): len(l), chars(c) { assert(l > 0 || (!l && !c)); }
+  
+  Str(Chars c) {
+    Uns l = strnlen(c, max_Int);
+    check(l <= max_Int, "Str: Chars overflowed max_Int; len: %u", l);
+    chars = l ? c : NULL;
+    len = Int(l);
+  }
 };
 
 #define str0 Str(0, NULL)
 
 // for use with "%.*s" formatter.
 #define FMT_STR(str) cast(I32, (str).len), (str).chars
-
-
-static Str str_mk(Int len, Chars chars) {
-  return Str(len, chars);
-}
-
-
-static Str str_from_chars(Chars c) {
-  Uns len = strnlen(c, max_Int);
-  check(len <= max_Int, "str_from_chars: string exceeded max length");
-  return str_mk(cast(Int, len), c);
-}
 
 
 static void assert_str_is_valid(Str s) {
@@ -56,7 +51,7 @@ static Str str_slice(Str s, Int from, Int to) {
   assert(to >= 0);
   if (from > s.len) from = s.len;
   if (from >= to) return str0;
-  return str_mk(to - from, s.chars + from);
+  return Str(to - from, s.chars + from);
 }
 
 

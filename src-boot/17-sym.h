@@ -51,7 +51,7 @@ static Obj sym_new(Str s) {
 
 
 static Obj sym_new_from_chars(Chars c) {
-  return sym_new(str_from_chars(c));
+  return sym_new(Str(c));
 }
 
 
@@ -65,7 +65,7 @@ static Obj sym_new_from_c(Chars c) {
       chars[i] = '-';
     }
   }
-  Obj sym = sym_new(str_from_chars(chars));
+  Obj sym = sym_new(Str(chars));
   raw_dealloc(chars, ci_Chars);
   return sym;
 }

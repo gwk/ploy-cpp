@@ -47,7 +47,7 @@ static Chars data_chars(Obj d) {
 
 
 static Str data_str(Obj d) {
-  return str_mk(data_len(d), data_chars(d));
+  return Str(data_len(d), data_chars(d));
 }
 
 

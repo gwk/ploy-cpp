@@ -279,7 +279,7 @@ static Obj parse_Data(Parser* p, Char q) {
   }
   #undef APPEND
   P_ADV(1); // past closing quote.
-  Obj d = data_new_from_str(str_mk(len, chars));
+  Obj d = data_new_from_str(Str(len, len ? chars: NULL));
   chars_dealloc(chars);
   return d;
 }
