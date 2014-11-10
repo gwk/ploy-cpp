@@ -28,13 +28,19 @@ static Int data_len(Obj d) {
 }
 
 
-static CharsM data_ref_ptr(Obj d) {
+static Chars data_ref_ptr(Obj d) {
+  assert(ref_is_data(d));
+  return cast(Chars, d.d + 1); // address past data header.
+}
+
+
+static CharsM data_ref_charsM(Obj d) {
   assert(ref_is_data(d));
   return cast(CharsM, d.d + 1); // address past data header.
 }
 
 
-static CharsM data_ptr(Obj d) {
+static Chars data_ptr(Obj d) {
   if (is(d, blank)) return NULL; // TODO: support all data-word values.
   return data_ref_ptr(d);
 }
@@ -61,7 +67,7 @@ static Obj data_new_empty(Int len) {
 static Obj data_new_from_str(Str s) {
   if (!s.len) return rc_ret_val(blank);
   Obj d = data_new_empty(s.len);
-  memcpy(data_ptr(d), s.chars, cast(Uns, s.len));
+  memcpy(data_ref_charsM(d), s.chars, cast(Uns, s.len));
   return d;
 }
 
@@ -70,7 +76,7 @@ static Obj data_new_from_chars(Chars c) {
   Uns len = strnlen(c, max_Int);
   check(len <= max_Int, "data_new_from_chars: string exceeded max length");
   Obj d = data_new_empty(cast(Int, len));
-  memcpy(data_ptr(d), c, len);
+  memcpy(data_ref_charsM(d), c, len);
   return d;
 }
 
@@ -83,7 +89,7 @@ static Obj data_new_from_path(Chars path) {
   if (!len) return rc_ret_val(blank);
   Obj d = data_new_empty(len);
   fseek(f, 0, SEEK_SET);
-  Uns items_read = fread(data_ptr(d), size_Char, cast(Uns, len), f);
+  Uns items_read = fread(data_ref_charsM(d), size_Char, cast(Uns, len), f);
   check(cast(Int, items_read) == len,
         "read failed; expected len: %i; actual: %u; path: %s", len, items_read, path);
   fclose(f);

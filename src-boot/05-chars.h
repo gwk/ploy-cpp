@@ -11,6 +11,11 @@ static Bool chars_eq(Chars a, Chars b) {
 }
 
 
+static Int chars_len(Chars c) {
+  return (Int)strlen(c);
+}
+
+
 // get the base name of the path argument.
 UNUSED_FN static Chars chars_path_base(Chars path) {
   Int offset = 0;
@@ -24,7 +29,7 @@ UNUSED_FN static Chars chars_path_base(Chars path) {
 }
 
 
-static CharsM char_repr(Char c) {
+static Chars char_repr(Char c) {
   static Char reprs[256][8] = {};
   CharsM r = reprs[cast(Int, c)];
   if (*r) return r;
