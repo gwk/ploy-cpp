@@ -16,34 +16,57 @@
 
 static void write_repr(CFile f, Obj o);
 
-static void fmt_list_to_file(CFile f, Chars fmt, va_list args_list) {
-  Chars pf = fmt;
+#define FMT1(T, c_exp, ...) \
+static void _fmt1(CFile f, Chars fmt, T item) { \
+  if (*fmt != c_exp) { \
+    fprintf(stderr, "formatter '%c' received %s; fmt: '%s'", *fmt, #T, fmt); \
+    fflush(stderr); \
+    assert(0); \
+    exit(1); \
+  } \
+  __VA_ARGS__; \
+} \
+
+FMT1(Obj, 'o', write_repr(f, item));
+FMT1(Int, 'i', fprintf(f, "%li", item));
+FMT1(Uns, 'u', fprintf(f, "%lu", item));
+FMT1(Raw, 'p', fprintf(f, "%p", item));
+UNUSED_FN FMT1(Char, 'c', fprintf(f, "%c", item));
+FMT1(Chars, 's', fprintf(f, "%s", item));
+
+#undef FMT1
+
+
+static Chars _fmt_adv(CFile f, Chars fmt) {
   Char c;
-  while ((c = *pf++)) {
+  while ((c = *fmt++)) {
     if (c == '%') {
-      c = *pf++;
-      Obj arg = va_arg(args_list, Obj);
-      switch (c) {
-        case 'o': write_repr(f, arg); break;
-        case 'i': fprintf(f, "%li", arg.i); break;
-        case 'u': fprintf(f, "%lu", arg.u); break;
-        case 'p': fprintf(f, "%p", arg.r); break;
-        case 's': fputs(arg.chars, f); break;
-        case 'c': fputs(char_repr((Char)arg.u), f); break;
-        default: error("obj_fmt: invalid placeholder: '%c'; %s", (Uns)c, fmt);
+      if (*fmt == '%') {
+        fputc('%', f);
+        fmt++;
+      } else {
+        return fmt;
       }
     } else {
       fputc(c, f);
     }
   }
+  return null;
 }
 
 
-static void fmt_to_file(CFile f, Chars fmt, ...) {
-  va_list args_list;
-  va_start(args_list, fmt);
-  fmt_list_to_file(f, fmt, args_list);
-  va_end(args_list);
+template <typename... Ts>
+static void fmt_to_file(CFile f, Chars fmt) {
+  fmt = _fmt_adv(f, fmt);
+  check(!fmt, "missing format arguments: '%s'", fmt);
+}
+
+template <typename T, typename... Ts>
+static void fmt_to_file(CFile f, Chars fmt, T item, Ts... items) {
+  fmt = _fmt_adv(f, fmt);
+  check(fmt, "excessive format arguments");
+  _fmt1(f, fmt, item);
+  fmt_to_file(f, ++fmt, items...);
 }
 
 

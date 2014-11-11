@@ -58,7 +58,7 @@ static Obj expand(Int d, Obj env, Obj code) {
   // owns code.
 #if OPTION_REC_LIMIT
   check(d < OPTION_REC_LIMIT, "macro expansion exceeded recursion limit: %i\n%o",
-    OPTION_REC_LIMIT, code);
+    Int(OPTION_REC_LIMIT), code);
 #endif
   Trace trace(code, 0, null);
   Trace* t = &trace;

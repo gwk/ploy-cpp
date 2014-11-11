@@ -626,7 +626,8 @@ static Step run_step(Int d, Trace* t, Obj env, Obj code) {
   // owns env.
   run_err_trace(d, trace_run_prefix, code);
 #if OPTION_REC_LIMIT
-  exc_check(d < OPTION_REC_LIMIT, "execution exceeded recursion limit: %i", OPTION_REC_LIMIT);
+  exc_check(d < OPTION_REC_LIMIT, "execution exceeded recursion limit: %i",
+    Int(OPTION_REC_LIMIT));
 #endif
   Step step = run_step_disp(d, t, env, code);
   return step;

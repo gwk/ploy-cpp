@@ -6,7 +6,7 @@
 #include "01-macros.h"
 
 
-#define len_buffer 256 // standard buffer size for various Char arrays on the stack.
+#define len_buffer Int(256) // standard buffer size for various Char arrays on the stack.
 // this cannot be a const Int due to c limitations.
 
 // all types are upper case by convention.
@@ -94,7 +94,11 @@ static const Int size_min_alloc = 1 << width_min_alloc; // in bytes.
 #define err_flush() fflush(stderr)
 #define errL(s) { err(s); err_nl(); }
 
-static void fmt_to_file(CFile f, Chars fmt, ...);
+template <typename... Ts>
+static void fmt_to_file(CFile f, Chars fmt);
+
+template <typename T, typename... Ts>
+static void fmt_to_file(CFile f, Chars fmt, T item, Ts... items);
 
 // note: the final token pasting is between the comma and __VA_ARGS__.
 // this is a gnu extension to elide the comma in the case where __VA_ARGS__ is empty.
