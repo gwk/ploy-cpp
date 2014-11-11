@@ -43,11 +43,11 @@ struct Mem {
     }
   }
 
-  UNUSED_FN Bool operator==(Mem m) {
+  Bool operator==(Mem m) {
     return len == m.len && memcmp(els, m.els, cast(Uns, len * size_Obj)) == 0;
   }
 
-  UNUSED_FN Obj* end() {
+  Obj* end() {
     return els + len;
   }
 

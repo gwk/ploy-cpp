@@ -43,30 +43,6 @@ static Obj cmpd_new_M(Obj type, Mem m) {
 }
 
 
-UNUSED_FN static Obj cmpd_new_M_ret(Obj type, Mem m) {
-  // owns type.
-  Obj c = cmpd_new_raw(type, m.len);
-  Obj* els = cmpd_els(c);
-  for_in(i, m.len) {
-    els[i] = m.el(i).ret();
-  }
-  return c;
-}
-
-
-UNUSED_FN static Obj cmpd_new_EM(Obj type, Obj el, Mem m) {
-  // owns type, el, elements of m.
-  Int len = m.len + 1;
-  Obj c = cmpd_new_raw(type, len);
-  Obj* els = cmpd_els(c);
-  els[0] = el;
-  for_in(i, m.len) {
-    els[i + 1] = m.el_move(i);
-  }
-  return c;
-}
-
-
 static Obj _cmpd_new(Obj type, Int i, Obj el) {
   // owns all arguments.
   Obj o = cmpd_new_raw(type, i + 1);
