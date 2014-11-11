@@ -111,13 +111,13 @@ static void fmt_to_file(CFile f, Chars fmt, ...);
 union Obj;
 struct Trace;
 
-static NO_RETURN _exc_raise(Trace* trace, Obj env, Chars fmt, ...);
+static NO_RETURN _exc_raise(Trace* trace, Obj env);
 
 // check that a condition is true; otherwise error.
 #define check(condition, fmt, ...) { if (!(condition)) error(fmt, ## __VA_ARGS__); }
 
 // NOTE: the exc macros expect env to be defined in the current scope.
-#define exc_raise(fmt, ...) _exc_raise(t, env, fmt, ##__VA_ARGS__)
+#define exc_raise(fmt, ...) { fmt_to_file(stderr, fmt, ##__VA_ARGS__); _exc_raise(t, env); }
 #define exc_check(condition, ...) if (!(condition)) exc_raise(__VA_ARGS__)
 
 
