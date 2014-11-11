@@ -94,11 +94,11 @@ static const Int size_min_alloc = 1 << width_min_alloc; // in bytes.
 #define err_flush() fflush(stderr)
 #define errL(s) { err(s); err_nl(); }
 
-static void fmt_to_file(CFile f, Chars fmt, Chars args_str, ...);
+static void fmt_to_file(CFile f, Chars fmt, ...);
 
 // note: the final token pasting is between the comma and __VA_ARGS__.
 // this is a gnu extension to elide the comma in the case where __VA_ARGS__ is empty.
-#define errF(fmt, ...) fmt_to_file(stderr, fmt, #__VA_ARGS__, ## __VA_ARGS__)
+#define errF(fmt, ...) fmt_to_file(stderr, fmt, ## __VA_ARGS__)
 #define errFL(fmt, ...) errF(fmt "\n", ## __VA_ARGS__)
 
 
@@ -111,13 +111,13 @@ static void fmt_to_file(CFile f, Chars fmt, Chars args_str, ...);
 union Obj;
 struct Trace;
 
-static NO_RETURN _exc_raise(Trace* trace, Obj env, Chars fmt, Chars args_str, ...);
+static NO_RETURN _exc_raise(Trace* trace, Obj env, Chars fmt, ...);
 
 // check that a condition is true; otherwise error.
 #define check(condition, fmt, ...) { if (!(condition)) error(fmt, ## __VA_ARGS__); }
 
 // NOTE: the exc macros expect env to be defined in the current scope.
-#define exc_raise(fmt, ...) _exc_raise(t, env, fmt, #__VA_ARGS__, ##__VA_ARGS__)
+#define exc_raise(fmt, ...) _exc_raise(t, env, fmt, ##__VA_ARGS__)
 #define exc_check(condition, ...) if (!(condition)) exc_raise(__VA_ARGS__)
 
 

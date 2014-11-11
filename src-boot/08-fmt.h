@@ -3,40 +3,24 @@
 
 // string formatting.
 
+// the format syntax is similar to printf, but simplified and extended to handle ploy objects.
+// %o: Obj.
+// %i: Int.
+// %u: Uns.
+// %p: Raw.
+// %s: Chars.
+// %c: Char.
+
 #include "07-obj.h"
 
 
 static void write_repr(CFile f, Obj o);
 
-static void fmt_list_to_file(CFile f, Chars fmt, Chars args_str, va_list args_list) {
-  // the format syntax is similar to printf, but simplified and extended to handle ploy objects.
-  // %o: Obj.
-  // %i: Int.
-  // %u: Uns.
-  // %p: Raw.
-  // %s: Chars.
-  // %c: Char. NOTE: Char arguments must be cast to Uns in the call to align variadic args.
-  // for safety and debug convenience, the function takes an additional string argument,
-  // which should be provided by a wrapper macro that passes the format #__VA_ARGS__.
-  // this facilitates a runtime check that the format matches the argument count.
-  Chars pa = args_str;
-  Int arg_count = bit(*pa);
-  Int level = 0;
-  while (*pa) {
-    switch (*pa++) {
-      case '(': level++; continue;
-      case ')': level--; continue;
-      case ',': if (!level) arg_count++; continue;
-    }
-  }
-  Int i = 0;
+static void fmt_list_to_file(CFile f, Chars fmt, va_list args_list) {
   Chars pf = fmt;
   Char c;
   while ((c = *pf++)) {
     if (c == '%') {
-      check(i < arg_count, "obj_fmt: more than %i items in format: '%s'; args: '%s'",
-        arg_count, fmt, args_str);
-      i++;
       c = *pf++;
       Obj arg = va_arg(args_list, Obj);
       switch (c) {
@@ -52,15 +36,13 @@ static void fmt_list_to_file(CFile f, Chars fmt, Chars args_str, va_list args_li
       fputc(c, f);
     }
   }
-  check(i == arg_count, "only %i items in format: '%s'; %i args: '%s'",
-    i, fmt, arg_count, args_str);
 }
 
 
-static void fmt_to_file(CFile f, Chars fmt, Chars args_str, ...) {
+static void fmt_to_file(CFile f, Chars fmt, ...) {
   va_list args_list;
-  va_start(args_list, args_str);
-  fmt_list_to_file(f, fmt, args_str, args_list);
+  va_start(args_list, fmt);
+  fmt_list_to_file(f, fmt, args_list);
   va_end(args_list);
 }
 

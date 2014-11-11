@@ -26,12 +26,12 @@ static Obj track_src(Obj original, Obj derived) {
 }
 
 
-static NO_RETURN _exc_raise(Trace* trace, Obj env, Chars fmt, Chars args_str, ...) {
+static NO_RETURN _exc_raise(Trace* trace, Obj env, Chars fmt, ...) {
   // raise an exception.
   // NOTE: there is not yet any exception unwind mechanism, so this just calls exit.
   va_list args_list;
-  va_start(args_list, args_str);
-  fmt_list_to_file(stderr, fmt, args_str, args_list);
+  va_start(args_list, fmt);
+  fmt_list_to_file(stderr, fmt, args_list);
   va_end(args_list);
   errL("\ntrace:");
   while (trace) {
