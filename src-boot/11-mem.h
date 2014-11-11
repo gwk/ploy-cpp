@@ -45,15 +45,6 @@ UNUSED_FN static Bool mem_eq(Mem a, Mem b) {
 }
 
 
-static Mem mem_next(Mem m) {
-  // note: this may produce an invalid mem representing the end of the region;
-  // as a minor optimization, we do not set m.els to null if len == 0,
-  // but we could if it matters.
-  assert(m.len > 0 && m.els);
-  return Mem(m.len - 1, m.els + 1);
-}
-
-
 UNUSED_FN static Obj* mem_end(Mem m) {
   return m.els + m.len;
 }
@@ -99,12 +90,6 @@ static Int mem_append(Mem* m, Obj o) {
   // during debug it is often the malloc scribble value.
   m->els[i] = o;
   return i;
-}
-
-
-UNUSED_FN static Mem mem_push(Mem m, Obj o) {
-  mem_put(m, 0, o);
-  return mem_next(m);
 }
 
 
