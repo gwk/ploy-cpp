@@ -14,6 +14,6 @@ static void global_push(Obj global) {
 
 #if OPTION_ALLOC_COUNT
 static void global_cleanup() {
-  mem_dissolve_dealloc(globals.mem);
+  globals.mem.dissolve_dealloc();
 }
 #endif

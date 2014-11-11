@@ -180,8 +180,8 @@ static Obj host_aput(Trace* t, Obj env) {
   Int i = int_val(b);
   exc_check(i >= 0 && i < l, "el index out of range; index: %i; len: %i", i, l);
   Mem m = cmpd_mem(a);
-  rc_rel(mem_el_move(m, i));
-  mem_put(m, i, rc_ret(c));
+  rc_rel(m.el_move(i));
+  m.put(i, rc_ret(c));
   return rc_ret(a);
 }
 

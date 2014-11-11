@@ -106,10 +106,10 @@ int main(int argc, Chars argv[]) {
   rc_rel(env);
   env_cleanup();
   // release but do not clear to facilitate debugging during type_cleanup.
-  mem_rel_no_clear(global_sym_names.mem);
+  global_sym_names.mem.rel_no_clear();
   type_cleanup();
   rc_cleanup();
-  mem_dealloc_no_clear(global_sym_names.mem);
+  global_sym_names.mem.dealloc_no_clear();
   counter_stats(should_log_stats);
 #endif
 

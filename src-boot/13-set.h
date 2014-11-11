@@ -38,7 +38,7 @@ static void set_dealloc(Set* s) {
   Int len = 0;
   for_in(i, s->len_buckets) {
     len += s->buckets[i].mem.len;
-    mem_dealloc(s->buckets[i].mem);
+    s->buckets[i].mem.dealloc();
   }
   assert(len == s->len);
   raw_dealloc(s->buckets, ci_Set);
@@ -80,7 +80,7 @@ static void set_insert(Set* s, Obj o) {
     for_in(i, s->len_buckets) {
       Hash_bucket src = s->buckets[i];
       for_in(j, src.mem.len) {
-        Obj el = mem_el_move(src.mem, j);
+        Obj el = src.mem.el_move(j);
         Hash_bucket* dst = set_bucket(&s1, el);
         array_append(dst, el);
       }

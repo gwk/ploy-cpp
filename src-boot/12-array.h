@@ -22,7 +22,7 @@ struct Array {
 static Array array_alloc_cap(Int cap) {
   Array a = array0;
   a.cap = cap;
-  mem_realloc(&a.mem, a.cap);
+  a.mem.grow(a.cap);
   return a;
 }
 
@@ -34,7 +34,7 @@ static void array_grow_cap(Array* a) {
   } else {
     a->cap *= 2;
   }
-  mem_realloc(&a->mem, a->cap);
+  a->mem.grow(a->cap);
 }
 
 
@@ -44,7 +44,7 @@ static Int array_append(Array* a, Obj o) {
   if (a->mem.len == a->cap) {
     array_grow_cap(a);
   }
-  return mem_append(&a->mem, o);
+  return a->mem.append(o);
 }
 
 

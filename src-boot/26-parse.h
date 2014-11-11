@@ -121,7 +121,7 @@ static Bool parser_has_next_expr(Parser* p) {
 static Obj parse_expr(Parser* p);
 
 static Mem parse_exprs(Parser* p, Char term) {
-  // caller must call mem_rel_dealloc or mem_dealloc on returned Mem.
+  // caller must call mem.rel_dealloc or mem.dealloc on returned Mem.
   // term is a the expected terminator character (e.g. closing paren).
   Array a = array0;
   while (parser_has_next_expr(p)) {
@@ -134,7 +134,7 @@ static Mem parse_exprs(Parser* p, Char term) {
     array_append(&a, o);
   }
   if (p->e) {
-    mem_rel_dealloc(a.mem);
+    a.mem.rel_dealloc();
     return mem0;
   }
   return a.mem;
@@ -425,7 +425,7 @@ static Bool parse_terminator(Parser* p, Char t) {
 
 #define P_CONSUME_TERMINATOR(t) \
 if (p->e || !parse_terminator(p, t)) { \
-  mem_rel_dealloc(m); \
+  m.rel_dealloc(); \
   return obj0; \
 }
 
@@ -435,7 +435,7 @@ static Obj parse_Expand(Parser* p) {
   Mem m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR('>');
   Obj e = cmpd_new(rc_ret(t_Expand), cmpd_new_M(rc_ret(t_Arr_Expr), m));
-  mem_dealloc(m);
+  m.dealloc();
   return e;
 }
 
@@ -445,7 +445,7 @@ static Obj parse_Call(Parser* p) {
   Mem m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR(')');
   Obj c = cmpd_new(rc_ret(t_Call), cmpd_new_M(rc_ret(t_Arr_Expr), m));
-  mem_dealloc(m);
+  m.dealloc();
   return c;
 }
 
@@ -455,7 +455,7 @@ static Obj parse_struct(Parser* p) {
   Mem m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR('}');
   Obj s = cmpd_new(rc_ret(t_Syn_struct), cmpd_new_M(rc_ret(t_Arr_Expr), m));
-  mem_dealloc(m);
+  m.dealloc();
   return s;
 }
 
@@ -465,7 +465,7 @@ static Obj parse_seq(Parser* p) {
   Mem m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR(']');
   Obj s = cmpd_new(rc_ret(t_Syn_seq), cmpd_new_M(rc_ret(t_Arr_Expr), m));
-  mem_dealloc(m);
+  m.dealloc();
   return s;
 }
 
@@ -544,10 +544,10 @@ static Obj parse_src(Dict* src_locs, Obj path, Obj src, CharsM* e) {
     o = obj0;
   } else if (p.pos.off != p.s.len) {
     o = parse_error(&p, "parsing terminated early");
-    mem_rel_dealloc(m);
+    m.rel_dealloc();
   } else {
     o = cmpd_new_M(rc_ret(t_Arr_Expr), m);
-    mem_dealloc(m);
+    m.dealloc();
   }
   *e = p.e;
   return o;

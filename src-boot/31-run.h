@@ -195,8 +195,8 @@ static Obj bind_par(Int d, Trace* t, Obj env, Obj call, Obj par, Mem vals, Int* 
   Obj val;
   Int i = *i_vals;
   if (i < vals.len) {
-    Obj arg_name = mem_el_move(vals, i++);
-    Obj arg = mem_el_move(vals, i++);
+    Obj arg_name = vals.el_move(i++);
+    Obj arg = vals.el_move(i++);
     *i_vals = i;
     exc_check(!arg_name.vld() || par_el_name == arg_name,
       "call: %o\nparameter: %o\ndoes not match argument label %i: %o\narg: %o",
@@ -222,7 +222,7 @@ static Obj bind_variad(Int d, Trace* t, Obj env, Obj call, Obj par, Mem vals, In
   Int start = *i_vals;
   Int end = vals.len;
   for_imns(i, start, end, 2) {
-    if (mem_el(vals, i).vld()) { // labeled arg; terminate variad.
+    if (vals.el(i).vld()) { // labeled arg; terminate variad.
       end = i;
       break;
     }
@@ -232,7 +232,7 @@ static Obj bind_variad(Int d, Trace* t, Obj env, Obj call, Obj par, Mem vals, In
   Obj vrd = cmpd_new_raw(rc_ret(t_Arr_Obj), len); // TODO: set correct type.
   Int j = 0;
   for_imns(i, start + 1, end, 2) {
-    Obj arg = mem_el_move(vals, i);
+    Obj arg = vals.el_move(i);
     cmpd_put(vrd, j++, arg);
   }
   env = bind_val(t, false, env, rc_ret_val(par_el_name), vrd);
@@ -243,7 +243,7 @@ static Obj bind_variad(Int d, Trace* t, Obj env, Obj call, Obj par, Mem vals, In
 static Obj run_bind_vals(Int d, Trace* t, Obj env, Obj call, Obj variad, Obj pars,
   Mem vals) {
   // owns env.
-  env = bind_val(t, false, env, rc_ret_val(s_self), mem_el_move(vals, 0));
+  env = bind_val(t, false, env, rc_ret_val(s_self), vals.el_move(0));
   Int i_vals = 1; // first name of the interleaved name/value pairs.
   Bool has_variad = false;
   for_in(i_pars, cmpd_len(pars)) {
@@ -266,7 +266,7 @@ static Obj run_bind_vals(Int d, Trace* t, Obj env, Obj call, Obj variad, Obj par
 
 static Step run_call_func(Int d, Trace* t, Obj env, Obj call, Mem vals, Bool is_call) {
   // owns env, func.
-  Obj func = mem_el(vals, 0);
+  Obj func = vals.el(0);
   assert(cmpd_len(func) == 7);
   Obj is_native = cmpd_el(func, 0);
   Obj is_macro  = cmpd_el(func, 1);
@@ -291,7 +291,7 @@ static Step run_call_func(Int d, Trace* t, Obj env, Obj call, Mem vals, Bool is_
   // NOTE: because func is bound to self in callee_env, and func contains body,
   // we can give func to callee_env and still safely return the unretained body as tail.code.
   callee_env = run_bind_vals(d, t, callee_env, call, variad, pars, vals);
-  mem_dealloc(vals);
+  vals.dealloc();
   if (bool_is_true(is_native)) {
 #if OPTION_TCO
     // caller will own env, callee_env, but not .code.
@@ -314,10 +314,10 @@ static Step run_call_func(Int d, Trace* t, Obj env, Obj call, Mem vals, Bool is_
 static Step run_call_accessor(Int d, Trace* t, Obj env, Obj call, Mem vals) {
   // owns env, vals.
   exc_check(vals.len == 3, "call: %o\naccessor requires 1 argument", call);
-  exc_check(!mem_el(vals, 1).vld(), "call:%o\naccessee is a label", call);
-  Obj accessor = mem_el_move(vals, 0);
-  Obj accessee = mem_el_move(vals, 2);
-  mem_dealloc(vals);
+  exc_check(!vals.el(1).vld(), "call:%o\naccessee is a label", call);
+  Obj accessor = vals.el_move(0);
+  Obj accessee = vals.el_move(2);
+  vals.dealloc();
   assert(cmpd_len(accessor) == 1);
   Obj name = cmpd_el(accessor, 0);
   exc_check(name.is_sym(), "call: %o\naccessor expr is not a sym: %o", call, name);
@@ -350,12 +350,12 @@ static Step run_call_accessor(Int d, Trace* t, Obj env, Obj call, Mem vals) {
 static Step run_call_mutator(Int d, Trace* t, Obj env, Obj call, Mem vals) {
   // owns env, vals.
   exc_check(vals.len == 5, "call: %o\nmutator requires 2 arguments", call);
-  exc_check(!mem_el(vals, 1).vld(), "call:%o\nmutatee is a label", call);
-  exc_check(!mem_el(vals, 3).vld(), "call:%o\nmutator expr is a label", call);
-  Obj mutator = mem_el_move(vals, 0);
-  Obj mutatee = mem_el_move(vals, 2);
-  Obj val = mem_el_move(vals, 4);
-  mem_dealloc(vals);
+  exc_check(!vals.el(1).vld(), "call:%o\nmutatee is a label", call);
+  exc_check(!vals.el(3).vld(), "call:%o\nmutator expr is a label", call);
+  Obj mutator = vals.el_move(0);
+  Obj mutatee = vals.el_move(2);
+  Obj val = vals.el_move(4);
+  vals.dealloc();
   assert(cmpd_len(mutator) == 1);
   Obj name = cmpd_el(mutator, 0);
   exc_check(name.is_sym(), "call: %o\nmutator expr is not a sym: %o", call, name);
@@ -388,10 +388,10 @@ static Step run_call_mutator(Int d, Trace* t, Obj env, Obj call, Mem vals) {
 static Step run_call_EXPAND(Int d, Trace* t, Obj env, Obj call, Mem vals) {
   // owns env, vals.
   exc_check(vals.len == 3, "call: %o\n:EXPAND requires 1 argument", call);
-  exc_check(!mem_el(vals, 1).vld(), "call: %o\nEXPAND expr is a label", call);
-  Obj callee = mem_el_move(vals, 0);
-  Obj expr = mem_el_move(vals, 2);
-  mem_dealloc(vals);
+  exc_check(!vals.el(1).vld(), "call: %o\nEXPAND expr is a label", call);
+  Obj callee = vals.el_move(0);
+  Obj expr = vals.el_move(2);
+  vals.dealloc();
   rc_rel_val(callee);
   Obj res = expand(0, env, expr);
   return Step(env, res);
@@ -401,10 +401,10 @@ static Step run_call_EXPAND(Int d, Trace* t, Obj env, Obj call, Mem vals) {
 static Step run_call_RUN(Int d, Trace* t, Obj env, Obj call, Mem vals) {
   // owns env, vals.
   exc_check(vals.len == 3, "call: %o\n:RUN requires 1 argument", call);
-  exc_check(!mem_el(vals, 1).vld(), "call: %o\nRUN expr is a label", call);
-  Obj callee = mem_el_move(vals, 0);
-  Obj expr = mem_el_move(vals, 2);
-  mem_dealloc(vals);
+  exc_check(!vals.el(1).vld(), "call: %o\nRUN expr is a label", call);
+  Obj callee = vals.el_move(0);
+  Obj expr = vals.el_move(2);
+  vals.dealloc();
   rc_rel_val(callee);
   // for now, perform a non-TCO run so that we do not have to retain expr.
   Step step = run(d, t, env, expr);
@@ -415,10 +415,10 @@ static Step run_call_RUN(Int d, Trace* t, Obj env, Obj call, Mem vals) {
 
 static Step run_call_CONS(Int d, Trace* t, Obj env, Obj call, Mem vals) {
   exc_check(vals.len >= 3, "call: %o\nCONS requires a type argument", call);
-  exc_check(!mem_el(vals, 1).vld(), "call: %o\nCONS type argument is a label", call);
-  Obj callee = mem_el_move(vals, 0);
+  exc_check(!vals.el(1).vld(), "call: %o\nCONS type argument is a label", call);
+  Obj callee = vals.el_move(0);
   rc_rel_val(callee);
-  Obj type = mem_el_move(vals, 2);
+  Obj type = vals.el_move(2);
   Obj kind = type_kind(type);
   Int len = (vals.len - 3) / 2;
   Obj res = cmpd_new_raw(type, len);
@@ -430,8 +430,8 @@ static Step run_call_CONS(Int d, Trace* t, Obj env, Obj call, Mem vals) {
     for_in(i, len) {
       Obj field = cmpd_el(fields, i);
       Obj field_name = cmpd_el(field, 0);
-      Obj sym = mem_el_move(vals, i * 2 + 3);
-      Obj val = mem_el_move(vals, i * 2 + 4);
+      Obj sym = vals.el_move(i * 2 + 3);
+      Obj val = vals.el_move(i * 2 + 4);
       if (sym.vld()) {
         exc_check(sym == field_name, "call: %o\nCONS: expected field label: %o; received: %o",
           call, field_name, sym);
@@ -440,15 +440,15 @@ static Step run_call_CONS(Int d, Trace* t, Obj env, Obj call, Mem vals) {
     }
   } else if (is_kind_arr(kind)) {
     for_in(i, len) {
-      Obj sym = mem_el_move(vals, i * 2 + 3);
-      Obj val = mem_el_move(vals, i * 2 + 4);
+      Obj sym = vals.el_move(i * 2 + 3);
+      Obj val = vals.el_move(i * 2 + 4);
       exc_check(!sym.vld(), "call: %o\nCONS: unexpected element label: %o", call, sym);
       cmpd_put(res, i, val);
     }
   } else {
     exc_raise("call: %o\nCONS type is not a struct or arr type", call);
   }
-  mem_dealloc(vals);
+  vals.dealloc();
   return Step(env, res);
 }
 
@@ -459,25 +459,25 @@ static Step run_tail(Int d, Trace* parent_trace, Step step);
 static Step run_call_dispatcher(Int d, Trace* t, Obj env, Obj call, Mem vals,
   Obj dispatcher) {
   // owns env, vals.
-  Obj callee = mem_el_ret(vals, 0);
+  Obj callee = vals.el_ret(0);
   Int types_len = (vals.len - 1) / 2;
   Obj types = cmpd_new_raw(rc_ret(t_Arr_Type), types_len);
   for_in(i, types_len) {
-    Obj val = mem_el(vals, i * 2 + 2);
+    Obj val = vals.el(i * 2 + 2);
     cmpd_put(types, i, rc_ret(val.type()));
   }
-  Mem disp_vals = mem_alloc(5);
-  mem_put(disp_vals, 0, rc_ret(dispatcher));
-  mem_put(disp_vals, 1, s_callee);
-  mem_put(disp_vals, 2, callee);
-  mem_put(disp_vals, 3, s_types);
-  mem_put(disp_vals, 4, types);
+  Mem disp_vals(5);
+  disp_vals.put(0, rc_ret(dispatcher));
+  disp_vals.put(1, s_callee);
+  disp_vals.put(2, callee);
+  disp_vals.put(3, s_types);
+  disp_vals.put(4, types);
   Step step = run_Call_disp(d, t, env, call, disp_vals);
   step = run_tail(d, t, step);
   env = step.res.env;
   // replace the original callee with the function returned by the dispatcher.
-  rc_rel(mem_el_move(vals, 0));
-  mem_put(vals, 0, step.res.val);
+  rc_rel(vals.el_move(0));
+  vals.put(0, step.res.val);
   return run_Call_disp(d, t, env, call, vals);
 }
 
@@ -533,7 +533,7 @@ static Step run_Call(Int d, Trace* t, Obj env, Obj code) {
 
 
 static Step run_Call_disp(Int d, Trace* t, Obj env, Obj code, Mem vals) {
-  Obj callee = mem_el(vals, 0);
+  Obj callee = vals.el(0);
   Obj type = callee.type();
   Int ti = type_index(type); // Int type avoids incomplete enum switch error.
   switch (ti) {
@@ -706,12 +706,12 @@ static Obj run_macro(Trace* t, Obj env, Obj code) {
     code, macro_sym);
   Obj macro = env_get(env, macro_sym);
   exc_check(macro.vld(), "expand: %o\nmacro lookup error: %o", code, macro_sym);
-  Mem vals = mem_alloc(len * 2 - 1);
-  mem_put(vals, 0, rc_ret(macro));
+  Mem vals(len * 2 - 1);
+  vals.put(0, rc_ret(macro));
   for_imn(i, 1, len) {
     Obj expr = cmpd_el(exprs, i);
-    mem_put(vals, i * 2 - 1, obj0);
-    mem_put(vals, i * 2, rc_ret(expr));
+    vals.put(i * 2 - 1, obj0);
+    vals.put(i * 2, rc_ret(expr));
   }
   Step step = run_call_func(0, t, env, code, vals, false); // owns env, macro.
   step = run_tail(0, t, step); // handle any TCO steps.

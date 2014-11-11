@@ -322,7 +322,7 @@ static Obj type_init_values(Obj env) {
 
 #if OPTION_ALLOC_COUNT
 static void type_cleanup() {
-  mem_rel_dealloc(global_singletons.mem);
+  global_singletons.mem.rel_dealloc();
   for_in(i, ti_END) {
     Obj o = type_for_index(cast(Type_index, i));
     rc_rel(o.t->kind);

@@ -28,7 +28,7 @@ DEF_SIZE(Dict);
 DBG_FN static void dict_rel(Dict* d) {
   assert(d->vld());
   for_in(i, d->len_buckets) {
-    mem_rel(d->buckets[i].mem);
+    d->buckets[i].mem.rel();
   }
 }
 
@@ -38,7 +38,7 @@ static void dict_dealloc(Dict* d) {
   Int len = 0;
   for_in(i, d->len_buckets) {
     len += d->buckets[i].mem.len / 2;
-    mem_dealloc(d->buckets[i].mem);
+    d->buckets[i].mem.dealloc();
   }
   assert(len == d->len);
   raw_dealloc(d->buckets, ci_Dict);
@@ -92,8 +92,8 @@ static void dict_insert(Dict* d, Obj k, Obj v) {
     for_in(i, d->len_buckets) {
       Hash_bucket src = d->buckets[i];
       for_ins(j, src.mem.len, 2) {
-        Obj ek = mem_el_move(src.mem, j);
-        Obj ev = mem_el_move(src.mem, j + 1);
+        Obj ek = src.mem.el_move(j);
+        Obj ev = src.mem.el_move(j + 1);
         Hash_bucket* dst = dict_bucket(&d1, ek);
         array_append(dst, ek);
         array_append(dst, ev);

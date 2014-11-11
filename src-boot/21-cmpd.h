@@ -37,7 +37,7 @@ static Obj cmpd_new_M(Obj type, Mem m) {
   Obj c = cmpd_new_raw(type, m.len);
   Obj* els = cmpd_els(c);
   for_in(i, m.len) {
-    els[i] = mem_el_move(m, i);
+    els[i] = m.el_move(i);
   }
   return c;
 }
@@ -48,7 +48,7 @@ UNUSED_FN static Obj cmpd_new_M_ret(Obj type, Mem m) {
   Obj c = cmpd_new_raw(type, m.len);
   Obj* els = cmpd_els(c);
   for_in(i, m.len) {
-    els[i] = mem_el_ret(m, i);
+    els[i] = m.el_ret(i);
   }
   return c;
 }
@@ -61,7 +61,7 @@ UNUSED_FN static Obj cmpd_new_EM(Obj type, Obj el, Mem m) {
   Obj* els = cmpd_els(c);
   els[0] = el;
   for_in(i, m.len) {
-    els[i + 1] = mem_el_move(m, i);
+    els[i + 1] = m.el_move(i);
   }
   return c;
 }
@@ -110,12 +110,12 @@ static Mem cmpd_mem(Obj c) {
 static Obj cmpd_el(Obj c, Int i) {
   // assumes the caller knows the size of the compound.
   assert(ref_is_cmpd(c));
-  return mem_el(cmpd_mem(c), i);
+  return cmpd_mem(c).el(i);
 }
 
 
 static void cmpd_put(Obj c, Int i, Obj e) {
-  mem_put(cmpd_mem(c), i, e);
+  cmpd_mem(c).put(i, e);
 }
 
 
