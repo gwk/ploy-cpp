@@ -135,7 +135,7 @@ static Mem parse_exprs(Parser* p, Char term) {
   }
   if (p->e) {
     a.mem.rel_dealloc();
-    return mem0;
+    return Mem();
   }
   return a.mem;
 }

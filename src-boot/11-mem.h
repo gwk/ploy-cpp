@@ -155,7 +155,3 @@ struct Mem {
 #endif
 
 };
-
-
-#define mem0 Mem()
-
