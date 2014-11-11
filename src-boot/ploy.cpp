@@ -4,7 +4,7 @@
 #include "32-eval.h"
 
 
-static Obj parse_and_eval(Dict* src_locs, Obj env, Obj path, Obj src, Bool should_output_val) {
+static Obj parse_and_eval(Dict& src_locs, Obj env, Obj path, Obj src, Bool should_output_val) {
   // owns path, src.
   CharsM e = null;
   Obj code = parse_src(src_locs, path, src, &e);
@@ -87,13 +87,13 @@ int main(int argc, Chars argv[]) {
     env = env_push_frame(env);
     path = data_new_from_chars(paths[i]);
     src = data_new_from_path(paths[i]);
-    env = parse_and_eval(&global_src_locs, env, path, src, false);
+    env = parse_and_eval(global_src_locs, env, path, src, false);
   }
   if (expr) {
     env = env_push_frame(env);
     path = data_new_from_chars("<expr>");
     src = data_new_from_chars(expr);
-    env = parse_and_eval(&global_src_locs, env, path, src, should_output_val);
+    env = parse_and_eval(global_src_locs, env, path, src, should_output_val);
   }
 
 #if OPTION_ALLOC_COUNT

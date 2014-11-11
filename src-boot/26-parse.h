@@ -24,23 +24,22 @@ struct Parser {
 };
 
 
-#define DEF_POS Src_pos pos = p->pos
+#define DEF_POS Src_pos pos = p.pos
 
 
 #if VERBOSE_PARSE
-static void parse_err_prefix(Parser* p) {
+static void parse_err_prefix(Parser& p) {
   fprintf(stderr, "%.*s:%ld:%ld (%ld): ",
-    FMT_STR(data_str(p->path)), p->pos.line + 1, p->pos.col + 1, p->pos.off);
-  if (p->e) errF("\nerror: %s\nobj:  ", p->e);
+    FMT_STR(data_str(p.path)), p.pos.line + 1, p.pos.col + 1, p.pos.off);
+  if (p.e) errF("\nerror: %s\nobj:  ", p.e);
 }
 
 #define parse_errFL(fmt, ...) parse_err_prefix(p); errFL(fmt, ##__VA_ARGS__)
 #endif
 
-
 __attribute__((format (printf, 2, 3)))
-static Obj parse_error(Parser* p, Chars fmt, ...) {
-  assert(!p->e);
+static Obj parse_error(Parser& p, Chars fmt, ...) {
+  assert(!p.e);
   va_list args;
   va_start(args, fmt);
   CharsM msg;
@@ -48,7 +47,7 @@ static Obj parse_error(Parser* p, Chars fmt, ...) {
   va_end(args);
   check(msg_len >= 0, "parse_error allocation failed: %s", fmt);
   // parser owner must call raw_dealloc on e.
-  p->e = str_src_loc_str(data_str(p->path), p->s, p->pos.off, 0, p->pos.line, p->pos.col, msg);
+  p.e = str_src_loc_str(data_str(p.path), p.s, p.pos.off, 0, p.pos.line, p.pos.col, msg);
   free(msg); // matches vasprintf above.
   return obj0;
 }
@@ -58,15 +57,15 @@ static Obj parse_error(Parser* p, Chars fmt, ...) {
 if (!(condition)) return parse_error(p, fmt, ##__VA_ARGS__)
 
 
-#define PP  (p->pos.off < p->s.len)
-#define PP1 (p->pos.off < p->s.len - 1)
+#define PP  (p.pos.off < p.s.len)
+#define PP1 (p.pos.off < p.s.len - 1)
 
-#define PC  p->s.chars[p->pos.off]
-#define PC1 p->s.chars[p->pos.off + 1]
+#define PC  p.s.chars[p.pos.off]
+#define PC1 p.s.chars[p.pos.off + 1]
 
-#define P_ADV(n, ...) { p->pos.off += n; p->pos.col += n; if (!PP) {__VA_ARGS__;}; } 
+#define P_ADV(n, ...) { p.pos.off += n; p.pos.col += n; if (!PP) {__VA_ARGS__;}; } 
 
-#define P_CHARS (p->s.chars + p->pos.off)
+#define P_CHARS (p.s.chars + p.pos.off)
 
 
 static Bool char_is_seq_term(Char c) {
@@ -85,7 +84,7 @@ static Bool char_is_atom_term(Char c) {
 }
 
 
-static Bool parse_space(Parser* p) {
+static Bool parse_space(Parser& p) {
   // return true if parsing can continue.
   while (PP) {
     Char c = PC;
@@ -94,9 +93,9 @@ static Bool parse_space(Parser* p) {
         P_ADV(1, break);
        break ;
       case '\n':
-        p->pos.off++;
-        p->pos.line++;
-        p->pos.col = 0;
+        p.pos.off++;
+        p.pos.line++;
+        p.pos.col = 0;
         break;
       case '\t':
         parse_error(p, "illegal tab character");
@@ -113,27 +112,27 @@ static Bool parse_space(Parser* p) {
 }
 
 
-static Bool parser_has_next_expr(Parser* p) {
+static Bool parser_has_next_expr(Parser& p) {
   return parse_space(p) && !char_is_seq_term(PC);
 }
 
 
-static Obj parse_expr(Parser* p);
+static Obj parse_expr(Parser& p);
 
-static Mem parse_exprs(Parser* p, Char term) {
+static Mem parse_exprs(Parser& p, Char term) {
   // caller must call mem.rel_dealloc or mem.dealloc on returned Mem.
   // term is a the expected terminator character (e.g. closing paren).
   Array a;
   while (parser_has_next_expr(p)) {
     if (term && PC == term) break;
     Obj o = parse_expr(p);
-    if (p->e) {
+    if (p.e) {
       assert(!o.vld());
       break;
     }
     a.append(o);
   }
-  if (p->e) {
+  if (p.e) {
     a.mem.rel_dealloc();
     return Mem();
   }
@@ -142,7 +141,7 @@ static Mem parse_exprs(Parser* p, Char term) {
 
 
 
-static U64 parse_U64(Parser* p) {
+static U64 parse_U64(Parser& p) {
   Char c = PC;
   I32 base = 0;
   if (c == '0' && PP1) {
@@ -160,7 +159,7 @@ static U64 parse_U64(Parser* p) {
       base = 10;
     }
   }
-  Chars start = p->s.chars + p->pos.off;
+  Chars start = p.s.chars + p.pos.off;
   CharsM end;
   // TODO: this appears unsafe; what if strtoull runs off the end of the string?
   U64 u = strtoull(start, &end, base);
@@ -171,7 +170,7 @@ static U64 parse_U64(Parser* p) {
   }
   assert(end > start); // strtoull man page is a bit confusing as to the precise semantics.
   Int n = end - start;
-  assert(p->pos.off + n <= p->s.len);
+  assert(p.pos.off + n <= p.s.len);
   P_ADV(n, return u);
   if (!char_is_atom_term(PC)) {
     parse_error(p, "invalid number literal terminator: %c", PC);
@@ -181,64 +180,64 @@ static U64 parse_U64(Parser* p) {
 }
 
 
-static Obj parse_uns(Parser* p) {
+static Obj parse_uns(Parser& p) {
   U64 u = parse_U64(p);
-  if (p->e) return obj0;
+  if (p.e) return obj0;
   return int_new_from_uns(u);
 }
 
 
-static Obj parse_Int(Parser* p, Int sign) {
+static Obj parse_Int(Parser& p, Int sign) {
   assert(PC == '-' || PC == '+');
   P_ADV(1, return parse_error(p, "incomplete signed number literal"));
   U64 u = parse_U64(p);
-  if (p->e) return obj0;
+  if (p.e) return obj0;
   parse_check(u <= max_Int, "signed number literal is too large");
   return int_new((I64)u * sign);
 }
 
 
-static Obj parse_Sym(Parser* p) {
+static Obj parse_Sym(Parser& p) {
   assert(PC == '_' || isalpha(PC));
-  Int off = p->pos.off;
+  Int off = p.pos.off;
   loop {
     P_ADV(1, break);
     Char c = PC;
     if (!(c == '-' || c == '_' || isalnum(c))) break;
   }
-  Str s = str_slice(p->s, off, p->pos.off);
+  Str s = str_slice(p.s, off, p.pos.off);
   return sym_new(s);
 }
 
 
-static Obj parse_sub_expr(Parser* p);
+static Obj parse_sub_expr(Parser& p);
 
-static Obj parse_Comment(Parser* p) {
+static Obj parse_Comment(Parser& p) {
   DEF_POS;
   assert(PC == '#');
   P_ADV(1, return parse_error(p, "unterminated comment (add newline)"));
   if (PC == '#') { // double-hash comments out the following expression.
     P_ADV(1, return parse_error(p, "expression comment requires sub-expression"));
     Obj expr = parse_sub_expr(p);
-    if (p->e) return obj0;
+    if (p.e) return obj0;
     // first field indicates expression comment.
     return cmpd_new(t_Comment.ret(), s_true.ret_val(), expr);
   }
   // otherwise comment out a single line.
   while (PC == ' ') {
-    P_ADV(1, p->pos = pos; return parse_error(p, "unterminated comment (add newline)"));
+    P_ADV(1, p.pos = pos; return parse_error(p, "unterminated comment (add newline)"));
   };
-  Int off_start = p->pos.off;
+  Int off_start = p.pos.off;
   while (PC != '\n') {
-    P_ADV(1, p->pos = pos; return parse_error(p, "unterminated comment (add newline)"));
+    P_ADV(1, p.pos = pos; return parse_error(p, "unterminated comment (add newline)"));
   }
-  Str s = str_slice(p->s, off_start, p->pos.off);
+  Str s = str_slice(p.s, off_start, p.pos.off);
   Obj d = data_new_from_str(s);
   return cmpd_new(t_Comment.ret(), s_false.ret_val(), d);
 }
 
 
-static Obj parse_Data(Parser* p, Char q) {
+static Obj parse_Data(Parser& p, Char q) {
   DEF_POS;
   assert(PC == q);
   Int cap = size_min_alloc;
@@ -248,7 +247,7 @@ static Obj parse_Data(Parser* p, Char q) {
 #define APPEND(c) { len = chars_append(&chars, &cap, len, c); }
   loop {
     P_ADV(1,
-      p->pos = pos; chars_dealloc(chars); return parse_error(p, "unterminated string literal"));
+      p.pos = pos; chars_dealloc(chars); return parse_error(p, "unterminated string literal"));
     Char c = PC;
     if (escape) {
       escape = false;
@@ -285,55 +284,55 @@ static Obj parse_Data(Parser* p, Char q) {
 }
 
 
-static Obj parse_Quo(Parser* p) {
+static Obj parse_Quo(Parser& p) {
   assert(PC == '`');
   P_ADV(1);
   Obj o = parse_sub_expr(p);
-  if (p->e) return obj0;
+  if (p.e) return obj0;
   return cmpd_new(t_Quo.ret(), o);
 }
 
 
-static Obj parse_Qua(Parser* p) {
+static Obj parse_Qua(Parser& p) {
   assert(PC == '~');
   P_ADV(1);
   Obj o = parse_sub_expr(p);
-  if (p->e) return obj0;
+  if (p.e) return obj0;
   return cmpd_new(t_Qua.ret(), o);
 }
 
 
-static Obj parse_Unq(Parser* p) {
+static Obj parse_Unq(Parser& p) {
   assert(PC == ',');
   P_ADV(1);
   Obj o = parse_sub_expr(p);
-  if (p->e) return obj0;
+  if (p.e) return obj0;
   return cmpd_new(t_Unq.ret(), o);
 }
 
 
-static Obj parse_Bang(Parser* p) {
+static Obj parse_Bang(Parser& p) {
   assert(PC == '!');
   P_ADV(1);
   Obj o = parse_sub_expr(p);
-  if (p->e) return obj0;
+  if (p.e) return obj0;
   return cmpd_new(t_Bang.ret(), o);
 }
 
 
-static Obj parse_Splice(Parser* p) {
+static Obj parse_Splice(Parser& p) {
   assert(PC == '*');
   P_ADV(1);
   Obj o = parse_sub_expr(p);
-  if (p->e) return obj0;
+  if (p.e) return obj0;
   return cmpd_new(t_Splice.ret(), o);
 }
 
 
-static Obj parse_Label(Parser* p) {
+static Obj parse_Label(Parser& p) {
   P_ADV(1, return parse_error(p, "incomplete label name"));
   Obj name = parse_sub_expr(p);
-  if (p->e) {
+  if (p.e) {
     assert(!name.vld());
     return obj0;
   }
@@ -342,7 +341,7 @@ static Obj parse_Label(Parser* p) {
   if (c == ':') {
     P_ADV(1, return parse_error(p, "incomplete label type"));
     type = parse_sub_expr(p);
-    if (p->e) {
+    if (p.e) {
       name.rel();
       assert(!type.vld());
       return obj0;
@@ -354,7 +353,7 @@ static Obj parse_Label(Parser* p) {
   if (PC == '=') {
     P_ADV(1, return parse_error(p, "incomplete label expr"));
     expr = parse_sub_expr(p);
-    if (p->e) {
+    if (p.e) {
       name.rel();
       type.rel();
       assert(!expr.vld());
@@ -367,10 +366,10 @@ static Obj parse_Label(Parser* p) {
 }
 
 
-static Obj parse_Variad(Parser* p) {
+static Obj parse_Variad(Parser& p) {
   P_ADV(1, return parse_error(p, "incomplete variad expression"));
   Obj expr = parse_sub_expr(p);
-  if (p->e) {
+  if (p.e) {
     assert(!expr.vld());
     return obj0;
   }
@@ -379,7 +378,7 @@ static Obj parse_Variad(Parser* p) {
   if (c == ':') {
     P_ADV(1, return parse_error(p, "incomplete variad type"));
     type = parse_sub_expr(p);
-    if (p->e) {
+    if (p.e) {
       expr.rel();
       assert(!type.vld());
       return obj0;
@@ -391,10 +390,10 @@ static Obj parse_Variad(Parser* p) {
 }
 
 
-static Obj parse_Accessor(Parser* p) {
+static Obj parse_Accessor(Parser& p) {
   P_ADV(1, return parse_error(p, "incomplete accessor"));
   Obj expr = parse_sub_expr(p);
-  if (p->e) {
+  if (p.e) {
     assert(!expr.vld());
     return obj0;
   }
@@ -402,10 +401,10 @@ static Obj parse_Accessor(Parser* p) {
 }
 
 
-static Obj parse_Mutator(Parser* p) {
+static Obj parse_Mutator(Parser& p) {
   P_ADV(2, return parse_error(p, "incomplete mutator"));
   Obj expr = parse_sub_expr(p);
-  if (p->e) {
+  if (p.e) {
     assert(!expr.vld());
     return obj0;
   }
@@ -413,7 +412,7 @@ static Obj parse_Mutator(Parser* p) {
 }
 
 
-static Bool parse_terminator(Parser* p, Char t) {
+static Bool parse_terminator(Parser& p, Char t) {
   if (PC != t) {
     parse_error(p, "expected terminator: '%c'", t);
     return false;
@@ -424,13 +423,13 @@ static Bool parse_terminator(Parser* p, Char t) {
 
 
 #define P_CONSUME_TERMINATOR(t) \
-if (p->e || !parse_terminator(p, t)) { \
+if (p.e || !parse_terminator(p, t)) { \
   m.rel_dealloc(); \
   return obj0; \
 }
 
 
-static Obj parse_Expand(Parser* p) {
+static Obj parse_Expand(Parser& p) {
   P_ADV(1, return parse_error(p, "unterminated expand"));
   Mem m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR('>');
@@ -440,7 +439,7 @@ static Obj parse_Expand(Parser* p) {
 }
 
 
-static Obj parse_Call(Parser* p) {
+static Obj parse_Call(Parser& p) {
   P_ADV(1, return parse_error(p, "unterminated call"));
   Mem m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR(')');
@@ -450,7 +449,7 @@ static Obj parse_Call(Parser* p) {
 }
 
 
-static Obj parse_struct(Parser* p) {
+static Obj parse_struct(Parser& p) {
   P_ADV(1, return parse_error(p, "unterminated constructor"));
   Mem m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR('}');
@@ -460,7 +459,7 @@ static Obj parse_struct(Parser* p) {
 }
 
 
-static Obj parse_seq(Parser* p) {
+static Obj parse_seq(Parser& p) {
   P_ADV(1, return parse_error(p, "unterminated sequence"));
   Mem m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR(']');
@@ -471,7 +470,7 @@ static Obj parse_seq(Parser* p) {
 
 
 // parse an expression.
-static Obj parse_expr_dispatch(Parser* p) {
+static Obj parse_expr_dispatch(Parser& p) {
   Char c = PC;
   switch (c) {
     case '<':   return parse_Expand(p);
@@ -508,42 +507,42 @@ static Obj parse_expr_dispatch(Parser* p) {
 }
 
 
-static Obj parse_expr(Parser* p) {
+static Obj parse_expr(Parser& p) {
   DEF_POS;
   Obj expr = parse_expr_dispatch(p);
 #if VERBOSE_PARSE
   parse_errFL("%o", expr);
 #endif
-  if (!p->e && expr.is_ref()) {
+  if (!p.e && expr.is_ref()) {
     Obj src_loc = cmpd_new(t_Src_loc.ret(),
-      p->path.ret(),
-      p->src.ret(),
+      p.path.ret(),
+      p.src.ret(),
       int_new(pos.off),
-      int_new(p->pos.off - pos.off),
+      int_new(p.pos.off - pos.off),
       int_new(pos.line),
       int_new(pos.col));
-    p->locs->insert(expr.ret(), src_loc); // dict owns k, v.
+    p.locs->insert(expr.ret(), src_loc); // dict owns k, v.
   }
   return expr;
 }
 
 
-static Obj parse_sub_expr(Parser* p) {
+static Obj parse_sub_expr(Parser& p) {
   parse_check(PP, "expected sub-expression");
   return parse_expr(p);
 }
 
 
-static Obj parse_src(Dict* src_locs, Obj path, Obj src, CharsM* e) {
+static Obj parse_src(Dict& src_locs, Obj path, Obj src, CharsM* e) {
   // caller must free e.
-  Parser p = Parser(src_locs, path, src, data_str(src),Src_pos(0, 0, 0), null);
-  Mem m = parse_exprs(&p, 0);
+  Parser p = Parser(&src_locs, path, src, data_str(src),Src_pos(0, 0, 0), null);
+  Mem m = parse_exprs(p, 0);
   Obj o;
   if (p.e) {
     assert(m.len == 0 && m.els == null);
     o = obj0;
   } else if (p.pos.off != p.s.len) {
-    o = parse_error(&p, "parsing terminated early");
+    o = parse_error(p, "parsing terminated early");
     m.rel_dealloc();
   } else {
     o = cmpd_new_M(t_Arr_Expr.ret(), m);
