@@ -49,9 +49,9 @@ static void write_repr_Env(CFile f, Obj env) {
 }
 
 
-static void write_repr_obj(CFile f, Obj o, Bool is_quoted, Int depth, Set* set);
+static void write_repr_obj(CFile f, Obj o, Bool is_quoted, Int depth, Set& set);
 
-static void write_repr_Comment(CFile f, Obj o, Bool is_quoted, Int depth, Set* set) {
+static void write_repr_Comment(CFile f, Obj o, Bool is_quoted, Int depth, Set& set) {
   assert(cmpd_len(o) == 2);
   fputs(NO_REPR_PO "#", f);
   if (bool_is_true(cmpd_el(o, 0))) {
@@ -64,7 +64,7 @@ static void write_repr_Comment(CFile f, Obj o, Bool is_quoted, Int depth, Set* s
 }
 
 
-static void write_repr_Bang(CFile f, Obj o, Bool is_quoted, Int depth, Set* set) {
+static void write_repr_Bang(CFile f, Obj o, Bool is_quoted, Int depth, Set& set) {
   assert(cmpd_len(o) == 1);
   if (!is_quoted) {
     fputc('`', f);
@@ -74,7 +74,7 @@ static void write_repr_Bang(CFile f, Obj o, Bool is_quoted, Int depth, Set* set)
 }
 
 
-static void write_repr_Quo(CFile f, Obj o, Bool is_quoted, Int depth, Set* set) {
+static void write_repr_Quo(CFile f, Obj o, Bool is_quoted, Int depth, Set& set) {
   assert(cmpd_len(o) == 1);
   if (!is_quoted) {
     fputc('`', f);
@@ -84,7 +84,7 @@ static void write_repr_Quo(CFile f, Obj o, Bool is_quoted, Int depth, Set* set) 
 }
 
 
-static void write_repr_Qua(CFile f, Obj o, Bool is_quoted, Int depth, Set* set) {
+static void write_repr_Qua(CFile f, Obj o, Bool is_quoted, Int depth, Set& set) {
   assert(cmpd_len(o) == 1);
   if (!is_quoted) {
     fputc('`', f);
@@ -94,7 +94,7 @@ static void write_repr_Qua(CFile f, Obj o, Bool is_quoted, Int depth, Set* set) 
 }
 
 
-static void write_repr_Unq(CFile f, Obj o, Bool is_quoted, Int depth, Set* set) {
+static void write_repr_Unq(CFile f, Obj o, Bool is_quoted, Int depth, Set& set) {
   assert(cmpd_len(o) == 1);
   if (!is_quoted) {
     fputc('`', f);
@@ -104,7 +104,7 @@ static void write_repr_Unq(CFile f, Obj o, Bool is_quoted, Int depth, Set* set) 
 }
 
 
-static void write_repr_Splice(CFile f, Obj o, Bool is_quoted, Int depth, Set* set) {
+static void write_repr_Splice(CFile f, Obj o, Bool is_quoted, Int depth, Set& set) {
   assert(cmpd_len(o) == 1);
   if (!is_quoted) {
     fputc('`', f);
@@ -114,7 +114,7 @@ static void write_repr_Splice(CFile f, Obj o, Bool is_quoted, Int depth, Set* se
 }
 
 
-static void write_repr_Label(CFile f, Obj o, Bool is_quoted, Int depth, Set* set) {
+static void write_repr_Label(CFile f, Obj o, Bool is_quoted, Int depth, Set& set) {
   assert(cmpd_len(o) == 3);
   if (!is_quoted) {
     fputc('`', f);
@@ -136,7 +136,7 @@ static void write_repr_Label(CFile f, Obj o, Bool is_quoted, Int depth, Set* set
 }
 
 
-static void write_repr_Variad(CFile f, Obj o, Bool is_quoted, Int depth, Set* set) {
+static void write_repr_Variad(CFile f, Obj o, Bool is_quoted, Int depth, Set& set) {
   assert(cmpd_len(o) == 2);
   if (!is_quoted) {
     fputc('`', f);
@@ -153,7 +153,7 @@ static void write_repr_Variad(CFile f, Obj o, Bool is_quoted, Int depth, Set* se
 }
 
 
-static void write_repr_Accessor(CFile f, Obj o, Bool is_quoted, Int depth, Set* set) {
+static void write_repr_Accessor(CFile f, Obj o, Bool is_quoted, Int depth, Set& set) {
   assert(cmpd_len(o) == 1);
   if (!is_quoted) {
     fputc('`', f);
@@ -163,7 +163,7 @@ static void write_repr_Accessor(CFile f, Obj o, Bool is_quoted, Int depth, Set* 
 }
 
 
-static void write_repr_Mutator(CFile f, Obj o, Bool is_quoted, Int depth, Set* set) {
+static void write_repr_Mutator(CFile f, Obj o, Bool is_quoted, Int depth, Set& set) {
   assert(cmpd_len(o) == 1);
   if (!is_quoted) {
     fputc('`', f);
@@ -173,7 +173,7 @@ static void write_repr_Mutator(CFile f, Obj o, Bool is_quoted, Int depth, Set* s
 }
 
 
-static void write_repr_syn_seq(CFile f, Obj s, Bool is_quoted, Int depth, Set* set,
+static void write_repr_syn_seq(CFile f, Obj s, Bool is_quoted, Int depth, Set& set,
   Chars chars_open, Char char_close) {
   assert(cmpd_len(s) == 1);
   Obj exprs = cmpd_el(s, 0);
@@ -189,7 +189,7 @@ static void write_repr_syn_seq(CFile f, Obj s, Bool is_quoted, Int depth, Set* s
 }
 
 
-static void write_repr_default(CFile f, Obj c, Bool is_quoted, Int depth, Set* set) {
+static void write_repr_default(CFile f, Obj c, Bool is_quoted, Int depth, Set& set) {
   assert(ref_is_cmpd(c));
   if (is_quoted) fputs("¿", f);
   fputs("(", f);
@@ -205,7 +205,7 @@ static void write_repr_default(CFile f, Obj c, Bool is_quoted, Int depth, Set* s
 }
 
 
-static void write_repr_dispatch(CFile f, Obj s, Bool is_quoted, Int depth, Set* set) {
+static void write_repr_dispatch(CFile f, Obj s, Bool is_quoted, Int depth, Set& set) {
   Obj type = s.type();
   if (type == t_Data) { write_repr_Data(f, s); return; }
   if (type == t_Env)  { write_repr_Env(f, s); return; }
@@ -237,7 +237,7 @@ static void write_repr_dispatch(CFile f, Obj s, Bool is_quoted, Int depth, Set* 
 }
 
 
-static void write_repr_obj(CFile f, Obj o, Bool is_quoted, Int depth, Set* set) {
+static void write_repr_obj(CFile f, Obj o, Bool is_quoted, Int depth, Set& set) {
   // is_quoted indicates that we are writing part of a repr that has already been quoted.
   if (!o.vld()) {
     fputs(NO_REPR_PO "obj0" NO_REPR_PC, f);
@@ -264,12 +264,12 @@ static void write_repr_obj(CFile f, Obj o, Bool is_quoted, Int depth, Set* set) 
     assert(ot == ot_ref);
     if (depth > 8) {
       fputs("…", f); // ellipsis.
-    } else if (set->contains(o)) { // cyclic object recursed.
+    } else if (set.contains(o)) { // cyclic object recursed.
       fputs("↺", f); // anticlockwise gapped circle arrow.
     } else {
-      set->insert(o);
+      set.insert(o);
       write_repr_dispatch(f, o, is_quoted, depth + 1, set);
-      set->remove(o);
+      set.remove(o);
     }
   }
 #if !OPT
@@ -280,7 +280,7 @@ static void write_repr_obj(CFile f, Obj o, Bool is_quoted, Int depth, Set* set) 
 
 static void write_repr(CFile f, Obj o) {
   Set s;
-  write_repr_obj(f, o, false, 0, &s);
+  write_repr_obj(f, o, false, 0, s);
   s.dealloc(true);
 }
 
