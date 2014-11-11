@@ -278,7 +278,7 @@ static void rc_remove(Obj r) {
 
 static Uns rc_get(Obj o) {
   // get the object's retain count for debugging purposes.
-  if (obj_is_val(o)) return max_Uns;
+  if (o.is_val()) return max_Uns;
   RC_item* item = rc_resolve_item(rc_get_item(o));
   return item->c >> 1; // shift off the flag bit.
 }
@@ -288,7 +288,7 @@ static Obj rc_ret(Obj o) {
   // increase the object's retain count by one.
   assert(o.vld());
   counter_inc(obj_counter_index(o));
-  if (obj_is_val(o)) return o;
+  if (o.is_val()) return o;
   RC_item* item = rc_get_item(o);
   check(item, "object was prematurely deallocated: %p", o);
   item = rc_resolve_item(item);
@@ -304,7 +304,7 @@ static void rc_rel(Obj o) {
   // decrease the object's retain count by one, or deallocate it.
   assert(o.vld());
   do {
-    if (obj_is_val(o)) {
+    if (o.is_val()) {
       counter_dec(obj_counter_index(o));
       return;
     }
@@ -342,7 +342,7 @@ static void rc_dissolve(Obj o) {
 
 static Obj rc_ret_val(Obj o) {
   // ret counting for non-ref objects. a no-op for optimized builds.
-  assert(obj_is_val(o));
+  assert(o.is_val());
   counter_inc(obj_counter_index(o));
   return o;
 }
@@ -350,7 +350,7 @@ static Obj rc_ret_val(Obj o) {
 
 static Obj rc_rel_val(Obj o) {
   // rel counting for non-ref objects. a no-op for optimized builds.
-  assert(obj_is_val(o));
+  assert(o.is_val());
   counter_dec(obj_counter_index(o));
   return o;
 }

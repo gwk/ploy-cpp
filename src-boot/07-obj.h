@@ -95,16 +95,15 @@ union Obj {
     assert(vld());
     return cast(Obj_tag, u & obj_tag_mask);
   }
+
+  Bool is_val() {
+    assert(vld());
+    return tag() != ot_ref;
+  }
 };
 DEF_SIZE(Obj);
 
 #define obj0 Obj()
-
-
-static Bool obj_is_val(Obj o) {
-  assert(o.vld());
-  return o.tag() != ot_ref;
-}
 
 
 static Bool obj_is_ref(Obj o) {
