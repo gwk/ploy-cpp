@@ -222,7 +222,7 @@ static Obj parse_Comment(Parser* p) {
     Obj expr = parse_sub_expr(p);
     if (p->e) return obj0;
     // first field indicates expression comment.
-    return cmpd_new2(rc_ret(t_Comment), rc_ret_val(s_true), expr);
+    return cmpd_new(rc_ret(t_Comment), rc_ret_val(s_true), expr);
   }
   // otherwise comment out a single line.
   while (PC == ' ') {
@@ -234,7 +234,7 @@ static Obj parse_Comment(Parser* p) {
   }
   Str s = str_slice(p->s, off_start, p->pos.off);
   Obj d = data_new_from_str(s);
-  return cmpd_new2(rc_ret(t_Comment), rc_ret_val(s_false), d);
+  return cmpd_new(rc_ret(t_Comment), rc_ret_val(s_false), d);
 }
 
 
@@ -290,7 +290,7 @@ static Obj parse_Quo(Parser* p) {
   P_ADV(1);
   Obj o = parse_sub_expr(p);
   if (p->e) return obj0;
-  return cmpd_new1(rc_ret(t_Quo), o);
+  return cmpd_new(rc_ret(t_Quo), o);
 }
 
 
@@ -299,7 +299,7 @@ static Obj parse_Qua(Parser* p) {
   P_ADV(1);
   Obj o = parse_sub_expr(p);
   if (p->e) return obj0;
-  return cmpd_new1(rc_ret(t_Qua), o);
+  return cmpd_new(rc_ret(t_Qua), o);
 }
 
 
@@ -308,7 +308,7 @@ static Obj parse_Unq(Parser* p) {
   P_ADV(1);
   Obj o = parse_sub_expr(p);
   if (p->e) return obj0;
-  return cmpd_new1(rc_ret(t_Unq), o);
+  return cmpd_new(rc_ret(t_Unq), o);
 }
 
 
@@ -317,7 +317,7 @@ static Obj parse_Bang(Parser* p) {
   P_ADV(1);
   Obj o = parse_sub_expr(p);
   if (p->e) return obj0;
-  return cmpd_new1(rc_ret(t_Bang), o);
+  return cmpd_new(rc_ret(t_Bang), o);
 }
 
 
@@ -326,7 +326,7 @@ static Obj parse_Splice(Parser* p) {
   P_ADV(1);
   Obj o = parse_sub_expr(p);
   if (p->e) return obj0;
-  return cmpd_new1(rc_ret(t_Splice), o);
+  return cmpd_new(rc_ret(t_Splice), o);
 }
 
 
@@ -363,7 +363,7 @@ static Obj parse_Label(Parser* p) {
   } else {
     expr = rc_ret_val(s_void);
   }
-  return cmpd_new3(rc_ret(t_Label), name, type, expr);
+  return cmpd_new(rc_ret(t_Label), name, type, expr);
 }
 
 
@@ -387,7 +387,7 @@ static Obj parse_Variad(Parser* p) {
   } else {
     type = rc_ret_val(s_nil);
   }
-  return cmpd_new2(rc_ret(t_Variad), expr, type);
+  return cmpd_new(rc_ret(t_Variad), expr, type);
 }
 
 
@@ -398,7 +398,7 @@ static Obj parse_Accessor(Parser* p) {
     assert(!expr.vld());
     return obj0;
   }
-  return cmpd_new1(rc_ret(t_Accessor), expr);
+  return cmpd_new(rc_ret(t_Accessor), expr);
 }
 
 
@@ -409,7 +409,7 @@ static Obj parse_Mutator(Parser* p) {
     assert(!expr.vld());
     return obj0;
   }
-  return cmpd_new1(rc_ret(t_Mutator), expr);
+  return cmpd_new(rc_ret(t_Mutator), expr);
 }
 
 
@@ -434,7 +434,7 @@ static Obj parse_Expand(Parser* p) {
   P_ADV(1, return parse_error(p, "unterminated expand"));
   Mem m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR('>');
-  Obj e = cmpd_new1(rc_ret(t_Expand), cmpd_new_M(rc_ret(t_Arr_Expr), m));
+  Obj e = cmpd_new(rc_ret(t_Expand), cmpd_new_M(rc_ret(t_Arr_Expr), m));
   mem_dealloc(m);
   return e;
 }
@@ -444,7 +444,7 @@ static Obj parse_Call(Parser* p) {
   P_ADV(1, return parse_error(p, "unterminated call"));
   Mem m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR(')');
-  Obj c = cmpd_new1(rc_ret(t_Call), cmpd_new_M(rc_ret(t_Arr_Expr), m));
+  Obj c = cmpd_new(rc_ret(t_Call), cmpd_new_M(rc_ret(t_Arr_Expr), m));
   mem_dealloc(m);
   return c;
 }
@@ -454,7 +454,7 @@ static Obj parse_struct(Parser* p) {
   P_ADV(1, return parse_error(p, "unterminated constructor"));
   Mem m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR('}');
-  Obj s = cmpd_new1(rc_ret(t_Syn_struct), cmpd_new_M(rc_ret(t_Arr_Expr), m));
+  Obj s = cmpd_new(rc_ret(t_Syn_struct), cmpd_new_M(rc_ret(t_Arr_Expr), m));
   mem_dealloc(m);
   return s;
 }
@@ -464,7 +464,7 @@ static Obj parse_seq(Parser* p) {
   P_ADV(1, return parse_error(p, "unterminated sequence"));
   Mem m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR(']');
-  Obj s = cmpd_new1(rc_ret(t_Syn_seq), cmpd_new_M(rc_ret(t_Arr_Expr), m));
+  Obj s = cmpd_new(rc_ret(t_Syn_seq), cmpd_new_M(rc_ret(t_Arr_Expr), m));
   mem_dealloc(m);
   return s;
 }
@@ -515,7 +515,7 @@ static Obj parse_expr(Parser* p) {
   parse_errFL("%o", expr);
 #endif
   if (!p->e && expr.is_ref()) {
-    Obj src_loc = cmpd_new6(rc_ret(t_Src_loc),
+    Obj src_loc = cmpd_new(rc_ret(t_Src_loc),
       rc_ret(p->path),
       rc_ret(p->src),
       int_new(pos.off),

@@ -20,7 +20,7 @@ static Bool cmpd_contains_unquote(Obj c) {
 static Obj expand_quasiquote(Int qua_depth, Obj o) {
   // owns o.
   if (!o.is_cmpd()) { // replace the quasiquote with quote.
-    return track_src(o, cmpd_new1(rc_ret(t_Quo), o));
+    return track_src(o, cmpd_new(rc_ret(t_Quo), o));
   }
   Obj type = o.type();
   if (!qua_depth && type == t_Unq) { // unquote is only performed at the same (innermost) level.
@@ -43,11 +43,11 @@ static Obj expand_quasiquote(Int qua_depth, Obj o) {
       Obj e = cmpd_el(o, i);
       cmpd_put(exprs, i + 2, expand_quasiquote(qd1, rc_ret(e))); // propagate the quotation.
     }
-    Obj cons = track_src(o, cmpd_new1(rc_ret(t_Call), exprs));
+    Obj cons = track_src(o, cmpd_new(rc_ret(t_Call), exprs));
     rc_rel(o);
     return cons;
   } else { // no unquotes in the tree; simply quote the top level.
-    return track_src(o, cmpd_new1(rc_ret(t_Quo), o));
+    return track_src(o, cmpd_new(rc_ret(t_Quo), o));
   }
 }
 

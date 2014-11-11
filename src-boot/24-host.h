@@ -278,15 +278,15 @@ static Obj host_init_func(Obj env, Int len_pars, Chars name, Func_host_ptr ptr) 
   Obj sym = sym_new_from_c(name);
   Obj pars; // TODO: add real types; unique value for expression default?
   #define PAR(s) \
-  cmpd_new3(rc_ret(t_Par), rc_ret_val(s), rc_ret_val(s_nil), rc_ret_val(s_void))
+  cmpd_new(rc_ret(t_Par), rc_ret_val(s), rc_ret_val(s_nil), rc_ret_val(s_void))
   switch (len_pars) {
-    case 1: pars = cmpd_new1(rc_ret(t_Arr_Par), PAR(s_a)); break;
-    case 2: pars = cmpd_new2(rc_ret(t_Arr_Par), PAR(s_a), PAR(s_b)); break;
-    case 3: pars = cmpd_new3(rc_ret(t_Arr_Par), PAR(s_a), PAR(s_b), PAR(s_c)); break;
+    case 1: pars = cmpd_new(rc_ret(t_Arr_Par), PAR(s_a)); break;
+    case 2: pars = cmpd_new(rc_ret(t_Arr_Par), PAR(s_a), PAR(s_b)); break;
+    case 3: pars = cmpd_new(rc_ret(t_Arr_Par), PAR(s_a), PAR(s_b), PAR(s_c)); break;
     default: assert(0);
   }
   #undef PAR
-  Obj f = cmpd_new7(rc_ret(t_Func),
+  Obj f = cmpd_new(rc_ret(t_Func),
     bool_new(false),
     bool_new(false),
     rc_ret(env),
@@ -302,7 +302,7 @@ static Obj host_init_file(Obj env, Chars sym_name, Chars name, CFile f, Bool r,
   Bool w) {
   // owns env.
   Obj sym = sym_new_from_chars(sym_name);
-  Obj val = cmpd_new4(rc_ret(t_File), data_new_from_chars(name), ptr_new(f),
+  Obj val = cmpd_new(rc_ret(t_File), data_new_from_chars(name), ptr_new(f),
     bool_new(r), bool_new(w));
   return env_bind(env, false, false, sym, val);
 }

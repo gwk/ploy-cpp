@@ -154,7 +154,7 @@ static Obj type_unit(Obj type) {
 
 
 static Obj par_new(Chars n, Obj t) {
-  return cmpd_new3(rc_ret(t_Par), sym_new_from_chars(n), rc_ret(t), rc_ret_val(s_void));
+  return cmpd_new(rc_ret(t_Par), sym_new_from_chars(n), rc_ret(t), rc_ret_val(s_void));
 }
 
 
@@ -169,45 +169,45 @@ static Obj type_kind_init_prim() {
 
 
 static Obj type_kind_init_arr(Obj el_type) {
-  return cmpd_new1(rc_ret(t_Type_kind_arr), rc_ret(el_type));
+  return cmpd_new(rc_ret(t_Type_kind_arr), rc_ret(el_type));
 }
 
 
 static Obj type_kind_struct(Obj fields) {
   // owns fields.
   // all structs start with a nil dispatcher.
-  return cmpd_new2(rc_ret(t_Type_kind_struct), fields, rc_ret_val(s_nil));
+  return cmpd_new(rc_ret(t_Type_kind_struct), fields, rc_ret_val(s_nil));
 }
 
 
 static Obj type_kind_init_struct1(Chars n0, Obj t0) {
-  return type_kind_struct(cmpd_new1(rc_ret(t_Arr_Par),
+  return type_kind_struct(cmpd_new(rc_ret(t_Arr_Par),
     par_new(n0, t0)));
 }
 
 
 static Obj type_kind_init_struct2(Chars n0, Obj t0, Chars n1, Obj t1) {
-  return type_kind_struct(cmpd_new2(rc_ret(t_Arr_Par),
+  return type_kind_struct(cmpd_new(rc_ret(t_Arr_Par),
     par_new(n0, t0), par_new(n1, t1)));
 }
 
 
 static Obj type_kind_init_struct3(Chars n0, Obj t0, Chars n1, Obj t1,
   Chars n2, Obj t2) {
-  return type_kind_struct(cmpd_new3(rc_ret(t_Arr_Par),
+  return type_kind_struct(cmpd_new(rc_ret(t_Arr_Par),
     par_new(n0, t0), par_new(n1, t1), par_new(n2, t2)));
 }
 
 
 static Obj type_kind_init_struct4(Chars n0, Obj t0, Chars n1, Obj t1,
   Chars n2, Obj t2, Chars n3, Obj t3) {
-  return type_kind_struct(cmpd_new4(rc_ret(t_Arr_Par),
+  return type_kind_struct(cmpd_new(rc_ret(t_Arr_Par),
     par_new(n0, t0), par_new(n1, t1), par_new(n2, t2), par_new(n3, t3)));
 }
 
 
 static Obj type_kind_init_struct_fn() {
-  return type_kind_struct(cmpd_new5(rc_ret(t_Type_kind_struct),
+  return type_kind_struct(cmpd_new(rc_ret(t_Type_kind_struct),
     par_new("is-native", t_Bool),
     par_new("is-macro", t_Bool),
     par_new("pars", t_Syn_seq),
@@ -217,7 +217,7 @@ static Obj type_kind_init_struct_fn() {
 
 
 static Obj type_kind_init_struct_func() {
-  return type_kind_struct(cmpd_new7(rc_ret(t_Type_kind_struct),
+  return type_kind_struct(cmpd_new(rc_ret(t_Type_kind_struct),
     par_new("is-native", t_Bool),
     par_new("is-macro", t_Bool),
     par_new("env", t_Env),
@@ -229,7 +229,7 @@ static Obj type_kind_init_struct_func() {
 
 
 static Obj type_kind_init_struct_src_loc() {
-  return type_kind_struct(cmpd_new6(rc_ret(t_Type_kind_struct),
+  return type_kind_struct(cmpd_new(rc_ret(t_Type_kind_struct),
     par_new("path", t_Data),
     par_new("src", t_Data),
     par_new("pos", t_Int),
@@ -240,8 +240,8 @@ static Obj type_kind_init_struct_src_loc() {
 
 
 static Obj type_kind_init_union_expr() {
-  return cmpd_new1(rc_ret(t_Type_kind_struct),
-      cmpd_new14(rc_ret(t_Arr_Type),
+  return cmpd_new(rc_ret(t_Type_kind_struct),
+      cmpd_new(rc_ret(t_Arr_Type),
       rc_ret(t_Int),
       rc_ret(t_Sym),
       rc_ret(t_Data),
@@ -260,8 +260,8 @@ static Obj type_kind_init_union_expr() {
 
 
 static Obj type_kind_init_union_type_kind() {
-  return cmpd_new1(rc_ret(t_Type_kind_struct),
-    cmpd_new7(rc_ret(t_Arr_Type),
+  return cmpd_new(rc_ret(t_Type_kind_struct),
+    cmpd_new(rc_ret(t_Arr_Type),
       rc_ret(t_Type_kind_unit),
       rc_ret(t_Type_kind_prim),
       rc_ret(t_Type_kind_arr),

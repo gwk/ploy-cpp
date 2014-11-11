@@ -19,6 +19,7 @@ DEF_SIZE(Cmpd);
 
 
 static Obj* cmpd_els(Obj c);
+static void cmpd_put(Obj c, Int i, Obj el);
 
 static Obj cmpd_new_raw(Obj type, Int len) {
   // owns type.
@@ -66,127 +67,25 @@ UNUSED_FN static Obj cmpd_new_EM(Obj type, Obj el, Mem m) {
 }
 
 
-static Obj cmpd_new1(Obj type, Obj a) {
+static Obj _cmpd_new(Obj type, Int i, Obj el) {
   // owns all arguments.
-  Obj o = cmpd_new_raw(type, 1);
-  Obj* els = cmpd_els(o);
-  els[0] = a;
+  Obj o = cmpd_new_raw(type, i + 1);
+  cmpd_put(o, i, el);
   return o;
 }
 
-
-static Obj cmpd_new2(Obj type, Obj a, Obj b) {
+template <typename T, typename... Ts>
+static Obj _cmpd_new(Obj type, Int i, T el, Ts... rest) {
   // owns all arguments.
-  Obj o = cmpd_new_raw(type, 2);
-  Obj* els = cmpd_els(o);
-  els[0] = a;
-  els[1] = b;
+  Obj o = _cmpd_new(type, i + 1, rest...);
+  cmpd_put(o, i, el);
   return o;
 }
 
-
-static Obj cmpd_new3(Obj type, Obj a, Obj b, Obj c) {
+template <typename T, typename... Ts>
+static Obj cmpd_new(Obj type, T el, Ts... rest) {
   // owns all arguments.
-  Obj o = cmpd_new_raw(type, 3);
-  Obj* els = cmpd_els(o);
-  els[0] = a;
-  els[1] = b;
-  els[2] = c;
-  return o;
-}
-
-
-static Obj cmpd_new4(Obj type, Obj a, Obj b, Obj c, Obj d) {
-  // owns all arguments.
-  Obj o = cmpd_new_raw(type, 4);
-  Obj* els = cmpd_els(o);
-  els[0] = a;
-  els[1] = b;
-  els[2] = c;
-  els[3] = d;
-  return o;
-}
-
-
-static Obj cmpd_new5(Obj type, Obj a, Obj b, Obj c, Obj d, Obj e) {
-  // owns all arguments.
-  Obj o = cmpd_new_raw(type, 5);
-  Obj* els = cmpd_els(o);
-  els[0] = a;
-  els[1] = b;
-  els[2] = c;
-  els[3] = d;
-  els[4] = e;
-  return o;
-}
-
-
-static Obj cmpd_new6(Obj type, Obj a, Obj b, Obj c, Obj d, Obj e, Obj f) {
-  // owns all arguments.
-  Obj o = cmpd_new_raw(type, 6);
-  Obj* els = cmpd_els(o);
-  els[0] = a;
-  els[1] = b;
-  els[2] = c;
-  els[3] = d;
-  els[4] = e;
-  els[5] = f;
-  return o;
-}
-
-
-static Obj cmpd_new7(Obj type, Obj a, Obj b, Obj c, Obj d, Obj e, Obj f, Obj g) {
-  // owns all arguments.
-  Obj o = cmpd_new_raw(type, 7);
-  Obj* els = cmpd_els(o);
-  els[0] = a;
-  els[1] = b;
-  els[2] = c;
-  els[3] = d;
-  els[4] = e;
-  els[5] = f;
-  els[6] = g;
-  return o;
-}
-
-
-UNUSED_FN
-static Obj cmpd_new8(Obj type, Obj a, Obj b, Obj c, Obj d, Obj e, Obj f, Obj g, Obj h) {
-  // owns all arguments.
-  Obj o = cmpd_new_raw(type, 8);
-  Obj* els = cmpd_els(o);
-  els[0] = a;
-  els[1] = b;
-  els[2] = c;
-  els[3] = d;
-  els[4] = e;
-  els[5] = f;
-  els[6] = g;
-  els[7] = h;
-  return o;
-}
-
-
-static Obj cmpd_new14(Obj type, Obj a, Obj b, Obj c, Obj d, Obj e, Obj f, Obj g, Obj h,
-  Obj i, Obj j, Obj k, Obj l, Obj m, Obj n) {
-  // owns all arguments.
-  Obj o = cmpd_new_raw(type, 14);
-  Obj* els = cmpd_els(o);
-  els[0] = a;
-  els[1] = b;
-  els[2] = c;
-  els[3] = d;
-  els[4] = e;
-  els[5] = f;
-  els[6] = g;
-  els[7] = h;
-  els[8] = i;
-  els[9] = j;
-  els[10] = k;
-  els[11] = l;
-  els[12] = m;
-  els[13] = n;
-  return o;
+  return _cmpd_new(type, 0, el, rest...);
 }
 
 

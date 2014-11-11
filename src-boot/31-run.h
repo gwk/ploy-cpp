@@ -154,7 +154,7 @@ static Step run_Fn(Int d, Trace* t, Obj env, Obj code) {
     } else {
       exc_raise("Fn: parameter %i is malformed: %o", i, syn);
     }
-    Obj par =  cmpd_new3(rc_ret(t_Par), par_name, par_type, par_dflt);
+    Obj par =  cmpd_new(rc_ret(t_Par), par_name, par_type, par_dflt);
     cmpd_put(pars, i, par);
     if (is_variad) {
       exc_check(variad == s_void, "Fn: multiple variadic parameters: %o", syn);
@@ -162,7 +162,7 @@ static Step run_Fn(Int d, Trace* t, Obj env, Obj code) {
       variad = rc_ret(par);
     }
   }
-  Obj f = cmpd_new7(rc_ret(t_Func),
+  Obj f = cmpd_new(rc_ret(t_Func),
     rc_ret_val(is_native),
     rc_ret_val(is_macro),
     rc_ret(env),
