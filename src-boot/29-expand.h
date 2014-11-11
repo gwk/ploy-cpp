@@ -7,7 +7,7 @@
 static Bool cmpd_contains_unquote(Obj c) {
   // TODO: follow the same depth rule as below.
   assert(ref_is_cmpd(c));
-  if (obj_type(c) == t_Unq) return true;
+  if (c.type() == t_Unq) return true;
   Mem m = cmpd_mem(c);
   it_mem(it, m) {
     Obj e = *it;
@@ -22,7 +22,7 @@ static Obj expand_quasiquote(Int qua_depth, Obj o) {
   if (!o.is_cmpd()) { // replace the quasiquote with quote.
     return track_src(o, cmpd_new1(rc_ret(t_Quo), o));
   }
-  Obj type = obj_type(o);
+  Obj type = o.type();
   if (!qua_depth && type == t_Unq) { // unquote is only performed at the same (innermost) level.
     check(cmpd_len(o) == 1, "malformed Unq: %o", o);
     Obj e = rc_ret(cmpd_el(o, 0));

@@ -40,7 +40,7 @@ static Obj host_not(Trace* t, Obj env) {
 
 static Obj host_id_hash(Trace* t, Obj env) {
   GET_A;
-  return int_new(obj_id_hash(a));
+  return int_new(a.id_hash());
 }
 
 
@@ -242,7 +242,7 @@ static Obj host_raise(Trace* t, Obj env) {
 
 static Obj host_type_of(Trace* t, Obj env) {
   GET_A;
-  Obj type = obj_type(a);
+  Obj type = a.type();
   return rc_ret(type);
 }
 
@@ -258,7 +258,7 @@ static void write_data(CFile f, Obj d);
 
 static Obj host_dbg(Trace* t, Obj env) {
   GET_AB; // label, obj.
-  exc_check(obj_type(a) == t_Data, "dbg expects argument 1 to be Data: %o", a);
+  exc_check(a.type() == t_Data, "dbg expects argument 1 to be Data: %o", a);
   write_data(stderr, a);
   errFL(": %p rc:%u %o", b, rc_get(b), b);
   return rc_ret_val(s_void);

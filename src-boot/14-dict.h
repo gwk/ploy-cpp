@@ -48,7 +48,7 @@ static void dict_dealloc(Dict* d) {
 static Hash_bucket* dict_bucket(Dict* d, Obj k) {
   assert(d->vld());
   assert(d->len > 0);
-  Int h = obj_id_hash(k);
+  Int h = k.id_hash();
   Int i = h % d->len_buckets;
   return d->buckets + i;
 }

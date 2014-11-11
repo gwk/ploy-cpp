@@ -129,7 +129,7 @@ static Step run_Fn(Int d, Trace* t, Obj env, Obj code) {
   Obj ret_type  = cmpd_el(code, 3);
   Obj body      = cmpd_el(code, 4);
   exc_check(is_macro.is_bool(), "Fn: is-macro is not a Bool: %o", is_macro);
-  exc_check(obj_type(pars_seq) == t_Syn_seq,
+  exc_check(pars_seq.type() == t_Syn_seq,
     "Fn: pars is not a sequence literal: %o", pars_seq);
   assert(cmpd_len(pars_seq) == 1);
   Obj pars_exprs = cmpd_el(pars_seq, 0);
@@ -137,7 +137,7 @@ static Step run_Fn(Int d, Trace* t, Obj env, Obj code) {
   Obj variad = rc_ret(s_void);
   for_in(i, cmpd_len(pars_exprs)) {
     Obj syn = cmpd_el(pars_exprs, i);
-    Obj syn_type = obj_type(syn);
+    Obj syn_type = syn.type();
     Obj par_name;
     Obj par_type;
     Obj par_dflt;
@@ -249,7 +249,7 @@ static Obj run_bind_vals(Int d, Trace* t, Obj env, Obj call, Obj variad, Obj par
   for_in(i_pars, cmpd_len(pars)) {
     assert(i_vals <= vals.len && i_vals % 2 == 1);
     Obj par = cmpd_el(pars, i_pars);
-    exc_check(obj_type(par) == t_Par, "call: %o\nparameter %i is malformed: %o",
+    exc_check(par.type() == t_Par, "call: %o\nparameter %i is malformed: %o",
       call, i_pars, par);
     if (par == variad) {
       exc_check(!has_variad, "call: %o\nmultiple variad parameters", call);
@@ -279,7 +279,7 @@ static Step run_call_func(Int d, Trace* t, Obj env, Obj call, Mem vals, Bool is_
   exc_check(is_macro.is_bool(), "func: %o\nis-macro is not a Bool: %o", func, is_macro);
   // TODO: check that variad is an Expr.
   exc_check(lex_env.is_env(), "func: %o\nenv is not an Env: %o", func, lex_env);
-  exc_check(obj_type(pars) == t_Arr_Par, "func: %o\npars is not an Arr-Par: %o", func, pars);
+  exc_check(pars.type() == t_Arr_Par, "func: %o\npars is not an Arr-Par: %o", func, pars);
   // TODO: check that ret-type is a Type.
   exc_check(ret_type == s_nil, "func: %o\nret-type is non-nil: %o", func, ret_type);
   if (is_call) {
@@ -322,8 +322,8 @@ static Step run_call_accessor(Int d, Trace* t, Obj env, Obj call, Mem vals) {
   Obj name = cmpd_el(accessor, 0);
   exc_check(name.is_sym(), "call: %o\naccessor expr is not a sym: %o", call, name);
   exc_check(accessee.is_cmpd(), "call: %o\naccessee is not a struct: %o", call, accessee);
-  Obj type = obj_type(accessee);
-  assert(obj_type(type) == t_Type);
+  Obj type = accessee.type();
+  assert(type.type() == t_Type);
   Obj kind = cmpd_el(type, 1);
   exc_check(is_kind_struct(kind), "call: %o\naccessee is not a struct: %o", call, accessee);
   Obj fields = cmpd_el(kind, 0);
@@ -360,8 +360,8 @@ static Step run_call_mutator(Int d, Trace* t, Obj env, Obj call, Mem vals) {
   Obj name = cmpd_el(mutator, 0);
   exc_check(name.is_sym(), "call: %o\nmutator expr is not a sym: %o", call, name);
   exc_check(mutatee.is_cmpd(), "call: %o\nmutatee is not a struct: %o", call, mutatee);
-  Obj type = obj_type(mutatee);
-  assert(obj_type(type) == t_Type);
+  Obj type = mutatee.type();
+  assert(type.type() == t_Type);
   Obj kind = cmpd_el(type, 1);
   Obj fields = cmpd_el(kind, 0);
   assert(cmpd_len(fields) == cmpd_len(mutatee));
@@ -464,7 +464,7 @@ static Step run_call_dispatcher(Int d, Trace* t, Obj env, Obj call, Mem vals,
   Obj types = cmpd_new_raw(rc_ret(t_Arr_Type), types_len);
   for_in(i, types_len) {
     Obj val = mem_el(vals, i * 2 + 2);
-    cmpd_put(types, i, rc_ret(obj_type(val)));
+    cmpd_put(types, i, rc_ret(val.type()));
   }
   Mem disp_vals = mem_alloc(5);
   mem_put(disp_vals, 0, rc_ret(dispatcher));
@@ -500,7 +500,7 @@ static Step run_Call(Int d, Trace* t, Obj env, Obj code) {
   array_append(&vals, step.res.val);
   for_imn(i, 1, len) {
     Obj expr = cmpd_el(exprs, i);
-    Obj expr_t = obj_type(expr);
+    Obj expr_t = expr.type();
     if (expr_t == t_Splice) {
       Obj sub_expr = cmpd_el(expr, 0);
       step = run(d, t, env, sub_expr);
@@ -534,7 +534,7 @@ static Step run_Call(Int d, Trace* t, Obj env, Obj code) {
 
 static Step run_Call_disp(Int d, Trace* t, Obj env, Obj code, Mem vals) {
   Obj callee = mem_el(vals, 0);
-  Obj type = obj_type(callee);
+  Obj type = callee.type();
   Int ti = type_index(type); // Int type avoids incomplete enum switch error.
   switch (ti) {
     case ti_Func:     return run_call_func(d, t, env, code, vals, true);

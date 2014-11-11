@@ -68,11 +68,13 @@ struct Cmpd;
 struct Type;
 
 extern const Obj s_true, s_false;
+extern Obj t_Ptr, t_Int, t_Data, t_Sym;
 
 static Bool ref_is_data(Obj o);
 static Bool ref_is_env(Obj o);
 static Bool ref_is_cmpd(Obj o);
 static Bool ref_is_type(Obj o);
+static Obj ref_type(Obj r);
 
 union Obj {
   Int i;
@@ -141,65 +143,52 @@ union Obj {
     return is_ref() && ref_is_data(*this);
   }
 
-
   Bool is_data() {
     return is_data_word() || is_data_ref();
   }
-
 
   Bool is_env() {
     return is_ref() && ref_is_env(*this);
   }
 
-
   Bool is_cmpd() {
     return is_ref() && ref_is_cmpd(*this);
   }
 
-
   Bool is_type() {
     return is_ref() && ref_is_type(*this);
   }
+
+  Obj type() {
+    switch (tag()) {
+      case ot_ref: return ref_type(*this);
+      case ot_ptr: return t_Ptr;
+      case ot_int: return t_Int;
+      case ot_sym: return (is_data_word() ? t_Data : t_Sym);
+    }
+  }
+
+  Int id_hash() {
+    switch (tag()) {
+      case ot_ref: return cast(Int, u >> width_min_alloc);
+      case ot_ptr: return cast(Int, u >> width_min_alloc);
+      case ot_int: return cast(Int, u >> width_obj_tag);
+      case ot_sym: return cast(Int, u >> width_sym_tags);
+    }
+  }
+
+#if OPTION_ALLOC_COUNT
+  Counter_index counter_index() {
+    Obj_tag ot = tag();
+    switch (ot) {
+      case ot_ref: return ci_Ref_rc;
+      case ot_ptr: return ci_Ptr_rc;
+      case ot_int: return ci_Int_rc;
+      case ot_sym: return is_data_word() ? ci_Data_word_rc : ci_Sym_rc;
+    }
+  }
+#endif
 };
 DEF_SIZE(Obj);
 
 #define obj0 Obj()
-
-
-
-static Obj ref_type(Obj r);
-extern Obj t_Ptr, t_Int, t_Data, t_Sym;
-
-static Obj obj_type(Obj o) {
-  switch (o.tag()) {
-    case ot_ref: return ref_type(o);
-    case ot_ptr: return t_Ptr;
-    case ot_int: return t_Int;
-    case ot_sym: return (o.is_data_word() ? t_Data : t_Sym);
-  }
-}
-
-
-static Int obj_id_hash(Obj o) {
-  switch (o.tag()) {
-    case ot_ref: return cast(Int, o.u >> width_min_alloc);
-    case ot_ptr: return cast(Int, o.u >> width_min_alloc);
-    case ot_int: return cast(Int, o.u >> width_obj_tag);
-    case ot_sym: return cast(Int, o.u >> width_sym_tags);
-  }
-}
-
-
-#if OPTION_ALLOC_COUNT
-
-static Counter_index obj_counter_index(Obj o) {
-  Obj_tag ot = o.tag();
-  switch (ot) {
-    case ot_ref: return ci_Ref_rc;
-    case ot_ptr: return ci_Ptr_rc;
-    case ot_int: return ci_Int_rc;
-    case ot_sym: return o.is_data_word() ? ci_Data_word_rc : ci_Sym_rc;
-  }
-}
-#endif
-

@@ -188,7 +188,7 @@ static void write_repr_default(CFile f, Obj c, Bool is_quoted, Int depth, Set* s
   assert(ref_is_cmpd(c));
   if (is_quoted) fputs("¿", f);
   fputs("(", f);
-  Obj t = obj_type(c);
+  Obj t = c.type();
   assert(t.is_type());
   assert(t.t->name.is_sym());
   write_repr_obj(f, t.t->name, true, depth, set);
@@ -201,7 +201,7 @@ static void write_repr_default(CFile f, Obj c, Bool is_quoted, Int depth, Set* s
 
 
 static void write_repr_dispatch(CFile f, Obj s, Bool is_quoted, Int depth, Set* set) {
-  Obj type = obj_type(s);
+  Obj type = s.type();
   if (type == t_Data) { write_repr_Data(f, s); return; }
   if (type == t_Env)  { write_repr_Env(f, s); return; }
 

@@ -22,7 +22,7 @@ static Step eval_mem_expr(Obj env, Obj exprs) {
   // this is quite different than calling eval on a Do instance;
   // besides evaluating a different, non-Expr type,
   // it also does the complete eval cycle on each item in turn.
-  assert(obj_type(exprs) == t_Arr_Expr);
+  assert(exprs.type() == t_Arr_Expr);
   Mem m = cmpd_mem(exprs);
   if (m.len == 0) {
     return Step(env, rc_ret_val(s_void));

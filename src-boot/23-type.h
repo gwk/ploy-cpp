@@ -114,12 +114,12 @@ static Obj type_kind(Obj t) {
 
 
 static Bool is_kind_struct(Obj kind) {
-  return obj_type(kind) == t_Type_kind_struct;
+  return kind.type() == t_Type_kind_struct;
 }
 
 
 static Bool is_kind_arr(Obj kind) {
-  return obj_type(kind) == t_Type_kind_arr;
+  return kind.type() == t_Type_kind_arr;
 }
 
 
