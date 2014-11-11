@@ -31,9 +31,14 @@ static void write_repr_Data(CFile f, Obj d) {
 }
 
 
+#if 0
 // use a non-parseable flat parens to represent objects that do not have a direct repr.
 #define NO_REPR_PO "⟮" // U+27EE Mathematical left flattened parenthesis.
 #define NO_REPR_PC "⟯" // U+27EF Mathematical right flattened parenthesis.
+#else
+#define NO_REPR_PO "("
+#define NO_REPR_PC ")"
+#endif
 
 
 static void write_repr_Env(CFile f, Obj env) {
