@@ -105,7 +105,7 @@ static void rc_hist_count_moves(Int i) {
 
 static Uns rc_hash(Obj r) {
   // pointer hash simply shifts off the bits that are guaranteed to be zero.
-  assert(obj_is_ref(r));
+  assert(r.is_ref());
   return r.u >> width_min_alloc;
 }
 
@@ -220,7 +220,7 @@ struct RC_BII {
 
 static RC_BII rc_get_BII(Obj r) {
   // returns the resolved item but the original bucket and item index.
-  assert(obj_is_ref(r));
+  assert(r.is_ref());
   RC_bucket* b = rc_bucket_ptr(r);
   for_in(i, b->len) {
     RC_item* item = b->items + i;

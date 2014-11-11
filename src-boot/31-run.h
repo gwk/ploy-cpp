@@ -31,7 +31,7 @@ union Step {
 
 static Step run_sym(Trace* t, Obj env, Obj code) {
   // owns env.
-  assert(obj_is_sym(code));
+  assert(code.is_sym());
   if (code.u <= s_END_SPECIAL_SYMS.u) {
     return Step(env, rc_ret_val(code)); // special syms are self-evaluating.
   }
@@ -96,7 +96,7 @@ static Step run_Bind(Int d, Trace* t, Obj env, Obj code) {
     is_mutable);
   exc_check(obj_is_bool(is_public), "Bind requires argument 2 to be a Bool; received: %o",
     is_public);
-  exc_check(obj_is_sym(sym), "Bind requires argument 3 to be a bindable sym; received: %o",
+  exc_check(sym.is_sym(), "Bind requires argument 3 to be a bindable sym; received: %o",
     sym);
   exc_check(!sym_is_special(sym), "Bind cannot bind to special sym: %o", sym);
   Step step = run(d, t, env, expr);
@@ -302,7 +302,7 @@ static Step run_call_func(Int d, Trace* t, Obj env, Obj call, Mem vals, Bool is_
     return Step(env, step.res.val); // NO TCO.
 #endif
   } else { // host function.
-    exc_check(obj_is_ptr(body), "host func: %o\nbody is not a Ptr: %o", func, body);
+    exc_check(body.is_ptr(), "host func: %o\nbody is not a Ptr: %o", func, body);
     Func_host_ptr f_ptr = cast(Func_host_ptr, ptr_val(body));
     Obj res = f_ptr(t, callee_env);
     rc_rel(callee_env);
@@ -320,7 +320,7 @@ static Step run_call_accessor(Int d, Trace* t, Obj env, Obj call, Mem vals) {
   mem_dealloc(vals);
   assert(cmpd_len(accessor) == 1);
   Obj name = cmpd_el(accessor, 0);
-  exc_check(obj_is_sym(name), "call: %o\naccessor expr is not a sym: %o", call, name);
+  exc_check(name.is_sym(), "call: %o\naccessor expr is not a sym: %o", call, name);
   exc_check(obj_is_cmpd(accessee), "call: %o\naccessee is not a struct: %o", call, accessee);
   Obj type = obj_type(accessee);
   assert(obj_type(type) == t_Type);
@@ -358,7 +358,7 @@ static Step run_call_mutator(Int d, Trace* t, Obj env, Obj call, Mem vals) {
   mem_dealloc(vals);
   assert(cmpd_len(mutator) == 1);
   Obj name = cmpd_el(mutator, 0);
-  exc_check(obj_is_sym(name), "call: %o\nmutator expr is not a sym: %o", call, name);
+  exc_check(name.is_sym(), "call: %o\nmutator expr is not a sym: %o", call, name);
   exc_check(obj_is_cmpd(mutatee), "call: %o\nmutatee is not a struct: %o", call, mutatee);
   Obj type = obj_type(mutatee);
   assert(obj_type(type) == t_Type);
@@ -701,7 +701,7 @@ static Obj run_macro(Trace* t, Obj env, Obj code) {
   Int len = cmpd_len(exprs); 
   exc_check(len > 0, "expand: %o\nempty", code);
   Obj macro_sym = cmpd_el(exprs, 0);
-  exc_check(obj_is_sym(macro_sym), "expand: %o\nargument 0 must be a Sym; found: %o",
+  exc_check(macro_sym.is_sym(), "expand: %o\nargument 0 must be a Sym; found: %o",
     code, macro_sym);
   Obj macro = env_get(env, macro_sym);
   exc_check(macro.vld(), "expand: %o\nmacro lookup error: %o", code, macro_sym);

@@ -14,6 +14,6 @@ static Obj ptr_new(Raw p) {
 
 
 static Raw ptr_val(Obj p) {
-  assert(obj_is_ptr(p));
+  assert(p.is_ptr());
   return cast(Raw, (p.u & ~obj_tag_mask));
 }

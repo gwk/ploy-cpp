@@ -22,7 +22,7 @@ static Obj host_is(Trace* t, Obj env) {
 
 static Obj host_is_ref(Trace* t, Obj env) {
   GET_A;
-  return bool_new(obj_is_ref(a));
+  return bool_new(a.is_ref());
 }
 
 
@@ -46,7 +46,7 @@ static Obj host_id_hash(Trace* t, Obj env) {
 
 static Obj host_ineg(Trace* t, Obj env) {
   GET_A;
-  exc_check(obj_is_int(a), "ineg requires Int; received: %o", a);
+  exc_check(a.is_int(), "ineg requires Int; received: %o", a);
   Int i = int_val(a);
   return int_new(-i);
 }
@@ -54,7 +54,7 @@ static Obj host_ineg(Trace* t, Obj env) {
 
 static Obj host_iabs(Trace* t, Obj env) {
   GET_A;
-  exc_check(obj_is_int(a), "iabs requires Int; received: %o", a);
+  exc_check(a.is_int(), "iabs requires Int; received: %o", a);
   Int i = int_val(a);
   return int_new(i < 0 ? -i : i);
 }
@@ -64,8 +64,8 @@ static Obj host_iabs(Trace* t, Obj env) {
 #define HOST_BIN_OP(type_name, op) \
 static Obj host_##op(Trace* t, Obj env) { \
   GET_AB; \
-  exc_check(obj_is_int(a), #op " requires arg 1 to be a Int; received: %o", a); \
-  exc_check(obj_is_int(b), #op " requires arg 2 to be a Int; received: %o", b); \
+  exc_check(a.is_int(), #op " requires arg 1 to be a Int; received: %o", a); \
+  exc_check(b.is_int(), #op " requires arg 2 to be a Int; received: %o", b); \
   Int i = op(int_val(a), int_val(b)); \
   return type_name##_new(i); \
 }
@@ -138,7 +138,7 @@ static Obj host_data_ref_iso(Trace* t, Obj env) {
 static Obj host_cmpd_field(Trace* t, Obj env) {
   GET_AB;
   exc_check(obj_is_cmpd(a), "field requires arg 1 to be a Cmpd; received: %o", a);
-  exc_check(obj_is_int(b), "field requires arg 2 to be an Int; received: %o", b);
+  exc_check(b.is_int(), "field requires arg 2 to be an Int; received: %o", b);
   Int l = cmpd_len(a);
   Int i = int_val(b);
   exc_check(i >= 0 && i < l, "field index out of range; index: %i; len: %i", i, l);
@@ -150,7 +150,7 @@ static Obj host_cmpd_field(Trace* t, Obj env) {
 static Obj host_ael(Trace* t, Obj env) {
   GET_AB;
   exc_check(obj_is_cmpd(a), "ael requires arg 1 to be an Arr; received: %o", a);
-  exc_check(obj_is_int(b), "ael requires arg 2 to be a Int; received: %o", b);
+  exc_check(b.is_int(), "ael requires arg 2 to be a Int; received: %o", b);
   Int l = cmpd_len(a);
   Int i = int_val(b);
   exc_check(i >= 0 && i < l, "ael index out of range; index: %i; len: %i", i, l);
@@ -162,7 +162,7 @@ static Obj host_ael(Trace* t, Obj env) {
 static Obj host_anew(Trace* t, Obj env) {
   GET_AB;
   exc_check(obj_is_type(a), "anew requires arg 1 to be a Type; received: %o", a);
-  exc_check(obj_is_int(b), "anew requires arg 2 to be an Int; received: %o", b);
+  exc_check(b.is_int(), "anew requires arg 2 to be an Int; received: %o", b);
   Int len = int_val(b);
   Obj res = cmpd_new_raw(rc_ret(a), len);
   for_in(i, len) {
@@ -175,7 +175,7 @@ static Obj host_anew(Trace* t, Obj env) {
 static Obj host_aput(Trace* t, Obj env) {
   GET_ABC;
   exc_check(obj_is_cmpd(a), "el requires arg 1 to be a Arr; received: %o", a);
-  exc_check(obj_is_int(b), "el requires arg 2 to be a Int; received: %o", b);
+  exc_check(b.is_int(), "el requires arg 2 to be a Int; received: %o", b);
   Int l = cmpd_len(a);
   Int i = int_val(b);
   exc_check(i >= 0 && i < l, "el index out of range; index: %i; len: %i", i, l);
@@ -189,8 +189,8 @@ static Obj host_aput(Trace* t, Obj env) {
 static Obj host_aslice(Trace* t, Obj env) {
   GET_ABC;
   exc_check(obj_is_cmpd(a), "el requires arg 1 to be a Arr; received: %o", a);
-  exc_check(obj_is_int(b), "el requires arg 2 to be a Int; received: %o", b);
-  exc_check(obj_is_int(c), "el requires arg 3 to be a Int; received: %o", c);
+  exc_check(b.is_int(), "el requires arg 2 to be a Int; received: %o", b);
+  exc_check(c.is_int(), "el requires arg 3 to be a Int; received: %o", c);
   Int fr = int_val(b);
   Int to = int_val(c);
   return cmpd_slice(a, fr, to);
@@ -199,7 +199,7 @@ static Obj host_aslice(Trace* t, Obj env) {
 
 static Obj host_write(Trace* t, Obj env) {
   GET_AB;
-  exc_check(obj_is_ptr(a), "write requires arg 1 to be a File; received: %o", a);
+  exc_check(a.is_ptr(), "write requires arg 1 to be a File; received: %o", a);
   exc_check(obj_is_data(b), "write requires arg 2 to be a Data; received: %o", b);
   CFile file = cast(CFile, ptr_val(a));
   // for now, ignore the return value.
@@ -210,7 +210,7 @@ static Obj host_write(Trace* t, Obj env) {
 
 static Obj host_write_repr(Trace* t, Obj env) {
   GET_AB;
-  exc_check(obj_is_ptr(a), "write-repr requires arg 1 to be a File; received: %o", a);
+  exc_check(a.is_ptr(), "write-repr requires arg 1 to be a File; received: %o", a);
   CFile file = cast(CFile, ptr_val(a));
   write_repr(file, b);
   return rc_ret_val(s_void);
@@ -219,7 +219,7 @@ static Obj host_write_repr(Trace* t, Obj env) {
 
 static Obj host_flush(Trace* t, Obj env) {
   GET_A;
-  exc_check(obj_is_ptr(a), "flush requires arg 1 to be a File; received: %o", a);
+  exc_check(a.is_ptr(), "flush requires arg 1 to be a File; received: %o", a);
   CFile file = cast(CFile, ptr_val(a));
   fflush(file);
   return rc_ret_val(s_void);
@@ -228,7 +228,7 @@ static Obj host_flush(Trace* t, Obj env) {
 
 static Obj host_exit(Trace* t, Obj env) {
   GET_A;
-  exc_check(obj_is_int(a), "exit requires arg 1 to be an Int; recived: %o", a);
+  exc_check(a.is_int(), "exit requires arg 1 to be an Int; recived: %o", a);
   exit(cast(I32, int_val(a)));
   // TODO: throw exception to unwind, cleanup, and report counts?
 }

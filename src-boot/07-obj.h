@@ -100,34 +100,30 @@ union Obj {
     assert(vld());
     return tag() != ot_ref;
   }
+
+  Bool is_ref() {
+    assert(vld());
+    return tag() == ot_ref;
+  }
+
+  Bool is_ptr() {
+    assert(vld());
+    return tag() == ot_ptr;
+  }
+
+  Bool is_int() {
+    assert(vld());
+    return tag() == ot_int;
+  }
+
+  Bool is_sym() {
+    assert(vld());
+    return tag() == ot_sym;
+  }
 };
 DEF_SIZE(Obj);
 
 #define obj0 Obj()
-
-
-static Bool obj_is_ref(Obj o) {
-  assert(o.vld());
-  return o.tag() == ot_ref;
-}
-
-
-static Bool obj_is_ptr(Obj o) {
-  assert(o.vld());
-  return o.tag() == ot_ptr;
-}
-
-
-static Bool obj_is_int(Obj o) {
-  assert(o.vld());
-  return o.tag() == ot_int;
-}
-
-
-static Bool obj_is_sym(Obj o) {
-  assert(o.vld());
-  return o.tag() == ot_sym;
-}
 
 
 extern const Obj s_true, s_false;
@@ -149,7 +145,7 @@ static Bool ref_is_cmpd(Obj o);
 static Bool ref_is_type(Obj o);
 
 static Bool obj_is_data_ref(Obj o) {
-  return obj_is_ref(o) && ref_is_data(o);
+  return o.is_ref() && ref_is_data(o);
 }
 
 
@@ -159,17 +155,17 @@ static Bool obj_is_data(Obj o) {
 
 
 static Bool obj_is_env(Obj o) {
-  return obj_is_ref(o) && ref_is_env(o);
+  return o.is_ref() && ref_is_env(o);
 }
 
 
 static Bool obj_is_cmpd(Obj o) {
-  return obj_is_ref(o) && ref_is_cmpd(o);
+  return o.is_ref() && ref_is_cmpd(o);
 }
 
 
 static Bool obj_is_type(Obj o) {
-  return obj_is_ref(o) && ref_is_type(o);
+  return o.is_ref() && ref_is_type(o);
 }
 
 

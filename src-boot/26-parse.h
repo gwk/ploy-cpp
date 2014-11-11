@@ -514,7 +514,7 @@ static Obj parse_expr(Parser* p) {
 #if VERBOSE_PARSE
   parse_errFL("%o", expr);
 #endif
-  if (!p->e && obj_is_ref(expr)) {
+  if (!p->e && expr.is_ref()) {
     Obj src_loc = cmpd_new6(rc_ret(t_Src_loc),
       rc_ret(p->path),
       rc_ret(p->src),

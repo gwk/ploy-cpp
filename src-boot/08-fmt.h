@@ -67,7 +67,7 @@ static void fmt_to_file(CFile f, Chars fmt, Chars args_str, ...) {
 
 Obj dbg(Obj o); // not declared static so that it is always available in debugger.
 Obj dbg(Obj o) {
-  if (obj_is_ref(o)) {
+  if (o.is_ref()) {
     errFL("%p : %o", o.r, o);
   } else {
     errFL("%o", o);

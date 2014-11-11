@@ -13,7 +13,7 @@ struct Ref_head {
 
 
 static Obj ref_type(Obj r) {
-  assert(obj_is_ref(r));
+  assert(r.is_ref());
   return r.h->type;
 }
 

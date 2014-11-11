@@ -21,13 +21,13 @@ static Obj sym_with_index(Int i) {
 
 
 static Int sym_index(Obj s) {
-  assert(obj_is_sym(s));
+  assert(s.is_sym());
   return s.i >> width_sym_tags;
 }
 
 
 static Obj sym_data(Obj s) {
-  assert(obj_is_sym(s));
+  assert(s.is_sym());
   return mem_el(global_sym_names.mem, sym_index(s));
 }
 

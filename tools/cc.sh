@@ -23,7 +23,7 @@ if [[ "$1" == "-dbg" ]]; then
 -fsanitize=local-bounds \
 -fsanitize=undefined \
 -fno-limit-debug-info \
--O0
+-O1
 "
 #-fsanitize=address # fails on clang 3.5: linker error for libclang_rt.asan_osx_dynamic.dylib.
 #-fsanitize-memory-track-origins  Enable origins tracking in MemorySanitizer

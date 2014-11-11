@@ -11,7 +11,7 @@ static void write_data(CFile f, Obj d) {
 
 
 static void write_repr_Sym(CFile f, Obj s, Bool is_quoted) {
-  assert(obj_is_sym(s));
+  assert(s.is_sym());
   if (!is_quoted && !sym_is_special(s)) {
     fputc('`', f);
   }
@@ -190,7 +190,7 @@ static void write_repr_default(CFile f, Obj c, Bool is_quoted, Int depth, Set* s
   fputs("(", f);
   Obj t = obj_type(c);
   assert(obj_is_type(t));
-  assert(obj_is_sym(t.t->name));
+  assert(t.t->name.is_sym());
   write_repr_obj(f, t.t->name, true, depth, set);
   for_in(i, cmpd_len(c)) {
     fputc(' ', f);

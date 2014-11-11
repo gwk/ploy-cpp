@@ -36,7 +36,7 @@ static Obj env_rel_fields(Obj o) {
 
 static Obj env_new(Bool is_mutable, Bool is_public, Obj key, Obj val, Obj tl) {
   // owns key, val, tl.
-  assert(obj_is_sym(key));
+  assert(key.is_sym());
   assert(tl == s_ENV_END || obj_is_env(tl));
   Obj o = ref_new(size_Env, rc_ret(t_Env));
   o.e->is_mutable = is_mutable;

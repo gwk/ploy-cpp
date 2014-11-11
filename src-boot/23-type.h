@@ -101,7 +101,7 @@ static Int type_index(Obj t) {
 static Obj type_name(Obj t) {
   assert(obj_is_type(t));
   Obj name = cmpd_el(t, 0);
-  assert(obj_is_sym(name));
+  assert(name.is_sym());
   return name;
 }
 
