@@ -264,12 +264,12 @@ static void write_repr_obj(CFile f, Obj o, Bool is_quoted, Int depth, Set* set) 
     assert(ot == ot_ref);
     if (depth > 8) {
       fputs("…", f); // ellipsis.
-    } else if (set_contains(set, o)) { // cyclic object recursed.
+    } else if (set->contains(o)) { // cyclic object recursed.
       fputs("↺", f); // anticlockwise gapped circle arrow.
     } else {
-      set_insert(set, o);
+      set->insert(o);
       write_repr_dispatch(f, o, is_quoted, depth + 1, set);
-      set_remove(set, o);
+      set->remove(o);
     }
   }
 #if !OPT
@@ -281,6 +281,6 @@ static void write_repr_obj(CFile f, Obj o, Bool is_quoted, Int depth, Set* set) 
 static void write_repr(CFile f, Obj o) {
   Set s;
   write_repr_obj(f, o, false, 0, &s);
-  set_dealloc(&s, true);
+  s.dealloc(true);
 }
 

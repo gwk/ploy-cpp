@@ -28,90 +28,86 @@ struct Set {
       return !len && !len_buckets;
     }
   }
-};
-DEF_SIZE(Set);
 
-
-static void set_dealloc(Set* s, Bool assert_cleared) {
-  assert(s->vld());
-  Int len = 0;
-  for_in(i, s->len_buckets) {
-    len += s->buckets[i].mem.len;
-    if (assert_cleared) {
-      s->buckets[i].mem.dealloc();
-    } else {
-      s->buckets[i].mem.dealloc_no_clear();
-    }
-  }
-  assert(len == s->len);
-  raw_dealloc(s->buckets, ci_Set);
-}
-
-
-static Hash_bucket* set_bucket(Set* s, Obj o) {
-  assert(s->vld());
-  assert(s->len > 0);
-  Int h = o.id_hash();
-  Int i = h % s->len_buckets;
-  return s->buckets + i;
-}
-
-
-static Bool set_contains(Set* s, Obj o) {
-  assert(s->vld());
-  if (!s->len) return false;
-  Hash_bucket* b = set_bucket(s, o);
-  return b->contains(o);
-}
-
-
-static void set_insert(Set* s, Obj o) {
-  assert(s->vld());
-  assert(!set_contains(s, o)); // TODO: support duplicate insert.
-  if (s->len == 0) {
-    s->len_buckets = min_table_len_buckets;
-    Int size = s->len_buckets * size_Hash_bucket;
-    s->buckets = cast(Hash_bucket*, raw_alloc(size, ci_Set));
-    memset(s->buckets, 0, cast(Uns, size));
-  } else if (s->len + 1 == s->len_buckets) { // load factor == 1.0.
-    // TODO: assess resize criteria.
-    Int len_buckets = s->len_buckets * 2;
-    Int size = len_buckets * size_Hash_bucket;
-    Set s1 = Set(s->len, len_buckets, cast(Hash_bucket*, raw_alloc(size, ci_Set)));
-    memset(s1.buckets, 0, cast(Uns, size));
-    // copy existing elements.
-    for_in(i, s->len_buckets) {
-      Hash_bucket src = s->buckets[i];
-      for_in(j, src.mem.len) {
-        Obj el = src.mem.el_move(j);
-        Hash_bucket* dst = set_bucket(&s1, el);
-        dst->append(el);
+  void dealloc(Bool assert_cleared) {
+    assert(vld());
+    Int len_act = 0;
+    for_in(i, len_buckets) {
+      len_act += buckets[i].mem.len;
+      if (assert_cleared) {
+        buckets[i].mem.dealloc();
+      } else {
+        buckets[i].mem.dealloc_no_clear();
       }
     }
-    // replace set.
-    set_dealloc(s, true);
-    *s = s1;
-  } else {
-    assert(s->len < s->len_buckets);
+    assert(len_act == len);
+    raw_dealloc(buckets, ci_Set);
   }
-  s->len++;
-  Hash_bucket* b = set_bucket(s, o);
-  b->append(o);
-}
 
+  Hash_bucket* bucket(Obj o) {
+    assert(vld());
+    assert(len > 0);
+    Int h = o.id_hash();
+    Int i = h % len_buckets;
+    return buckets + i;
+  }
 
-static void set_remove(Set* s, Obj o) {
-  Hash_bucket* b = set_bucket(s, o);
-  assert(b->vld());
-  for_in(i, b->mem.len) {
-    if (b->mem.els[i] == o) {
-      assert(s->len > 0);
-      s->len--;
-      // replace o with the last element. no-op if len == 1.
-      b->mem.els[i] = b->mem.els[b->mem.len - 1];
-      b->mem.len--;
-      return;
+  Bool contains(Obj o) {
+    assert(vld());
+    if (!len) return false;
+    Hash_bucket* b = bucket(o);
+    return b->contains(o);
+  }
+
+  void insert(Obj o) {
+    assert(vld());
+    assert(!contains(o)); // TODO: support duplicate insert.
+    if (len == 0) {
+      len_buckets = min_table_len_buckets;
+      Int size = len_buckets * size_Hash_bucket;
+      buckets = cast(Hash_bucket*, raw_alloc(size, ci_Set));
+      memset(buckets, 0, cast(Uns, size));
+    } else if (len + 1 == len_buckets) { // load factor == 1.0.
+      // TODO: assess resize criteria.
+      Int s1_len_buckets = len_buckets * 2;
+      Int size = s1_len_buckets * size_Hash_bucket;
+      Set s1 = Set(len, s1_len_buckets, cast(Hash_bucket*, raw_alloc(size, ci_Set)));
+      memset(s1.buckets, 0, cast(Uns, size));
+      // copy existing elements.
+      for_in(i, len_buckets) {
+        Hash_bucket src = buckets[i];
+        for_in(j, src.mem.len) {
+          Obj el = src.mem.el_move(j);
+          Hash_bucket* dst = s1.bucket(el);
+          dst->append(el);
+        }
+      }
+      // replace set.
+      dealloc(true);
+      *this = s1;
+    } else {
+      assert(len < len_buckets);
     }
+    len++;
+    Hash_bucket* b = bucket(o);
+    b->append(o);
   }
-  assert(0);
-}
+
+  void remove(Obj o) {
+    assert(vld());
+    Hash_bucket* b = bucket(o);
+    for_in(i, b->mem.len) {
+      if (b->mem.els[i] == o) {
+        assert(len > 0);
+        len--;
+        // replace o with the last element. no-op if len == 1.
+        b->mem.els[i] = b->mem.els[b->mem.len - 1];
+        b->mem.len--;
+        return;
+      }
+    }
+    assert(0);
+  }
+
+};
+DEF_SIZE(Set);

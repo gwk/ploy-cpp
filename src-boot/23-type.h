@@ -310,11 +310,11 @@ static void type_init_table() {
 
 
 static void obj_validate(Set* s, Obj o) {
-  if (set_contains(s, o)) return;
+  if (s->contains(o)) return;
   check(o.vld(), "invalid object: %p", o.r);
   if (o.is_val()) return;
   check(o.h->rc, "object rc == 0: %o", o);
-  set_insert(s, o);
+  s->insert(o);
   obj_validate(s, o.type());
   if (!o.is_cmpd()) return;
   Int len = cmpd_len(o);
@@ -343,7 +343,7 @@ static Obj type_init_values(Obj env) {
     Obj t = type_for_index((Type_index)i);
     obj_validate(&s, t);
   }
-  set_dealloc(&s, false);
+  s.dealloc(false);
   return env;
 }
 
