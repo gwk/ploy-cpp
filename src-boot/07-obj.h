@@ -90,45 +90,44 @@ union Obj {
   Bool operator!=(Obj o) { return u != o.u; }
 
   Bool vld() { return *this != Obj(); }
- 
+   
+  Obj_tag tag() {
+    assert(vld());
+    return cast(Obj_tag, u & obj_tag_mask);
+  }
 };
 DEF_SIZE(Obj);
 
 #define obj0 Obj()
 
-static Obj_tag obj_tag(Obj o) {
-  assert(o.vld());
-  return cast(Obj_tag, o.u & obj_tag_mask);
-}
-
 
 static Bool obj_is_val(Obj o) {
   assert(o.vld());
-  return obj_tag(o) != ot_ref;
+  return o.tag() != ot_ref;
 }
 
 
 static Bool obj_is_ref(Obj o) {
   assert(o.vld());
-  return obj_tag(o) == ot_ref;
+  return o.tag() == ot_ref;
 }
 
 
 static Bool obj_is_ptr(Obj o) {
   assert(o.vld());
-  return obj_tag(o) == ot_ptr;
+  return o.tag() == ot_ptr;
 }
 
 
 static Bool obj_is_int(Obj o) {
   assert(o.vld());
-  return obj_tag(o) == ot_int;
+  return o.tag() == ot_int;
 }
 
 
 static Bool obj_is_sym(Obj o) {
   assert(o.vld());
-  return obj_tag(o) == ot_sym;
+  return o.tag() == ot_sym;
 }
 
 
@@ -141,7 +140,7 @@ static Bool obj_is_bool(Obj o) {
 
 
 static Bool obj_is_data_word(Obj o) {
-  return obj_tag(o) == ot_sym && o.u & data_word_bit;
+  return o.tag() == ot_sym && o.u & data_word_bit;
 }
 
 
@@ -179,7 +178,7 @@ static Obj ref_type(Obj r);
 extern Obj t_Ptr, t_Int, t_Data, t_Sym;
 
 static Obj obj_type(Obj o) {
-  switch (obj_tag(o)) {
+  switch (o.tag()) {
     case ot_ref: return ref_type(o);
     case ot_ptr: return t_Ptr;
     case ot_int: return t_Int;
@@ -189,7 +188,7 @@ static Obj obj_type(Obj o) {
 
 
 static Int obj_id_hash(Obj o) {
-  switch (obj_tag(o)) {
+  switch (o.tag()) {
     case ot_ref: return cast(Int, o.u >> width_min_alloc);
     case ot_ptr: return cast(Int, o.u >> width_min_alloc);
     case ot_int: return cast(Int, o.u >> width_obj_tag);
@@ -201,7 +200,7 @@ static Int obj_id_hash(Obj o) {
 #if OPTION_ALLOC_COUNT
 
 static Counter_index obj_counter_index(Obj o) {
-  Obj_tag ot = obj_tag(o);
+  Obj_tag ot = o.tag();
   switch (ot) {
     case ot_ref: return ci_Ref_rc;
     case ot_ptr: return ci_Ptr_rc;

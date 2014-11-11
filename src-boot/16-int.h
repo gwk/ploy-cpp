@@ -21,7 +21,7 @@ static const Obj int0 = Obj((Int)ot_int);
 static const Obj int1 = Obj((Int)(ot_int + shift_factor_Int * 1));
 
 static Int int_val(Obj o) {
-  assert(obj_tag(o) == ot_int);
+  assert(o.tag() == ot_int);
   Int i = o.i & cast(Int, obj_body_mask);
   assert(i == 0 || i <= -shift_factor_Int || i >= shift_factor_Int);
   return i / shift_factor_Int;

@@ -238,7 +238,7 @@ static void write_repr_obj(CFile f, Obj o, Bool is_quoted, Int depth, Set* set) 
     fputs(NO_REPR_PO "obj0" NO_REPR_PC, f);
     return;
   }
-  Obj_tag ot = obj_tag(o);
+  Obj_tag ot = o.tag();
   if (ot == ot_ptr) {
 #if OPTION_BLANK_PTR_REPR
     fprintf(f, NO_REPR_PO "Ptr" NO_REPR_PC);

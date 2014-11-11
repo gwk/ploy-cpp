@@ -46,7 +46,7 @@ static Obj ref_new(Int size, Obj type) {
   assert(size >= size_Raw * 2);
   counter_inc(ci_Ref_rc); // ret/rel counter.
   Obj r = Obj(raw_alloc(size, ci_Ref_alloc)); // alloc counter also incremented.
-  assert(!obj_tag(r)); // check that alloc is sufficiently aligned for pointer tagging.
+  assert(!r.tag()); // check that alloc is sufficiently aligned for pointer tagging.
   rc_insert(r);
   r.h->type = type;
   return r;

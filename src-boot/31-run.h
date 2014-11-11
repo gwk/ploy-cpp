@@ -576,7 +576,7 @@ static const Chars trace_expand_val_prefix = "▫ ";
 
 static Step run_step_disp(Int d, Trace* t, Obj env, Obj code) {
   // owns env.
-  Obj_tag ot = obj_tag(code);
+  Obj_tag ot = code.tag();
   if (ot == ot_ptr) {
     exc_raise("cannot run Ptr object: %o", code);
   }

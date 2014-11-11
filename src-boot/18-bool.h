@@ -21,7 +21,7 @@ extern const Obj blank;
 static Int cmpd_len(Obj c);
 
 static Bool is_true(Obj o) {
-  switch (obj_tag(o)) {
+  switch (o.tag()) {
     case ot_ref: {
       Obj t = ref_type(o);
       if (t == t_Data) return o != blank;
