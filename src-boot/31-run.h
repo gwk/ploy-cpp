@@ -92,9 +92,9 @@ static Step run_Bind(Int d, Trace* t, Obj env, Obj code) {
   Obj is_public = cmpd_el(code, 1);
   Obj sym = cmpd_el(code, 2);
   Obj expr = cmpd_el(code, 3);
-  exc_check(obj_is_bool(is_mutable), "Bind requires argument 1 to be a Bool; received: %o",
+  exc_check(is_mutable.is_bool(), "Bind requires argument 1 to be a Bool; received: %o",
     is_mutable);
-  exc_check(obj_is_bool(is_public), "Bind requires argument 2 to be a Bool; received: %o",
+  exc_check(is_public.is_bool(), "Bind requires argument 2 to be a Bool; received: %o",
     is_public);
   exc_check(sym.is_sym(), "Bind requires argument 3 to be a bindable sym; received: %o",
     sym);
@@ -128,7 +128,7 @@ static Step run_Fn(Int d, Trace* t, Obj env, Obj code) {
   Obj pars_seq  = cmpd_el(code, 2);
   Obj ret_type  = cmpd_el(code, 3);
   Obj body      = cmpd_el(code, 4);
-  exc_check(obj_is_bool(is_macro), "Fn: is-macro is not a Bool: %o", is_macro);
+  exc_check(is_macro.is_bool(), "Fn: is-macro is not a Bool: %o", is_macro);
   exc_check(obj_type(pars_seq) == t_Syn_seq,
     "Fn: pars is not a sequence literal: %o", pars_seq);
   assert(cmpd_len(pars_seq) == 1);
@@ -275,8 +275,8 @@ static Step run_call_func(Int d, Trace* t, Obj env, Obj call, Mem vals, Bool is_
   Obj pars      = cmpd_el(func, 4);
   Obj ret_type  = cmpd_el(func, 5);
   Obj body      = cmpd_el(func, 6);
-  exc_check(obj_is_bool(is_native), "func: %o\nis-native is not a Bool: %o", func, is_native);
-  exc_check(obj_is_bool(is_macro), "func: %o\nis-macro is not a Bool: %o", func, is_macro);
+  exc_check(is_native.is_bool(), "func: %o\nis-native is not a Bool: %o", func, is_native);
+  exc_check(is_macro.is_bool(), "func: %o\nis-macro is not a Bool: %o", func, is_macro);
   // TODO: check that variad is an Expr.
   exc_check(obj_is_env(lex_env), "func: %o\nenv is not an Env: %o", func, lex_env);
   exc_check(obj_type(pars) == t_Arr_Par, "func: %o\npars is not an Arr-Par: %o", func, pars);
@@ -584,7 +584,7 @@ static Step run_step_disp(Int d, Trace* t, Obj env, Obj code) {
     return Step(env, rc_ret_val(code)); // self-evaluating.
   }
   if (ot == ot_sym) {
-    if (obj_is_data_word(code)) {
+    if (code.is_data_word()) {
       return Step(env, rc_ret_val(code)); // self-evaluating.
     } else {
       return run_sym(t, env, code);

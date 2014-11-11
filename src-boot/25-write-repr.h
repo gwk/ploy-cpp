@@ -248,7 +248,7 @@ static void write_repr_obj(CFile f, Obj o, Bool is_quoted, Int depth, Set* set) 
   } else if (ot == ot_int) {
     fprintf(f, "%ld", int_val(o));
   } else if (ot == ot_sym) {
-    if (obj_is_data_word(o)) {
+    if (o.is_data_word()) {
       // TODO: support all word values.
       assert(o == blank);
       fputs("''", f);

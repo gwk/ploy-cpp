@@ -67,6 +67,8 @@ struct Env;
 struct Cmpd;
 struct Type;
 
+extern const Obj s_true, s_false;
+
 union Obj {
   Int i;
   Uns u;
@@ -120,23 +122,20 @@ union Obj {
     assert(vld());
     return tag() == ot_sym;
   }
+
+  Bool is_bool() {
+    assert(vld());
+    return *this == s_true || *this == s_false;
+  }
+
+  Bool is_data_word() {
+    return tag() == ot_sym && u & data_word_bit;
+  }
+
 };
 DEF_SIZE(Obj);
 
 #define obj0 Obj()
-
-
-extern const Obj s_true, s_false;
-
-static Bool obj_is_bool(Obj o) {
-  assert(o.vld());
-  return o == s_true || o == s_false;
-}
-
-
-static Bool obj_is_data_word(Obj o) {
-  return o.tag() == ot_sym && o.u & data_word_bit;
-}
 
 
 static Bool ref_is_data(Obj o);
@@ -150,7 +149,7 @@ static Bool obj_is_data_ref(Obj o) {
 
 
 static Bool obj_is_data(Obj o) {
-  return obj_is_data_word(o) || obj_is_data_ref(o);
+  return o.is_data_word() || obj_is_data_ref(o);
 }
 
 
@@ -177,7 +176,7 @@ static Obj obj_type(Obj o) {
     case ot_ref: return ref_type(o);
     case ot_ptr: return t_Ptr;
     case ot_int: return t_Int;
-    case ot_sym: return (obj_is_data_word(o) ? t_Data : t_Sym);
+    case ot_sym: return (o.is_data_word() ? t_Data : t_Sym);
   }
 }
 
@@ -200,7 +199,7 @@ static Counter_index obj_counter_index(Obj o) {
     case ot_ref: return ci_Ref_rc;
     case ot_ptr: return ci_Ptr_rc;
     case ot_int: return ci_Int_rc;
-    case ot_sym: return obj_is_data_word(o) ? ci_Data_word_rc : ci_Sym_rc;
+    case ot_sym: return o.is_data_word() ? ci_Data_word_rc : ci_Sym_rc;
   }
 }
 #endif
