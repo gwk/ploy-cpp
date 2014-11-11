@@ -33,12 +33,16 @@ DEF_SIZE(Set);
 #define set0 Set(0, 0, null)
 
 
-static void set_dealloc(Set* s) {
+static void set_dealloc(Set* s, Bool assert_cleared) {
   assert(s->vld());
   Int len = 0;
   for_in(i, s->len_buckets) {
     len += s->buckets[i].mem.len;
-    s->buckets[i].mem.dealloc();
+    if (assert_cleared) {
+      s->buckets[i].mem.dealloc();
+    } else {
+      s->buckets[i].mem.dealloc_no_clear();
+    }
   }
   assert(len == s->len);
   raw_dealloc(s->buckets, ci_Set);
@@ -86,7 +90,7 @@ static void set_insert(Set* s, Obj o) {
       }
     }
     // replace set.
-    set_dealloc(s);
+    set_dealloc(s, true);
     *s = s1;
   } else {
     assert(s->len < s->len_buckets);
