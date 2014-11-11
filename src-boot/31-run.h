@@ -459,7 +459,7 @@ static Step run_tail(Int d, Trace* parent_trace, Step step);
 static Step run_call_dispatcher(Int d, Trace* t, Obj env, Obj call, Mem vals,
   Obj dispatcher) {
   // owns env, vals.
-  Obj callee = vals.el_ret(0);
+  Obj callee = vals.el(0).ret();
   Int types_len = (vals.len - 1) / 2;
   Obj types = cmpd_new_raw(t_Arr_Type.ret(), types_len);
   for_in(i, types_len) {

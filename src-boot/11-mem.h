@@ -57,11 +57,6 @@ struct Mem {
     return els[i];
   }
 
-  Obj el_ret(Int i) {
-    // retain and return element i in m.
-    return el(i).ret();
-  }
-
   Obj el_move(Int i) {
     // move element at i out of m.
     Obj e = el(i);

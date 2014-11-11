@@ -48,7 +48,7 @@ UNUSED_FN static Obj cmpd_new_M_ret(Obj type, Mem m) {
   Obj c = cmpd_new_raw(type, m.len);
   Obj* els = cmpd_els(c);
   for_in(i, m.len) {
-    els[i] = m.el_ret(i);
+    els[i] = m.el(i).ret();
   }
   return c;
 }
