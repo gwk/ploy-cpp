@@ -22,112 +22,106 @@ struct Dict {
       return !len && !len_buckets;
     }
   }
-};
-DEF_SIZE(Dict);
 
-
-DBG_FN static void dict_rel(Dict* d) {
-  assert(d->vld());
-  for_in(i, d->len_buckets) {
-    d->buckets[i].mem.rel();
-  }
-}
-
-
-static void dict_dealloc(Dict* d) {
-  assert(d->vld());
-  Int len = 0;
-  for_in(i, d->len_buckets) {
-    len += d->buckets[i].mem.len / 2;
-    d->buckets[i].mem.dealloc();
-  }
-  assert(len == d->len);
-  raw_dealloc(d->buckets, ci_Dict);
-}
-
-
-static Hash_bucket* dict_bucket(Dict* d, Obj k) {
-  assert(d->vld());
-  assert(d->len > 0);
-  Int h = k.id_hash();
-  Int i = h % d->len_buckets;
-  return d->buckets + i;
-}
-
-
-static Obj dict_fetch(Dict* d, Obj k) {
-  assert(d->vld());
-  if (!d->len) return obj0;
-  Hash_bucket* b = dict_bucket(d, k);
-  for_ins(i, b->mem.len, 2) {
-    if (b->mem.els[i] == k) {
-      return b->mem.els[i + 1];
+  void rel() {
+    assert(vld());
+    for_in(i, len_buckets) {
+      buckets[i].mem.rel();
     }
   }
-  return obj0;
-}
 
+  void dealloc() {
+    assert(vld());
+    Int len_act = 0;
+    for_in(i, len_buckets) {
+      len_act += buckets[i].mem.len / 2;
+      buckets[i].mem.dealloc();
+    }
+    assert(len_act == len);
+    raw_dealloc(buckets, ci_Dict);
+  }
 
-static Bool dict_contains(Dict* d, Obj k) {
-  return dict_fetch(d, k).vld();
-}
+  Hash_bucket* bucket(Obj k) {
+    assert(vld());
+    assert(len > 0);
+    Int h = k.id_hash();
+    Int i = h % len_buckets;
+    return buckets + i;
+  }
 
-
-static void dict_insert(Dict* d, Obj k, Obj v) {
-  assert(d->vld());
-  Obj existing = dict_fetch(d, k);
-  if (v == existing) return;
-  assert(!existing.vld());
-  if (d->len == 0) {
-    d->len_buckets = min_table_len_buckets;
-    Int size = d->len_buckets * size_Hash_bucket;
-    d->buckets = cast(Hash_bucket*, raw_alloc(size, ci_Dict));
-    memset(d->buckets, 0, cast(Uns, size));
-  } else if (d->len + 1 == d->len_buckets) { // load factor == 1.0.
-    // TODO: assess resize criteria.
-    Int len_buckets = d->len_buckets * 2;
-    Int size = len_buckets * size_Hash_bucket;
-    Dict d1 = Dict(d->len, len_buckets, cast(Hash_bucket*, raw_alloc(size, ci_Dict)));
-    memset(d1.buckets, 0, cast(Uns, size));
-    // copy existing elements.
-    for_in(i, d->len_buckets) {
-      Hash_bucket src = d->buckets[i];
-      for_ins(j, src.mem.len, 2) {
-        Obj ek = src.mem.el_move(j);
-        Obj ev = src.mem.el_move(j + 1);
-        Hash_bucket* dst = dict_bucket(&d1, ek);
-        dst->append(ek);
-        dst->append(ev);
+  Obj fetch(Obj k) {
+    assert(vld());
+    if (!len) return obj0;
+    Hash_bucket* b = bucket(k);
+    for_ins(i, b->mem.len, 2) {
+      if (b->mem.els[i] == k) {
+        return b->mem.els[i + 1];
       }
     }
-    // replace dict.
-    dict_dealloc(d);
-    *d = d1;
-  } else {
-    assert(d->len < d->len_buckets);
+    return obj0;
   }
-  d->len++;
-  Hash_bucket* b = dict_bucket(d, k);
-  b->append(k);
-  b->append(v);
-}
 
+  Bool contains(Obj k) {
+    return fetch(k).vld();
+  }
 
-UNUSED_FN static void dict_remove(Dict* d, Obj k) {
-  Hash_bucket* b = dict_bucket(d, k);
-  assert(b->vld());
-  for_ins(i, b->mem.len, 2) {
-    if (b->mem.els[i].r == k.r) {
-      assert(d->len > 0);
-      d->len--;
-      // replace k,v pair with the last pair. no-op if len == 1.
-      b->mem.els[i] = b->mem.els[b->mem.len - 2]; // k.
-      b->mem.els[i + 1] = b->mem.els[b->mem.len - 1]; // v.
-      b->mem.len -= 2;
-      return;
+  void insert(Obj k, Obj v) {
+    assert(vld());
+    Obj existing = fetch(k);
+    if (v == existing) return;
+    assert(!existing.vld());
+    if (len == 0) {
+      len_buckets = min_table_len_buckets;
+      Int size = len_buckets * size_Hash_bucket;
+      buckets = cast(Hash_bucket*, raw_alloc(size, ci_Dict));
+      memset(buckets, 0, cast(Uns, size));
+    } else if (len + 1 == len_buckets) { // load factor == 1.0.
+      // TODO: assess resize criteria.
+      Int d1_len_buckets = len_buckets * 2;
+      Int size = d1_len_buckets * size_Hash_bucket;
+      Dict d1 = Dict(len, d1_len_buckets, cast(Hash_bucket*, raw_alloc(size, ci_Dict)));
+      memset(d1.buckets, 0, cast(Uns, size));
+      // copy existing elements.
+      for_in(i, len_buckets) {
+        Hash_bucket src = buckets[i];
+        for_ins(j, src.mem.len, 2) {
+          Obj ek = src.mem.el_move(j);
+          Obj ev = src.mem.el_move(j + 1);
+          Hash_bucket* dst = d1.bucket(ek);
+          dst->append(ek);
+          dst->append(ev);
+        }
+      }
+      // replace dict.
+      dealloc();
+      *this = d1;
+    } else {
+      assert(len < len_buckets);
     }
+    len++;
+    Hash_bucket* b = bucket(k);
+    b->append(k);
+    b->append(v);
   }
-  assert(0); // TODO: support removing nonexistent key?
-}
+
+  void remove(Obj k) {
+    Hash_bucket* b = bucket(k);
+    assert(vld());
+    for_ins(i, b->mem.len, 2) {
+      if (b->mem.els[i].r == k.r) {
+        assert(len > 0);
+        len--;
+        // replace k,v pair with the last pair. no-op if len == 1.
+        b->mem.els[i] = b->mem.els[b->mem.len - 2]; // k.
+        b->mem.els[i + 1] = b->mem.els[b->mem.len - 1]; // v.
+        b->mem.len -= 2;
+        return;
+      }
+    }
+    assert(0); // TODO: support removing nonexistent key?
+  }
+
+};
+DEF_SIZE(Dict);
 
 

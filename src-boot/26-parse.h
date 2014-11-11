@@ -522,7 +522,7 @@ static Obj parse_expr(Parser* p) {
       int_new(p->pos.off - pos.off),
       int_new(pos.line),
       int_new(pos.col));
-    dict_insert(p->locs, expr.ret(), src_loc); // dict owns k, v.
+    p->locs->insert(expr.ret(), src_loc); // dict owns k, v.
   }
   return expr;
 }

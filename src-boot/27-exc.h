@@ -18,9 +18,9 @@ static Dict global_src_locs;
 
 static Obj track_src(Obj original, Obj derived) {
   if (!original.is_ref() || !derived.is_ref()) return derived;
-  Obj src_loc = dict_fetch(&global_src_locs, original);
-  if (src_loc.vld() && !dict_contains(&global_src_locs, derived)) {
-    dict_insert(&global_src_locs, derived.ret(), src_loc.ret());
+  Obj src_loc = global_src_locs.fetch(original);
+  if (src_loc.vld() && !global_src_locs.contains(derived)) {
+    global_src_locs.insert(derived.ret(), src_loc.ret());
   }
   return derived;
 }
@@ -31,7 +31,7 @@ static NO_RETURN _exc_raise(Trace* trace, Obj env) {
   // NOTE: there is not yet any exception unwind mechanism, so this just calls exit.
   errL("\ntrace:");
   while (trace) {
-    Obj loc = dict_fetch(&global_src_locs, trace->code);
+    Obj loc = global_src_locs.fetch(trace->code);
     if (!loc.vld()) {
       errFL("  %o", trace->code);
     } else {

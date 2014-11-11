@@ -98,8 +98,8 @@ int main(int argc, Chars argv[]) {
 
 #if OPTION_ALLOC_COUNT
   // cleanup in reverse order.
-  dict_rel(&global_src_locs);
-  dict_dealloc(&global_src_locs);
+  global_src_locs.rel();
+  global_src_locs.dealloc();
   global_cleanup();
   env.rel();
   env_cleanup();
