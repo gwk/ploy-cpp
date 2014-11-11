@@ -10,7 +10,6 @@ static const Int min_table_len_buckets = 16;
 
 typedef Array Hash_bucket;
 DEF_SIZE(Hash_bucket);
-static const Hash_bucket hash_bucket0 = array0;
 
 
 struct Set {
@@ -62,7 +61,7 @@ static Bool set_contains(Set* s, Obj o) {
   assert(s->vld());
   if (!s->len) return false;
   Hash_bucket* b = set_bucket(s, o);
-  return array_contains(b, o);
+  return b->contains(o);
 }
 
 
@@ -86,7 +85,7 @@ static void set_insert(Set* s, Obj o) {
       for_in(j, src.mem.len) {
         Obj el = src.mem.el_move(j);
         Hash_bucket* dst = set_bucket(&s1, el);
-        array_append(dst, el);
+        dst->append(el);
       }
     }
     // replace set.
@@ -97,7 +96,7 @@ static void set_insert(Set* s, Obj o) {
   }
   s->len++;
   Hash_bucket* b = set_bucket(s, o);
-  array_append(b, o);
+  b->append(o);
 }
 
 

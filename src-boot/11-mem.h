@@ -26,6 +26,8 @@ struct Mem {
   Int len;
   Obj* els; // TODO: union with Obj el to optimize the len == 1 case?
 
+  Mem(): len(0), els(null) {}
+
   Mem(Int l, Obj* e): len(l), els(e) {}
 
   explicit Mem(Int l): len(0), els(null) {
@@ -155,5 +157,5 @@ struct Mem {
 };
 
 
-#define mem0 Mem(0, null)
+#define mem0 Mem()
 

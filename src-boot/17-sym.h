@@ -9,7 +9,7 @@
 static const Int sym_index_end = 1L << (size_Int * 8 - width_sym_tags);
 
 // each Sym object is an index into this array of strings.
-static Array global_sym_names = array0;
+static Array global_sym_names;
 
 
 #define _sym_with_index(index) Obj((Uns)((cast(Uns, index) << width_sym_tags) | ot_sym))
@@ -43,7 +43,7 @@ static Obj sym_new(Str s) {
     }
   }
   Obj d = data_new_from_str(s);
-  Int i = array_append(&global_sym_names, d);
+  Int i = global_sym_names.append(d);
   Obj sym = sym_with_index(i);
   //errFL("NEW SYM: %ld: %o", i, sym);
   return sym.ret_val();

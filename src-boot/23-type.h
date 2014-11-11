@@ -136,7 +136,7 @@ static Obj kind_fields(Obj kind) {
 
 
 // flat array of unit type, singleton interleaved pairs.
-static Array global_singletons = array0;
+static Array global_singletons;
 
 
 static Obj type_unit(Obj type) {
@@ -147,8 +147,8 @@ static Obj type_unit(Obj type) {
     }
   }
   Obj s = cmpd_new_raw(type.ret(), 0);
-  array_append(&global_singletons, type.ret());
-  array_append(&global_singletons, s);
+  global_singletons.append(type.ret());
+  global_singletons.append(s);
   return s.ret();
 }
 

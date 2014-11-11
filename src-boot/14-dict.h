@@ -95,8 +95,8 @@ static void dict_insert(Dict* d, Obj k, Obj v) {
         Obj ek = src.mem.el_move(j);
         Obj ev = src.mem.el_move(j + 1);
         Hash_bucket* dst = dict_bucket(&d1, ek);
-        array_append(dst, ek);
-        array_append(dst, ev);
+        dst->append(ek);
+        dst->append(ev);
       }
     }
     // replace dict.
@@ -107,8 +107,8 @@ static void dict_insert(Dict* d, Obj k, Obj v) {
   }
   d->len++;
   Hash_bucket* b = dict_bucket(d, k);
-  array_append(b, k);
-  array_append(b, v);
+  b->append(k);
+  b->append(v);
 }
 
 

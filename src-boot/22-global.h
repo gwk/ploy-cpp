@@ -4,11 +4,11 @@
 #include "21-cmpd.h"
 
 // flat array of unit type, singleton interleaved pairs.
-static Array globals = array0;
+static Array globals;
 
 
 static void global_push(Obj global) {
-  array_append(&globals, global.ret());
+  globals.append(global.ret());
 }
 
 

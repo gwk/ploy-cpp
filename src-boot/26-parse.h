@@ -123,7 +123,7 @@ static Obj parse_expr(Parser* p);
 static Mem parse_exprs(Parser* p, Char term) {
   // caller must call mem.rel_dealloc or mem.dealloc on returned Mem.
   // term is a the expected terminator character (e.g. closing paren).
-  Array a = array0;
+  Array a;
   while (parser_has_next_expr(p)) {
     if (term && PC == term) break;
     Obj o = parse_expr(p);
@@ -131,7 +131,7 @@ static Mem parse_exprs(Parser* p, Char term) {
       assert(!o.vld());
       break;
     }
-    array_append(&a, o);
+    a.append(o);
   }
   if (p->e) {
     a.mem.rel_dealloc();

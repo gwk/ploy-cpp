@@ -494,10 +494,10 @@ static Step run_Call(Int d, Trace* t, Obj env, Obj code) {
   // the names are not ref-counted, but the values are.
   // the array can grow arbitrarily large due to splice arguments;
   // allocate an initial capacity sufficient for the non-splice case.
-  Array vals = array_alloc_cap(len * 2 - 1);
+  Array vals(len * 2 - 1);
   Step step = run(d, t, env, cmpd_el(exprs, 0)); // callee.
   env = step.res.env;
-  array_append(&vals, step.res.val);
+  vals.append(step.res.val);
   for_imn(i, 1, len) {
     Obj expr = cmpd_el(exprs, i);
     Obj expr_t = expr.type();
@@ -508,8 +508,8 @@ static Step run_Call(Int d, Trace* t, Obj env, Obj code) {
       Obj val = step.res.val;
       exc_check(val.is_cmpd(), "call: %o\nspliced value is not of a compound type: %o", val);
       it_cmpd(it, val) {
-        array_append(&vals, obj0); // no name.
-        array_append(&vals, it->ret());
+        vals.append(obj0); // no name.
+        vals.append(it->ret());
       }
       val.rel();
     } else if (expr_t == t_Label) {
@@ -518,14 +518,14 @@ static Step run_Call(Int d, Trace* t, Obj env, Obj code) {
         code, expr_el_type);
       step = run(d, t, env, expr_el_expr);
       env = step.res.env;
-      array_append(&vals, expr_el_name);
-      array_append(&vals, step.res.val);
+      vals.append(expr_el_name);
+      vals.append(step.res.val);
     }
     else { // unlabeled arg expr.
       step = run(d, t, env, expr);
       env = step.res.env;
-      array_append(&vals, obj0); // no name.
-      array_append(&vals, step.res.val);
+      vals.append(obj0); // no name.
+      vals.append(step.res.val);
     }
   }
   return run_Call_disp(d, t, env, code, vals.mem);

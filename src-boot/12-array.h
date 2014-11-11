@@ -9,51 +9,47 @@
 struct Array {
   Mem mem;
   Int cap;
+
+  Array(): mem(), cap(0) {}
+
+  explicit Array(Int c): mem(), cap(c) {
+    mem.grow(cap);
+  }
+
   Array(Mem m, Int c): mem(m), cap(c) {}
 
   Bool vld() {
     return mem.vld() && cap >= 0 && mem.len <= cap;
   }
+
+  void grow_cap() {
+    assert(vld());
+    if (cap == 0) {
+      cap = 2; // minimum capacity for 8 byte words with 16 byte min malloc.
+    } else {
+      cap *= 2;
+    }
+    mem.grow(cap);
+  }
+
+  Int append(Obj o) {
+    // semantics can be move (owns o) or borrow (must be cleared prior to dealloc).
+    assert(vld());
+    if (mem.len == cap) {
+      grow_cap();
+    }
+    return mem.append(o);
+  }
+
+  Bool contains(Obj r) {
+    assert(vld());
+    it_mem(it, mem) {
+      if (it->u == r.u) {
+        return true;
+      }
+    }
+    return false;
+  }
+
 };
 
-#define array0 Array(mem0, 0)
-
-
-static Array array_alloc_cap(Int cap) {
-  Array a = array0;
-  a.cap = cap;
-  a.mem.grow(a.cap);
-  return a;
-}
-
-
-static void array_grow_cap(Array* a) {
-  assert(a->vld());
-  if (a->cap == 0) {
-    a->cap = 2; // minimum capacity for 8 byte words with 16 byte min malloc.
-  } else {
-    a->cap *= 2;
-  }
-  a->mem.grow(a->cap);
-}
-
-
-static Int array_append(Array* a, Obj o) {
-  // semantics can be move (owns o) or borrow (must be cleared prior to dealloc).
-  assert(a->vld());
-  if (a->mem.len == a->cap) {
-    array_grow_cap(a);
-  }
-  return a->mem.append(o);
-}
-
-
-static Bool array_contains(Array* a, Obj r) {
-  assert(a->vld());
-  it_mem(it, a->mem) {
-    if (it->u == r.u) {
-      return true;
-    }
-  }
-  return false;
-}
