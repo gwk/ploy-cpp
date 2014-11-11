@@ -11,7 +11,7 @@ static Bool cmpd_contains_unquote(Obj c) {
   Mem m = cmpd_mem(c);
   it_mem(it, m) {
     Obj e = *it;
-    if (obj_is_cmpd(e) && cmpd_contains_unquote(e)) return true;
+    if (e.is_cmpd() && cmpd_contains_unquote(e)) return true;
   }
   return false;
 }
@@ -19,7 +19,7 @@ static Bool cmpd_contains_unquote(Obj c) {
 
 static Obj expand_quasiquote(Int qua_depth, Obj o) {
   // owns o.
-  if (!obj_is_cmpd(o)) { // replace the quasiquote with quote.
+  if (!o.is_cmpd()) { // replace the quasiquote with quote.
     return track_src(o, cmpd_new1(rc_ret(t_Quo), o));
   }
   Obj type = obj_type(o);
@@ -62,7 +62,7 @@ static Obj expand(Int d, Obj env, Obj code) {
 #endif
   Trace trace(code, 0, null);
   Trace* t = &trace;
-  if (!obj_is_cmpd(code)) {
+  if (!code.is_cmpd()) {
     return code;
   }
   Obj type = ref_type(code);

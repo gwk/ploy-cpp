@@ -8,7 +8,7 @@
 
 
 static Obj preprocess(Obj code) {
-  if (!obj_is_cmpd(code)) {
+  if (!code.is_cmpd()) {
     return rc_ret(code);
   }
   if (ref_type(code) == t_Comment) {

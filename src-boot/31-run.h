@@ -278,7 +278,7 @@ static Step run_call_func(Int d, Trace* t, Obj env, Obj call, Mem vals, Bool is_
   exc_check(is_native.is_bool(), "func: %o\nis-native is not a Bool: %o", func, is_native);
   exc_check(is_macro.is_bool(), "func: %o\nis-macro is not a Bool: %o", func, is_macro);
   // TODO: check that variad is an Expr.
-  exc_check(obj_is_env(lex_env), "func: %o\nenv is not an Env: %o", func, lex_env);
+  exc_check(lex_env.is_env(), "func: %o\nenv is not an Env: %o", func, lex_env);
   exc_check(obj_type(pars) == t_Arr_Par, "func: %o\npars is not an Arr-Par: %o", func, pars);
   // TODO: check that ret-type is a Type.
   exc_check(ret_type == s_nil, "func: %o\nret-type is non-nil: %o", func, ret_type);
@@ -321,7 +321,7 @@ static Step run_call_accessor(Int d, Trace* t, Obj env, Obj call, Mem vals) {
   assert(cmpd_len(accessor) == 1);
   Obj name = cmpd_el(accessor, 0);
   exc_check(name.is_sym(), "call: %o\naccessor expr is not a sym: %o", call, name);
-  exc_check(obj_is_cmpd(accessee), "call: %o\naccessee is not a struct: %o", call, accessee);
+  exc_check(accessee.is_cmpd(), "call: %o\naccessee is not a struct: %o", call, accessee);
   Obj type = obj_type(accessee);
   assert(obj_type(type) == t_Type);
   Obj kind = cmpd_el(type, 1);
@@ -359,7 +359,7 @@ static Step run_call_mutator(Int d, Trace* t, Obj env, Obj call, Mem vals) {
   assert(cmpd_len(mutator) == 1);
   Obj name = cmpd_el(mutator, 0);
   exc_check(name.is_sym(), "call: %o\nmutator expr is not a sym: %o", call, name);
-  exc_check(obj_is_cmpd(mutatee), "call: %o\nmutatee is not a struct: %o", call, mutatee);
+  exc_check(mutatee.is_cmpd(), "call: %o\nmutatee is not a struct: %o", call, mutatee);
   Obj type = obj_type(mutatee);
   assert(obj_type(type) == t_Type);
   Obj kind = cmpd_el(type, 1);
@@ -506,7 +506,7 @@ static Step run_Call(Int d, Trace* t, Obj env, Obj code) {
       step = run(d, t, env, sub_expr);
       env = step.res.env;
       Obj val = step.res.val;
-      exc_check(obj_is_cmpd(val), "call: %o\nspliced value is not of a compound type: %o", val);
+      exc_check(val.is_cmpd(), "call: %o\nspliced value is not of a compound type: %o", val);
       it_cmpd(it, val) {
         array_append(&vals, obj0); // no name.
         array_append(&vals, rc_ret(*it));

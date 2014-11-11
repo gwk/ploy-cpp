@@ -69,6 +69,11 @@ struct Type;
 
 extern const Obj s_true, s_false;
 
+static Bool ref_is_data(Obj o);
+static Bool ref_is_env(Obj o);
+static Bool ref_is_cmpd(Obj o);
+static Bool ref_is_type(Obj o);
+
 union Obj {
   Int i;
   Uns u;
@@ -132,40 +137,34 @@ union Obj {
     return tag() == ot_sym && u & data_word_bit;
   }
 
+  Bool is_data_ref() {
+    return is_ref() && ref_is_data(*this);
+  }
+
+
+  Bool is_data() {
+    return is_data_word() || is_data_ref();
+  }
+
+
+  Bool is_env() {
+    return is_ref() && ref_is_env(*this);
+  }
+
+
+  Bool is_cmpd() {
+    return is_ref() && ref_is_cmpd(*this);
+  }
+
+
+  Bool is_type() {
+    return is_ref() && ref_is_type(*this);
+  }
 };
 DEF_SIZE(Obj);
 
 #define obj0 Obj()
 
-
-static Bool ref_is_data(Obj o);
-static Bool ref_is_env(Obj o);
-static Bool ref_is_cmpd(Obj o);
-static Bool ref_is_type(Obj o);
-
-static Bool obj_is_data_ref(Obj o) {
-  return o.is_ref() && ref_is_data(o);
-}
-
-
-static Bool obj_is_data(Obj o) {
-  return o.is_data_word() || obj_is_data_ref(o);
-}
-
-
-static Bool obj_is_env(Obj o) {
-  return o.is_ref() && ref_is_env(o);
-}
-
-
-static Bool obj_is_cmpd(Obj o) {
-  return o.is_ref() && ref_is_cmpd(o);
-}
-
-
-static Bool obj_is_type(Obj o) {
-  return o.is_ref() && ref_is_type(o);
-}
 
 
 static Obj ref_type(Obj r);

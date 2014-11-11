@@ -332,7 +332,7 @@ static void rc_rel(Obj o) {
 static void cmpd_dissolve_fields(Obj c);
 
 static void rc_dissolve(Obj o) {
-  if (obj_is_cmpd(o)) {
+  if (o.is_cmpd()) {
     cmpd_dissolve_fields(o);
   }
   rc_rel(o);

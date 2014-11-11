@@ -37,7 +37,7 @@ static Obj env_rel_fields(Obj o) {
 static Obj env_new(Bool is_mutable, Bool is_public, Obj key, Obj val, Obj tl) {
   // owns key, val, tl.
   assert(key.is_sym());
-  assert(tl == s_ENV_END || obj_is_env(tl));
+  assert(tl == s_ENV_END || tl.is_env());
   Obj o = ref_new(size_Env, rc_ret(t_Env));
   o.e->is_mutable = is_mutable;
   o.e->is_public = is_public;
@@ -51,7 +51,7 @@ static Obj env_new(Bool is_mutable, Bool is_public, Obj key, Obj val, Obj tl) {
 static Obj env_get(Obj env, Obj key) {
   assert(!sym_is_special(key));
   while (env != s_ENV_END) {
-    assert(obj_is_env(env));
+    assert(env.is_env());
     if (env.e->key == key) { // key is never ENV_FRAME_KEY, since marker is special.
       return env.e->val;
     }
@@ -73,7 +73,7 @@ static Obj env_bind(Obj env, Bool is_mutable, Bool is_public, Obj key, Obj val) 
   assert(!sym_is_special(key));
   Obj e = env;
   while (e != s_ENV_END) { // check that symbol is not already bound.
-    assert(obj_is_env(e));
+    assert(e.is_env());
     Obj k = e.e->key;
     if (!is_mutable && k == s_ENV_FRAME_KEY) { // frame boundary; check is complete.
       break;

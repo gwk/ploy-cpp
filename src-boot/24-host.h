@@ -110,7 +110,7 @@ static Obj host_dlen(Trace* t, Obj env) {
   if (a == blank) {
     l = 0;
   } else {
-    exc_check(obj_is_data(a), "dlen requires Data; received: %o", a);
+    exc_check(a.is_data(), "dlen requires Data; received: %o", a);
     l = data_len(a);
   }
   return int_new(l);
@@ -119,7 +119,7 @@ static Obj host_dlen(Trace* t, Obj env) {
 
 static Obj host_cmpd_len(Trace* t, Obj env) {
   GET_A;
-  exc_check(obj_is_cmpd(a), "cmpd-len requires Cmpd; received: %o", a);
+  exc_check(a.is_cmpd(), "cmpd-len requires Cmpd; received: %o", a);
   Int l = cmpd_len(a);
   return int_new(l);
 }
@@ -127,9 +127,9 @@ static Obj host_cmpd_len(Trace* t, Obj env) {
 
 static Obj host_data_ref_iso(Trace* t, Obj env) {
   GET_AB;
-  exc_check(obj_is_data_ref(a), "data-ref-iso requires arg 1 to be a Data ref; received: %o",
+  exc_check(a.is_data_ref(), "data-ref-iso requires arg 1 to be a Data ref; received: %o",
     a);
-  exc_check(obj_is_data_ref(a), "data-ref-iso requires arg 1 to be a Data ref; received: %o",
+  exc_check(a.is_data_ref(), "data-ref-iso requires arg 1 to be a Data ref; received: %o",
     a);
   return bool_new(data_ref_iso(a, b));
 }
@@ -137,7 +137,7 @@ static Obj host_data_ref_iso(Trace* t, Obj env) {
 
 static Obj host_cmpd_field(Trace* t, Obj env) {
   GET_AB;
-  exc_check(obj_is_cmpd(a), "field requires arg 1 to be a Cmpd; received: %o", a);
+  exc_check(a.is_cmpd(), "field requires arg 1 to be a Cmpd; received: %o", a);
   exc_check(b.is_int(), "field requires arg 2 to be an Int; received: %o", b);
   Int l = cmpd_len(a);
   Int i = int_val(b);
@@ -149,7 +149,7 @@ static Obj host_cmpd_field(Trace* t, Obj env) {
 
 static Obj host_ael(Trace* t, Obj env) {
   GET_AB;
-  exc_check(obj_is_cmpd(a), "ael requires arg 1 to be an Arr; received: %o", a);
+  exc_check(a.is_cmpd(), "ael requires arg 1 to be an Arr; received: %o", a);
   exc_check(b.is_int(), "ael requires arg 2 to be a Int; received: %o", b);
   Int l = cmpd_len(a);
   Int i = int_val(b);
@@ -161,7 +161,7 @@ static Obj host_ael(Trace* t, Obj env) {
 
 static Obj host_anew(Trace* t, Obj env) {
   GET_AB;
-  exc_check(obj_is_type(a), "anew requires arg 1 to be a Type; received: %o", a);
+  exc_check(a.is_type(), "anew requires arg 1 to be a Type; received: %o", a);
   exc_check(b.is_int(), "anew requires arg 2 to be an Int; received: %o", b);
   Int len = int_val(b);
   Obj res = cmpd_new_raw(rc_ret(a), len);
@@ -174,7 +174,7 @@ static Obj host_anew(Trace* t, Obj env) {
 
 static Obj host_aput(Trace* t, Obj env) {
   GET_ABC;
-  exc_check(obj_is_cmpd(a), "el requires arg 1 to be a Arr; received: %o", a);
+  exc_check(a.is_cmpd(), "el requires arg 1 to be a Arr; received: %o", a);
   exc_check(b.is_int(), "el requires arg 2 to be a Int; received: %o", b);
   Int l = cmpd_len(a);
   Int i = int_val(b);
@@ -188,7 +188,7 @@ static Obj host_aput(Trace* t, Obj env) {
 
 static Obj host_aslice(Trace* t, Obj env) {
   GET_ABC;
-  exc_check(obj_is_cmpd(a), "el requires arg 1 to be a Arr; received: %o", a);
+  exc_check(a.is_cmpd(), "el requires arg 1 to be a Arr; received: %o", a);
   exc_check(b.is_int(), "el requires arg 2 to be a Int; received: %o", b);
   exc_check(c.is_int(), "el requires arg 3 to be a Int; received: %o", c);
   Int fr = int_val(b);
@@ -200,7 +200,7 @@ static Obj host_aslice(Trace* t, Obj env) {
 static Obj host_write(Trace* t, Obj env) {
   GET_AB;
   exc_check(a.is_ptr(), "write requires arg 1 to be a File; received: %o", a);
-  exc_check(obj_is_data(b), "write requires arg 2 to be a Data; received: %o", b);
+  exc_check(b.is_data(), "write requires arg 2 to be a Data; received: %o", b);
   CFile file = cast(CFile, ptr_val(a));
   // for now, ignore the return value.
   fwrite(data_chars(b), size_Char, cast(Uns, data_len(b)), file);
