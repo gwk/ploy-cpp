@@ -49,7 +49,6 @@ int main(int argc, Chars argv[]) {
   assert_host_basic();
   assert(size_Obj == size_Raw);
   reduce_stack_limit();
-  rc_init();
   type_init_table();
   sym_init(); // requires type_init_table.
   env_init();
@@ -108,13 +107,8 @@ int main(int argc, Chars argv[]) {
   // release but do not clear to facilitate debugging during type_cleanup.
   global_sym_names.mem.rel_no_clear();
   type_cleanup();
-  rc_cleanup();
   global_sym_names.mem.dealloc_no_clear();
   counter_stats(should_log_stats);
-#endif
-
-#if OPTION_RC_TABLE_STATS
-  rc_table_stats();
 #endif
 
   return 0;

@@ -152,8 +152,7 @@ static Int int_clamp(Int x, Int a, Int b) {
 }
 
 
-#if OPTION_RC_TABLE_STATS
-static Int int_pow2_fl(Int x) {
+UNUSED_FN static Int int_pow2_fl(Int x) {
   if (x < 0) x *= -1;
   Int p = -1;
   while (x) {
@@ -162,4 +161,4 @@ static Int int_pow2_fl(Int x) {
   }
   return p;
 }
-#endif
+

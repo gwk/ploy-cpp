@@ -6,12 +6,6 @@
 #include "09-rc.h"
 
 
-struct Head {
-  Obj type;
-  Head(Obj t): type(t) {}
-};
-
-
 static Obj ref_type(Obj r) {
   assert(r.is_ref());
   return r.h->type;
@@ -47,7 +41,7 @@ static Obj ref_new(Int size, Obj type) {
   counter_inc(ci_Ref_rc); // ret/rel counter.
   Obj r = Obj(raw_alloc(size, ci_Ref_alloc)); // alloc counter also incremented.
   assert(!r.tag()); // check that alloc is sufficiently aligned for pointer tagging.
-  rc_insert(r);
+  r.h->rc = (1<<1) + 1;
   r.h->type = type;
   return r;
 }
@@ -57,7 +51,9 @@ static Obj env_rel_fields(Obj o);
 static Obj cmpd_rel_fields(Obj c);
 
 static Obj ref_dealloc(Obj r) {
-  //errFL("DEALLOC: %p:%o", r, r);
+  //errFL("DEALLOC: %p:%o", r.r, r);
+  r.h->rc = 0;
+  //assert(r != t_Type);
   rc_rel(ref_type(r));
   Obj tail;
   if (ref_is_data(r)) { // no extra action required.

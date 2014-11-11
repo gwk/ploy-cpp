@@ -50,11 +50,6 @@
 #define OPTION_ALLOC_COUNT !OPT
 #endif
 
-// reference counter hash table stats.
-#ifndef OPTION_RC_TABLE_STATS
-#define OPTION_RC_TABLE_STATS 0
-#endif
-
 #ifndef OPTION_BLANK_PTR_REPR
 #define OPTION_BLANK_PTR_REPR 0
 #endif

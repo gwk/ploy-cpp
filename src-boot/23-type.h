@@ -143,7 +143,7 @@ static Obj type_unit(Obj type) {
   // TODO: improve performance by using a hash table?
   for_ins(i, global_singletons.mem.len, 2) {
     if (global_singletons.mem.els[i] == type) {
-      return global_singletons.mem.els[i + 1];
+      return rc_ret(global_singletons.mem.els[i + 1]);
     }
   }
   Obj s = cmpd_new_raw(rc_ret(type), 0);
@@ -288,8 +288,11 @@ static Obj type_kind_init_class_dispatcher() {
 
 
 static void type_add(Obj type, Chars c_name, Obj kind) {
-  Obj name = sym_new_from_c(c_name);
-  *type.t = Type(Head(rc_ret(t_Type)), 2, name, kind);
+  assert(rc_get(type));
+  type.h->type = rc_ret(t_Type);
+  type.t->len = 2;
+  type.t->name = sym_new_from_c(c_name);
+  type.t->kind = kind;
 }
 
 
@@ -297,12 +300,30 @@ static void type_init_table() {
   // the type table holds the core types, and is statically allocated,
   // which allows us to map between type pointers and Type_index indices.
   // even though the contents of the table are not yet initialized,
-  // we can now set all of the core type t_<T> c pointer variables,
-  // which are necessary for initialization of all other basic ploy objects.
-  // we must also insert these objects into the rc table using the special rc_insert function.
-#define T(type, ...) t_##type = rc_insert(Obj(type_table + ti_##type));
+  // we can now set all of the core type t_<T> variables,
+  // which are necessary for complete initialization of the types themselves.
+  // TODO: improve rc semantics so that we do not have to manually retain each item.
+#define T(t, ...) t_##t = Obj(type_table + ti_##t); t_##t.h->rc = (1<<1) + 1;
   TYPE_LIST
 #undef T
+}
+
+
+static void obj_validate(Set* s, Obj o) {
+  if (set_contains(s, o)) return;
+  check(o.vld(), "invalid object: %p", o.r);
+  if (o.is_val()) return;
+  check(o.h->rc, "object rc == 0: %o", o);
+  set_insert(s, o);
+  obj_validate(s, o.type());
+  if (!o.is_cmpd()) return;
+  Int len = cmpd_len(o);
+  if (o.type() == t_Type) {
+    check(len == 2, "Type: bad len: %i", len);
+  }
+  for_in(i, cmpd_len(o)) {
+    obj_validate(s, cmpd_el(o, i));
+  }
 }
 
 
@@ -316,6 +337,13 @@ static Obj type_init_values(Obj env) {
     Obj o = type_for_index((Type_index)i);
     env = env_bind(env, false, false, rc_ret(o.t->name), rc_ret(o));
   }
+  // validate type graph.
+  Set s = set0;
+  for_in(i, ti_END) {
+    Obj t = type_for_index((Type_index)i);
+    obj_validate(&s, t);
+  }
+  set_dealloc(&s, false);
   return env;
 }
 
@@ -335,7 +363,7 @@ static void type_cleanup() {
     Obj o = type_for_index(cast(Type_index, i));
     rc_rel(o.h->type);
     rc_rel_val(o.t->name); // order does not matter as long as name is always a symbol.
-    rc_remove(o);
+    check(o.h->rc == (1<<1) + 1, "type_cleanup: unexpected rc: %u: %o", o.h->rc, o);
   }
 }
 #endif
