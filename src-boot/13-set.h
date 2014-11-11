@@ -17,6 +17,8 @@ struct Set {
   Int len_buckets;
   Hash_bucket* buckets;
 
+  Set(): len(0), len_buckets(0), buckets(null) {}
+
   Set(Int l, Int lb, Hash_bucket* b): len(l), len_buckets(lb), buckets(b) {}
 
   Bool vld() {
@@ -28,8 +30,6 @@ struct Set {
   }
 };
 DEF_SIZE(Set);
-
-#define set0 Set(0, 0, null)
 
 
 static void set_dealloc(Set* s, Bool assert_cleared) {

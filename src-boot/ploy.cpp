@@ -81,7 +81,6 @@ int main(int argc, Chars argv[]) {
     }
   }
 
-  global_src_locs = dict0;
   Obj path, src;
 
   for_in(i, path_count) {

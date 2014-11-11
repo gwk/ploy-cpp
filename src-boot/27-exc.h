@@ -14,7 +14,7 @@ struct Trace {
 }; // Trace objects are live on the stack only.
 
 
-static Dict global_src_locs = dict0;
+static Dict global_src_locs;
 
 static Obj track_src(Obj original, Obj derived) {
   if (!original.is_ref() || !derived.is_ref()) return derived;

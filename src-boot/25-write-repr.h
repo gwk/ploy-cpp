@@ -279,7 +279,7 @@ static void write_repr_obj(CFile f, Obj o, Bool is_quoted, Int depth, Set* set) 
 
 
 static void write_repr(CFile f, Obj o) {
-  Set s = set0;
+  Set s;
   write_repr_obj(f, o, false, 0, &s);
   set_dealloc(&s, true);
 }

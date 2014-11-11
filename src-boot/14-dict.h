@@ -10,6 +10,9 @@ struct Dict {
   Int len;
   Int len_buckets;
   Hash_bucket* buckets;
+
+  Dict(): len(0), len_buckets(0), buckets(null) {}
+
   Dict(Int l, Int lb, Hash_bucket* b): len(l), len_buckets(lb), buckets(b) {}
 
   Bool vld() {
@@ -21,8 +24,6 @@ struct Dict {
   }
 };
 DEF_SIZE(Dict);
-
-#define dict0 Dict(0, 0, null)
 
 
 DBG_FN static void dict_rel(Dict* d) {

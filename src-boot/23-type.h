@@ -338,7 +338,7 @@ static Obj type_init_values(Obj env) {
     env = env_bind(env, false, false, o.t->name.ret(), o.ret());
   }
   // validate type graph.
-  Set s = set0;
+  Set s;
   for_in(i, ti_END) {
     Obj t = type_for_index((Type_index)i);
     obj_validate(&s, t);
