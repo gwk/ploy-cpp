@@ -288,7 +288,7 @@ static Obj type_kind_init_class_dispatcher() {
 
 
 static void type_add(Obj type, Chars c_name, Obj kind) {
-  assert(rc_get(type));
+  assert(type.rc());
   type.h->type = rc_ret(t_Type);
   type.t->len = 2;
   type.t->name = sym_new_from_c(c_name);

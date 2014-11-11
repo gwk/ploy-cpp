@@ -76,6 +76,7 @@ static Bool ref_is_cmpd(Obj o);
 static Bool ref_is_type(Obj o);
 static Obj ref_type(Obj r);
 
+
 union Obj {
   Int i;
   Uns u;
@@ -177,6 +178,8 @@ union Obj {
     }
   }
 
+  Uns rc();
+
 #if OPTION_ALLOC_COUNT
   Counter_index counter_index() {
     Obj_tag ot = tag();
@@ -188,7 +191,24 @@ union Obj {
     }
   }
 #endif
+
 };
 DEF_SIZE(Obj);
 
 #define obj0 Obj()
+
+
+struct Head {
+  Obj type;
+  Uns rc;
+  Head(Obj t): type(t), rc(0) {}
+};
+
+
+Uns Obj::rc() {
+  // get the object's retain count for debugging purposes.
+  if (is_val()) return max_Uns;
+  assert(h->rc & 1); // TODO: support indirect counts.
+  return h->rc >> 1; // shift off the direct flag bit.
+}
+

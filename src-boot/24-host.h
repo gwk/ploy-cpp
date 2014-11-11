@@ -260,7 +260,7 @@ static Obj host_dbg(Trace* t, Obj env) {
   GET_AB; // label, obj.
   exc_check(a.type() == t_Data, "dbg expects argument 1 to be Data: %o", a);
   write_data(stderr, a);
-  errFL(": %p rc:%u %o", b, rc_get(b), b);
+  errFL(": %p rc:%u %o", b, b.rc(), b);
   return rc_ret_val(s_void);
 }
 

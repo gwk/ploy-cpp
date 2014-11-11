@@ -8,21 +8,6 @@
 #include "08-fmt.h"
 
 
-struct Head {
-  Obj type;
-  Uns rc;
-  Head(Obj t): type(t), rc(0) {}
-};
-
-
-static Uns rc_get(Obj o) {
-  // get the object's retain count for debugging purposes.
-  if (o.is_val()) return max_Uns;
-  assert(o.h->rc & 1); // TODO: support indirect counts.
-  return o.h->rc >> 1; // shift off the direct flag bit.
-}
-
-
 static Obj rc_ret(Obj o) {
   // increase the object's retain count by one.
   assert(o.vld());
