@@ -71,9 +71,6 @@ static Obj sym_new_from_c(Chars c) {
 }
 
 
-// for use with "%.*s" formatter.
-#define FMT_SYM(sym) FMT_STR(data_str(sym_data(sym)))
-
 // notes:
 // syms with index lower than END_SPECIAL_SYMS are self-evaluating;
 // syms after END_SPECIAL_SYMS are looked up.
