@@ -6,9 +6,9 @@
 #include "09-rc.h"
 
 
-struct Ref_head {
+struct Head {
   Obj type;
-  Ref_head(Obj t): type(t) {}
+  Head(Obj t): type(t) {}
 };
 
 

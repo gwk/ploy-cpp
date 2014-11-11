@@ -7,12 +7,12 @@
 
 
 struct Type {
-  Ref_head head;
+  Head head;
   Int len;
   Obj name;
   Obj kind;
   Type(): head(obj0), len(0), name(obj0), kind(obj0) {} // TODO: remove this if possible.
-  Type(Ref_head h, Int l, Obj n, Obj k): head(h), len(l), name(n), kind(k) {}
+  Type(Head h, Int l, Obj n, Obj k): head(h), len(l), name(n), kind(k) {}
 } ALIGNED_TO_WORD;
 DEF_SIZE(Type);
 
@@ -289,7 +289,7 @@ static Obj type_kind_init_class_dispatcher() {
 
 static void type_add(Obj type, Chars c_name, Obj kind) {
   Obj name = sym_new_from_c(c_name);
-  *type.t = Type(Ref_head(rc_ret(t_Type)), 2, name, kind);
+  *type.t = Type(Head(rc_ret(t_Type)), 2, name, kind);
 }
 
 

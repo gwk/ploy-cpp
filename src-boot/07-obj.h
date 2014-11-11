@@ -61,7 +61,7 @@ static Chars obj_tag_names[] = {
   "Sym",
 };
 
-struct Ref_head;
+struct Head;
 struct Data;
 struct Env;
 struct Cmpd;
@@ -81,7 +81,7 @@ union Obj {
   Uns u;
   Raw r;
   Chars chars; // no valid object can be cast to chars; this for the exc_raise formatter.
-  Ref_head* h; // common to all ref types.
+  Head* h; // common to all ref types.
   Data* d;
   Env* e;
   Cmpd* c;

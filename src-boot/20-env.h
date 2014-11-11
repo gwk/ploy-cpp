@@ -9,7 +9,7 @@
 
 
 struct Env {
-  Ref_head head;
+  Head head;
   Bool is_mutable: 1;
   Bool is_public : 1;
   Uns bit_padding : 6;

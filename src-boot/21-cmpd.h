@@ -12,7 +12,7 @@ it++)
 
 
 struct Cmpd {
-  Ref_head head;
+  Head head;
   Int len;
 } ALIGNED_TO_WORD;
 DEF_SIZE(Cmpd);
