@@ -23,12 +23,12 @@ DEF_SIZE(Env);
 
 static Obj env_rel_fields(Obj o) {
   // returns last element for release by parent; this is a c tail call optimization.
-  rc_rel(o.e->key);
-  rc_rel(o.e->val);
+  o.e->key.rel();
+  o.e->val.rel();
 #if OPTION_TCO
   return o.e->tl;
 #else
-  rc_rel(o.e->tl);
+  o.e->tl.rel();
   return obj0;
 #endif
 }
@@ -38,7 +38,7 @@ static Obj env_new(Bool is_mutable, Bool is_public, Obj key, Obj val, Obj tl) {
   // owns key, val, tl.
   assert(key.is_sym());
   assert(tl == s_ENV_END || tl.is_env());
-  Obj o = ref_new(size_Env, rc_ret(t_Env));
+  Obj o = ref_new(size_Env, t_Env.ret());
   o.e->is_mutable = is_mutable;
   o.e->is_public = is_public;
   o.e->key = key;
@@ -63,7 +63,7 @@ static Obj env_get(Obj env, Obj key) {
 
 static Obj env_push_frame(Obj env) {
   // owns env.
-  return env_new(false, false, rc_ret_val(s_ENV_FRAME_KEY), rc_ret_val(s_ENV_FRAME_VAL), env);
+  return env_new(false, false, s_ENV_FRAME_KEY.ret_val(), s_ENV_FRAME_VAL.ret_val(), env);
 }
 
 
@@ -79,14 +79,14 @@ static Obj env_bind(Obj env, Bool is_mutable, Bool is_public, Obj key, Obj val) 
       break;
     } else if (k == key) { // symbol is already bound.
       if (is_mutable && e.e->is_mutable) { // mutate the mutable binding.
-        rc_rel(key);
-        rc_rel(e.e->val);
+        key.rel();
+        e.e->val.rel();
         e.e->val = val;
         return env;
       } else { // immutable; cannot rebind.
-        rc_rel(env);
-        rc_rel(key);
-        rc_rel(val);
+        env.rel();
+        key.rel();
+        val.rel();
         return obj0;
       }
     }
@@ -100,13 +100,13 @@ static Obj global_env;
 
 
 static void env_init() {
-  global_env = rc_ret_val(s_ENV_END);
+  global_env = s_ENV_END.ret_val();
 }
 
 
 #if OPTION_ALLOC_COUNT
 static void env_cleanup() {
-  rc_rel(global_env);
+  global_env.rel();
   global_env = obj0;
 }
 #endif

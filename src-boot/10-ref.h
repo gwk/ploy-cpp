@@ -54,7 +54,7 @@ static Obj ref_dealloc(Obj r) {
   //errFL("DEALLOC: %p:%o", r.r, r);
   r.h->rc = 0;
   //assert(r != t_Type);
-  rc_rel(ref_type(r));
+  ref_type(r).rel();
   Obj tail;
   if (ref_is_data(r)) { // no extra action required.
     tail = obj0;

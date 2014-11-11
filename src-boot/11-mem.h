@@ -57,7 +57,7 @@ struct Mem {
 
   Obj el_ret(Int i) {
     // retain and return element i in m.
-    return rc_ret(el(i));
+    return el(i).ret();
   }
 
   Obj el_move(Int i) {
@@ -104,13 +104,13 @@ struct Mem {
   void rel_no_clear() {
     // release all elements without clearing them; useful for debugging final teardown.
     it_mem(it, *this) {
-      rc_rel(*it);
+      it->rel();
     }
   }
 
   void rel() {
     it_mem(it, *this) {
-      rc_rel(*it);
+      it->rel();
 #if OPTION_MEM_ZERO
       *it = obj0;
 #endif
@@ -120,7 +120,7 @@ struct Mem {
 #if OPTION_ALLOC_COUNT
   void dissolve() {
     it_mem(it, *this) {
-      rc_dissolve(*it);
+      it->dissolve();
     }
   }
 #endif

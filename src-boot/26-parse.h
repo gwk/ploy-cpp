@@ -222,7 +222,7 @@ static Obj parse_Comment(Parser* p) {
     Obj expr = parse_sub_expr(p);
     if (p->e) return obj0;
     // first field indicates expression comment.
-    return cmpd_new(rc_ret(t_Comment), rc_ret_val(s_true), expr);
+    return cmpd_new(t_Comment.ret(), s_true.ret_val(), expr);
   }
   // otherwise comment out a single line.
   while (PC == ' ') {
@@ -234,7 +234,7 @@ static Obj parse_Comment(Parser* p) {
   }
   Str s = str_slice(p->s, off_start, p->pos.off);
   Obj d = data_new_from_str(s);
-  return cmpd_new(rc_ret(t_Comment), rc_ret_val(s_false), d);
+  return cmpd_new(t_Comment.ret(), s_false.ret_val(), d);
 }
 
 
@@ -290,7 +290,7 @@ static Obj parse_Quo(Parser* p) {
   P_ADV(1);
   Obj o = parse_sub_expr(p);
   if (p->e) return obj0;
-  return cmpd_new(rc_ret(t_Quo), o);
+  return cmpd_new(t_Quo.ret(), o);
 }
 
 
@@ -299,7 +299,7 @@ static Obj parse_Qua(Parser* p) {
   P_ADV(1);
   Obj o = parse_sub_expr(p);
   if (p->e) return obj0;
-  return cmpd_new(rc_ret(t_Qua), o);
+  return cmpd_new(t_Qua.ret(), o);
 }
 
 
@@ -308,7 +308,7 @@ static Obj parse_Unq(Parser* p) {
   P_ADV(1);
   Obj o = parse_sub_expr(p);
   if (p->e) return obj0;
-  return cmpd_new(rc_ret(t_Unq), o);
+  return cmpd_new(t_Unq.ret(), o);
 }
 
 
@@ -317,7 +317,7 @@ static Obj parse_Bang(Parser* p) {
   P_ADV(1);
   Obj o = parse_sub_expr(p);
   if (p->e) return obj0;
-  return cmpd_new(rc_ret(t_Bang), o);
+  return cmpd_new(t_Bang.ret(), o);
 }
 
 
@@ -326,7 +326,7 @@ static Obj parse_Splice(Parser* p) {
   P_ADV(1);
   Obj o = parse_sub_expr(p);
   if (p->e) return obj0;
-  return cmpd_new(rc_ret(t_Splice), o);
+  return cmpd_new(t_Splice.ret(), o);
 }
 
 
@@ -343,27 +343,27 @@ static Obj parse_Label(Parser* p) {
     P_ADV(1, return parse_error(p, "incomplete label type"));
     type = parse_sub_expr(p);
     if (p->e) {
-      rc_rel(name);
+      name.rel();
       assert(!type.vld());
       return obj0;
     }
   } else {
-    type = rc_ret_val(s_nil);
+    type = s_nil.ret_val();
   }
   Obj expr;
   if (PC == '=') {
     P_ADV(1, return parse_error(p, "incomplete label expr"));
     expr = parse_sub_expr(p);
     if (p->e) {
-      rc_rel(name);
-      rc_rel(type);
+      name.rel();
+      type.rel();
       assert(!expr.vld());
       return obj0;
     }
   } else {
-    expr = rc_ret_val(s_void);
+    expr = s_void.ret_val();
   }
-  return cmpd_new(rc_ret(t_Label), name, type, expr);
+  return cmpd_new(t_Label.ret(), name, type, expr);
 }
 
 
@@ -380,14 +380,14 @@ static Obj parse_Variad(Parser* p) {
     P_ADV(1, return parse_error(p, "incomplete variad type"));
     type = parse_sub_expr(p);
     if (p->e) {
-      rc_rel(expr);
+      expr.rel();
       assert(!type.vld());
       return obj0;
     }
   } else {
-    type = rc_ret_val(s_nil);
+    type = s_nil.ret_val();
   }
-  return cmpd_new(rc_ret(t_Variad), expr, type);
+  return cmpd_new(t_Variad.ret(), expr, type);
 }
 
 
@@ -398,7 +398,7 @@ static Obj parse_Accessor(Parser* p) {
     assert(!expr.vld());
     return obj0;
   }
-  return cmpd_new(rc_ret(t_Accessor), expr);
+  return cmpd_new(t_Accessor.ret(), expr);
 }
 
 
@@ -409,7 +409,7 @@ static Obj parse_Mutator(Parser* p) {
     assert(!expr.vld());
     return obj0;
   }
-  return cmpd_new(rc_ret(t_Mutator), expr);
+  return cmpd_new(t_Mutator.ret(), expr);
 }
 
 
@@ -434,7 +434,7 @@ static Obj parse_Expand(Parser* p) {
   P_ADV(1, return parse_error(p, "unterminated expand"));
   Mem m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR('>');
-  Obj e = cmpd_new(rc_ret(t_Expand), cmpd_new_M(rc_ret(t_Arr_Expr), m));
+  Obj e = cmpd_new(t_Expand.ret(), cmpd_new_M(t_Arr_Expr.ret(), m));
   m.dealloc();
   return e;
 }
@@ -444,7 +444,7 @@ static Obj parse_Call(Parser* p) {
   P_ADV(1, return parse_error(p, "unterminated call"));
   Mem m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR(')');
-  Obj c = cmpd_new(rc_ret(t_Call), cmpd_new_M(rc_ret(t_Arr_Expr), m));
+  Obj c = cmpd_new(t_Call.ret(), cmpd_new_M(t_Arr_Expr.ret(), m));
   m.dealloc();
   return c;
 }
@@ -454,7 +454,7 @@ static Obj parse_struct(Parser* p) {
   P_ADV(1, return parse_error(p, "unterminated constructor"));
   Mem m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR('}');
-  Obj s = cmpd_new(rc_ret(t_Syn_struct), cmpd_new_M(rc_ret(t_Arr_Expr), m));
+  Obj s = cmpd_new(t_Syn_struct.ret(), cmpd_new_M(t_Arr_Expr.ret(), m));
   m.dealloc();
   return s;
 }
@@ -464,7 +464,7 @@ static Obj parse_seq(Parser* p) {
   P_ADV(1, return parse_error(p, "unterminated sequence"));
   Mem m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR(']');
-  Obj s = cmpd_new(rc_ret(t_Syn_seq), cmpd_new_M(rc_ret(t_Arr_Expr), m));
+  Obj s = cmpd_new(t_Syn_seq.ret(), cmpd_new_M(t_Arr_Expr.ret(), m));
   m.dealloc();
   return s;
 }
@@ -515,14 +515,14 @@ static Obj parse_expr(Parser* p) {
   parse_errFL("%o", expr);
 #endif
   if (!p->e && expr.is_ref()) {
-    Obj src_loc = cmpd_new(rc_ret(t_Src_loc),
-      rc_ret(p->path),
-      rc_ret(p->src),
+    Obj src_loc = cmpd_new(t_Src_loc.ret(),
+      p->path.ret(),
+      p->src.ret(),
       int_new(pos.off),
       int_new(p->pos.off - pos.off),
       int_new(pos.line),
       int_new(pos.col));
-    dict_insert(p->locs, rc_ret(expr), src_loc); // dict owns k, v.
+    dict_insert(p->locs, expr.ret(), src_loc); // dict owns k, v.
   }
   return expr;
 }
@@ -546,7 +546,7 @@ static Obj parse_src(Dict* src_locs, Obj path, Obj src, CharsM* e) {
     o = parse_error(&p, "parsing terminated early");
     m.rel_dealloc();
   } else {
-    o = cmpd_new_M(rc_ret(t_Arr_Expr), m);
+    o = cmpd_new_M(t_Arr_Expr.ret(), m);
     m.dealloc();
   }
   *e = p.e;

@@ -7,7 +7,7 @@
 static Obj int_new(Int i) {
   check(i >= -max_Int_tagged && i <= max_Int_tagged, "large Int values not yet suppported.");
   Int shifted = i * shift_factor_Int;
-  return rc_ret_val(Obj((Int)(shifted | ot_int)));
+  return Obj((Int)(shifted | ot_int)).ret_val();
 }
 
 

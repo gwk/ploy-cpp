@@ -20,13 +20,13 @@ static Bool cmpd_contains_unquote(Obj c) {
 static Obj expand_quasiquote(Int qua_depth, Obj o) {
   // owns o.
   if (!o.is_cmpd()) { // replace the quasiquote with quote.
-    return track_src(o, cmpd_new(rc_ret(t_Quo), o));
+    return track_src(o, cmpd_new(t_Quo.ret(), o));
   }
   Obj type = o.type();
   if (!qua_depth && type == t_Unq) { // unquote is only performed at the same (innermost) level.
     check(cmpd_len(o) == 1, "malformed Unq: %o", o);
-    Obj e = rc_ret(cmpd_el(o, 0));
-    rc_rel(o);
+    Obj e = cmpd_el(o, 0).ret();
+    o.rel();
     return e;
   }
   if (cmpd_contains_unquote(o)) { // unquote exists somewhere in the tree.
@@ -36,18 +36,18 @@ static Obj expand_quasiquote(Int qua_depth, Obj o) {
     } else if (type == t_Unq) {
       qd1--;
     }
-    Obj exprs = cmpd_new_raw(rc_ret(t_Arr_Expr), cmpd_len(o) + 2);
-    cmpd_put(exprs, 0, rc_ret_val(s_CONS));
-    cmpd_put(exprs, 1, rc_ret(type_name(type)));
+    Obj exprs = cmpd_new_raw(t_Arr_Expr.ret(), cmpd_len(o) + 2);
+    cmpd_put(exprs, 0, s_CONS.ret_val());
+    cmpd_put(exprs, 1, type_name(type).ret());
     for_in(i, cmpd_len(o)) {
       Obj e = cmpd_el(o, i);
-      cmpd_put(exprs, i + 2, expand_quasiquote(qd1, rc_ret(e))); // propagate the quotation.
+      cmpd_put(exprs, i + 2, expand_quasiquote(qd1, e.ret())); // propagate the quotation.
     }
-    Obj cons = track_src(o, cmpd_new(rc_ret(t_Call), exprs));
-    rc_rel(o);
+    Obj cons = track_src(o, cmpd_new(t_Call.ret(), exprs));
+    o.rel();
     return cons;
   } else { // no unquotes in the tree; simply quote the top level.
-    return track_src(o, cmpd_new(rc_ret(t_Quo), o));
+    return track_src(o, cmpd_new(t_Quo.ret(), o));
   }
 }
 
@@ -72,14 +72,14 @@ static Obj expand(Int d, Obj env, Obj code) {
   }
   if (type == t_Qua) {
     exc_check(cmpd_len(code) == 1, "malformed Qua: %o", code);
-    Obj expr = rc_ret(cmpd_el(code, 0));
-    rc_rel(code);
+    Obj expr = cmpd_el(code, 0).ret();
+    code.rel();
     return expand_quasiquote(0, expr);
   }
   if (type == t_Expand) {
-    Obj expanded = run_macro(t, rc_ret(env), code); // owns env.
+    Obj expanded = run_macro(t, env.ret(), code); // owns env.
     track_src(code, expanded);
-    rc_rel(code);
+    code.rel();
     // macro result may contain more expands; recursively expand the result.
     Obj final = expand(d + 1, env, expanded);
     return final;
@@ -88,13 +88,13 @@ static Obj expand(Int d, Obj env, Obj code) {
     // TODO: collapse comment and VOID nodes or perhaps a special COLLAPSE node?
     // this might allow for us to do away with the preprocess phase,
     // and would also allow a macro to collapse into nothing.
-    Obj expanded = cmpd_new_raw(rc_ret(ref_type(code)), cmpd_len(code));
+    Obj expanded = cmpd_new_raw(ref_type(code).ret(), cmpd_len(code));
     Obj* expanded_els = cmpd_els(expanded);
     for_in(i, cmpd_len(code)) {
-      expanded_els[i] = expand(d + 1, env, rc_ret(cmpd_el(code, i)));
+      expanded_els[i] = expand(d + 1, env, cmpd_el(code, i).ret());
     }
     track_src(code, expanded);
-    rc_rel(code);
+    code.rel();
     return expanded;
   }
 }

@@ -143,18 +143,18 @@ static Obj type_unit(Obj type) {
   // TODO: improve performance by using a hash table?
   for_ins(i, global_singletons.mem.len, 2) {
     if (global_singletons.mem.els[i] == type) {
-      return rc_ret(global_singletons.mem.els[i + 1]);
+      return global_singletons.mem.els[i + 1].ret();
     }
   }
-  Obj s = cmpd_new_raw(rc_ret(type), 0);
-  array_append(&global_singletons, rc_ret(type));
+  Obj s = cmpd_new_raw(type.ret(), 0);
+  array_append(&global_singletons, type.ret());
   array_append(&global_singletons, s);
-  return rc_ret(s);
+  return s.ret();
 }
 
 
 static Obj par_new(Chars n, Obj t) {
-  return cmpd_new(rc_ret(t_Par), sym_new_from_chars(n), rc_ret(t), rc_ret_val(s_void));
+  return cmpd_new(t_Par.ret(), sym_new_from_chars(n), t.ret(), s_void.ret_val());
 }
 
 
@@ -169,45 +169,45 @@ static Obj type_kind_init_prim() {
 
 
 static Obj type_kind_init_arr(Obj el_type) {
-  return cmpd_new(rc_ret(t_Type_kind_arr), rc_ret(el_type));
+  return cmpd_new(t_Type_kind_arr.ret(), el_type.ret());
 }
 
 
 static Obj type_kind_struct(Obj fields) {
   // owns fields.
   // all structs start with a nil dispatcher.
-  return cmpd_new(rc_ret(t_Type_kind_struct), fields, rc_ret_val(s_nil));
+  return cmpd_new(t_Type_kind_struct.ret(), fields, s_nil.ret_val());
 }
 
 
 static Obj type_kind_init_struct1(Chars n0, Obj t0) {
-  return type_kind_struct(cmpd_new(rc_ret(t_Arr_Par),
+  return type_kind_struct(cmpd_new(t_Arr_Par.ret(),
     par_new(n0, t0)));
 }
 
 
 static Obj type_kind_init_struct2(Chars n0, Obj t0, Chars n1, Obj t1) {
-  return type_kind_struct(cmpd_new(rc_ret(t_Arr_Par),
+  return type_kind_struct(cmpd_new(t_Arr_Par.ret(),
     par_new(n0, t0), par_new(n1, t1)));
 }
 
 
 static Obj type_kind_init_struct3(Chars n0, Obj t0, Chars n1, Obj t1,
   Chars n2, Obj t2) {
-  return type_kind_struct(cmpd_new(rc_ret(t_Arr_Par),
+  return type_kind_struct(cmpd_new(t_Arr_Par.ret(),
     par_new(n0, t0), par_new(n1, t1), par_new(n2, t2)));
 }
 
 
 static Obj type_kind_init_struct4(Chars n0, Obj t0, Chars n1, Obj t1,
   Chars n2, Obj t2, Chars n3, Obj t3) {
-  return type_kind_struct(cmpd_new(rc_ret(t_Arr_Par),
+  return type_kind_struct(cmpd_new(t_Arr_Par.ret(),
     par_new(n0, t0), par_new(n1, t1), par_new(n2, t2), par_new(n3, t3)));
 }
 
 
 static Obj type_kind_init_struct_fn() {
-  return type_kind_struct(cmpd_new(rc_ret(t_Type_kind_struct),
+  return type_kind_struct(cmpd_new(t_Type_kind_struct.ret(),
     par_new("is-native", t_Bool),
     par_new("is-macro", t_Bool),
     par_new("pars", t_Syn_seq),
@@ -217,7 +217,7 @@ static Obj type_kind_init_struct_fn() {
 
 
 static Obj type_kind_init_struct_func() {
-  return type_kind_struct(cmpd_new(rc_ret(t_Type_kind_struct),
+  return type_kind_struct(cmpd_new(t_Type_kind_struct.ret(),
     par_new("is-native", t_Bool),
     par_new("is-macro", t_Bool),
     par_new("env", t_Env),
@@ -229,7 +229,7 @@ static Obj type_kind_init_struct_func() {
 
 
 static Obj type_kind_init_struct_src_loc() {
-  return type_kind_struct(cmpd_new(rc_ret(t_Type_kind_struct),
+  return type_kind_struct(cmpd_new(t_Type_kind_struct.ret(),
     par_new("path", t_Data),
     par_new("src", t_Data),
     par_new("pos", t_Int),
@@ -240,35 +240,35 @@ static Obj type_kind_init_struct_src_loc() {
 
 
 static Obj type_kind_init_union_expr() {
-  return cmpd_new(rc_ret(t_Type_kind_struct),
-      cmpd_new(rc_ret(t_Arr_Type),
-      rc_ret(t_Int),
-      rc_ret(t_Sym),
-      rc_ret(t_Data),
-      rc_ret(t_Bang),
-      rc_ret(t_Quo),
-      rc_ret(t_Do),
-      rc_ret(t_Scope),
-      rc_ret(t_Bind),
-      rc_ret(t_If),
-      rc_ret(t_Fn),
-      rc_ret(t_Syn_struct),
-      rc_ret(t_Syn_seq),
-      rc_ret(t_Call),
-      rc_ret(t_Expand)));
+  return cmpd_new(t_Type_kind_struct.ret(),
+      cmpd_new(t_Arr_Type.ret(),
+      t_Int.ret(),
+      t_Sym.ret(),
+      t_Data.ret(),
+      t_Bang.ret(),
+      t_Quo.ret(),
+      t_Do.ret(),
+      t_Scope.ret(),
+      t_Bind.ret(),
+      t_If.ret(),
+      t_Fn.ret(),
+      t_Syn_struct.ret(),
+      t_Syn_seq.ret(),
+      t_Call.ret(),
+      t_Expand.ret()));
 }
 
 
 static Obj type_kind_init_union_type_kind() {
-  return cmpd_new(rc_ret(t_Type_kind_struct),
-    cmpd_new(rc_ret(t_Arr_Type),
-      rc_ret(t_Type_kind_unit),
-      rc_ret(t_Type_kind_prim),
-      rc_ret(t_Type_kind_arr),
-      rc_ret(t_Type_kind_struct),
-      rc_ret(t_Type_kind_union),
-      rc_ret(t_Type_kind_class),
-      rc_ret(t_Type_kind_var)));
+  return cmpd_new(t_Type_kind_struct.ret(),
+    cmpd_new(t_Arr_Type.ret(),
+      t_Type_kind_unit.ret(),
+      t_Type_kind_prim.ret(),
+      t_Type_kind_arr.ret(),
+      t_Type_kind_struct.ret(),
+      t_Type_kind_union.ret(),
+      t_Type_kind_class.ret(),
+      t_Type_kind_var.ret()));
 }
 
 
@@ -289,7 +289,7 @@ static Obj type_kind_init_class_dispatcher() {
 
 static void type_add(Obj type, Chars c_name, Obj kind) {
   assert(type.rc());
-  type.h->type = rc_ret(t_Type);
+  type.h->type = t_Type.ret();
   type.t->len = 2;
   type.t->name = sym_new_from_c(c_name);
   type.t->kind = kind;
@@ -335,7 +335,7 @@ static Obj type_init_values(Obj env) {
   #undef T
   for_in(i, ti_END) {
     Obj o = type_for_index((Type_index)i);
-    env = env_bind(env, false, false, rc_ret(o.t->name), rc_ret(o));
+    env = env_bind(env, false, false, o.t->name.ret(), o.ret());
   }
   // validate type graph.
   Set s = set0;
@@ -353,7 +353,7 @@ static void type_cleanup() {
   global_singletons.mem.rel_dealloc();
   for_in(i, ti_END) {
     Obj o = type_for_index(cast(Type_index, i));
-    rc_rel(o.t->kind);
+    o.t->kind.rel();
     o.t->kind = s_DISSOLVED; // not counted; further access is invalid.
   }
   // run final cleanup in reverse so that Type is cleaned up last;
@@ -361,8 +361,8 @@ static void type_cleanup() {
   // so that Type releases itself first and then verifies that its rc count is zero.
   for_in_rev(i, ti_END) {
     Obj o = type_for_index(cast(Type_index, i));
-    rc_rel(o.h->type);
-    rc_rel_val(o.t->name); // order does not matter as long as name is always a symbol.
+    o.h->type.rel();
+    o.t->name.rel_val(); // order does not matter as long as name is always a symbol.
     check(o.h->rc == (1<<1) + 1, "type_cleanup: unexpected rc: %u: %o", o.h->rc, o);
   }
 }

@@ -5,7 +5,7 @@
 
 
 static Obj bool_new(Int i) {
-  return rc_ret_val(i ? s_true : s_false);
+  return (i ? s_true : s_false).ret_val();
 }
 
 

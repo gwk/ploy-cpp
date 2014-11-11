@@ -8,8 +8,8 @@ static Obj parse_and_eval(Dict* src_locs, Obj env, Obj path, Obj src, Bool shoul
   // owns path, src.
   CharsM e = null;
   Obj code = parse_src(src_locs, path, src, &e);
-  rc_rel(path);
-  rc_rel(src);
+  path.rel();
+  src.rel();
   if (e) {
     err("parse error: ");
     err(e);
@@ -25,8 +25,8 @@ static Obj parse_and_eval(Dict* src_locs, Obj env, Obj path, Obj src, Bool shoul
     write_repr(stdout, step.res.val);
     fputc('\n', stdout);
   }
-  rc_rel(code);
-  rc_rel(step.res.val);
+  code.rel();
+  step.res.val.rel();
   return step.res.env;
 }
 
@@ -52,7 +52,7 @@ int main(int argc, Chars argv[]) {
   type_init_table();
   sym_init(); // requires type_init_table.
   env_init();
-  Obj env = type_init_values(rc_ret(s_ENV_END)); // requires sym_init.
+  Obj env = type_init_values(s_ENV_END.ret_val()); // requires sym_init.
   env = host_init(env);
 
   // parse arguments.
@@ -102,7 +102,7 @@ int main(int argc, Chars argv[]) {
   dict_rel(&global_src_locs);
   dict_dealloc(&global_src_locs);
   global_cleanup();
-  rc_rel(env);
+  env.rel();
   env_cleanup();
   // release but do not clear to facilitate debugging during type_cleanup.
   global_sym_names.mem.rel_no_clear();

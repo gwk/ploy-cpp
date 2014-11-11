@@ -59,14 +59,14 @@ static Bool data_ref_iso(Obj a, Obj b) {
 
 
 static Obj data_new_empty(Int len) {
-  Obj d = ref_new(size_Data + len, rc_ret(t_Data));
+  Obj d = ref_new(size_Data + len, t_Data.ret());
   d.d->len = len;
   return d; // borrowed.
 }
 
 
 static Obj data_new_from_str(Str s) {
-  if (!s.len) return rc_ret_val(blank);
+  if (!s.len) return blank.ret_val();
   Obj d = data_new_empty(s.len);
   memcpy(data_ref_charsM(d), s.chars, cast(Uns, s.len));
   return d;
@@ -87,7 +87,7 @@ static Obj data_new_from_path(Chars path) {
   check(f, "could not open file: %s", path);
   fseek(f, 0, SEEK_END);
   Int len = ftell(f);
-  if (!len) return rc_ret_val(blank);
+  if (!len) return blank.ret_val();
   Obj d = data_new_empty(len);
   fseek(f, 0, SEEK_SET);
   Uns items_read = fread(data_ref_charsM(d), size_Char, cast(Uns, len), f);

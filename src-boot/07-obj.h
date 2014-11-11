@@ -70,12 +70,14 @@ struct Type;
 extern const Obj s_true, s_false;
 extern Obj t_Ptr, t_Int, t_Data, t_Sym;
 
+static Obj ref_dealloc(Obj o);
+static Bool ref_is_cmpd(Obj o);
 static Bool ref_is_data(Obj o);
 static Bool ref_is_env(Obj o);
-static Bool ref_is_cmpd(Obj o);
 static Bool ref_is_type(Obj o);
 static Obj ref_type(Obj r);
 
+static void cmpd_dissolve_fields(Obj c);
 
 union Obj {
   Int i;
@@ -96,71 +98,71 @@ union Obj {
   explicit Obj(Raw _r): r(_r) {}
   explicit Obj(Type* _t): t(_t) {}
 
-  Bool operator==(Obj o) { return u == o.u; }
-  Bool operator!=(Obj o) { return u != o.u; }
+  Bool operator==(const Obj o) const { return u == o.u; }
+  Bool operator!=(const Obj o) const { return u != o.u; }
 
-  Bool vld() { return *this != Obj(); }
+  Bool vld() const { return *this != Obj(); }
    
-  Obj_tag tag() {
+  Obj_tag tag() const {
     assert(vld());
     return cast(Obj_tag, u & obj_tag_mask);
   }
 
-  Bool is_val() {
+  Bool is_val() const {
     assert(vld());
     return tag() != ot_ref;
   }
 
-  Bool is_ref() {
+  Bool is_ref() const {
     assert(vld());
     return tag() == ot_ref;
   }
 
-  Bool is_ptr() {
+  Bool is_ptr() const {
     assert(vld());
     return tag() == ot_ptr;
   }
 
-  Bool is_int() {
+  Bool is_int() const {
     assert(vld());
     return tag() == ot_int;
   }
 
-  Bool is_sym() {
+  Bool is_sym() const {
     assert(vld());
     return tag() == ot_sym;
   }
 
-  Bool is_bool() {
+  Bool is_bool() const {
     assert(vld());
     return *this == s_true || *this == s_false;
   }
 
-  Bool is_data_word() {
+  Bool is_data_word() const {
     return tag() == ot_sym && u & data_word_bit;
   }
 
-  Bool is_data_ref() {
+  Bool is_data_ref() const {
     return is_ref() && ref_is_data(*this);
   }
 
-  Bool is_data() {
+  Bool is_data() const {
     return is_data_word() || is_data_ref();
   }
 
-  Bool is_env() {
+  Bool is_env() const {
     return is_ref() && ref_is_env(*this);
   }
 
-  Bool is_cmpd() {
+  Bool is_cmpd() const {
     return is_ref() && ref_is_cmpd(*this);
   }
 
-  Bool is_type() {
+  Bool is_type() const {
     return is_ref() && ref_is_type(*this);
   }
 
-  Obj type() {
+  Obj type() const {
     switch (tag()) {
       case ot_ref: return ref_type(*this);
       case ot_ptr: return t_Ptr;
@@ -169,7 +171,7 @@ union Obj {
     }
   }
 
-  Int id_hash() {
+  Int id_hash() const {
     switch (tag()) {
       case ot_ref: return cast(Int, u >> width_min_alloc);
       case ot_ptr: return cast(Int, u >> width_min_alloc);
@@ -178,10 +180,28 @@ union Obj {
     }
   }
 
-  Uns rc();
+  void dissolve() {
+    if (is_cmpd()) {
+      cmpd_dissolve_fields(*this);
+    }
+    rel();
+  }
 
-#if OPTION_ALLOC_COUNT
-  Counter_index counter_index() {
+  Obj ret_val() const {
+    // ret counting for non-ref objects. a no-op for optimized builds.
+    assert(is_val());
+    counter_inc(counter_index());
+    return *this;
+  }
+
+  Obj rel_val() const {
+    // rel counting for non-ref objects. a no-op for optimized builds.
+    assert(is_val());
+    counter_dec(counter_index());
+    return *this;
+  }
+
+  Counter_index counter_index() const {
     Obj_tag ot = tag();
     switch (ot) {
       case ot_ref: return ci_Ref_rc;
@@ -190,7 +210,10 @@ union Obj {
       case ot_sym: return is_data_word() ? ci_Data_word_rc : ci_Sym_rc;
     }
   }
-#endif
+
+  Uns rc() const;
+  Obj ret();
+  void rel();
 
 };
 DEF_SIZE(Obj);
@@ -205,10 +228,50 @@ struct Head {
 };
 
 
-Uns Obj::rc() {
+Uns Obj::rc() const {
   // get the object's retain count for debugging purposes.
   if (is_val()) return max_Uns;
   assert(h->rc & 1); // TODO: support indirect counts.
   return h->rc >> 1; // shift off the direct flag bit.
 }
+
+
+Obj Obj::ret() {
+  // increase the object's retain count by one.
+  assert(vld());
+  counter_inc(counter_index());
+  if (is_val()) return *this;
+  check(h->rc, "object was prematurely deallocated: %p", r);
+  assert(h->rc & 1); // TODO: support indirect counts.
+  assert(h->rc < max_Uns);
+  h->rc += 2; // increment by two to leave the flag bit intact.
+  return *this;
+}
+
+void Obj::rel() {
+  // decrease the object's retain count by one, or deallocate it.
+  Obj o = *this;
+  assert(vld());
+  do {
+    if (o.is_val()) {
+      counter_dec(o.counter_index());
+      return;
+    }
+    if (!o.h->rc) {
+      // cycle deallocation is complete, and we have arrived at an already-deallocated member.
+      errFL("CYCLE: %p", o.r);
+      assert(0); // TODO: support cycles.
+      return;     
+    }
+    counter_dec(counter_index());
+    assert(o.h->rc & 1); // TODO: support indirect counts.
+    if (o.h->rc == (1<<1) + 1) { // count == 1.
+      o = ref_dealloc(o); // returns tail object to be released.
+    } else {
+      o.h->rc -= 2; // decrement by two to leave the flag bit intact.
+      break;
+    }
+  } while (o.vld());
+}
+
 

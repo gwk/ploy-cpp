@@ -10,7 +10,7 @@
 
 static Obj host_identity(Trace* t, Obj env) {
   GET_A;
-  return rc_ret(a);
+  return a.ret();
 }
 
 
@@ -143,7 +143,7 @@ static Obj host_cmpd_field(Trace* t, Obj env) {
   Int i = int_val(b);
   exc_check(i >= 0 && i < l, "field index out of range; index: %i; len: %i", i, l);
   Obj field = cmpd_el(a, i);
-  return rc_ret(field);
+  return field.ret();
 }
 
 
@@ -155,7 +155,7 @@ static Obj host_ael(Trace* t, Obj env) {
   Int i = int_val(b);
   exc_check(i >= 0 && i < l, "ael index out of range; index: %i; len: %i", i, l);
   Obj el = cmpd_el(a, i);
-  return rc_ret(el);
+  return el.ret();
 }
 
 
@@ -164,9 +164,9 @@ static Obj host_anew(Trace* t, Obj env) {
   exc_check(a.is_type(), "anew requires arg 1 to be a Type; received: %o", a);
   exc_check(b.is_int(), "anew requires arg 2 to be an Int; received: %o", b);
   Int len = int_val(b);
-  Obj res = cmpd_new_raw(rc_ret(a), len);
+  Obj res = cmpd_new_raw(a.ret(), len);
   for_in(i, len) {
-    cmpd_put(res, i, rc_ret_val(s_UNINIT));
+    cmpd_put(res, i, s_UNINIT.ret_val());
   }
   return res;
 }
@@ -180,9 +180,9 @@ static Obj host_aput(Trace* t, Obj env) {
   Int i = int_val(b);
   exc_check(i >= 0 && i < l, "el index out of range; index: %i; len: %i", i, l);
   Mem m = cmpd_mem(a);
-  rc_rel(m.el_move(i));
-  m.put(i, rc_ret(c));
-  return rc_ret(a);
+  m.el_move(i).rel();
+  m.put(i, c.ret());
+  return a.ret();
 }
 
 
@@ -204,7 +204,7 @@ static Obj host_write(Trace* t, Obj env) {
   CFile file = cast(CFile, ptr_val(a));
   // for now, ignore the return value.
   fwrite(data_chars(b), size_Char, cast(Uns, data_len(b)), file);
-  return rc_ret_val(s_void);
+  return s_void.ret_val();
 }
 
 
@@ -213,7 +213,7 @@ static Obj host_write_repr(Trace* t, Obj env) {
   exc_check(a.is_ptr(), "write-repr requires arg 1 to be a File; received: %o", a);
   CFile file = cast(CFile, ptr_val(a));
   write_repr(file, b);
-  return rc_ret_val(s_void);
+  return s_void.ret_val();
 }
 
 
@@ -222,7 +222,7 @@ static Obj host_flush(Trace* t, Obj env) {
   exc_check(a.is_ptr(), "flush requires arg 1 to be a File; received: %o", a);
   CFile file = cast(CFile, ptr_val(a));
   fflush(file);
-  return rc_ret_val(s_void);
+  return s_void.ret_val();
 }
 
 
@@ -243,14 +243,14 @@ static Obj host_raise(Trace* t, Obj env) {
 static Obj host_type_of(Trace* t, Obj env) {
   GET_A;
   Obj type = a.type();
-  return rc_ret(type);
+  return type.ret();
 }
 
 
 static Obj host_globalize(Trace* t, Obj env) {
   GET_A;
   global_push(a);
-  return rc_ret(s_void);
+  return s_void.ret_val();
 }
 
 
@@ -261,7 +261,7 @@ static Obj host_dbg(Trace* t, Obj env) {
   exc_check(a.type() == t_Data, "dbg expects argument 1 to be Data: %o", a);
   write_data(stderr, a);
   errFL(": %p rc:%u %o", b, b.rc(), b);
-  return rc_ret_val(s_void);
+  return s_void.ret_val();
 }
 
 
@@ -278,21 +278,21 @@ static Obj host_init_func(Obj env, Int len_pars, Chars name, Func_host_ptr ptr) 
   Obj sym = sym_new_from_c(name);
   Obj pars; // TODO: add real types; unique value for expression default?
   #define PAR(s) \
-  cmpd_new(rc_ret(t_Par), rc_ret_val(s), rc_ret_val(s_nil), rc_ret_val(s_void))
+  cmpd_new(t_Par.ret(), s.ret_val(), s_nil.ret_val(), s_void.ret_val())
   switch (len_pars) {
-    case 1: pars = cmpd_new(rc_ret(t_Arr_Par), PAR(s_a)); break;
-    case 2: pars = cmpd_new(rc_ret(t_Arr_Par), PAR(s_a), PAR(s_b)); break;
-    case 3: pars = cmpd_new(rc_ret(t_Arr_Par), PAR(s_a), PAR(s_b), PAR(s_c)); break;
+    case 1: pars = cmpd_new(t_Arr_Par.ret(), PAR(s_a)); break;
+    case 2: pars = cmpd_new(t_Arr_Par.ret(), PAR(s_a), PAR(s_b)); break;
+    case 3: pars = cmpd_new(t_Arr_Par.ret(), PAR(s_a), PAR(s_b), PAR(s_c)); break;
     default: assert(0);
   }
   #undef PAR
-  Obj f = cmpd_new(rc_ret(t_Func),
+  Obj f = cmpd_new(t_Func.ret(),
     bool_new(false),
     bool_new(false),
-    rc_ret(env),
-    rc_ret(s_void),
+    env.ret(),
+    s_void.ret_val(),
     pars,
-    rc_ret_val(s_nil), // TODO: specify actual return type?
+    s_nil.ret_val(), // TODO: specify actual return type?
     ptr_new(cast(Raw, ptr)));
   return env_bind(env, false, false, sym, f);
 }
@@ -302,7 +302,7 @@ static Obj host_init_file(Obj env, Chars sym_name, Chars name, CFile f, Bool r,
   Bool w) {
   // owns env.
   Obj sym = sym_new_from_chars(sym_name);
-  Obj val = cmpd_new(rc_ret(t_File), data_new_from_chars(name), ptr_new(f),
+  Obj val = cmpd_new(t_File.ret(), data_new_from_chars(name), ptr_new(f),
     bool_new(r), bool_new(w));
   return env_bind(env, false, false, sym, val);
 }

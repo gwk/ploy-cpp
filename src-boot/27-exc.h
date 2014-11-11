@@ -20,7 +20,7 @@ static Obj track_src(Obj original, Obj derived) {
   if (!original.is_ref() || !derived.is_ref()) return derived;
   Obj src_loc = dict_fetch(&global_src_locs, original);
   if (src_loc.vld() && !dict_contains(&global_src_locs, derived)) {
-    dict_insert(&global_src_locs, rc_ret(derived), rc_ret(src_loc));
+    dict_insert(&global_src_locs, derived.ret(), src_loc.ret());
   }
   return derived;
 }

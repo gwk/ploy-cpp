@@ -130,11 +130,11 @@ static Obj cmpd_slice(Obj c, Int f, Int t) {
   if (ls == l) {
     return c; // no ret/rel necessary.
   }
-  Obj slice = cmpd_new_raw(rc_ret(ref_type(c)), ls);
+  Obj slice = cmpd_new_raw(ref_type(c).ret(), ls);
   Obj* src = cmpd_els(c);
   Obj* dst = cmpd_els(slice);
   for_in(i, ls) {
-    dst[i] = rc_ret(src[i + f]);
+    dst[i] = src[i + f].ret();
   }
   return slice;
 }
@@ -145,23 +145,20 @@ static Obj cmpd_rel_fields(Obj c) {
   if (!m.len) return obj0; // return the termination sentinel for rc_rel tail loop.
   Int last_i = m.len - 1;
   it_mem_to(it, m, last_i) {
-    rc_rel(*it);
+    it->rel();
   }
 #if OPTION_TCO
   return m.els[last_i];
 #else
-  rc_rel(m.els[last_i]);
+  m.els[last_i].rel();
   return obj0;
 #endif
 }
 
 
-#if OPTION_ALLOC_COUNT
 static void cmpd_dissolve_fields(Obj c) {
   it_cmpd(it, c) {
-    rc_rel(*it);
-    *it = rc_ret_val(s_DISSOLVED);
+    it->rel();
+    *it = s_DISSOLVED.ret_val();
   }
 }
-#endif
-

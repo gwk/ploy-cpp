@@ -8,7 +8,7 @@ static Array globals = array0;
 
 
 static void global_push(Obj global) {
-  array_append(&globals, rc_ret(global));
+  array_append(&globals, global.ret());
 }
 
 
