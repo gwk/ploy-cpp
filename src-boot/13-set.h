@@ -8,7 +8,7 @@
 
 static const Int min_table_len_buckets = 16;
 
-typedef Array Hash_bucket;
+typedef List Hash_bucket;
 DEF_SIZE(Hash_bucket);
 
 

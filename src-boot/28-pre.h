@@ -14,7 +14,7 @@ static Obj preprocess(Obj code) {
   if (ref_type(code) == t_Comment) {
     return obj0;
   }
-  Array dst;
+  List dst;
   it_mem(it, cmpd_mem(code)) {
     Obj o = preprocess(*it);
     if (o.vld()) {

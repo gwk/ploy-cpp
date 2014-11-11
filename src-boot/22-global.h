@@ -4,7 +4,7 @@
 #include "21-cmpd.h"
 
 // flat array of unit type, singleton interleaved pairs.
-static Array globals;
+static List globals;
 
 
 static void global_push(Obj global) {

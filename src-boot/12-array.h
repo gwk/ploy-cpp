@@ -6,17 +6,17 @@
 #include "11-mem.h"
 
 
-struct Array {
+struct List {
   Mem mem;
   Int cap;
 
-  Array(): mem(), cap(0) {}
+  List(): mem(), cap(0) {}
 
-  explicit Array(Int c): mem(), cap(c) {
+  explicit List(Int c): mem(), cap(c) {
     mem.grow(cap);
   }
 
-  Array(Mem m, Int c): mem(m), cap(c) {}
+  List(Mem m, Int c): mem(m), cap(c) {}
 
   Bool vld() {
     return mem.vld() && cap >= 0 && mem.len <= cap;

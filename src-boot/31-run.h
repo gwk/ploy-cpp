@@ -494,7 +494,7 @@ static Step run_Call(Int d, Trace* t, Obj env, Obj code) {
   // the names are not ref-counted, but the values are.
   // the array can grow arbitrarily large due to splice arguments;
   // allocate an initial capacity sufficient for the non-splice case.
-  Array vals(len * 2 - 1);
+  List vals(len * 2 - 1);
   Step step = run(d, t, env, cmpd_el(exprs, 0)); // callee.
   env = step.res.env;
   vals.append(step.res.val);

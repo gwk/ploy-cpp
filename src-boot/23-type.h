@@ -136,7 +136,7 @@ static Obj kind_fields(Obj kind) {
 
 
 // flat array of unit type, singleton interleaved pairs.
-static Array global_singletons;
+static List global_singletons;
 
 
 static Obj type_unit(Obj type) {
