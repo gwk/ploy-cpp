@@ -7,7 +7,7 @@ cd $(dirname "$0")/..
 rename-enum -w 2 -off 1 -dash-separator src-boot/*.h
 
 prev_name=''
-for path in $(ls src-boot/*.h src-boot/ploy.c); do
+for path in $(ls src-boot/*.h src-boot/ploy.cpp); do
   if [[ -n "$prev_name" ]]; then
     echo "fix include: $path; $prev_name"
     text-replace \
