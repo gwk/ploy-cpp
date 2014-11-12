@@ -23,10 +23,10 @@ struct Dict {
     }
   }
 
-  void rel() {
+  void rel_els() {
     assert(vld());
     for_in(i, len_buckets) {
-      buckets[i].array.rel();
+      buckets[i].array.rel_els();
     }
   }
 

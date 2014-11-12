@@ -355,7 +355,7 @@ static Obj type_init_values(Obj env) {
 
 #if OPTION_ALLOC_COUNT
 static void type_cleanup() {
-  global_singletons.array.rel_dealloc();
+  global_singletons.array.rel_els_dealloc();
   for_in(i, ti_end) {
     Obj o = type_for_index(i);
     o.t->kind.rel();

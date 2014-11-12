@@ -98,15 +98,15 @@ int main(int argc, Chars argv[]) {
 
 #if OPTION_ALLOC_COUNT
   // cleanup in reverse order.
-  global_src_locs.rel();
+  global_src_locs.rel_els();
   global_src_locs.dealloc();
   global_cleanup();
   env.rel();
   env_cleanup();
   // release but do not clear to facilitate debugging during type_cleanup.
-  global_sym_names.array.rel_no_clear();
+  global_sym_names.array.rel_els(false);
   type_cleanup();
-  global_sym_names.array.dealloc_no_clear();
+  global_sym_names.array.dealloc(false);
   counter_stats(should_log_stats);
 #endif
 

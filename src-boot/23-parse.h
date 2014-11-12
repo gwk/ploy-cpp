@@ -133,7 +133,7 @@ static Array parse_exprs(Parser& p, Char term) {
     a.append(o);
   }
   if (p.e) {
-    a.array.rel_dealloc();
+    a.array.rel_els_dealloc();
     return Array();
   }
   return a.array;
@@ -424,7 +424,7 @@ static Bool parse_terminator(Parser& p, Char t) {
 
 #define P_CONSUME_TERMINATOR(t) \
 if (p.e || !parse_terminator(p, t)) { \
-  a.rel_dealloc(); \
+  a.rel_els_dealloc(); \
   return obj0; \
 }
 
@@ -543,7 +543,7 @@ static Obj parse_src(Dict& src_locs, Obj path, Obj src, CharsM* e) {
     o = obj0;
   } else if (p.pos.off != p.s.len) {
     o = parse_error(p, "parsing terminated early");
-    a.rel_dealloc();
+    a.rel_els_dealloc();
   } else {
     o = cmpd_new_M(t_Arr_Expr.ret(), a);
     a.dealloc();

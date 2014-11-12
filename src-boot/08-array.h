@@ -98,55 +98,42 @@ struct Array {
 #endif
   }
 
-  void rel_no_clear() {
-    // release all elements without clearing them; useful for debugging final teardown.
+  void rel_els(Bool dbg_clear=true) {
     it_array(it, *this) {
       it->rel();
+      if (OPTION_MEM_ZERO && dbg_clear) {
+        *it = obj0;
+      }
     }
   }
 
-  void rel() {
-    it_array(it, *this) {
-      it->rel();
-#if OPTION_MEM_ZERO
-      *it = obj0;
-#endif
-    }
-  }
-
-#if OPTION_ALLOC_COUNT
-  void dissolve() {
+  void dissolve_els(Bool dbg_clear=true) {
     it_array(it, *this) {
       it->dissolve();
+      if (OPTION_MEM_ZERO && dbg_clear) {
+        *it = obj0;
+      }
     }
   }
-#endif
 
-  void dealloc_no_clear() {
+  void dealloc(Bool dbg_cleared=true) {
+    // elements must have been previously moved or cleared.
+    if (OPTION_MEM_ZERO && dbg_cleared) {
+      it_array(it, *this) {
+        assert(!it->vld());
+      }
+    }
     raw_dealloc(els, ci_Array);
   }
 
-  void dealloc() {
-    // elements must have been previously moved or cleared.
-#if OPTION_MEM_ZERO
-    it_array(it, *this) {
-      assert(!it->vld());
-    }
-#endif
-    dealloc_no_clear();
+  void rel_els_dealloc() {
+    rel_els(false);
+    dealloc(false);
   }
 
-  void rel_dealloc() {
-    rel_no_clear();
-    dealloc_no_clear();
+  void dissolve_els_dealloc() {
+    dissolve_els();
+    dealloc(false);
   }
-
-
-#if OPTION_ALLOC_COUNT
-  void dissolve_dealloc() {
-    dissolve();
-    dealloc_no_clear();
-  }
-#endif
 
 };

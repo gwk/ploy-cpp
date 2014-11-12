@@ -29,16 +29,12 @@ struct Set {
     }
   }
 
-  void dealloc(Bool assert_cleared) {
+  void dealloc(Bool dbg_cleared) {
     assert(vld());
     Int len_act = 0;
     for_in(i, len_buckets) {
       len_act += buckets[i].array.len;
-      if (assert_cleared) {
-        buckets[i].array.dealloc();
-      } else {
-        buckets[i].array.dealloc_no_clear();
-      }
+      buckets[i].array.dealloc(dbg_cleared);
     }
     assert(len_act == len);
     raw_dealloc(buckets, ci_Set);
