@@ -13,7 +13,7 @@ struct Env {
   Bool is_mutable: 1;
   Bool is_public : 1;
   Uns bit_padding : 6;
-  Char padding[7];
+  Char padding[size_Word - 1];
   Obj key; // ENV_FRAME_KEY for frame.
   Obj val; // ENV_FRAME_VAL for frame.
   Obj tl;

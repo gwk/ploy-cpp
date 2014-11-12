@@ -161,7 +161,7 @@ static U64 parse_U64(Parser& p) {
   }
   Chars start = p.s.chars + p.pos.off;
   CharsM end;
-  // TODO: this appears unsafe; what if strtoull runs off the end of the string?
+  // TODO: this appears unsafe if source string is not null-terminated.
   U64 u = strtoull(start, &end, base);
   int en = errno;
   if (en) {
@@ -183,7 +183,7 @@ static U64 parse_U64(Parser& p) {
 static Obj parse_uns(Parser& p) {
   U64 u = parse_U64(p);
   if (p.e) return obj0;
-  return int_new_from_uns(u);
+  return int_new_from_U64(u);
 }
 
 
@@ -193,7 +193,7 @@ static Obj parse_Int(Parser& p, Int sign) {
   U64 u = parse_U64(p);
   if (p.e) return obj0;
   parse_check(u <= max_Int, "signed number literal is too large");
-  return int_new(I64(u) * sign);
+  return int_new(Int(u) * sign);
 }
 
 

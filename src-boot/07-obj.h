@@ -18,12 +18,12 @@ static const Bool report_pinned_counts = true;
 #define width_obj_tag 2
 #define obj_tag_end (1L << width_obj_tag)
 
-static const Int width_tagged_word = width_word - width_obj_tag;
+static const Int width_tagged_word = width_Word - width_obj_tag;
 
 static const Uns obj_tag_mask = obj_tag_end - 1;
 static const Uns obj_body_mask = ~obj_tag_mask;
-static const Int max_Int_tagged  = (1L  << width_tagged_word) - 1;
-static const Uns max_Uns_tagged  = max_Int_tagged;
+static const Int max_Int_tagged = (1L << width_tagged_word) - 1;
+static const Uns max_Uns_tagged = max_Int_tagged;
 // we cannot shift signed values in C so we use multiplication by powers of 2 instead.
 static const Int shift_factor_Int = 1L << width_obj_tag;
 

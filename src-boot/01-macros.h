@@ -65,11 +65,13 @@
 #if __SIZEOF_POINTER__ == 4
 #define ARCH_32_WORD 1
 #define ARCH_64_WORD 0
-#define width_word 32
+#define size_Word 4
+#define width_Word 32
 #elif __SIZEOF_POINTER__ == 8
 #define ARCH_32_WORD 0
 #define ARCH_64_WORD 1
-#define width_word 64
+#define size_Word 8
+#define width_Word 64
 #else
 #error "unknown architecture"
 #endif

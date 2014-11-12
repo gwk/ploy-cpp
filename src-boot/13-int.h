@@ -11,8 +11,8 @@ static Obj int_new(Int i) {
 }
 
 
-static Obj int_new_from_uns(Uns u) {
-  check(u < max_Uns_tagged, "large Uns values not yet supported.");
+static Obj int_new_from_U64(U64 u) {
+  check(u < U64(max_Uns_tagged), "large Uns values not yet supported.");
   return int_new(Int(u));
 }
 

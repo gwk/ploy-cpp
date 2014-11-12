@@ -6,7 +6,6 @@
       <if (ieq i 1) b
         (self (idec i) b (iadd a b))>>>>
 
-# 89 is the max value for 64 bit builds.
-# beyond this requires more than 61 bits which causes overflow and trap.
-# this test case will fail on 32 bit builds.
-(outRL (fib 89))
+# 89 is the max value for 64 bit builds;
+# is the max for 32 bit builds.
+(outRL (fib 43))

@@ -14,6 +14,12 @@ _bld/ploy: tools/cc.sh src-boot/*
 _bld/ploy-dbg: tools/cc.sh src-boot/*
 	tools/cc.sh -dbg src-boot/ploy.cpp -o $@
 
+_bld/ploy32: tools/cc.sh src-boot/*
+	tools/cc.sh -m32 src-boot/ploy.cpp -o $@
+
+_bld/ploy32-dbg: tools/cc.sh src-boot/*
+	tools/cc.sh -dbg -m32 src-boot/ploy.cpp -o $@
+
 _bld/ploy-cov: tools/cc.sh src-boot/*
 	tools/cc.sh -dbg src-boot/ploy.cpp --coverage -o $@
 	# compiling ploy-cov also produces the .gcno file.
@@ -74,13 +80,14 @@ _bld/ploy-ast-dump.txt: _bld/compile_commands.json src-boot/*
 
 all: basic preprocess ast cov ll analyze callgraph test perf-test
 
-basic: _bld/ploy _bld/ploy-dbg
+basic: _bld/ploy _bld/ploy-dbg _bld/ploy32 _bld/ploy32-dbg
 
 clean:
 	rm -rf _bld/*
 
 parse:
 	tools/cc.sh -dbg src-boot/ploy.cpp -fsyntax-only
+	tools/cc.sh -dbg -m32 src-boot/ploy.cpp -fsyntax-only
 	tools/cc.sh src-boot/ploy.cpp -fsyntax-only
 
 preprocess: _bld/ploy-post-proc-no-libs.cpp _bld/ploy-dbg-post-proc-no-libs.cpp
@@ -102,13 +109,21 @@ callgraph: _bld/ploy-callgraph.svg
 # omit perf tests, which take too long in debug mode.
 test-dbg: tools/run-tests.sh _bld/ploy-dbg
 	@echo "\ntest-dbg:"
-	$^ test/[0-2]-*
+	$^ test/[0-3]-*
 
 test-rel: tools/run-tests.sh _bld/ploy
 	@echo "\ntest-rel:"
-	$^ test/[0-3]-*
+	$^ test/[0-2]-*
 
-test: test-dbg test-rel
+test-rel32: tools/run-tests.sh _bld/ploy32
+	@echo "\ntest-rel:"
+	$^ test/[0-2]-*
+
+test-perf: tools/run-tests.sh _bld/ploy
+	@echo "\ntest-perf:"
+	$^ test/4-*
+
+test: test-dbg test-rel test-rel32
 
 perf-test: _bld/prof-res-usage
 	tools/perf-test-all.sh
