@@ -1,7 +1,7 @@
 // Copyright 2013 George King.
 // Permission to use this file is granted in ploy/license.txt.
 
-#include "23-type.h"
+#include "23-parse.h"
 
 #define GET_VAL(v) Obj v = env_get(env, s_##v)
 #define GET_A GET_VAL(a)
@@ -253,8 +253,6 @@ static Obj host_globalize(UNUSED Trace* t, Obj env) {
   return s_void.ret_val();
 }
 
-
-static void write_data(CFile f, Obj d);
 
 static Obj host_dbg(Trace* t, Obj env) {
   GET_AB; // label, obj.

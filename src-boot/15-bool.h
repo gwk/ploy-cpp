@@ -1,7 +1,7 @@
 // Copyright 2013 George King.
 // Permission to use this file is granted in ploy/license.txt.
 
-#include "17-sym.h"
+#include "14-sym.h"
 
 
 static Obj bool_new(Int i) {

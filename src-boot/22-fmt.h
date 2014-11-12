@@ -11,10 +11,8 @@
 // %s: Chars.
 // %c: Char.
 
-#include "07-obj.h"
+#include "21-write-repr.h"
 
-
-static void write_repr(CFile f, Obj o);
 
 #define FMT1(T, c_exp, ...) \
 static void _fmt1(CFile f, Chars fmt, T item) { \

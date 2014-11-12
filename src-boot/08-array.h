@@ -3,7 +3,7 @@
 
 // fixed-length object array type.
 
-#include "10-ref.h"
+#include "07-obj.h"
 
 
 // iterate over array using pointer Obj pointer e, start index m, end index n.

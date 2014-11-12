@@ -1,7 +1,7 @@
 // Copyright 2014 George King.
 // Permission to use this file is granted in ploy/license.txt.
 
-#include "28-pre.h"
+#include "26-pre.h"
 
 
 static Bool cmpd_contains_unquote(Obj c) {
