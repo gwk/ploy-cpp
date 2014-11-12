@@ -63,7 +63,6 @@ $cmd_prefix clang++ \
 -Wno-c++98-compat-pedantic \
 -Wno-global-constructors \
 -Wno-gnu \
--Wno-covered-switch-default \
 -fstrict-aliasing \
 -ftrapv \
 -fno-cxx-exceptions \
