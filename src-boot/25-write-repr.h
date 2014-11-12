@@ -5,7 +5,7 @@
 
 
 static void write_data(CFile f, Obj d) {
-  assert(ref_is_data(d));
+  assert(d.ref_is_data());
   fwrite(data_chars(d), 1, Uns(data_len(d)), f);
 }
 
@@ -21,7 +21,7 @@ static void write_repr_Sym(CFile f, Obj s, Bool is_quoted) {
 
 
 static void write_repr_Data(CFile f, Obj d) {
-  assert(ref_is_data(d));
+  assert(d.ref_is_data());
   Chars p = data_ref_chars(d);
   fputc('\'', f);
   for_in(i, data_len(d)) {
@@ -190,7 +190,7 @@ static void write_repr_syn_seq(CFile f, Obj s, Bool is_quoted, Int depth, Set& s
 
 
 static void write_repr_default(CFile f, Obj c, Bool is_quoted, Int depth, Set& set) {
-  assert(ref_is_cmpd(c));
+  assert(c.ref_is_cmpd());
   if (is_quoted) fputs("¿", f);
   fputs("(", f);
   Obj t = c.type();

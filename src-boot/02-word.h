@@ -112,7 +112,6 @@ static void fmt_to_file(CFile f, Chars fmt, T item, Ts... items);
   fail(); \
 }
 
-union Obj;
 struct Trace;
 
 [[noreturn]] static void _exc_raise(Trace* trace);

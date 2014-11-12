@@ -6,7 +6,7 @@
 
 static Bool cmpd_contains_unquote(Obj c) {
   // TODO: follow the same depth rule as below.
-  assert(ref_is_cmpd(c));
+  assert(c.ref_is_cmpd());
   if (c.type() == t_Unq) return true;
   Array a = cmpd_array(c);
   it_array(it, a) {
@@ -65,7 +65,7 @@ static Obj expand(Int d, Obj env, Obj code) {
   if (!code.is_cmpd()) {
     return code;
   }
-  Obj type = ref_type(code);
+  Obj type = code.ref_type();
   if (type == t_Quo) {
     exc_check(cmpd_len(code) == 1, "malformed Quo: %o", code);
     return code;
@@ -88,7 +88,7 @@ static Obj expand(Int d, Obj env, Obj code) {
     // TODO: collapse comment and VOID nodes or perhaps a special COLLAPSE node?
     // this might allow for us to do away with the preprocess phase,
     // and would also allow a macro to collapse into nothing.
-    Obj expanded = cmpd_new_raw(ref_type(code).ret(), cmpd_len(code));
+    Obj expanded = cmpd_new_raw(code.ref_type().ret(), cmpd_len(code));
     Obj* expanded_els = cmpd_els(expanded);
     for_in(i, cmpd_len(code)) {
       expanded_els[i] = expand(d + 1, env, cmpd_el(code, i).ret());

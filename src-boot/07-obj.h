@@ -65,17 +65,15 @@ struct Env;
 struct Cmpd;
 struct Type;
 
-extern const Obj s_true, s_false;
-extern Obj t_Ptr, t_Int, t_Data, t_Sym;
+union Obj;
 
-static Obj ref_dealloc(Obj o);
-static Bool ref_is_cmpd(Obj o);
-static Bool ref_is_data(Obj o);
-static Bool ref_is_env(Obj o);
-static Bool ref_is_type(Obj o);
-static Obj ref_type(Obj r);
+extern const Obj s_true, s_false;
+extern Obj t_Data, t_Env, t_Int, t_Ptr, t_Sym, t_Type;
 
 static void cmpd_dissolve_fields(Obj c);
+static Obj cmpd_rel_fields(Obj c);
+static Obj env_rel_fields(Obj o);
+static Obj type_name(Obj t);
 
 union Obj {
   Int i;
@@ -140,29 +138,27 @@ union Obj {
     return tag() == ot_sym && u & data_word_bit;
   }
 
-  Bool is_data_ref() const {
-    return is_ref() && ref_is_data(*this);
-  }
+  Bool ref_is_data() const { return ref_type() == t_Data; }
 
-  Bool is_data() const {
-    return is_data_word() || is_data_ref();
-  }
+  Bool ref_is_env() const { return ref_type() == t_Env; }
 
-  Bool is_env() const {
-    return is_ref() && ref_is_env(*this);
-  }
+  Bool ref_is_cmpd() const { return !ref_is_data() && !ref_is_env(); }
 
-  Bool is_cmpd() const {
-    return is_ref() && ref_is_cmpd(*this);
-  }
+  Bool ref_is_type() const { return ref_type() == t_Type; }
 
-  Bool is_type() const {
-    return is_ref() && ref_is_type(*this);
-  }
+  Bool is_data_ref() const { return is_ref() && ref_is_data(); }
+
+  Bool is_data() const { return is_data_word() || is_data_ref(); }
+
+  Bool is_env() const { return is_ref() && ref_is_env(); }
+
+  Bool is_cmpd() const { return is_ref() && ref_is_cmpd(); }
+
+  Bool is_type() const { return is_ref() && ref_is_type(); }
 
   Obj type() const {
     switch (tag()) {
-      case ot_ref: return ref_type(*this);
+      case ot_ref: return ref_type();
       case ot_ptr: return t_Ptr;
       case ot_int: return t_Int;
       case ot_sym: return (is_data_word() ? t_Data : t_Sym);
@@ -202,16 +198,22 @@ union Obj {
   Counter_index counter_index() const {
     Obj_tag ot = tag();
     switch (ot) {
-      case ot_ref: return ci_Ref_rc;
+      case ot_ref: {
+        if (ref_is_data()) return ci_Data_ref_rc;
+        else if (ref_is_env()) return ci_Env_rc;
+        else return ci_Cmpd_rc;
+      }
       case ot_ptr: return ci_Ptr_rc;
       case ot_int: return ci_Int_rc;
       case ot_sym: return is_data_word() ? ci_Data_word_rc : ci_Sym_rc;
     }
   }
 
+  Obj ref_type() const;
   Uns rc() const;
   Obj ret();
   void rel();
+  Obj dealloc();
 
 };
 DEF_SIZE(Obj);
@@ -219,12 +221,17 @@ DEF_SIZE(Obj);
 #define obj0 Obj()
 
 
-struct Head {
+struct Head { // common header for all heap objects.
   Obj type;
   Uns rc;
   Head(Obj t): type(t), rc(0) {}
 };
 
+
+Obj Obj::ref_type() const {
+  assert(is_ref());
+  return h->type;
+}
 
 Uns Obj::rc() const {
   // get the object's retain count for debugging purposes.
@@ -232,7 +239,6 @@ Uns Obj::rc() const {
   assert(h->rc & 1); // TODO: support indirect counts.
   return h->rc >> 1; // shift off the direct flag bit.
 }
-
 
 Obj Obj::ret() {
   // increase the object's retain count by one.
@@ -261,10 +267,10 @@ void Obj::rel() {
       assert(0); // TODO: support cycles.
       return;     
     }
-    counter_dec(counter_index());
+    counter_dec(o.counter_index());
     assert(o.h->rc & 1); // TODO: support indirect counts.
     if (o.h->rc == (1<<1) + 1) { // count == 1.
-      o = ref_dealloc(o); // returns tail object to be released.
+      o = o.dealloc(); // returns tail object to be released.
     } else {
       o.h->rc -= 2; // decrement by two to leave the flag bit intact.
       break;
@@ -272,4 +278,24 @@ void Obj::rel() {
   } while (o.vld());
 }
 
-
+Obj Obj::dealloc() {
+  assert(is_ref());
+  //errFL("DEALLOC: %p:%o", r, *this);
+  h->rc = 0;
+  ref_type().rel();
+  Obj tail;
+  if (ref_is_data()) { // no extra action required.
+    tail = obj0;
+  } else if (ref_is_env()) {
+    tail = env_rel_fields(*this);
+  } else {
+    tail = cmpd_rel_fields(*this);
+  }
+  // ret/rel counter has already been decremented by rc_rel.
+#if !OPTION_DEALLOC_PRESERVE
+  raw_dealloc(r, Counter_index(counter_index() + 1));
+#elif OPTION_ALLOC_COUNT
+  counter_dec(Counter_index(counter_index() + 1)); // do not dealloc, just count.
+#endif
+  return tail;
+}

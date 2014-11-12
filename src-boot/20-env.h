@@ -38,7 +38,10 @@ static Obj env_new(Bool is_mutable, Bool is_public, Obj key, Obj val, Obj tl) {
   // owns key, val, tl.
   assert(key.is_sym());
   assert(tl == s_ENV_END || tl.is_env());
-  Obj o = ref_new(size_Env, t_Env.ret());
+  counter_inc(ci_Env_rc);
+  Obj o = Obj(raw_alloc(size_Env, ci_Env_alloc));
+  o.h->type = t_Env.ret();
+  o.h->rc = (1<<1) + 1;
   o.e->is_mutable = is_mutable;
   o.e->is_public = is_public;
   o.e->key = key;

@@ -16,7 +16,7 @@ const Obj blank = Obj(Uns(ot_sym | data_word_bit));
 
 
 static Int data_ref_len(Obj d) {
-  assert(ref_is_data(d));
+  assert(d.ref_is_data());
   assert(d.d->len > 0);
   return d.d->len;
 }
@@ -29,13 +29,13 @@ static Int data_len(Obj d) {
 
 
 static Chars data_ref_chars(Obj d) {
-  assert(ref_is_data(d));
+  assert(d.ref_is_data());
   return reinterpret_cast<Chars>(d.d + 1); // address past data header.
 }
 
 
 static CharsM data_ref_charsM(Obj d) {
-  assert(ref_is_data(d));
+  assert(d.ref_is_data());
   return reinterpret_cast<CharsM>(d.d + 1); // address past data header.
 }
 
@@ -58,16 +58,19 @@ static Bool data_ref_iso(Obj a, Obj b) {
 }
 
 
-static Obj data_new_empty(Int len) {
-  Obj d = ref_new(size_Data + len, t_Data.ret());
-  d.d->len = len;
-  return d; // borrowed.
+static Obj data_new_raw(Int len) {
+  counter_inc(ci_Data_ref_rc);
+  Obj o = Obj(raw_alloc(size_Data + len, ci_Data_ref_alloc));
+  o.h->type = t_Data.ret();
+  o.h->rc = (1<<1) + 1;
+  o.d->len = len;
+  return o;
 }
 
 
 static Obj data_new_from_str(Str s) {
   if (!s.len) return blank.ret_val();
-  Obj d = data_new_empty(s.len);
+  Obj d = data_new_raw(s.len);
   memcpy(data_ref_charsM(d), s.chars, Uns(s.len));
   return d;
 }
@@ -76,7 +79,7 @@ static Obj data_new_from_str(Str s) {
 static Obj data_new_from_chars(Chars c) {
   Uns len = strnlen(c, max_Int);
   check(len <= max_Int, "data_new_from_chars: string exceeded max length");
-  Obj d = data_new_empty(Int(len));
+  Obj d = data_new_raw(Int(len));
   memcpy(data_ref_charsM(d), c, len);
   return d;
 }
@@ -88,7 +91,7 @@ static Obj data_new_from_path(Chars path) {
   fseek(f, 0, SEEK_END);
   Int len = ftell(f);
   if (!len) return blank.ret_val();
-  Obj d = data_new_empty(len);
+  Obj d = data_new_raw(len);
   fseek(f, 0, SEEK_SET);
   Uns items_read = fread(data_ref_charsM(d), size_Char, Uns(len), f);
   check(Int(items_read) == len,

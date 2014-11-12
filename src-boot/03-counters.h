@@ -21,8 +21,12 @@ C(Ptr_rc) \
 C(Int_rc) \
 C(Sym_rc) \
 C(Data_word_rc) \
-C(Ref_rc) \
-C(Ref_alloc) \
+C(Data_ref_rc) \
+C(Data_ref_alloc) \
+C(Env_rc) \
+C(Env_alloc) \
+C(Cmpd_rc) \
+C(Cmpd_alloc) \
 
 
 // index enum for the counters.

@@ -23,7 +23,7 @@ static Int cmpd_len(Obj c);
 static Bool is_true(Obj o) {
   switch (o.tag()) {
     case ot_ref: {
-      Obj t = ref_type(o);
+      Obj t = o.ref_type();
       if (t == t_Data) return o != blank;
       if (t == t_Env) return true;
       return !!cmpd_len(o);

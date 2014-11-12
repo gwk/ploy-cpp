@@ -23,12 +23,15 @@ static void cmpd_put(Obj c, Int i, Obj el);
 
 static Obj cmpd_new_raw(Obj type, Int len) {
   // owns type.
-  Obj c = ref_new(size_Cmpd + (size_Obj * len), type);
-  c.c->len = len;
+  counter_inc(ci_Cmpd_rc);
+  Obj o = Obj(raw_alloc(size_Cmpd + (size_Obj * len), ci_Cmpd_alloc));
+  o.h->type = type;
+  o.h->rc = (1<<1) + 1;
+  o.c->len = len;
 #if OPTION_MEM_ZERO
-  memset(cmpd_els(c), 0, Uns(size_Obj * len));
+  memset(cmpd_els(o), 0, Uns(size_Obj * len));
 #endif
-  return c;
+  return o;
 }
 
 
@@ -66,14 +69,14 @@ static Obj cmpd_new(Obj type, T el, Ts... rest) {
 
 
 static Int cmpd_len(Obj c) {
-  assert(ref_is_cmpd(c));
+  assert(c.ref_is_cmpd());
   assert(c.c->len >= 0);
   return c.c->len;
 }
 
 
 static Obj* cmpd_els(Obj c) {
-  assert(ref_is_cmpd(c));
+  assert(c.ref_is_cmpd());
   return reinterpret_cast<Obj*>(c.c + 1); // address past header.
 }
 
@@ -85,7 +88,7 @@ static Array cmpd_array(Obj c) {
 
 static Obj cmpd_el(Obj c, Int i) {
   // assumes the caller knows the size of the compound.
-  assert(ref_is_cmpd(c));
+  assert(c.ref_is_cmpd());
   return cmpd_array(c).el(i);
 }
 
@@ -96,7 +99,7 @@ static void cmpd_put(Obj c, Int i, Obj e) {
 
 
 static Obj cmpd_slice(Obj c, Int f, Int t) {
-  assert(ref_is_cmpd(c));
+  assert(c.ref_is_cmpd());
   Int l = cmpd_len(c);
   if (f < 0) f += l;
   if (t < 0) t += l;
@@ -106,7 +109,7 @@ static Obj cmpd_slice(Obj c, Int f, Int t) {
   if (ls == l) {
     return c; // no ret/rel necessary.
   }
-  Obj slice = cmpd_new_raw(ref_type(c).ret(), ls);
+  Obj slice = cmpd_new_raw(c.ref_type().ret(), ls);
   Obj* src = cmpd_els(c);
   Obj* dst = cmpd_els(slice);
   for_in(i, ls) {

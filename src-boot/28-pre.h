@@ -11,7 +11,7 @@ static Obj preprocess(Obj code) {
   if (!code.is_cmpd()) {
     return code.ret();
   }
-  if (ref_type(code) == t_Comment) {
+  if (code.ref_type() == t_Comment) {
     return obj0;
   }
   List dst;
@@ -21,7 +21,7 @@ static Obj preprocess(Obj code) {
       dst.append(o); // owns o.
     }
   }
-  Obj c = cmpd_new_M(ref_type(code).ret(), dst.array);
+  Obj c = cmpd_new_M(code.ref_type().ret(), dst.array);
   dst.array.dealloc();
   return track_src(code, c);
 }

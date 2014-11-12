@@ -592,7 +592,7 @@ static Step run_step_disp(Int d, Trace* t, Obj env, Obj code) {
     }
   }
   assert(ot == ot_ref);
-  Obj type = ref_type(code);
+  Obj type = code.ref_type();
   Int ti = type_index(type);
 #define RUN(type) case ti_##type: return run_##type(d, t, env, code)
   switch (ti) {
