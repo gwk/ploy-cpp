@@ -75,6 +75,10 @@ enum Type_index {
 #undef T
 
 // the basic types are prefixed with t_.
+#define T(t, ...) extern Obj t_##t;
+TYPE_LIST
+#undef T
+
 #define T(t, ...) Obj t_##t;
 TYPE_LIST
 #undef T

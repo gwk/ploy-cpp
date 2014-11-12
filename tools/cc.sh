@@ -61,9 +61,7 @@ $cmd_prefix clang++ \
 -Werror \
 -Weverything \
 -Wno-c++98-compat-pedantic \
--Wno-c99-extensions \
 -Wno-global-constructors \
--Wno-missing-variable-declarations \
 -Wno-unused-parameter \
 -Wno-gnu \
 -Wno-covered-switch-default \
