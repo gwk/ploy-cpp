@@ -48,6 +48,10 @@ if args.debug:
 def lex(string):
   return shlex.split(string)
 
+def jsq(words):
+  'join lists with spaces, quoting elements.'
+  return words if isinstance(words, str) else ' '.join(repr(w) for w in words)
+
 # known tools
 tools = {
   'compilers' : {
@@ -234,13 +238,22 @@ def run_case(case_path, case):
   else:
     _fs.make_dirs(test_dir)
   # setup test values.
-  errLLI(*('  {}: {}'.format(k, repr(v)) for k, v in case.items()))
+  errLLI(*('  {}: {}'.format(k, repr(v)) for k, v in sorted(case.items())))
+
+  test_env_vars = {    
+    'SRC_DIR' : src_dir,
+    'COMPILER' : jsq(case['compiler'] or '[NO-COMPILER]'),
+    'INTERPRETER' : jsq(case['interpreter'] or '[NO-INTERPRETER]'),
+  }
+  for k, v in tools['compilers'].items():
+    test_env_vars['COMPILER_{}'.format(k[1:])] = jsq(v or '[NO-COMPILER]')
+  for k, v in tools['interpreters'].items():
+    test_env_vars['INTERPRETER_{}'.format(k[1:])] = jsq(v or '[NO-INTERPRETER]')
+  errLI('test env vars:')
+  errLLI(*('  {}: {}'.format(k, repr(v)) for k, v, in sorted(test_env_vars.items())))
 
   def expand(string):
     'test environment variable substitution; uses string template $ syntax.'
-    test_env_vars = {    
-      'SRC_DIR' : src_dir,  # SRC is a special variable holding the test case source directory; TODO: rename?
-    }
     return _string.template(string, **test_env_vars) if string else string
 
   def expand_poly(val):

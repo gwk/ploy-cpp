@@ -1,4 +1,4 @@
 {
-  'cmd' : '_bld/ploy -e "0 1"',
+  'cmd' : '$INTERPRETER_ploy -e "0 1"',
   'out' : '1\n',
 }
