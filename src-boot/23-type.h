@@ -128,7 +128,7 @@ static Bool is_kind_arr(Obj kind) {
 }
 
 
-UNUSED_FN static Obj kind_el_type(Obj kind) {
+UNUSED static Obj kind_el_type(Obj kind) {
   assert(is_kind_arr(kind));
   return cmpd_el(kind, 0);
 }

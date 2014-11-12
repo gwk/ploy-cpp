@@ -17,7 +17,7 @@ static Int chars_len(Chars c) {
 
 
 // get the base name of the path argument.
-UNUSED_FN static Chars chars_path_base(Chars path) {
+UNUSED static Chars chars_path_base(Chars path) {
   Int offset = 0;
   Int i = 0;
   loop {

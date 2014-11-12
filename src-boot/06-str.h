@@ -27,9 +27,11 @@ struct Str {
 #define FMT_STR(str) I32((str).len), (str).chars
 
 
-static void assert_str_is_valid(Str s) {
-  assert((!s.chars && !s.len) || (s.chars && s.len > 0));
-}
+#if OPT
+#define assert_str_is_valid(s)
+#else
+#define assert_str_is_valid(s) assert((!s.chars && !s.len) || (s.chars && s.len > 0))
+#endif
 
 
 static Bool str_eq(Str a, Str b) {
@@ -39,7 +41,7 @@ static Bool str_eq(Str a, Str b) {
 }
 
 
-UNUSED_FN static Bool str_ends_with_char(Str s, Char c) {
+UNUSED static Bool str_ends_with_char(Str s, Char c) {
   assert_str_is_valid(s);
   return (s.len > 0 && s.chars[s.len - 1] == c);
 }

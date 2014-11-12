@@ -31,7 +31,7 @@ FMT1(Obj, 'o', write_repr(f, item));
 FMT1(Int, 'i', fprintf(f, "%li", item));
 FMT1(Uns, 'u', fprintf(f, "%lu", item));
 FMT1(Raw, 'p', fprintf(f, "%p", item));
-UNUSED_FN FMT1(Char, 'c', fprintf(f, "%c", item));
+UNUSED FMT1(Char, 'c', fprintf(f, "%c", item));
 FMT1(Chars, 's', fprintf(f, "%s", item));
 
 #undef FMT1

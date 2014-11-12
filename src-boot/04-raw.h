@@ -8,7 +8,7 @@
 #include "03-counters.h"
 
 
-static Raw raw_alloc(Int size, Counter_index ci) {
+static Raw raw_alloc(Int size, DBG Counter_index ci) {
   assert(size >= 0);
   // malloc does not return null for zero size;
   // we do so that a len/ptr pair with zero len always has a null ptr.
@@ -23,7 +23,7 @@ static Raw raw_alloc(Int size, Counter_index ci) {
 }
 
 
-static void raw_dealloc(Raw p, Counter_index ci) {
+static void raw_dealloc(Raw p, DBG Counter_index ci) {
   if (p) { // do not count null.
     counter_dec(ci);
     free(p);

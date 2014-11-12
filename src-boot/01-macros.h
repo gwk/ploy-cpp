@@ -109,10 +109,6 @@ for (Int i = (n) - 1, _end_##i = (m), _step_##i = (s); i >= _end_##i; i -= _step
 #define bit(x) (!!(x)) // 0 for falsy, 1 for truthy.
 #define XOR(a, b) (bit(a) ^ bit(b)) // logical exclusive-or.
 
-// suppress unused var warnings.
-#define STRING_FROM_TOKEN(x) #x
-#define UNUSED_VAR(x) _Pragma(STRING_FROM_TOKEN(unused(x)))
-
 // force struct alignment. ex: struct S { I32 a, b; } ALIGNED_TO_8;
 #define ALIGNED_TO_4 __attribute__((__aligned__(4)))
 #define ALIGNED_TO_8 __attribute__((__aligned__(8)))
@@ -123,8 +119,13 @@ for (Int i = (n) - 1, _end_##i = (m), _step_##i = (s); i >= _end_##i; i -= _step
 #define ALIGNED_TO_WORD ALIGNED_TO_8
 #endif
 
-// suppress compiler warnings. ex: UNUSED_FN f() {...}
-#define UNUSED_FN __attribute__((unused))
+// suppress unused warnings. ex: UNUSED f(UNUSED Int x) {...}
+#define UNUSED __attribute__((unused))
+
+// suppress unused var warnings; useful for vars defined within a macro expansion.
+#define STRING_FROM_TOKEN(x) #x
+#define UNUSED_VAR(x) _Pragma(STRING_FROM_TOKEN(unused(x)))
+
 
 // mark a function as having no side effects.
 #define PURE __attribute__((pure))
@@ -133,14 +134,8 @@ for (Int i = (n) - 1, _end_##i = (m), _step_##i = (s); i >= _end_##i; i -= _step
 // dereferencing pointer arguments is disallowed.
 #define PURE_VAL __attribute__((const))
 
-// clang c function overloading extension.
-#define OVERLOAD __attribute__((overloadable))
-
-
 #if OPT
-#define DBG_FN UNUSED_FN
-#define DBG_VAR(x) UNUSED_VAR(x)
+#define DBG UNUSED
 #else
-#define DBG_FN
-#define DBG_VAR(x)
+#define DBG
 #endif

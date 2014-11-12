@@ -41,7 +41,7 @@ static Step run_sym(Trace* t, Obj env, Obj code) {
 }
 
 
-static Step run_Quo(Int d, Trace* t, Obj env, Obj code) {
+static Step run_Quo(UNUSED Int d, Trace* t, Obj env, Obj code) {
   // owns env.
   exc_check(cmpd_len(code) == 1, "Quo requires 1 field; received %i", cmpd_len(code));
   return Step(env, cmpd_el(code, 0).ret());
@@ -68,7 +68,7 @@ static Step run_Do(Int d, Trace* t, Obj env, Obj code) {
 }
 
 
-static Step run_Scope(Int d, Trace* t, Obj env, Obj code) {
+static Step run_Scope(UNUSED Int d, Trace* t, Obj env, Obj code) {
   // owns env.
   exc_check(cmpd_len(code) == 1, "Scope requires 1 field; received %i", cmpd_len(code));
   Obj expr = cmpd_el(code, 0);
@@ -120,7 +120,7 @@ static Step run_If(Int d, Trace* t, Obj env, Obj code) {
 }
 
 
-static Step run_Fn(Int d, Trace* t, Obj env, Obj code) {
+static Step run_Fn(UNUSED Int d, Trace* t, Obj env, Obj code) {
   // owns env.
   exc_check(cmpd_len(code) == 5, "Fn requires 5 fields; received %i", cmpd_len(code));
   Obj is_native = cmpd_el(code, 0);
@@ -215,7 +215,8 @@ static Obj bind_par(Int d, Trace* t, Obj env, Obj call, Obj par, Mem vals, Int* 
 }
 
 
-static Obj bind_variad(Int d, Trace* t, Obj env, Obj call, Obj par, Mem vals, Int* i_vals) {
+static Obj bind_variad(UNUSED Int d, Trace* t, Obj env, Obj par, Mem vals,
+  Int* i_vals) {
   // owns env.
   UNPACK_PAR(par); UNUSED_VAR(par_el_type);
   exc_check(par_el_dflt == s_void, "variad parameter has non-void default argument: %o", par);
@@ -254,7 +255,7 @@ static Obj run_bind_vals(Int d, Trace* t, Obj env, Obj call, Obj variad, Obj par
     if (par == variad) {
       exc_check(!has_variad, "call: %o\nmultiple variad parameters", call);
       has_variad = true;
-      env = bind_variad(d, t, env, call, par, vals, &i_vals);
+      env = bind_variad(d, t, env, par, vals, &i_vals);
     } else {
       env = bind_par(d, t, env, call, par, vals, &i_vals);
     }
@@ -311,7 +312,7 @@ static Step run_call_func(Int d, Trace* t, Obj env, Obj call, Mem vals, Bool is_
 }
 
 
-static Step run_call_accessor(Int d, Trace* t, Obj env, Obj call, Mem vals) {
+static Step run_call_accessor(UNUSED Int d, Trace* t, Obj env, Obj call, Mem vals) {
   // owns env, vals.
   exc_check(vals.len == 3, "call: %o\naccessor requires 1 argument", call);
   exc_check(!vals.el(1).vld(), "call:%o\naccessee is a label", call);
@@ -347,7 +348,7 @@ static Step run_call_accessor(Int d, Trace* t, Obj env, Obj call, Mem vals) {
 }
 
 
-static Step run_call_mutator(Int d, Trace* t, Obj env, Obj call, Mem vals) {
+static Step run_call_mutator(UNUSED Int d, Trace* t, Obj env, Obj call, Mem vals) {
   // owns env, vals.
   exc_check(vals.len == 5, "call: %o\nmutator requires 2 arguments", call);
   exc_check(!vals.el(1).vld(), "call:%o\nmutatee is a label", call);
@@ -385,7 +386,7 @@ static Step run_call_mutator(Int d, Trace* t, Obj env, Obj call, Mem vals) {
 }
 
 
-static Step run_call_EXPAND(Int d, Trace* t, Obj env, Obj call, Mem vals) {
+static Step run_call_EXPAND(UNUSED Int d, Trace* t, Obj env, Obj call, Mem vals) {
   // owns env, vals.
   exc_check(vals.len == 3, "call: %o\n:EXPAND requires 1 argument", call);
   exc_check(!vals.el(1).vld(), "call: %o\nEXPAND expr is a label", call);
@@ -413,7 +414,7 @@ static Step run_call_RUN(Int d, Trace* t, Obj env, Obj call, Mem vals) {
 }
 
 
-static Step run_call_CONS(Int d, Trace* t, Obj env, Obj call, Mem vals) {
+static Step run_call_CONS(UNUSED Int d, Trace* t, Obj env, Obj call, Mem vals) {
   exc_check(vals.len >= 3, "call: %o\nCONS requires a type argument", call);
   exc_check(!vals.el(1).vld(), "call: %o\nCONS type argument is a label", call);
   Obj callee = vals.el_move(0);

@@ -40,10 +40,8 @@ enum Obj_tag {
 // and the width of Int and Sym were reduced by one bit.
 // it remains to be seen just how bad an idea this is for 32-bit applications;
 // it also remains to be seen if/how to do the rounding correctly!
-static const Uns ot_flt_bit = 1; // only flt words have low bit set.
-UNUSED_VAR(ot_flt_bit)
-static const Uns flt_body_mask = max_Uns - 1;
-UNUSED_VAR(flt_body_mask)
+UNUSED static const Uns ot_flt_bit = 1; // only flt words have low bit set.
+UNUSED static const Uns flt_body_mask = max_Uns - 1;
 
 // Sym indices are interleaved with word-sized Data values.
 // The low bit after the tag differentiates between Sym (0) and Data (1).

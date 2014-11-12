@@ -8,37 +8,37 @@
 #define GET_AB GET_A; GET_VAL(b)
 #define GET_ABC GET_AB; GET_VAL(c)
 
-static Obj host_identity(Trace* t, Obj env) {
+static Obj host_identity(UNUSED Trace* t, Obj env) {
   GET_A;
   return a.ret();
 }
 
 
-static Obj host_is(Trace* t, Obj env) {
+static Obj host_is(UNUSED Trace* t, Obj env) {
   GET_AB;
   return bool_new(a == b);
 }
 
 
-static Obj host_is_ref(Trace* t, Obj env) {
+static Obj host_is_ref(UNUSED Trace* t, Obj env) {
   GET_A;
   return bool_new(a.is_ref());
 }
 
 
-static Obj host_is_true(Trace* t, Obj env) {
+static Obj host_is_true(UNUSED Trace* t, Obj env) {
   GET_A;
   return bool_new(is_true(a));
 }
 
 
-static Obj host_not(Trace* t, Obj env) {
+static Obj host_not(UNUSED Trace* t, Obj env) {
   GET_A;
   return bool_new(!is_true(a));
 }
 
 
-static Obj host_id_hash(Trace* t, Obj env) {
+static Obj host_id_hash(UNUSED Trace* t, Obj env) {
   GET_A;
   return int_new(a.id_hash());
 }
@@ -240,14 +240,14 @@ static Obj host_raise(Trace* t, Obj env) {
 }
 
 
-static Obj host_type_of(Trace* t, Obj env) {
+static Obj host_type_of(UNUSED Trace* t, Obj env) {
   GET_A;
   Obj type = a.type();
   return type.ret();
 }
 
 
-static Obj host_globalize(Trace* t, Obj env) {
+static Obj host_globalize(UNUSED Trace* t, Obj env) {
   GET_A;
   global_push(a);
   return s_void.ret_val();

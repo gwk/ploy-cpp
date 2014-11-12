@@ -62,7 +62,6 @@ $cmd_prefix clang++ \
 -Weverything \
 -Wno-c++98-compat-pedantic \
 -Wno-global-constructors \
--Wno-unused-parameter \
 -Wno-gnu \
 -Wno-covered-switch-default \
 -Wno-class-varargs \

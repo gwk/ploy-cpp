@@ -4,7 +4,7 @@
 #include "29-expand.h"
 
 
-static Obj compile(Obj env, Obj code) {
+static Obj compile(UNUSED Obj env, Obj code) {
   // owns code.
   return code;
 }
