@@ -70,7 +70,7 @@ T(File, struct4, "name", t_Data, "ptr", t_Ptr, "is-readable", t_Bool, "is_writea
 #define T(t, ...) ti_##t,
 enum Type_index {
   TYPE_LIST
-  ti_END
+  ti_end
 };
 #undef T
 
@@ -85,10 +85,10 @@ TYPE_LIST
 
 
 // in order for type indices to work, the known types must be allocated in a single slab.
-static Type type_table[ti_END];
+static Type type_table[ti_end];
 
 
-#define assert_valid_type_index(ti) assert((ti) >= 0 && (ti) < ti_END)
+#define assert_valid_type_index(ti) assert((ti) >= 0 && (ti) < ti_end)
 
 static Obj type_for_index(Int ti) {
   assert_valid_type_index(ti);
@@ -338,13 +338,13 @@ static Obj type_init_values(Obj env) {
   #define T(t, k, ...) type_add(t_##t, #t, type_kind_init_##k(__VA_ARGS__));
   TYPE_LIST
   #undef T
-  for_in(i, ti_END) {
+  for_in(i, ti_end) {
     Obj o = type_for_index(i);
     env = env_bind(env, false, false, o.t->name.ret(), o.ret());
   }
   // validate type graph.
   Set s;
-  for_in(i, ti_END) {
+  for_in(i, ti_end) {
     Obj t = type_for_index(i);
     obj_validate(&s, t);
   }
@@ -356,7 +356,7 @@ static Obj type_init_values(Obj env) {
 #if OPTION_ALLOC_COUNT
 static void type_cleanup() {
   global_singletons.array.rel_dealloc();
-  for_in(i, ti_END) {
+  for_in(i, ti_end) {
     Obj o = type_for_index(i);
     o.t->kind.rel();
     o.t->kind = s_DISSOLVED; // not counted; further access is invalid.
@@ -364,7 +364,7 @@ static void type_cleanup() {
   // run final cleanup in reverse so that Type is cleaned up last;
   // the type slot is released first, and then rc_remove is called,
   // so that Type releases itself first and then verifies that its rc count is zero.
-  for_in_rev(i, ti_END) {
+  for_in_rev(i, ti_end) {
     Obj o = type_for_index(i);
     o.h->type.rel();
     o.t->name.rel_val(); // order does not matter as long as name is always a symbol.
