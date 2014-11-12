@@ -6,69 +6,75 @@
 #include "08-obj.h"
 
 
-struct Array {
-  Int len;
-  Obj* els; // TODO: union with Obj el to optimize the len == 1 case?
+class Array {
+  Int _len;
+  Obj* _els; // TODO: union with Obj el to optimize the len == 1 case?
 
-  Array(): len(0), els(null) {}
+public:
 
-  explicit Array(Int l): len(0), els(null) {
+  Array(): _len(0), _els(null) {}
+
+  explicit Array(Int l): _len(0), _els(null) {
     grow(l);
   }
 
-  Array(Int l, Obj* e): len(l), els(e) {}
+  Array(Int l, Obj* e): _len(l), _els(e) {}
 
+  Int len() const { return _len; }
+
+  Obj* els() const { return _els; }
+  
   Bool vld() {
-    if (els) {
-      return len >= 0;
+    if (_els) {
+      return _len >= 0;
     } else {
-      return !len;
+      return !_len;
     }
   }
 
   Bool operator==(Array a) {
-    return len == a.len && memcmp(els, a.els, Uns(len * size_Obj)) == 0;
+    return _len == a._len && memcmp(_els, a._els, Uns(_len * size_Obj)) == 0;
   }
 
-  Obj* begin() const { return els; }
+  Obj* begin() const { return _els; }
 
-  Obj* end() const { return els + len; }
+  Obj* end() const { return _els + _len; }
 
   Range<Obj*>to(Int to_index) const { return Range<Obj*>(begin(), begin() + to_index); }
 
   Obj el(Int i) {
     // return element i in array with no ownership changes.
-    assert(vld() && i >= 0 && i < len);
-    return els[i];
+    assert(vld() && i >= 0 && i < _len);
+    return _els[i];
   }
 
   Obj el_move(Int i) {
     // move element at i out of array.
     Obj e = el(i);
 #if OPTION_MEM_ZERO
-    els[i] = obj0;
+    _els[i] = obj0;
 #endif
     return e;
   }
 
   void put(Int i, Obj o) {
-    assert(vld() && i >= 0 && i < len);
+    assert(vld() && i >= 0 && i < _len);
 #if OPTION_MEM_ZERO
-    assert(!els[i].vld());
+    assert(!_els[i].vld());
 #endif
-    els[i] = o;
+    _els[i] = o;
   }
 
   void grow(Int new_len) {
-    assert(len < new_len);
-    els = static_cast<Obj*>(raw_realloc(els, new_len * size_Obj, ci_Array));
+    assert(_len < new_len);
+    _els = static_cast<Obj*>(raw_realloc(_els, new_len * size_Obj, ci_Array));
 #if OPTION_MEM_ZERO
-    if (len < new_len) {
-      // zero all new, uninitialized els to catch illegal derefernces.
-      memset(els + len, 0, Uns((new_len - len) * size_Obj));
+    if (_len < new_len) {
+      // zero all new, uninitialized els to catch illegal dereferences.
+      memset(_els + _len, 0, Uns((new_len - _len) * size_Obj));
     }
 #endif
-    len = new_len;
+    _len = new_len;
   }
 
   void rel_els(Bool dbg_clear=true) {
@@ -98,7 +104,7 @@ struct Array {
       }
 #endif
     }
-    raw_dealloc(els, ci_Array);
+    raw_dealloc(_els, ci_Array);
   }
 
   void rel_els_dealloc() {

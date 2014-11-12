@@ -37,10 +37,9 @@ static Obj cmpd_new_raw(Obj type, Int len) {
 
 static Obj cmpd_new_M(Obj type, Array a) {
   // owns type, elements of a.
-  Obj c = cmpd_new_raw(type, a.len);
-  Obj* els = cmpd_els(c);
-  for_in(i, a.len) {
-    els[i] = a.el_move(i);
+  Obj c = cmpd_new_raw(type, a.len());
+  for_in(i, a.len()) {
+    cmpd_put(c, i, a.el_move(i));
   }
   return c;
 }
@@ -121,15 +120,15 @@ static Obj cmpd_slice(Obj c, Int f, Int t) {
 
 static Obj cmpd_rel_fields(Obj c) {
   Array a = cmpd_array(c);
-  if (!a.len) return obj0; // return the termination sentinel for rc_rel tail loop.
-  Int last_i = a.len - 1;
+  if (!a.len()) return obj0; // return the termination sentinel for rc_rel tail loop.
+  Int last_i = a.len() - 1;
   for_mut(el, a.to(last_i)) {
     el.rel();
   }
 #if OPTION_TCO
-  return a.els[last_i];
+  return a.el(last_i);
 #else
-  a.els[last_i].rel();
+  a.el(last_i).rel();
   return obj0;
 #endif
 }

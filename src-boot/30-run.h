@@ -194,7 +194,7 @@ static Obj bind_par(Int d, Trace* t, Obj env, Obj call, Obj par, Array vals, Int
   UNPACK_PAR(par); UNUSED_VAR(par_el_type);
   Obj val;
   Int i = *i_vals;
-  if (i < vals.len) {
+  if (i < vals.len()) {
     Obj arg_name = vals.el_move(i++);
     Obj arg = vals.el_move(i++);
     *i_vals = i;
@@ -221,7 +221,7 @@ static Obj bind_variad(UNUSED Int d, Trace* t, Obj env, Obj par, Array vals,
   UNPACK_PAR(par); UNUSED_VAR(par_el_type);
   exc_check(par_el_dflt == s_void, "variad parameter has non-void default argument: %o", par);
   Int start = *i_vals;
-  Int end = vals.len;
+  Int end = vals.len();
   for_imns(i, start, end, 2) {
     if (vals.el(i).vld()) { // labeled arg; terminate variad.
       end = i;
@@ -248,7 +248,7 @@ static Obj run_bind_vals(Int d, Trace* t, Obj env, Obj call, Obj variad, Obj par
   Int i_vals = 1; // first name of the interleaved name/value pairs.
   Bool has_variad = false;
   for_in(i_pars, cmpd_len(pars)) {
-    assert(i_vals <= vals.len && i_vals % 2 == 1);
+    assert(i_vals <= vals.len() && i_vals % 2 == 1);
     Obj par = cmpd_el(pars, i_pars);
     exc_check(par.type() == t_Par, "call: %o\nparameter %i is malformed: %o",
       call, i_pars, par);
@@ -260,7 +260,7 @@ static Obj run_bind_vals(Int d, Trace* t, Obj env, Obj call, Obj variad, Obj par
       env = bind_par(d, t, env, call, par, vals, &i_vals);
     }
   }
-  exc_check(i_vals == vals.len, "call: %o\nreceived too many arguments", call);
+  exc_check(i_vals == vals.len(), "call: %o\nreceived too many arguments", call);
   return env;
 }
 
@@ -314,7 +314,7 @@ static Step run_call_func(Int d, Trace* t, Obj env, Obj call, Array vals, Bool i
 
 static Step run_call_accessor(UNUSED Int d, Trace* t, Obj env, Obj call, Array vals) {
   // owns env, vals.
-  exc_check(vals.len == 3, "call: %o\naccessor requires 1 argument", call);
+  exc_check(vals.len() == 3, "call: %o\naccessor requires 1 argument", call);
   exc_check(!vals.el(1).vld(), "call:%o\naccessee is a label", call);
   Obj accessor = vals.el_move(0);
   Obj accessee = vals.el_move(2);
@@ -350,7 +350,7 @@ static Step run_call_accessor(UNUSED Int d, Trace* t, Obj env, Obj call, Array v
 
 static Step run_call_mutator(UNUSED Int d, Trace* t, Obj env, Obj call, Array vals) {
   // owns env, vals.
-  exc_check(vals.len == 5, "call: %o\nmutator requires 2 arguments", call);
+  exc_check(vals.len() == 5, "call: %o\nmutator requires 2 arguments", call);
   exc_check(!vals.el(1).vld(), "call:%o\nmutatee is a label", call);
   exc_check(!vals.el(3).vld(), "call:%o\nmutator expr is a label", call);
   Obj mutator = vals.el_move(0);
@@ -371,8 +371,8 @@ static Step run_call_mutator(UNUSED Int d, Trace* t, Obj env, Obj call, Array va
     Obj field_name = cmpd_el(field, 0);
     if (field_name == name) {
       Array a = cmpd_array(mutatee);
-      a.els[i].rel();
-      a.els[i] = val;
+      a.el_move(i).rel();
+      a.put(i, val);
       mutator.rel();
       return Step(env, mutatee);
     }
@@ -388,7 +388,7 @@ static Step run_call_mutator(UNUSED Int d, Trace* t, Obj env, Obj call, Array va
 
 static Step run_call_EXPAND(UNUSED Int d, Trace* t, Obj env, Obj call, Array vals) {
   // owns env, vals.
-  exc_check(vals.len == 3, "call: %o\n:EXPAND requires 1 argument", call);
+  exc_check(vals.len() == 3, "call: %o\n:EXPAND requires 1 argument", call);
   exc_check(!vals.el(1).vld(), "call: %o\nEXPAND expr is a label", call);
   Obj callee = vals.el_move(0);
   Obj expr = vals.el_move(2);
@@ -401,7 +401,7 @@ static Step run_call_EXPAND(UNUSED Int d, Trace* t, Obj env, Obj call, Array val
 
 static Step run_call_RUN(Int d, Trace* t, Obj env, Obj call, Array vals) {
   // owns env, vals.
-  exc_check(vals.len == 3, "call: %o\n:RUN requires 1 argument", call);
+  exc_check(vals.len() == 3, "call: %o\n:RUN requires 1 argument", call);
   exc_check(!vals.el(1).vld(), "call: %o\nRUN expr is a label", call);
   Obj callee = vals.el_move(0);
   Obj expr = vals.el_move(2);
@@ -415,13 +415,13 @@ static Step run_call_RUN(Int d, Trace* t, Obj env, Obj call, Array vals) {
 
 
 static Step run_call_CONS(UNUSED Int d, Trace* t, Obj env, Obj call, Array vals) {
-  exc_check(vals.len >= 3, "call: %o\nCONS requires a type argument", call);
+  exc_check(vals.len() >= 3, "call: %o\nCONS requires a type argument", call);
   exc_check(!vals.el(1).vld(), "call: %o\nCONS type argument is a label", call);
   Obj callee = vals.el_move(0);
   callee.rel_val();
   Obj type = vals.el_move(2);
   Obj kind = type_kind(type);
-  Int len = (vals.len - 3) / 2;
+  Int len = (vals.len() - 3) / 2;
   Obj res = cmpd_new_raw(type, len);
   if (is_kind_struct(kind)) {
     Obj fields = kind_fields(kind);
@@ -461,7 +461,7 @@ static Step run_call_dispatcher(Int d, Trace* t, Obj env, Obj call, Array vals,
   Obj dispatcher) {
   // owns env, vals.
   Obj callee = vals.el(0).ret();
-  Int types_len = (vals.len - 1) / 2;
+  Int types_len = (vals.len() - 1) / 2;
   Obj types = cmpd_new_raw(t_Arr_Type.ret(), types_len);
   for_in(i, types_len) {
     Obj val = vals.el(i * 2 + 2);

@@ -17,7 +17,7 @@ struct List {
   }
 
   Bool vld() {
-    return _array.vld() && len >= 0 && len <= _array.len;
+    return _array.vld() && len >= 0 && len <= _array.len();
   }
 
   Obj* begin() const {
@@ -31,7 +31,7 @@ struct List {
   void grow_cap() {
     assert(vld());
     // minimum capacity is 2 given 8 byte words with 16 byte min malloc.
-    Int cap = (_array.len == 0) ? 2 : _array.len * 2;
+    Int cap = (_array.len() == 0) ? 2 : _array.len() * 2;
     _array.grow(cap);
   }
 
@@ -55,7 +55,7 @@ struct List {
   Int append(Obj o) {
     // semantics can be move (owns o) or borrow.
     assert(vld());
-    if (len == _array.len) {
+    if (len == _array.len()) {
       grow_cap();
     }
     Int i = len++;
@@ -74,7 +74,7 @@ struct List {
   }
 
   Array array() {
-    return Array(len, len ? _array.els : null);
+    return Array(len, len ? _array.els() : null);
   }
 
   void rel_els(Bool dbg_clear=true) {

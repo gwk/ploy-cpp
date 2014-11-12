@@ -539,7 +539,7 @@ static Obj parse_src(Dict& src_locs, Obj path, Obj src, CharsM* e) {
   Array a = parse_exprs(p, 0);
   Obj o;
   if (p.e) {
-    assert(a.len == 0 && a.els == null);
+    assert(!a.len());
     o = obj0;
   } else if (p.pos.off != p.s.len) {
     o = parse_error(p, "parsing terminated early");
