@@ -33,8 +33,8 @@ struct Set {
     assert(vld());
     Int len_act = 0;
     for_in(i, len_buckets) {
-      len_act += buckets[i].array.len;
-      buckets[i].array.dealloc(dbg_cleared);
+      len_act += buckets[i].len;
+      buckets[i].dealloc(dbg_cleared);
     }
     assert(len_act == len);
     raw_dealloc(buckets, ci_Set);
@@ -72,8 +72,8 @@ struct Set {
       // copy existing elements.
       for_in(i, len_buckets) {
         Hash_bucket src = buckets[i];
-        for_in(j, src.array.len) {
-          Obj el = src.array.el_move(j);
+        for_in(j, src.len) {
+          Obj el = src.el_move(j);
           Hash_bucket* dst = s1.bucket(el);
           dst->append(el);
         }
@@ -92,13 +92,16 @@ struct Set {
   void remove(Obj o) {
     assert(vld());
     Hash_bucket* b = bucket(o);
-    for_in(i, b->array.len) {
-      if (b->array.els[i] == o) {
+    for_in(i, b->len) {
+      if (b->el(i) == o) {
         assert(len > 0);
         len--;
-        // replace o with the last element. no-op if len == 1.
-        b->array.els[i] = b->array.els[b->array.len - 1];
-        b->array.len--;
+        b->el_move(i);
+        Int last_i = b->len - 1;
+        if (i < last_i) { // move last el into this position.
+          b->put(i, b->el_move(last_i));
+        }
+        b->len--;
         return;
       }
     }

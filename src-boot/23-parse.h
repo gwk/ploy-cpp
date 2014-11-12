@@ -133,10 +133,10 @@ static Array parse_exprs(Parser& p, Char term) {
     a.append(o);
   }
   if (p.e) {
-    a.array.rel_els_dealloc();
+    a.rel_els_dealloc();
     return Array();
   }
-  return a.array;
+  return a.array();
 }
 
 

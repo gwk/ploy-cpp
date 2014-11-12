@@ -104,9 +104,9 @@ int main(int argc, Chars argv[]) {
   env.rel();
   env_cleanup();
   // release but do not clear to facilitate debugging during type_cleanup.
-  global_sym_names.array.rel_els(false);
+  global_sym_names.rel_els(false);
   type_cleanup();
-  global_sym_names.array.dealloc(false);
+  global_sym_names.dealloc(false);
   counter_stats(should_log_stats);
 #endif
 

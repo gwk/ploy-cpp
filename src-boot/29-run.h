@@ -529,7 +529,7 @@ static Step run_Call(Int d, Trace* t, Obj env, Obj code) {
       vals.append(step.res.val);
     }
   }
-  return run_Call_disp(d, t, env, code, vals.array);
+  return run_Call_disp(d, t, env, code, vals.array());
 }
 
 

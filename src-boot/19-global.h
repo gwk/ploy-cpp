@@ -3,7 +3,7 @@
 
 #include "18-cmpd.h"
 
-// flat array of unit type, singleton interleaved pairs.
+
 static List globals;
 
 
@@ -14,6 +14,6 @@ static void global_push(Obj global) {
 
 #if OPTION_ALLOC_COUNT
 static void global_cleanup() {
-  globals.array.dissolve_els_dealloc();
+  globals.dissolve_els_dealloc();
 }
 #endif

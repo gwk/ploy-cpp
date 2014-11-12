@@ -21,7 +21,7 @@ static Obj preprocess(Obj code) {
       dst.append(o); // owns o.
     }
   }
-  Obj c = cmpd_new_M(code.ref_type().ret(), dst.array);
-  dst.array.dealloc();
+  Obj c = cmpd_new_M(code.ref_type().ret(), dst.array());
+  dst.dealloc();
   return track_src(code, c);
 }

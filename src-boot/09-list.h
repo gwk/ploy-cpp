@@ -7,48 +7,98 @@
 
 
 struct List {
-  Array array;
-  Int cap;
+  Array _array;
+  Int len;
 
-  List(): array(), cap(0) {}
+  List(): _array(), len(0) {}
 
-  explicit List(Int c): array(), cap(c) {
-    array.grow(cap);
+  explicit List(Int cap): _array(), len(0) {
+    _array.grow(cap);
   }
 
-  List(Array a, Int c): array(a), cap(c) {}
-
   Bool vld() {
-    return array.vld() && cap >= 0 && array.len <= cap;
+    return _array.vld() && len >= 0 && len <= _array.len;
   }
 
   void grow_cap() {
     assert(vld());
-    if (cap == 0) {
-      cap = 2; // minimum capacity for 8 byte words with 16 byte min malloc.
-    } else {
-      cap *= 2;
-    }
-    array.grow(cap);
+    // minimum capacity is 2 given 8 byte words with 16 byte min malloc.
+    Int cap = (_array.len == 0) ? 2 : _array.len * 2;
+    _array.grow(cap);
+  }
+
+  Obj el(Int i) {
+    // return element i in array with no ownership changes.
+    assert(vld() && i < len);
+    return _array.el(i);
+  }
+
+  Obj el_move(Int i) {
+    // move element at i out of array.
+    assert(vld() && i < len);
+    return _array.el_move(i);
+  }
+
+  void put(Int i, Obj o) {
+    assert(vld() && i < len);
+    _array.put(i, o);
   }
 
   Int append(Obj o) {
-    // semantics can be move (owns o) or borrow (must be cleared prior to dealloc).
+    // semantics can be move (owns o) or borrow.
     assert(vld());
-    if (array.len == cap) {
+    if (len == _array.len) {
       grow_cap();
     }
-    return array.append(o);
+    Int i = len++;
+    _array.put(i, o);
+    return i;
   }
 
   Bool contains(Obj r) {
     assert(vld());
-    it_array(it, array) {
+    it_array_to(it, _array, len) {
       if (it->u == r.u) {
         return true;
       }
     }
     return false;
+  }
+
+  Array array() {
+    return Array(len, len ? _array.els : null);
+  }
+
+  void rel_els(Bool dbg_clear=true) {
+    it_array_to(it, _array, len) {
+      it->rel();
+      if (OPTION_MEM_ZERO && dbg_clear) {
+        *it = obj0;
+      }
+    }
+  }
+
+  void dissolve_els(Bool dbg_clear=true) {
+    it_array_to(it, _array, len) {
+      it->dissolve();
+      if (OPTION_MEM_ZERO && dbg_clear) {
+        *it = obj0;
+      }
+    }
+  }
+
+  void dealloc(Bool dbg_cleared=true) {
+    _array.dealloc(dbg_cleared);
+  }
+
+  void rel_els_dealloc() {
+    rel_els(false);
+    dealloc(false);
+  }
+
+  void dissolve_els_dealloc() {
+    dissolve_els();
+    dealloc(false);
   }
 
 };

@@ -26,7 +26,7 @@ struct Dict {
   void rel_els() {
     assert(vld());
     for_in(i, len_buckets) {
-      buckets[i].array.rel_els();
+      buckets[i].rel_els();
     }
   }
 
@@ -34,8 +34,8 @@ struct Dict {
     assert(vld());
     Int len_act = 0;
     for_in(i, len_buckets) {
-      len_act += buckets[i].array.len / 2;
-      buckets[i].array.dealloc();
+      len_act += buckets[i].len / 2;
+      buckets[i].dealloc();
     }
     assert(len_act == len);
     raw_dealloc(buckets, ci_Dict);
@@ -53,9 +53,9 @@ struct Dict {
     assert(vld());
     if (!len) return obj0;
     Hash_bucket* b = bucket(k);
-    for_ins(i, b->array.len, 2) {
-      if (b->array.els[i] == k) {
-        return b->array.els[i + 1];
+    for_ins(i, b->len, 2) {
+      if (b->el(i) == k) {
+        return b->el(i + 1);
       }
     }
     return obj0;
@@ -84,9 +84,9 @@ struct Dict {
       // copy existing elements.
       for_in(i, len_buckets) {
         Hash_bucket src = buckets[i];
-        for_ins(j, src.array.len, 2) {
-          Obj ek = src.array.el_move(j);
-          Obj ev = src.array.el_move(j + 1);
+        for_ins(j, src.len, 2) {
+          Obj ek = src.el_move(j);
+          Obj ev = src.el_move(j + 1);
           Hash_bucket* dst = d1.bucket(ek);
           dst->append(ek);
           dst->append(ev);
@@ -107,14 +107,21 @@ struct Dict {
   void remove(Obj k) {
     Hash_bucket* b = bucket(k);
     assert(vld());
-    for_ins(i, b->array.len, 2) {
-      if (b->array.els[i].r == k.r) {
+    for_ins(ik, b->len, 2) {
+      if (b->el(ik).r == k.r) {
         assert(len > 0);
         len--;
         // replace k,v pair with the last pair. no-op if len == 1.
-        b->array.els[i] = b->array.els[b->array.len - 2]; // k.
-        b->array.els[i + 1] = b->array.els[b->array.len - 1]; // v.
-        b->array.len -= 2;
+        Int iv = ik + 1;
+        Int last_ik = b->len - 2;
+        Int last_iv = last_ik + 1;
+        b->el_move(ik);
+        b->el_move(iv);
+        if (ik < last_ik) { // move last pair into this position.
+          b->put(ik, b->el_move(last_ik));
+          b->put(iv, b->el_move(last_iv));
+        }
+        b->len -= 2;
         return;
       }
     }

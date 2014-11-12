@@ -28,12 +28,11 @@ struct Array {
 
   Array(): len(0), els(null) {}
 
-  Array(Int l, Obj* e): len(l), els(e) {}
-
   explicit Array(Int l): len(0), els(null) {
     grow(l);
-    len = l;
   }
+
+  Array(Int l, Obj* e): len(l), els(e) {}
 
   Bool vld() {
     if (els) {
@@ -74,20 +73,7 @@ struct Array {
     els[i] = o;
   }
 
-  Int append(Obj o) {
-    // semantics can be move (owns o) or borrow (must be cleared prior to dealloc).
-    Int i = len++;
-    // note: unlike put, the memory being overwritten may not have been previously zeroed,
-    // because until now it was outside of the array range.
-    // during debug it is often the malloc scribble value.
-    els[i] = o;
-    return i;
-  }
-
   void grow(Int new_len) {
-    // note: this function does not set len,
-    // because that reflects the number of elements used, not allocation size.
-    // TODO: change this to match ploy Arr and List?
     assert(len < new_len);
     els = static_cast<Obj*>(raw_realloc(els, new_len * size_Obj, ci_Array));
 #if OPTION_MEM_ZERO
@@ -96,6 +82,7 @@ struct Array {
       memset(els + len, 0, Uns((new_len - len) * size_Obj));
     }
 #endif
+    len = new_len;
   }
 
   void rel_els(Bool dbg_clear=true) {
