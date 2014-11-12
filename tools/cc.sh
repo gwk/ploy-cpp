@@ -64,7 +64,6 @@ $cmd_prefix clang++ \
 -Wno-global-constructors \
 -Wno-gnu \
 -Wno-covered-switch-default \
--Wno-class-varargs \
 -fstrict-aliasing \
 -ftrapv \
 -fno-cxx-exceptions \
