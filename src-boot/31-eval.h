@@ -1,7 +1,7 @@
 // Copyright 2014 George King.
 // Permission to use this file is granted in ploy/license.txt.
 
-#include "29-run.h"
+#include "30-run.h"
 
 
 static Step eval(Obj env, Obj code) {
@@ -28,14 +28,14 @@ static Step eval_array_expr(Obj env, Obj exprs) {
     return Step(env, s_void.ret_val());
   }
   Int last = a.len - 1;
-  it_array_to(it, a, last) {
-    if (*it == s_HALT) {
+  for_ref(el, a.to(last)) {
+    if (el == s_HALT) {
       return Step(env, s_HALT.ret_val());
     }
-    Step step = eval(env, *it);
+    Step step = eval(env, el);
     env = step.res.env;
     step.res.val.rel();
   }
-  Step step = eval(env, a.els[last]);
+  Step step = eval(env, a.el(last));
   return step;
 }

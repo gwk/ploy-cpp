@@ -1,7 +1,7 @@
 // Copyright 2014 George King.
 // Permission to use this file is granted in ploy/license.txt.
 
-#include "26-pre.h"
+#include "27-pre.h"
 
 
 static Bool cmpd_contains_unquote(Obj c) {
@@ -9,9 +9,8 @@ static Bool cmpd_contains_unquote(Obj c) {
   assert(c.ref_is_cmpd());
   if (c.type() == t_Unq) return true;
   Array a = cmpd_array(c);
-  it_array(it, a) {
-    Obj e = *it;
-    if (e.is_cmpd() && cmpd_contains_unquote(e)) return true;
+  for_val(el, a) {
+    if (el.is_cmpd() && cmpd_contains_unquote(el)) return true;
   }
   return false;
 }

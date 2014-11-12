@@ -3,23 +3,7 @@
 
 // fixed-length object array type.
 
-#include "07-obj.h"
-
-
-// iterate over array using pointer Obj pointer e, start index m, end index n.
-// note: c syntax requires that all declarations in the for initializer have the same type,
-// or pointer of that type.
-// this prevents us from declaring a tempory variable to hold the value of array,
-// and so we cannot help but evaluate array multiple times.
-#define it_array_from_to(it, array, from, to) \
-for (Obj *it = (array).els + (from), \
-*_end_##it = (array).els + (to); \
-it < _end_##it; \
-it++)
-
-#define it_array_to(it, array, to) it_array_from_to(it, array, 0, to)
-#define it_array_from(it, array, from) it_array_from_to(it, array, from, (array).len)
-#define it_array(it, array) it_array_from(it, array, 0)
+#include "08-obj.h"
 
 
 struct Array {
@@ -46,9 +30,11 @@ struct Array {
     return len == a.len && memcmp(els, a.els, Uns(len * size_Obj)) == 0;
   }
 
-  Obj* end() {
-    return els + len;
-  }
+  Obj* begin() const { return els; }
+
+  Obj* end() const { return els + len; }
+
+  Range<Obj*>to(Int to_index) const { return Range<Obj*>(begin(), begin() + to_index); }
 
   Obj el(Int i) {
     // return element i in array with no ownership changes.
@@ -86,19 +72,19 @@ struct Array {
   }
 
   void rel_els(Bool dbg_clear=true) {
-    it_array(it, *this) {
-      it->rel();
+    for_mut(el, *this) {
+      el.rel();
       if (OPTION_MEM_ZERO && dbg_clear) {
-        *it = obj0;
+        el = obj0;
       }
     }
   }
 
   void dissolve_els(Bool dbg_clear=true) {
-    it_array(it, *this) {
-      it->dissolve();
+    for_mut(el, *this) {
+      el.dissolve();
       if (OPTION_MEM_ZERO && dbg_clear) {
-        *it = obj0;
+        el = obj0;
       }
     }
   }
@@ -106,9 +92,11 @@ struct Array {
   void dealloc(Bool dbg_cleared=true) {
     // elements must have been previously moved or cleared.
     if (OPTION_MEM_ZERO && dbg_cleared) {
-      it_array(it, *this) {
-        assert(!it->vld());
+#if !OPT
+      for_val(el, *this) {
+        assert(!el.vld());
       }
+#endif
     }
     raw_dealloc(els, ci_Array);
   }

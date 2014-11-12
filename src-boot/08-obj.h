@@ -7,7 +7,7 @@
 // or else references to allocated memory, which have a zero tag
 // (the zero tag is guaranteed due to heap allocation alignment).
 
-#include "06-str.h"
+#include "07-str.h"
 
 
 // reference count increment functions check for overflow,

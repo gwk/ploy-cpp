@@ -3,6 +3,7 @@
 
 // imports and macros.
 
+
 #ifndef OPT
 #error "must define OPT to either 0 (debug) or 1 (optimized)"
 #endif
@@ -57,7 +58,7 @@
 // verbose logging to aid debugging.
 #define VERBOSE_PARSE 0
 
-// disallow use of NULL in favor of nullptr, which we shorten to null.
+// disallow use of NULL in favor of c++ nullptr, which we shorten to null.
 #undef NULL
 #define null nullptr
 
@@ -76,41 +77,6 @@
 #error "unknown architecture"
 #endif
 
-// looping macros
-
-#define loop while (1) // infinite loop
-
-// for Int 'i' from 'm' to 'n' in increments of 's'.
-#define for_imns(i, m, n, s) \
-for (Int i = (m), _end_##i = (n), _step_##i = (s); i < _end_##i; i += _step_##i)
-
-// produces the same values for i as above, but in reverse order.
-#define for_imns_rev(i, m, n, s) \
-for (Int i = (n) - 1, _end_##i = (m), _step_##i = (s); i >= _end_##i; i -= _step_##i)
-
-// equivalent to for_imns(i, m, n, 1).
-#define for_imn(i, m, n)      for_imns(i, (m), (n), 1)
-#define for_imn_rev(i, m, n)  for_imns_rev(i, (m), (n), 1)
-
-// equivalent to for_imns(i, 0, n, s).
-#define for_ins(i, n, s)      for_imns(i, 0, (n), (s))
-#define for_ins_rev(i, n, s)  for_imns_rev(i, 0, (n), (s))
-
-// equivalent to for_imns(i, 0, n, 1).
-#define for_in(i, n)      for_imns(i, 0, (n), 1)
-#define for_in_rev(i, n)  for_imns_rev(i, 0, (n), 1)
-
-// returns -1, 0, or 1 based on sign of input.
-#define sign(x) ({__typeof__(x) __x = (x); __x > 0 ? 1 : (__x < 0 ? -1 : 0); })
-
-// used to create switch statements that return strings for enum names.
-#define CASE_RET_TOK(t) case t: return #t
-#define CASE_RET_TOK_SPLIT(prefix, t) case prefix##t: return #t
-
-// boolean logic
-#define bit(x) (!!(x)) // 0 for falsy, 1 for truthy.
-#define XOR(a, b) (bit(a) ^ bit(b)) // logical exclusive-or.
-
 // force struct alignment. ex: struct S { I32 a, b; } ALIGNED_TO_8;
 #define ALIGNED_TO_4 __attribute__((__aligned__(4)))
 #define ALIGNED_TO_8 __attribute__((__aligned__(8)))
@@ -121,20 +87,19 @@ for (Int i = (n) - 1, _end_##i = (m), _step_##i = (s); i >= _end_##i; i -= _step
 #define ALIGNED_TO_WORD ALIGNED_TO_8
 #endif
 
+// mark a function as having no side effects.
+#define PURE __attribute__((pure))
+
+// const is like pure, but also guarantees no access to any values except the arguments;
+// dereferencing pointer arguments is disallowed.
+#define PURE_VAL __attribute__((const))
+
 // suppress unused warnings. ex: UNUSED f(UNUSED Int x) {...}
 #define UNUSED __attribute__((unused))
 
 // suppress unused var warnings; useful for vars defined within a macro expansion.
 #define STRING_FROM_TOKEN(x) #x
 #define UNUSED_VAR(x) _Pragma(STRING_FROM_TOKEN(unused(x)))
-
-
-// mark a function as having no side effects.
-#define PURE __attribute__((pure))
-
-// const is like pure, but also does not access any values except the arguments;
-// dereferencing pointer arguments is disallowed.
-#define PURE_VAL __attribute__((const))
 
 #if OPT
 #define DBG UNUSED

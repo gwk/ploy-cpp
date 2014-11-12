@@ -1,7 +1,7 @@
 // Copyright 2013 George King.
 // Permission to use this file is granted in ploy/license.txt.
 
-#include "17-env.h"
+#include "18-env.h"
 
 
 // iterate over a compound.
@@ -123,8 +123,8 @@ static Obj cmpd_rel_fields(Obj c) {
   Array a = cmpd_array(c);
   if (!a.len) return obj0; // return the termination sentinel for rc_rel tail loop.
   Int last_i = a.len - 1;
-  it_array_to(it, a, last_i) {
-    it->rel();
+  for_mut(el, a.to(last_i)) {
+    el.rel();
   }
 #if OPTION_TCO
   return a.els[last_i];

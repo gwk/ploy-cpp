@@ -5,7 +5,7 @@
 // for the sake of accurate counting, no other code should call calloc/malloc/realloc;
 // the only legitimate uses of free are to match local asprintf and vasprintf.
 
-#include "03-counters.h"
+#include "04-counters.h"
 
 
 static Raw raw_alloc(Int size, DBG Counter_index ci) {

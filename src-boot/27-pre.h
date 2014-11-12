@@ -4,7 +4,7 @@
 // preprocessing stage.
 // eliminates comment expressions from a code tree.
 
-#include "25-exc.h"
+#include "26-exc.h"
 
 
 static Obj preprocess(Obj code) {
@@ -15,8 +15,8 @@ static Obj preprocess(Obj code) {
     return obj0;
   }
   List dst;
-  it_array(it, cmpd_array(code)) {
-    Obj o = preprocess(*it);
+  for_val(el, cmpd_array(code)) {
+    Obj o = preprocess(el);
     if (o.vld()) {
       dst.append(o); // owns o.
     }

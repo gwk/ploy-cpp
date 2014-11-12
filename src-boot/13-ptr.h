@@ -3,7 +3,7 @@
 
 // ptr functions.
 
-#include "11-dict.h"
+#include "12-dict.h"
 
 
 static Obj ptr_new(Raw p) {

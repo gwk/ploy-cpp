@@ -5,7 +5,7 @@
 // By using a struct with an explicit length,
 // we can create substrings without copying the original.
 
-#include "05-chars.h"
+#include "06-chars.h"
 
 
 struct Str {

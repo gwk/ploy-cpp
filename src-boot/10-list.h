@@ -3,7 +3,7 @@
 
 // resizable Array type.
 
-#include "08-array.h"
+#include "09-array.h"
 
 
 struct List {
@@ -18,6 +18,14 @@ struct List {
 
   Bool vld() {
     return _array.vld() && len >= 0 && len <= _array.len;
+  }
+
+  Obj* begin() const {
+    return _array.begin();
+  }
+
+  Obj* end() const {
+    return _array.begin() + len;
   }
 
   void grow_cap() {
@@ -55,10 +63,10 @@ struct List {
     return i;
   }
 
-  Bool contains(Obj r) {
+  Bool contains(Obj o) {
     assert(vld());
-    it_array_to(it, _array, len) {
-      if (it->u == r.u) {
+    for_val(el, *this) {
+      if (el == o) {
         return true;
       }
     }
@@ -70,19 +78,19 @@ struct List {
   }
 
   void rel_els(Bool dbg_clear=true) {
-    it_array_to(it, _array, len) {
-      it->rel();
+    for_mut(el, *this) {
+      el.rel();
       if (OPTION_MEM_ZERO && dbg_clear) {
-        *it = obj0;
+        el = obj0;
       }
     }
   }
 
   void dissolve_els(Bool dbg_clear=true) {
-    it_array_to(it, _array, len) {
-      it->dissolve();
+    for_mut(el, *this) {
+      el.dissolve();
       if (OPTION_MEM_ZERO && dbg_clear) {
-        *it = obj0;
+        el = obj0;
       }
     }
   }
