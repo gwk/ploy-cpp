@@ -370,9 +370,9 @@ static Step run_call_mutator(UNUSED Int d, Trace* t, Obj env, Obj call, Array va
     Obj field = cmpd_el(fields, i);
     Obj field_name = cmpd_el(field, 0);
     if (field_name == name) {
-      Array m = cmpd_array(mutatee);
-      m.els[i].rel();
-      m.els[i] = val;
+      Array a = cmpd_array(mutatee);
+      a.els[i].rel();
+      a.els[i] = val;
       mutator.rel();
       return Step(env, mutatee);
     }

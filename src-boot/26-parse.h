@@ -424,47 +424,47 @@ static Bool parse_terminator(Parser& p, Char t) {
 
 #define P_CONSUME_TERMINATOR(t) \
 if (p.e || !parse_terminator(p, t)) { \
-  m.rel_dealloc(); \
+  a.rel_dealloc(); \
   return obj0; \
 }
 
 
 static Obj parse_Expand(Parser& p) {
   P_ADV(1, return parse_error(p, "unterminated expand"));
-  Array m = parse_exprs(p, 0);
+  Array a = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR('>');
-  Obj e = cmpd_new(t_Expand.ret(), cmpd_new_M(t_Arr_Expr.ret(), m));
-  m.dealloc();
+  Obj e = cmpd_new(t_Expand.ret(), cmpd_new_M(t_Arr_Expr.ret(), a));
+  a.dealloc();
   return e;
 }
 
 
 static Obj parse_Call(Parser& p) {
   P_ADV(1, return parse_error(p, "unterminated call"));
-  Array m = parse_exprs(p, 0);
+  Array a = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR(')');
-  Obj c = cmpd_new(t_Call.ret(), cmpd_new_M(t_Arr_Expr.ret(), m));
-  m.dealloc();
+  Obj c = cmpd_new(t_Call.ret(), cmpd_new_M(t_Arr_Expr.ret(), a));
+  a.dealloc();
   return c;
 }
 
 
 static Obj parse_struct(Parser& p) {
   P_ADV(1, return parse_error(p, "unterminated constructor"));
-  Array m = parse_exprs(p, 0);
+  Array a = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR('}');
-  Obj s = cmpd_new(t_Syn_struct.ret(), cmpd_new_M(t_Arr_Expr.ret(), m));
-  m.dealloc();
+  Obj s = cmpd_new(t_Syn_struct.ret(), cmpd_new_M(t_Arr_Expr.ret(), a));
+  a.dealloc();
   return s;
 }
 
 
 static Obj parse_seq(Parser& p) {
   P_ADV(1, return parse_error(p, "unterminated sequence"));
-  Array m = parse_exprs(p, 0);
+  Array a = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR(']');
-  Obj s = cmpd_new(t_Syn_seq.ret(), cmpd_new_M(t_Arr_Expr.ret(), m));
-  m.dealloc();
+  Obj s = cmpd_new(t_Syn_seq.ret(), cmpd_new_M(t_Arr_Expr.ret(), a));
+  a.dealloc();
   return s;
 }
 
@@ -536,17 +536,17 @@ static Obj parse_sub_expr(Parser& p) {
 static Obj parse_src(Dict& src_locs, Obj path, Obj src, CharsM* e) {
   // caller must free e.
   Parser p = Parser(&src_locs, path, src, data_str(src),Src_pos(0, 0, 0), null);
-  Array m = parse_exprs(p, 0);
+  Array a = parse_exprs(p, 0);
   Obj o;
   if (p.e) {
-    assert(m.len == 0 && m.els == null);
+    assert(a.len == 0 && a.els == null);
     o = obj0;
   } else if (p.pos.off != p.s.len) {
     o = parse_error(p, "parsing terminated early");
-    m.rel_dealloc();
+    a.rel_dealloc();
   } else {
-    o = cmpd_new_M(t_Arr_Expr.ret(), m);
-    m.dealloc();
+    o = cmpd_new_M(t_Arr_Expr.ret(), a);
+    a.dealloc();
   }
   *e = p.e;
   return o;

@@ -8,8 +8,8 @@ static Bool cmpd_contains_unquote(Obj c) {
   // TODO: follow the same depth rule as below.
   assert(ref_is_cmpd(c));
   if (c.type() == t_Unq) return true;
-  Array m = cmpd_array(c);
-  it_array(it, m) {
+  Array a = cmpd_array(c);
+  it_array(it, a) {
     Obj e = *it;
     if (e.is_cmpd() && cmpd_contains_unquote(e)) return true;
   }

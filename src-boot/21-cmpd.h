@@ -32,12 +32,12 @@ static Obj cmpd_new_raw(Obj type, Int len) {
 }
 
 
-static Obj cmpd_new_M(Obj type, Array m) {
-  // owns type, elements of m.
-  Obj c = cmpd_new_raw(type, m.len);
+static Obj cmpd_new_M(Obj type, Array a) {
+  // owns type, elements of a.
+  Obj c = cmpd_new_raw(type, a.len);
   Obj* els = cmpd_els(c);
-  for_in(i, m.len) {
-    els[i] = m.el_move(i);
+  for_in(i, a.len) {
+    els[i] = a.el_move(i);
   }
   return c;
 }
@@ -117,16 +117,16 @@ static Obj cmpd_slice(Obj c, Int f, Int t) {
 
 
 static Obj cmpd_rel_fields(Obj c) {
-  Array m = cmpd_array(c);
-  if (!m.len) return obj0; // return the termination sentinel for rc_rel tail loop.
-  Int last_i = m.len - 1;
-  it_array_to(it, m, last_i) {
+  Array a = cmpd_array(c);
+  if (!a.len) return obj0; // return the termination sentinel for rc_rel tail loop.
+  Int last_i = a.len - 1;
+  it_array_to(it, a, last_i) {
     it->rel();
   }
 #if OPTION_TCO
-  return m.els[last_i];
+  return a.els[last_i];
 #else
-  m.els[last_i].rel();
+  a.els[last_i].rel();
   return obj0;
 #endif
 }

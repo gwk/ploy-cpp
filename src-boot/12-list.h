@@ -16,7 +16,7 @@ struct List {
     array.grow(cap);
   }
 
-  List(Array m, Int c): array(m), cap(c) {}
+  List(Array a, Int c): array(a), cap(c) {}
 
   Bool vld() {
     return array.vld() && cap >= 0 && array.len <= cap;

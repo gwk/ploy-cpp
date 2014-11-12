@@ -43,8 +43,8 @@ struct Array {
     }
   }
 
-  Bool operator==(Array m) {
-    return len == m.len && memcmp(els, m.els, Uns(len * size_Obj)) == 0;
+  Bool operator==(Array a) {
+    return len == a.len && memcmp(els, a.els, Uns(len * size_Obj)) == 0;
   }
 
   Obj* end() {
@@ -52,13 +52,13 @@ struct Array {
   }
 
   Obj el(Int i) {
-    // return element i in m with no ownership changes.
+    // return element i in array with no ownership changes.
     assert(vld() && i >= 0 && i < len);
     return els[i];
   }
 
   Obj el_move(Int i) {
-    // move element at i out of m.
+    // move element at i out of array.
     Obj e = el(i);
 #if OPTION_MEM_ZERO
     els[i] = obj0;
@@ -85,9 +85,9 @@ struct Array {
   }
 
   void grow(Int new_len) {
-    // note: this function does not set m->len,
+    // note: this function does not set len,
     // because that reflects the number of elements used, not allocation size.
-    // TODO: change this to match ploy Arr and List.
+    // TODO: change this to match ploy Arr and List?
     assert(len < new_len);
     els = static_cast<Obj*>(raw_realloc(els, new_len * size_Obj, ci_Array));
 #if OPTION_MEM_ZERO
