@@ -193,7 +193,7 @@ static Obj parse_Int(Parser& p, Int sign) {
   U64 u = parse_U64(p);
   if (p.e) return obj0;
   parse_check(u <= max_Int, "signed number literal is too large");
-  return int_new((I64)u * sign);
+  return int_new(I64(u) * sign);
 }
 
 

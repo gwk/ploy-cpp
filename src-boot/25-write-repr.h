@@ -6,7 +6,7 @@
 
 static void write_data(CFile f, Obj d) {
   assert(ref_is_data(d));
-  fwrite(data_chars(d), 1, cast(Uns, data_len(d)), f);
+  fwrite(data_chars(d), 1, Uns(data_len(d)), f);
 }
 
 

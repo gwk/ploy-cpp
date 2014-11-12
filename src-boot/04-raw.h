@@ -14,7 +14,7 @@ static Raw raw_alloc(Int size, Counter_index ci) {
   // we do so that a len/ptr pair with zero len always has a null ptr.
   if (!size) return null;
   counter_inc(ci); // do not count null.
-  Raw p = malloc(cast(Uns, size));
+  Raw p = malloc(Uns(size));
   if (!p) {
     fprintf(stderr, "raw_alloc failed; size: %ld", size);
     fail();
@@ -37,7 +37,7 @@ static Raw raw_realloc(Raw p, Int size, Counter_index ci) {
     return raw_alloc(size, ci);
   }
   if (size) {
-    Raw r = realloc(p, cast(Uns, size));
+    Raw r = realloc(p, Uns(size));
     if (!r) {
       fprintf(stderr, "raw_realloc failed; size: %ld", size);
       fail();

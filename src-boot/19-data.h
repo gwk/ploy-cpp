@@ -12,7 +12,7 @@ DEF_SIZE(Data);
 
 
 // zero length data word.
-const Obj blank = Obj((Uns)(ot_sym | data_word_bit));
+const Obj blank = Obj(Uns(ot_sym | data_word_bit));
 
 
 static Int data_ref_len(Obj d) {
@@ -30,13 +30,13 @@ static Int data_len(Obj d) {
 
 static Chars data_ref_chars(Obj d) {
   assert(ref_is_data(d));
-  return cast(Chars, d.d + 1); // address past data header.
+  return reinterpret_cast<Chars>(d.d + 1); // address past data header.
 }
 
 
 static CharsM data_ref_charsM(Obj d) {
   assert(ref_is_data(d));
-  return cast(CharsM, d.d + 1); // address past data header.
+  return reinterpret_cast<CharsM>(d.d + 1); // address past data header.
 }
 
 
@@ -54,7 +54,7 @@ static Str data_str(Obj d) {
 static Bool data_ref_iso(Obj a, Obj b) {
   Int len = data_ref_len(a);
   return len == data_ref_len(b)
-    && !memcmp(data_ref_chars(a), data_ref_chars(b), cast(Uns, len));
+    && !memcmp(data_ref_chars(a), data_ref_chars(b), Uns(len));
 }
 
 
@@ -68,7 +68,7 @@ static Obj data_new_empty(Int len) {
 static Obj data_new_from_str(Str s) {
   if (!s.len) return blank.ret_val();
   Obj d = data_new_empty(s.len);
-  memcpy(data_ref_charsM(d), s.chars, cast(Uns, s.len));
+  memcpy(data_ref_charsM(d), s.chars, Uns(s.len));
   return d;
 }
 
@@ -76,7 +76,7 @@ static Obj data_new_from_str(Str s) {
 static Obj data_new_from_chars(Chars c) {
   Uns len = strnlen(c, max_Int);
   check(len <= max_Int, "data_new_from_chars: string exceeded max length");
-  Obj d = data_new_empty(cast(Int, len));
+  Obj d = data_new_empty(Int(len));
   memcpy(data_ref_charsM(d), c, len);
   return d;
 }
@@ -90,8 +90,8 @@ static Obj data_new_from_path(Chars path) {
   if (!len) return blank.ret_val();
   Obj d = data_new_empty(len);
   fseek(f, 0, SEEK_SET);
-  Uns items_read = fread(data_ref_charsM(d), size_Char, cast(Uns, len), f);
-  check(cast(Int, items_read) == len,
+  Uns items_read = fread(data_ref_charsM(d), size_Char, Uns(len), f);
+  check(Int(items_read) == len,
         "read failed; expected len: %i; actual: %u; path: %s", len, items_read, path);
   fclose(f);
   return d;

@@ -105,7 +105,7 @@ union Obj {
    
   Obj_tag tag() const {
     assert(vld());
-    return cast(Obj_tag, u & obj_tag_mask);
+    return Obj_tag(u & obj_tag_mask);
   }
 
   Bool is_val() const {
@@ -173,10 +173,10 @@ union Obj {
 
   Int id_hash() const {
     switch (tag()) {
-      case ot_ref: return cast(Int, u >> width_min_alloc);
-      case ot_ptr: return cast(Int, u >> width_min_alloc);
-      case ot_int: return cast(Int, u >> width_obj_tag);
-      case ot_sym: return cast(Int, u >> width_sym_tags);
+      case ot_ref: return Int(u >> width_min_alloc);
+      case ot_ptr: return Int(u >> width_min_alloc);
+      case ot_int: return Int(u >> width_obj_tag);
+      case ot_sym: return Int(u >> width_sym_tags);
     }
   }
 

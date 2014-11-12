@@ -303,7 +303,7 @@ static Step run_call_func(Int d, Trace* t, Obj env, Obj call, Mem vals, Bool is_
 #endif
   } else { // host function.
     exc_check(body.is_ptr(), "host func: %o\nbody is not a Ptr: %o", func, body);
-    Func_host_ptr f_ptr = cast(Func_host_ptr, ptr_val(body));
+    Func_host_ptr f_ptr = Func_host_ptr(ptr_val(body));
     Obj res = f_ptr(t, callee_env);
     callee_env.rel();
     return Step(env, res); // NO TCO.
@@ -535,7 +535,7 @@ static Step run_Call(Int d, Trace* t, Obj env, Obj code) {
 static Step run_Call_disp(Int d, Trace* t, Obj env, Obj code, Mem vals) {
   Obj callee = vals.el(0);
   Obj type = callee.type();
-  Int ti = type_index(type); // Int type avoids incomplete enum switch error.
+  Int ti = type_index(type);
   switch (ti) {
     case ti_Func:     return run_call_func(d, t, env, code, vals, true);
     case ti_Accessor: return run_call_accessor(d, t, env, code, vals);
@@ -592,7 +592,7 @@ static Step run_step_disp(Int d, Trace* t, Obj env, Obj code) {
   }
   assert(ot == ot_ref);
   Obj type = ref_type(code);
-  Int ti = type_index(type); // Int type avoids incomplete enum switch error.
+  Int ti = type_index(type);
 #define RUN(type) case ti_##type: return run_##type(d, t, env, code)
   switch (ti) {
     case ti_Data:

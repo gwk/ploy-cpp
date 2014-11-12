@@ -12,7 +12,7 @@ static const Int sym_index_end = 1L << (size_Int * 8 - width_sym_tags);
 static List global_sym_names;
 
 
-#define _sym_with_index(index) Obj((Uns)((cast(Uns, index) << width_sym_tags) | ot_sym))
+#define _sym_with_index(index) Obj(Uns((Uns(index) << width_sym_tags) | ot_sym))
 
 static Obj sym_with_index(Int i) {
   check(i < sym_index_end, "Sym index is too large: %lx", i);
@@ -58,7 +58,7 @@ static Obj sym_new_from_chars(Chars c) {
 static Obj sym_new_from_c(Chars c) {
   // create a symbol after converting underscores to dashes.
   Int len = chars_len(c);
-  CharsM chars = (CharsM)raw_alloc(len + 1, ci_Chars);
+  CharsM chars = CharsM(raw_alloc(len + 1, ci_Chars));
   memcpy(chars, c, size_t(len + 1));
   for_in(i, len) {
     if (chars[i] == '_') {

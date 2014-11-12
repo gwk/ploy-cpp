@@ -101,9 +101,6 @@ for (Int i = (n) - 1, _end_##i = (m), _step_##i = (s); i >= _end_##i; i -= _step
 // returns -1, 0, or 1 based on sign of input.
 #define sign(x) ({__typeof__(x) __x = (x); __x > 0 ? 1 : (__x < 0 ? -1 : 0); })
 
-// use the cast macro to make all casts easily searchable for audits.
-#define cast(t, ...) (t)(__VA_ARGS__)
-
 // used to create switch statements that return strings for enum names.
 #define CASE_RET_TOK(t) case t: return #t
 #define CASE_RET_TOK_SPLIT(prefix, t) case prefix##t: return #t

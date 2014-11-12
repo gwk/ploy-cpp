@@ -12,7 +12,7 @@ static Bool chars_eq(Chars a, Chars b) {
 
 
 static Int chars_len(Chars c) {
-  return (Int)strlen(c);
+  return Int(strlen(c));
 }
 
 
@@ -31,7 +31,7 @@ UNUSED_FN static Chars chars_path_base(Chars path) {
 
 static Chars char_repr(Char c) {
   static Char reprs[256][8] = {};
-  CharsM r = reprs[cast(Int, c)];
+  CharsM r = reprs[Int(c)];
   if (*r) return r;
   switch (c) {
     case '\a': strcpy(r, "\\a");   break; // bell - BEL
@@ -62,7 +62,7 @@ static void chars_dealloc(CharsM c) {
 
 
 static CharsM chars_alloc(Int len) {
-  return cast(CharsM, raw_alloc(len, ci_Chars));
+  return CharsM(raw_alloc(len, ci_Chars));
 }
 
 
@@ -72,7 +72,7 @@ static Int chars_append(CharsM* p, Int* cap, Int len, Char c) {
   if (len == *cap) {
     assert(*cap > 0);
     *cap *= 2;
-    *p = cast(CharsM, raw_realloc(*p, *cap, ci_Chars));
+    *p = CharsM(raw_realloc(*p, *cap, ci_Chars));
   }
   CharsM chars = *p;
   chars[len] = c;

@@ -44,7 +44,7 @@ struct Mem {
   }
 
   Bool operator==(Mem m) {
-    return len == m.len && memcmp(els, m.els, cast(Uns, len * size_Obj)) == 0;
+    return len == m.len && memcmp(els, m.els, Uns(len * size_Obj)) == 0;
   }
 
   Obj* end() {
@@ -89,11 +89,11 @@ struct Mem {
     // because that reflects the number of elements used, not allocation size.
     // TODO: change this to match ploy Arr and List.
     assert(len < new_len);
-    els = cast(Obj*, raw_realloc(els, new_len * size_Obj, ci_Mem));
+    els = static_cast<Obj*>(raw_realloc(els, new_len * size_Obj, ci_Mem));
 #if OPTION_MEM_ZERO
     if (len < new_len) {
       // zero all new, uninitialized els to catch illegal derefernces.
-      memset(els + len, 0, cast(Uns, (new_len - len) * size_Obj));
+      memset(els + len, 0, Uns((new_len - len) * size_Obj));
     }
 #endif
   }

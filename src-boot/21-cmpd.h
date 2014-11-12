@@ -26,7 +26,7 @@ static Obj cmpd_new_raw(Obj type, Int len) {
   Obj c = ref_new(size_Cmpd + (size_Obj * len), type);
   c.c->len = len;
 #if OPTION_MEM_ZERO
-  memset(cmpd_els(c), 0, cast(Uns, (size_Obj * len)));
+  memset(cmpd_els(c), 0, Uns(size_Obj * len));
 #endif
   return c;
 }
@@ -74,7 +74,7 @@ static Int cmpd_len(Obj c) {
 
 static Obj* cmpd_els(Obj c) {
   assert(ref_is_cmpd(c));
-  return cast(Obj*, c.c + 1); // address past header.
+  return reinterpret_cast<Obj*>(c.c + 1); // address past header.
 }
 
 

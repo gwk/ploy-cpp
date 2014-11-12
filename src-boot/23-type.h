@@ -86,15 +86,16 @@ static Type type_table[ti_END];
 
 #define assert_valid_type_index(ti) assert((ti) >= 0 && (ti) < ti_END)
 
-static Obj type_for_index(Type_index ti) {
+static Obj type_for_index(Int ti) {
   assert_valid_type_index(ti);
   return Obj(type_table + ti);
 }
 
 
 static Int type_index(Obj t) {
+  // note: it is ok to return an invalid type index, to default in various switch dispatchers.
   Int ti = t.t - type_table;
-  return cast(Type_index, ti);
+  return Type_index(ti);
 }
 
 
@@ -334,13 +335,13 @@ static Obj type_init_values(Obj env) {
   TYPE_LIST
   #undef T
   for_in(i, ti_END) {
-    Obj o = type_for_index((Type_index)i);
+    Obj o = type_for_index(i);
     env = env_bind(env, false, false, o.t->name.ret(), o.ret());
   }
   // validate type graph.
   Set s;
   for_in(i, ti_END) {
-    Obj t = type_for_index((Type_index)i);
+    Obj t = type_for_index(i);
     obj_validate(&s, t);
   }
   s.dealloc(false);
@@ -352,7 +353,7 @@ static Obj type_init_values(Obj env) {
 static void type_cleanup() {
   global_singletons.mem.rel_dealloc();
   for_in(i, ti_END) {
-    Obj o = type_for_index(cast(Type_index, i));
+    Obj o = type_for_index(i);
     o.t->kind.rel();
     o.t->kind = s_DISSOLVED; // not counted; further access is invalid.
   }
@@ -360,7 +361,7 @@ static void type_cleanup() {
   // the type slot is released first, and then rc_remove is called,
   // so that Type releases itself first and then verifies that its rc count is zero.
   for_in_rev(i, ti_END) {
-    Obj o = type_for_index(cast(Type_index, i));
+    Obj o = type_for_index(i);
     o.h->type.rel();
     o.t->name.rel_val(); // order does not matter as long as name is always a symbol.
     check(o.h->rc == (1<<1) + 1, "type_cleanup: unexpected rc: %u: %o", o.h->rc, o);

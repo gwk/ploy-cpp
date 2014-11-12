@@ -62,7 +62,6 @@ $cmd_prefix clang++ \
 -Weverything \
 -Wno-c++98-compat-pedantic \
 -Wno-c99-extensions \
--Wno-old-style-cast \
 -Wno-global-constructors \
 -Wno-missing-variable-declarations \
 -Wno-unused-parameter \

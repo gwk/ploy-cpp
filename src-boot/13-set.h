@@ -65,14 +65,14 @@ struct Set {
     if (len == 0) {
       len_buckets = min_table_len_buckets;
       Int size = len_buckets * size_Hash_bucket;
-      buckets = cast(Hash_bucket*, raw_alloc(size, ci_Set));
-      memset(buckets, 0, cast(Uns, size));
+      buckets = static_cast<Hash_bucket*>(raw_alloc(size, ci_Set));
+      memset(buckets, 0, Uns(size));
     } else if (len + 1 == len_buckets) { // load factor == 1.0.
       // TODO: assess resize criteria.
       Int s1_len_buckets = len_buckets * 2;
       Int size = s1_len_buckets * size_Hash_bucket;
-      Set s1 = Set(len, s1_len_buckets, cast(Hash_bucket*, raw_alloc(size, ci_Set)));
-      memset(s1.buckets, 0, cast(Uns, size));
+      Set s1 = Set(len, s1_len_buckets, static_cast<Hash_bucket*>(raw_alloc(size, ci_Set)));
+      memset(s1.buckets, 0, Uns(size));
       // copy existing elements.
       for_in(i, len_buckets) {
         Hash_bucket src = buckets[i];

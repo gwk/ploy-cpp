@@ -24,7 +24,7 @@ struct Str {
 #define str0 Str(0, null)
 
 // for use with "%.*s" formatter.
-#define FMT_STR(str) cast(I32, (str).len), (str).chars
+#define FMT_STR(str) I32((str).len), (str).chars
 
 
 static void assert_str_is_valid(Str s) {
@@ -35,7 +35,7 @@ static void assert_str_is_valid(Str s) {
 static Bool str_eq(Str a, Str b) {
   assert_str_is_valid(a);
   assert_str_is_valid(b);
-  return a.len == b.len && memcmp(a.chars, b.chars, cast(Uns, a.len)) == 0;
+  return a.len == b.len && memcmp(a.chars, b.chars, Uns(a.len)) == 0;
 }
 
 
