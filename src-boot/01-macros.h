@@ -139,3 +139,6 @@ for (Int i = (n) - 1, _end_##i = (m), _step_##i = (s); i >= _end_##i; i -= _step
 #else
 #define DBG
 #endif
+
+// no difference in 'extra' assertions for now, but allow annotating them as such.
+#define assert_extra(condition) assert(condition)
