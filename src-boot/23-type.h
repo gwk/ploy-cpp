@@ -146,9 +146,9 @@ static List global_singletons;
 
 static Obj type_unit(Obj type) {
   // TODO: improve performance by using a hash table?
-  for_ins(i, global_singletons.mem.len, 2) {
-    if (global_singletons.mem.els[i] == type) {
-      return global_singletons.mem.els[i + 1].ret();
+  for_ins(i, global_singletons.array.len, 2) {
+    if (global_singletons.array.els[i] == type) {
+      return global_singletons.array.els[i + 1].ret();
     }
   }
   Obj s = cmpd_new_raw(type.ret(), 0);
@@ -334,7 +334,7 @@ static void obj_validate(Set* s, Obj o) {
 
 static Obj type_init_values(Obj env) {
   // this must be called after sym_init, because this adds symbols for the core types.
-  assert(global_sym_names.mem.len);
+  assert(global_sym_names.array.len);
   #define T(t, k, ...) type_add(t_##t, #t, type_kind_init_##k(__VA_ARGS__));
   TYPE_LIST
   #undef T
@@ -355,7 +355,7 @@ static Obj type_init_values(Obj env) {
 
 #if OPTION_ALLOC_COUNT
 static void type_cleanup() {
-  global_singletons.mem.rel_dealloc();
+  global_singletons.array.rel_dealloc();
   for_in(i, ti_END) {
     Obj o = type_for_index(i);
     o.t->kind.rel();

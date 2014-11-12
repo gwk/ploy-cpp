@@ -119,8 +119,8 @@ static Bool parser_has_next_expr(Parser& p) {
 
 static Obj parse_expr(Parser& p);
 
-static Mem parse_exprs(Parser& p, Char term) {
-  // caller must call mem.rel_dealloc or mem.dealloc on returned Mem.
+static Array parse_exprs(Parser& p, Char term) {
+  // caller must call array.rel_dealloc or array.dealloc on returned Array.
   // term is a the expected terminator character (e.g. closing paren).
   List a;
   while (parser_has_next_expr(p)) {
@@ -133,10 +133,10 @@ static Mem parse_exprs(Parser& p, Char term) {
     a.append(o);
   }
   if (p.e) {
-    a.mem.rel_dealloc();
-    return Mem();
+    a.array.rel_dealloc();
+    return Array();
   }
-  return a.mem;
+  return a.array;
 }
 
 
@@ -431,7 +431,7 @@ if (p.e || !parse_terminator(p, t)) { \
 
 static Obj parse_Expand(Parser& p) {
   P_ADV(1, return parse_error(p, "unterminated expand"));
-  Mem m = parse_exprs(p, 0);
+  Array m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR('>');
   Obj e = cmpd_new(t_Expand.ret(), cmpd_new_M(t_Arr_Expr.ret(), m));
   m.dealloc();
@@ -441,7 +441,7 @@ static Obj parse_Expand(Parser& p) {
 
 static Obj parse_Call(Parser& p) {
   P_ADV(1, return parse_error(p, "unterminated call"));
-  Mem m = parse_exprs(p, 0);
+  Array m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR(')');
   Obj c = cmpd_new(t_Call.ret(), cmpd_new_M(t_Arr_Expr.ret(), m));
   m.dealloc();
@@ -451,7 +451,7 @@ static Obj parse_Call(Parser& p) {
 
 static Obj parse_struct(Parser& p) {
   P_ADV(1, return parse_error(p, "unterminated constructor"));
-  Mem m = parse_exprs(p, 0);
+  Array m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR('}');
   Obj s = cmpd_new(t_Syn_struct.ret(), cmpd_new_M(t_Arr_Expr.ret(), m));
   m.dealloc();
@@ -461,7 +461,7 @@ static Obj parse_struct(Parser& p) {
 
 static Obj parse_seq(Parser& p) {
   P_ADV(1, return parse_error(p, "unterminated sequence"));
-  Mem m = parse_exprs(p, 0);
+  Array m = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR(']');
   Obj s = cmpd_new(t_Syn_seq.ret(), cmpd_new_M(t_Arr_Expr.ret(), m));
   m.dealloc();
@@ -536,7 +536,7 @@ static Obj parse_sub_expr(Parser& p) {
 static Obj parse_src(Dict& src_locs, Obj path, Obj src, CharsM* e) {
   // caller must free e.
   Parser p = Parser(&src_locs, path, src, data_str(src),Src_pos(0, 0, 0), null);
-  Mem m = parse_exprs(p, 0);
+  Array m = parse_exprs(p, 0);
   Obj o;
   if (p.e) {
     assert(m.len == 0 && m.els == null);

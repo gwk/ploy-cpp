@@ -26,7 +26,7 @@ struct Dict {
   void rel() {
     assert(vld());
     for_in(i, len_buckets) {
-      buckets[i].mem.rel();
+      buckets[i].array.rel();
     }
   }
 
@@ -34,8 +34,8 @@ struct Dict {
     assert(vld());
     Int len_act = 0;
     for_in(i, len_buckets) {
-      len_act += buckets[i].mem.len / 2;
-      buckets[i].mem.dealloc();
+      len_act += buckets[i].array.len / 2;
+      buckets[i].array.dealloc();
     }
     assert(len_act == len);
     raw_dealloc(buckets, ci_Dict);
@@ -53,9 +53,9 @@ struct Dict {
     assert(vld());
     if (!len) return obj0;
     Hash_bucket* b = bucket(k);
-    for_ins(i, b->mem.len, 2) {
-      if (b->mem.els[i] == k) {
-        return b->mem.els[i + 1];
+    for_ins(i, b->array.len, 2) {
+      if (b->array.els[i] == k) {
+        return b->array.els[i + 1];
       }
     }
     return obj0;
@@ -84,9 +84,9 @@ struct Dict {
       // copy existing elements.
       for_in(i, len_buckets) {
         Hash_bucket src = buckets[i];
-        for_ins(j, src.mem.len, 2) {
-          Obj ek = src.mem.el_move(j);
-          Obj ev = src.mem.el_move(j + 1);
+        for_ins(j, src.array.len, 2) {
+          Obj ek = src.array.el_move(j);
+          Obj ev = src.array.el_move(j + 1);
           Hash_bucket* dst = d1.bucket(ek);
           dst->append(ek);
           dst->append(ev);
@@ -107,14 +107,14 @@ struct Dict {
   void remove(Obj k) {
     Hash_bucket* b = bucket(k);
     assert(vld());
-    for_ins(i, b->mem.len, 2) {
-      if (b->mem.els[i].r == k.r) {
+    for_ins(i, b->array.len, 2) {
+      if (b->array.els[i].r == k.r) {
         assert(len > 0);
         len--;
         // replace k,v pair with the last pair. no-op if len == 1.
-        b->mem.els[i] = b->mem.els[b->mem.len - 2]; // k.
-        b->mem.els[i + 1] = b->mem.els[b->mem.len - 1]; // v.
-        b->mem.len -= 2;
+        b->array.els[i] = b->array.els[b->array.len - 2]; // k.
+        b->array.els[i + 1] = b->array.els[b->array.len - 1]; // v.
+        b->array.len -= 2;
         return;
       }
     }

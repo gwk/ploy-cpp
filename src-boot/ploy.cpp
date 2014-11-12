@@ -20,7 +20,7 @@ static Obj parse_and_eval(Dict& src_locs, Obj env, Obj path, Obj src, Bool shoul
 #if VERBOSE_PARSE
   errFL("parse_and_eval: %o\n%o", path, code);
 #endif
-  Step step = eval_mem_expr(env, code);
+  Step step = eval_array_expr(env, code);
   if (should_output_val && step.res.val != s_void) {
     write_repr(stdout, step.res.val);
     fputc('\n', stdout);
@@ -104,9 +104,9 @@ int main(int argc, Chars argv[]) {
   env.rel();
   env_cleanup();
   // release but do not clear to facilitate debugging during type_cleanup.
-  global_sym_names.mem.rel_no_clear();
+  global_sym_names.array.rel_no_clear();
   type_cleanup();
-  global_sym_names.mem.dealloc_no_clear();
+  global_sym_names.array.dealloc_no_clear();
   counter_stats(should_log_stats);
 #endif
 

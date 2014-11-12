@@ -6,31 +6,31 @@
 #include "10-ref.h"
 
 
-// iterate over mem using pointer Obj pointer e, start index m, end index n.
+// iterate over array using pointer Obj pointer e, start index m, end index n.
 // note: c syntax requires that all declarations in the for initializer have the same type,
 // or pointer of that type.
-// this prevents us from declaring a tempory variable to hold the value of mem,
-// and so we cannot help but evaluate mem multiple times.
-#define it_mem_from_to(it, mem, from, to) \
-for (Obj *it = (mem).els + (from), \
-*_end_##it = (mem).els + (to); \
+// this prevents us from declaring a tempory variable to hold the value of array,
+// and so we cannot help but evaluate array multiple times.
+#define it_array_from_to(it, array, from, to) \
+for (Obj *it = (array).els + (from), \
+*_end_##it = (array).els + (to); \
 it < _end_##it; \
 it++)
 
-#define it_mem_to(it, mem, to) it_mem_from_to(it, mem, 0, to)
-#define it_mem_from(it, mem, from) it_mem_from_to(it, mem, from, (mem).len)
-#define it_mem(it, mem) it_mem_from(it, mem, 0)
+#define it_array_to(it, array, to) it_array_from_to(it, array, 0, to)
+#define it_array_from(it, array, from) it_array_from_to(it, array, from, (array).len)
+#define it_array(it, array) it_array_from(it, array, 0)
 
 
-struct Mem {
+struct Array {
   Int len;
   Obj* els; // TODO: union with Obj el to optimize the len == 1 case?
 
-  Mem(): len(0), els(null) {}
+  Array(): len(0), els(null) {}
 
-  Mem(Int l, Obj* e): len(l), els(e) {}
+  Array(Int l, Obj* e): len(l), els(e) {}
 
-  explicit Mem(Int l): len(0), els(null) {
+  explicit Array(Int l): len(0), els(null) {
     grow(l);
     len = l;
   }
@@ -43,7 +43,7 @@ struct Mem {
     }
   }
 
-  Bool operator==(Mem m) {
+  Bool operator==(Array m) {
     return len == m.len && memcmp(els, m.els, Uns(len * size_Obj)) == 0;
   }
 
@@ -77,8 +77,8 @@ struct Mem {
   Int append(Obj o) {
     // semantics can be move (owns o) or borrow (must be cleared prior to dealloc).
     Int i = len++;
-    // note: unlike mem_put, the memory being overwritten may not have been previously zeroed,
-    // because until now it was outside of the mem range.
+    // note: unlike put, the memory being overwritten may not have been previously zeroed,
+    // because until now it was outside of the array range.
     // during debug it is often the malloc scribble value.
     els[i] = o;
     return i;
@@ -89,7 +89,7 @@ struct Mem {
     // because that reflects the number of elements used, not allocation size.
     // TODO: change this to match ploy Arr and List.
     assert(len < new_len);
-    els = static_cast<Obj*>(raw_realloc(els, new_len * size_Obj, ci_Mem));
+    els = static_cast<Obj*>(raw_realloc(els, new_len * size_Obj, ci_Array));
 #if OPTION_MEM_ZERO
     if (len < new_len) {
       // zero all new, uninitialized els to catch illegal derefernces.
@@ -100,13 +100,13 @@ struct Mem {
 
   void rel_no_clear() {
     // release all elements without clearing them; useful for debugging final teardown.
-    it_mem(it, *this) {
+    it_array(it, *this) {
       it->rel();
     }
   }
 
   void rel() {
-    it_mem(it, *this) {
+    it_array(it, *this) {
       it->rel();
 #if OPTION_MEM_ZERO
       *it = obj0;
@@ -116,20 +116,20 @@ struct Mem {
 
 #if OPTION_ALLOC_COUNT
   void dissolve() {
-    it_mem(it, *this) {
+    it_array(it, *this) {
       it->dissolve();
     }
   }
 #endif
 
   void dealloc_no_clear() {
-    raw_dealloc(els, ci_Mem);
+    raw_dealloc(els, ci_Array);
   }
 
   void dealloc() {
     // elements must have been previously moved or cleared.
 #if OPTION_MEM_ZERO
-    it_mem(it, *this) {
+    it_array(it, *this) {
       assert(!it->vld());
     }
 #endif

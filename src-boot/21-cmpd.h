@@ -32,7 +32,7 @@ static Obj cmpd_new_raw(Obj type, Int len) {
 }
 
 
-static Obj cmpd_new_M(Obj type, Mem m) {
+static Obj cmpd_new_M(Obj type, Array m) {
   // owns type, elements of m.
   Obj c = cmpd_new_raw(type, m.len);
   Obj* els = cmpd_els(c);
@@ -78,20 +78,20 @@ static Obj* cmpd_els(Obj c) {
 }
 
 
-static Mem cmpd_mem(Obj c) {
-  return Mem(cmpd_len(c), cmpd_els(c));
+static Array cmpd_array(Obj c) {
+  return Array(cmpd_len(c), cmpd_els(c));
 }
 
 
 static Obj cmpd_el(Obj c, Int i) {
   // assumes the caller knows the size of the compound.
   assert(ref_is_cmpd(c));
-  return cmpd_mem(c).el(i);
+  return cmpd_array(c).el(i);
 }
 
 
 static void cmpd_put(Obj c, Int i, Obj e) {
-  cmpd_mem(c).put(i, e);
+  cmpd_array(c).put(i, e);
 }
 
 
@@ -117,10 +117,10 @@ static Obj cmpd_slice(Obj c, Int f, Int t) {
 
 
 static Obj cmpd_rel_fields(Obj c) {
-  Mem m = cmpd_mem(c);
+  Array m = cmpd_array(c);
   if (!m.len) return obj0; // return the termination sentinel for rc_rel tail loop.
   Int last_i = m.len - 1;
-  it_mem_to(it, m, last_i) {
+  it_array_to(it, m, last_i) {
     it->rel();
   }
 #if OPTION_TCO

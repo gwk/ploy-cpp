@@ -28,7 +28,7 @@ static Int sym_index(Obj s) {
 
 static Obj sym_data(Obj s) {
   assert(s.is_sym());
-  return global_sym_names.mem.el(sym_index(s));
+  return global_sym_names.array.el(sym_index(s));
 }
 
 
@@ -36,8 +36,8 @@ static Str data_str(Obj d);
 static Obj data_new_from_str(Str s);
 
 static Obj sym_new(Str s) {
-  for_in(i, global_sym_names.mem.len) {
-    Obj d = global_sym_names.mem.el(i);
+  for_in(i, global_sym_names.array.len) {
+    Obj d = global_sym_names.array.el(i);
     if (str_eq(s, data_str(d))) {
       return sym_with_index(i).ret_val();
     }
@@ -126,7 +126,7 @@ SYM_LIST
 
 
 static void sym_init() {
-  assert(global_sym_names.mem.len == 0);
+  assert(global_sym_names.array.len == 0);
   for_in(i, si_END) {
     Chars name = sym_index_names[i];
     Obj sym = sym_new_from_c(name);

@@ -17,18 +17,18 @@ static Step eval(Obj env, Obj code) {
 }
 
 
-static Step eval_mem_expr(Obj env, Obj exprs) {
+static Step eval_array_expr(Obj env, Obj exprs) {
   // top level eval of a series of expressions.
   // this is quite different than calling eval on a Do instance;
   // besides evaluating a different, non-Expr type,
   // it also does the complete eval cycle on each item in turn.
   assert(exprs.type() == t_Arr_Expr);
-  Mem m = cmpd_mem(exprs);
+  Array m = cmpd_array(exprs);
   if (m.len == 0) {
     return Step(env, s_void.ret_val());
   }
   Int last = m.len - 1;
-  it_mem_to(it, m, last) {
+  it_array_to(it, m, last) {
     if (*it == s_HALT) {
       return Step(env, s_HALT.ret_val());
     }

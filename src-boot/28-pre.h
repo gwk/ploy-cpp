@@ -15,13 +15,13 @@ static Obj preprocess(Obj code) {
     return obj0;
   }
   List dst;
-  it_mem(it, cmpd_mem(code)) {
+  it_array(it, cmpd_array(code)) {
     Obj o = preprocess(*it);
     if (o.vld()) {
       dst.append(o); // owns o.
     }
   }
-  Obj c = cmpd_new_M(ref_type(code).ret(), dst.mem);
-  dst.mem.dealloc();
+  Obj c = cmpd_new_M(ref_type(code).ret(), dst.array);
+  dst.array.dealloc();
   return track_src(code, c);
 }

@@ -179,7 +179,7 @@ static Obj host_aput(Trace* t, Obj env) {
   Int l = cmpd_len(a);
   Int i = int_val(b);
   exc_check(i >= 0 && i < l, "el index out of range; index: %i; len: %i", i, l);
-  Mem m = cmpd_mem(a);
+  Array m = cmpd_array(a);
   m.el_move(i).rel();
   m.put(i, c.ret());
   return a.ret();

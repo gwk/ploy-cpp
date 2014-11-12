@@ -12,7 +12,7 @@
 C(Chars) \
 C(RC_table) \
 C(RC_bucket) \
-C(Mem) \
+C(Array) \
 C(Hash_bucket) \
 C(Set) \
 C(Dict) \
