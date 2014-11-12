@@ -115,7 +115,7 @@ static void fmt_to_file(CFile f, Chars fmt, T item, Ts... items);
 union Obj;
 struct Trace;
 
-static NO_RETURN _exc_raise(Trace* trace, Obj env);
+[[noreturn]] static void _exc_raise(Trace* trace, Obj env);
 
 // check that a condition is true; otherwise error.
 #define check(condition, fmt, ...) { if (!(condition)) error(fmt, ## __VA_ARGS__); }
@@ -125,8 +125,8 @@ static NO_RETURN _exc_raise(Trace* trace, Obj env);
 #define exc_check(condition, ...) if (!(condition)) exc_raise(__VA_ARGS__)
 
 
-NO_RETURN fail(void);
-NO_RETURN fail() {
+[[noreturn]] void fail(void);
+[[noreturn]] void fail() {
   exit(1);
 }
 

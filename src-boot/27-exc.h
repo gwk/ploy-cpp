@@ -26,7 +26,7 @@ static Obj track_src(Obj original, Obj derived) {
 }
 
 
-static NO_RETURN _exc_raise(Trace* trace, Obj env) {
+[[noreturn]] static void _exc_raise(Trace* trace, Obj env) {
   // raise an exception.
   // NOTE: there is not yet any exception unwind mechanism, so this just calls exit.
   errL("\ntrace:");

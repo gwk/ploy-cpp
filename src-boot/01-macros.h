@@ -126,9 +126,6 @@ for (Int i = (n) - 1, _end_##i = (m), _step_##i = (s); i >= _end_##i; i -= _step
 #define ALIGNED_TO_WORD ALIGNED_TO_8
 #endif
 
-// mark function as never returning. ex: NO_RETURN f() {...}
-#define NO_RETURN __attribute__((noreturn)) void
-
 // suppress compiler warnings. ex: UNUSED_FN f() {...}
 #define UNUSED_FN __attribute__((unused))
 
