@@ -47,7 +47,7 @@ UNUSED static const Uns flt_body_mask = max_Uns - 1;
 // The low bit after the tag differentiates between Sym (0) and Data (1).
 // Data-words would use the remaining bits in the byte to represent the length.
 // For 64 bit archs, this length field must count up to 7, so it requires 3 bits;
-// this implies that Obj_tag must be at most 4 bits wide (4 + 1 + 3 == 8 bits in the low byte).
+// this implies that Obj_tag can be at most 4 bits wide (4 + 1 + 3 == 8 bits in the low byte).
 static const Uns data_word_bit = (1 << width_obj_tag);
 
 static const Int width_sym_tags = width_obj_tag + 1; // extra bit for Data-word flag.
