@@ -62,7 +62,8 @@ $cmd_prefix clang++ \
 -Weverything \
 -Wno-c++98-compat-pedantic \
 -Wno-global-constructors \
--Wno-gnu \
+-Wno-exit-time-destructors \
+-Wno-gnu-zero-variadic-macro-arguments \
 -fstrict-aliasing \
 -ftrapv \
 -fno-cxx-exceptions \
