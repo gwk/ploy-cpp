@@ -6,52 +6,54 @@
 #include "11-set.h"
 
 
-struct Dict {
-  Int len;
-  Int len_buckets;
-  Hash_bucket* buckets;
+class Dict {
+  Int _len;
+  Int _len_buckets;
+  Hash_bucket* _buckets;
 
-  Dict(): len(0), len_buckets(0), buckets(null) {}
+public:
 
-  Dict(Int l, Int lb, Hash_bucket* b): len(l), len_buckets(lb), buckets(b) {}
+  Dict(): _len(0), _len_buckets(0), _buckets(null) {}
+
+  Dict(Int l, Int lb, Hash_bucket* b): _len(l), _len_buckets(lb), _buckets(b) {}
 
   Bool vld() {
-    if (buckets) {
-      return len >= 0 && len < len_buckets;
+    if (_buckets) {
+      return _len >= 0 && _len < _len_buckets;
     } else {
-      return !len && !len_buckets;
+      return !_len && !_len_buckets;
     }
   }
 
   void rel_els() {
     assert(vld());
-    for_in(i, len_buckets) {
-      buckets[i].rel_els();
+    for_in(i, _len_buckets) {
+      _buckets[i].rel_els();
     }
   }
 
   void dealloc() {
     assert(vld());
     Int len_act = 0;
-    for_in(i, len_buckets) {
-      len_act += buckets[i].len();
-      buckets[i].dealloc();
+    for_in(i, _len_buckets) {
+      len_act += _buckets[i].len();
+      _buckets[i].dealloc();
     }
-    assert(len_act == len * 2);
-    raw_dealloc(buckets, ci_Dict);
+    assert(len_act == _len * 2);
+    raw_dealloc(_buckets, ci_Dict);
   }
 
   Hash_bucket* bucket(Obj k) {
     assert(vld());
-    assert(len > 0);
+    assert(_len > 0);
     Int h = k.id_hash();
-    Int i = h % len_buckets;
-    return buckets + i;
+    Int i = h % _len_buckets;
+    return _buckets + i;
   }
 
   Obj fetch(Obj k) {
     assert(vld());
-    if (!len) return obj0;
+    if (!_len) return obj0;
     Hash_bucket* b = bucket(k);
     for_ins(i, b->len(), 2) {
       if (b->el(i) == k) {
@@ -70,20 +72,20 @@ struct Dict {
     Obj existing = fetch(k);
     if (v == existing) return;
     assert(!existing.vld());
-    if (len == 0) {
-      len_buckets = min_table_len_buckets;
-      Int size = len_buckets * size_Hash_bucket;
-      buckets = static_cast<Hash_bucket*>(raw_alloc(size, ci_Dict));
-      memset(buckets, 0, Uns(size));
-    } else if (len + 1 == len_buckets) { // load factor == 1.0.
+    if (_len == 0) {
+      _len_buckets = min_table_len_buckets;
+      Int size = _len_buckets * size_Hash_bucket;
+      _buckets = static_cast<Hash_bucket*>(raw_alloc(size, ci_Dict));
+      memset(_buckets, 0, Uns(size));
+    } else if (_len + 1 == _len_buckets) { // load factor == 1.0.
       // TODO: assess resize criteria.
-      Int d1_len_buckets = len_buckets * 2;
+      Int d1_len_buckets = _len_buckets * 2;
       Int size = d1_len_buckets * size_Hash_bucket;
-      Dict d1 = Dict(len, d1_len_buckets, static_cast<Hash_bucket*>(raw_alloc(size, ci_Dict)));
-      memset(d1.buckets, 0, Uns(size));
+      Dict d1 = Dict(_len, d1_len_buckets, static_cast<Hash_bucket*>(raw_alloc(size, ci_Dict)));
+      memset(d1._buckets, 0, Uns(size));
       // copy existing elements.
-      for_in(i, len_buckets) {
-        Hash_bucket src = buckets[i];
+      for_in(i, _len_buckets) {
+        Hash_bucket src = _buckets[i];
         for_ins(j, src.len(), 2) {
           Obj ek = src.el_move(j);
           Obj ev = src.el_move(j + 1);
@@ -96,9 +98,9 @@ struct Dict {
       dealloc();
       *this = d1;
     } else {
-      assert(len < len_buckets);
+      assert(_len < _len_buckets);
     }
-    len++;
+    _len++;
     Hash_bucket* b = bucket(k);
     b->append(k);
     b->append(v);
@@ -109,8 +111,8 @@ struct Dict {
     assert(vld());
     for_ins(ik, b->len(), 2) {
       if (b->el(ik).r == k.r) {
-        assert(len > 0);
-        len--;
+        assert(_len > 0);
+        _len--;
         Obj o = b->drop(ik + 1); // val first, so that last val gets swapped in.
         b->drop(ik); // key second; last key is now the last el.
         return o;
