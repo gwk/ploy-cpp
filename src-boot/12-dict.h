@@ -34,10 +34,10 @@ struct Dict {
     assert(vld());
     Int len_act = 0;
     for_in(i, len_buckets) {
-      len_act += buckets[i].len / 2;
+      len_act += buckets[i].len();
       buckets[i].dealloc();
     }
-    assert(len_act == len);
+    assert(len_act == len * 2);
     raw_dealloc(buckets, ci_Dict);
   }
 
@@ -53,7 +53,7 @@ struct Dict {
     assert(vld());
     if (!len) return obj0;
     Hash_bucket* b = bucket(k);
-    for_ins(i, b->len, 2) {
+    for_ins(i, b->len(), 2) {
       if (b->el(i) == k) {
         return b->el(i + 1);
       }
@@ -84,7 +84,7 @@ struct Dict {
       // copy existing elements.
       for_in(i, len_buckets) {
         Hash_bucket src = buckets[i];
-        for_ins(j, src.len, 2) {
+        for_ins(j, src.len(), 2) {
           Obj ek = src.el_move(j);
           Obj ev = src.el_move(j + 1);
           Hash_bucket* dst = d1.bucket(ek);
@@ -104,28 +104,20 @@ struct Dict {
     b->append(v);
   }
 
-  void remove(Obj k) {
+  Obj remove(Obj k) {
     Hash_bucket* b = bucket(k);
     assert(vld());
-    for_ins(ik, b->len, 2) {
+    for_ins(ik, b->len(), 2) {
       if (b->el(ik).r == k.r) {
         assert(len > 0);
         len--;
-        // replace k,v pair with the last pair. no-op if len == 1.
-        Int iv = ik + 1;
-        Int last_ik = b->len - 2;
-        Int last_iv = last_ik + 1;
-        b->el_move(ik);
-        b->el_move(iv);
-        if (ik < last_ik) { // move last pair into this position.
-          b->put(ik, b->el_move(last_ik));
-          b->put(iv, b->el_move(last_iv));
-        }
-        b->len -= 2;
-        return;
+        Obj o = b->drop(ik + 1); // val first, so that last val gets swapped in.
+        b->drop(ik); // key second; last key is now the last el.
+        return o;
       }
     }
     assert(0); // TODO: support removing nonexistent key?
+    return obj0;
   }
 
 };

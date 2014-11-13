@@ -6,27 +6,27 @@
 #include "09-array.h"
 
 
-struct List {
+class List {
   Array _array;
-  Int len;
+  Int _len;
 
-  List(): _array(), len(0) {}
+public:
 
-  explicit List(Int cap): _array(), len(0) {
+  List(): _array(), _len(0) {}
+
+  explicit List(Int cap): _array(), _len(0) {
     _array.grow(cap);
   }
 
-  Bool vld() {
-    return _array.vld() && len >= 0 && len <= _array.len();
-  }
+  Int len() { return _len; }
 
-  Obj* begin() const {
-    return _array.begin();
-  }
+  Array array() { return Array(_len, _len ? _array.els() : null); }
 
-  Obj* end() const {
-    return _array.begin() + len;
-  }
+  Bool vld() { return _array.vld() && _len >= 0 && _len <= _array.len(); }
+
+  Obj* begin() const { return _array.begin(); }
+
+  Obj* end() const { return _array.begin() + _len; }
 
   void grow_cap() {
     assert(vld());
@@ -37,30 +37,42 @@ struct List {
 
   Obj el(Int i) {
     // return element i in array with no ownership changes.
-    assert(vld() && i < len);
+    assert(vld() && i < _len);
     return _array.el(i);
   }
 
   Obj el_move(Int i) {
     // move element at i out of array.
-    assert(vld() && i < len);
+    assert(vld() && i < _len);
     return _array.el_move(i);
   }
 
   void put(Int i, Obj o) {
-    assert(vld() && i < len);
+    assert(vld() && i < _len);
     _array.put(i, o);
   }
 
   Int append(Obj o) {
     // semantics can be move (owns o) or borrow.
     assert(vld());
-    if (len == _array.len()) {
+    if (_len == _array.len()) {
       grow_cap();
     }
-    Int i = len++;
+    Int i = _len++;
     _array.put(i, o);
     return i;
+  }
+
+  Obj drop(Int i) {
+    // remove element i; if there is a last element, move it into this position.
+    assert(vld() && i >= 0 && i < _len);
+    Obj o = el_move(i);
+    Int last_i = _len - 1;
+    if (i < last_i) {
+      put(i, el_move(last_i));
+    }
+    _len--;
+    return o;
   }
 
   Bool contains(Obj o) {
@@ -71,10 +83,6 @@ struct List {
       }
     }
     return false;
-  }
-
-  Array array() {
-    return Array(len, len ? _array.els() : null);
   }
 
   void rel_els(Bool dbg_clear=true) {
