@@ -25,6 +25,8 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string>
+#include <unordered_map>
 #endif
 
 // enable tail-call optimizations.

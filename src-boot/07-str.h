@@ -11,6 +11,7 @@
 struct Str {
   Int len;
   Chars chars;
+
   Str(Int l, Chars c): len(l), chars(c) { assert(l > 0 || (!l && !c)); }
   
   explicit Str(Chars c) {
@@ -19,6 +20,9 @@ struct Str {
     chars = l ? c : null;
     len = Int(l);
   }
+
+  operator String() const { return String(chars, Uns(len)); }
+
 };
 
 #define str0 Str(0, null)
@@ -34,7 +38,7 @@ struct Str {
 #endif
 
 
-static Bool str_eq(Str a, Str b) {
+UNUSED static Bool str_eq(Str a, Str b) {
   assert_str_is_valid(a);
   assert_str_is_valid(b);
   return a.len == b.len && memcmp(a.chars, b.chars, Uns(a.len)) == 0;

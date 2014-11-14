@@ -28,6 +28,14 @@ typedef void* Raw;
 typedef Char* CharsM;
 typedef const Char* Chars;
 
+typedef std::string String;
+
+template <class T, class Hash = std::hash<T>, class Pred = std::equal_to<T>>
+using Hash_set = std::unordered_map<T, Hash, Pred>;
+
+template <class K, class V, class Hash = std::hash<K>, class Pred = std::equal_to<K>>
+using Hash_map = std::unordered_map<K, V, Hash, Pred>;
+
 #if ARCH_32_WORD
 typedef float Flt;
 #elif ARCH_64_WORD

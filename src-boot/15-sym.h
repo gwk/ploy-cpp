@@ -36,16 +36,14 @@ static Str data_str(Obj d);
 static Obj data_new_from_str(Str s);
 
 static Obj sym_new(Str s) {
-  for_in(i, global_sym_names.len()) {
-    Obj d = global_sym_names.el(i);
-    if (str_eq(s, data_str(d))) {
-      return sym_with_index(i).ret_val();
-    }
+  static Hash_map<String, Obj> cache;
+  Obj& sym = cache[s]; // on missing key, inserts default, obj0.
+  if (!sym.vld()) {
+    Obj d = data_new_from_str(s);
+    Int i = global_sym_names.append(d);
+    sym = sym_with_index(i);
+    //errFL("NEW SYM: %ld: %o", i, sym);
   }
-  Obj d = data_new_from_str(s);
-  Int i = global_sym_names.append(d);
-  Obj sym = sym_with_index(i);
-  //errFL("NEW SYM: %ld: %o", i, sym);
   return sym.ret_val();
 }
 

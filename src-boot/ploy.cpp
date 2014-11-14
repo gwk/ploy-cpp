@@ -45,6 +45,7 @@ static void reduce_stack_limit() {
   check(ok, "setrlimit failed");
 }
 
+
 int main(int argc, Chars argv[]) {
   assert_host_basic();
   assert(size_Obj == size_Raw);
