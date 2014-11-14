@@ -173,7 +173,7 @@ union Obj {
     }
   }
 
-  void dissolve() {
+  void dissolve() const {
     if (is_cmpd()) {
       cmpd_dissolve_fields(*this);
     }
@@ -208,11 +208,15 @@ union Obj {
     }
   }
 
+  struct Hash_is {
+    Int operator()(Obj o) const { return o.id_hash(); }
+  };
+
   Obj ref_type() const;
   Uns rc() const;
-  Obj ret();
-  void rel();
-  Obj dealloc();
+  Obj ret() const;
+  void rel() const;
+  Obj dealloc() const;
 
 };
 DEF_SIZE(Obj);
@@ -239,7 +243,7 @@ Uns Obj::rc() const {
   return h->rc >> 1; // shift off the direct flag bit.
 }
 
-Obj Obj::ret() {
+Obj Obj::ret() const {
   // increase the object's retain count by one.
   assert(vld());
   counter_inc(counter_index());
@@ -251,7 +255,7 @@ Obj Obj::ret() {
   return *this;
 }
 
-void Obj::rel() {
+void Obj::rel() const {
   // decrease the object's retain count by one, or deallocate it.
   Obj o = *this;
   assert(vld());
@@ -277,7 +281,7 @@ void Obj::rel() {
   } while (o.vld());
 }
 
-Obj Obj::dealloc() {
+Obj Obj::dealloc() const {
   assert(is_ref());
   //errFL("DEALLOC: %p:%o", r, *this);
   h->rc = 0;
