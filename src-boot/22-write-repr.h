@@ -54,7 +54,7 @@ static void write_repr_obj(CFile f, Obj o, Bool is_quoted, Int depth, Set& set);
 static void write_repr_Comment(CFile f, Obj o, UNUSED Bool is_quoted, Int depth, Set& set) {
   assert(cmpd_len(o) == 2);
   fputs(NO_REPR_PO "#", f);
-  if (bool_is_true(cmpd_el(o, 0))) {
+  if (cmpd_el(o, 0).is_true_bool()) {
     fputs("#", f);
   } else {
     fputs(" ", f);

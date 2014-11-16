@@ -100,7 +100,7 @@ static Step run_Bind(Int d, Trace* t, Obj env, Obj code) {
     sym);
   exc_check(!sym.is_special_sym(), "Bind cannot bind to special sym: %o", sym);
   Step step = run(d, t, env, expr);
-  Obj env1 = bind_val(t, bool_is_true(is_mutable), step.res.env, sym.ret_val(),
+  Obj env1 = bind_val(t, is_mutable.is_true_bool(), step.res.env, sym.ret_val(),
     step.res.val.ret());
   return Step(env1, step.res.val);
 }
@@ -114,7 +114,7 @@ static Step run_If(Int d, Trace* t, Obj env, Obj code) {
   Obj else_ = cmpd_el(code, 2);
   Step step = run(d, t, env, pred);
   env = step.res.env;
-  Obj branch = is_true(step.res.val) ? then : else_;
+  Obj branch = step.res.val.is_true() ? then : else_;
   step.res.val.rel();
   return Step(env, env, branch);
 }
@@ -325,16 +325,16 @@ static Step run_call_Func(Int d, Trace* t, Obj env, Obj call, Array vals, Bool i
   // TODO: check that ret-type is a Type.
   exc_check(ret_type == s_nil, "func: %o\nret-type is non-nil: %o", func, ret_type);
   if (is_call) {
-    exc_check(!bool_is_true(is_macro), "cannot call macro");
+    exc_check(!is_macro.is_true_bool(), "cannot call macro");
   } else {
-    exc_check(bool_is_true(is_macro), "cannot expand function");
+    exc_check(is_macro.is_true_bool(), "cannot expand function");
   }
   Obj callee_env = env_push_frame(lex_env.ret());
   // NOTE: because func is bound to self in callee_env, and func contains body,
   // we can give func to callee_env and still safely return the unretained body as tail.code.
   callee_env = run_bind_vals(d, t, callee_env, call, variad, assoc, pars, vals);
   vals.dealloc();
-  if (bool_is_true(is_native)) {
+  if (is_native.is_true_bool()) {
 #if OPTION_TCO
     // caller will own env, callee_env, but not .code.
     return Step(env, callee_env, body);

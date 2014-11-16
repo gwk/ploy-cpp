@@ -67,10 +67,11 @@ struct Type;
 
 union Obj;
 
-extern const Obj s_true, s_false;
+extern const Obj s_true, s_false, int0, blank;
 extern Obj t_Data, t_Env, t_Int, t_Ptr, t_Sym, t_Type;
 
 static void cmpd_dissolve_fields(Obj c);
+static Int cmpd_len(Obj c);
 static Obj cmpd_rel_fields(Obj c);
 static Obj env_rel_fields(Obj o);
 static Obj type_name(Obj t);
@@ -228,6 +229,31 @@ union Obj {
   
   Obj sym_data();
 
+  Bool is_true_bool() {
+    if (*this == s_true) return true;
+    if (*this == s_false) return false;
+    assert(0);
+    exit(1);
+  }
+
+  Bool is_true() {
+    switch (tag()) {
+      case ot_ref: {
+        Obj type = ref_type();
+        if (type == t_Data) return *this != blank;
+        if (type == t_Env) return true;
+        return !!cmpd_len(*this);
+      }
+      case ot_ptr:
+        return (ptr() != null);
+      case ot_int:
+        return *this != int0;
+      case ot_sym:
+        return (u >= s_true.u);
+    }
+    assert(0);
+  }
+
   struct Hash_is {
     Int operator()(Obj o) const { return o.id_hash(); }
   };
@@ -243,7 +269,7 @@ DEF_SIZE(Obj);
 
 #define obj0 Obj()
 
-static const Obj int0 = Obj(Int(ot_int));
+const Obj int0 = Obj(Int(ot_int));
 
 
 struct Head { // common header for all heap objects.
@@ -346,5 +372,6 @@ static Obj int_new_from_U64(U64 u) {
 }
 
 
-
-
+static Obj bool_new(Int i) {
+  return (i ? s_true : s_false).ret_val();
+}

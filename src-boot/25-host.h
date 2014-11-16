@@ -28,13 +28,13 @@ static Obj host_is_ref(UNUSED Trace* t, Obj env) {
 
 static Obj host_is_true(UNUSED Trace* t, Obj env) {
   GET_A;
-  return bool_new(is_true(a));
+  return bool_new(a.is_true());
 }
 
 
 static Obj host_not(UNUSED Trace* t, Obj env) {
   GET_A;
-  return bool_new(!is_true(a));
+  return bool_new(!a.is_true());
 }
 
 
