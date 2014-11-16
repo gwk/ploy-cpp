@@ -4,7 +4,8 @@
 #include "31-eval.h"
 
 
-static Obj parse_and_eval(Dict& src_locs, Obj env, Obj path, Obj src, Bool should_output_val) {
+static Obj parse_and_eval(Dict_src_locs& src_locs, Obj env, Obj path, Obj src,
+  Bool should_output_val) {
   // owns path, src.
   CharsM e = null;
   Obj code = parse_src(src_locs, path, src, &e);
@@ -99,8 +100,10 @@ int main(int argc, Chars argv[]) {
 
 #if OPTION_ALLOC_COUNT
   // cleanup in reverse order.
-  global_src_locs.rel_els();
-  global_src_locs.dealloc();
+  for (auto p : global_src_locs) {
+    p.first.rel();
+    p.second.rel();
+  }
   global_cleanup();
   env.rel();
   env_cleanup();

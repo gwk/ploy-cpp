@@ -14,13 +14,19 @@ struct Trace {
 }; // Trace objects are live on the stack only.
 
 
-static Dict global_src_locs;
+static Dict_src_locs global_src_locs;
 
 static Obj track_src(Obj original, Obj derived) {
   if (!original.is_ref() || !derived.is_ref()) return derived;
-  Obj src_loc = global_src_locs.fetch(original);
-  if (src_loc.vld() && !global_src_locs.contains(derived)) {
-    global_src_locs.insert(derived.ret(), src_loc.ret());
+  auto lookup = global_src_locs.find(original);
+  if (lookup != global_src_locs.end()) {
+    Obj lo = lookup->second;
+    assert(lo.vld());
+    Obj& ld = global_src_locs[derived];
+    if (!ld.vld()) { // an expression may be aliased by expansion and therefore already present.
+      derived.ret();
+      ld = lo.ret();
+    }
   }
   return derived;
 }
@@ -31,10 +37,12 @@ static Obj track_src(Obj original, Obj derived) {
   // NOTE: there is not yet any exception unwind mechanism, so this just calls exit.
   errL("\ntrace:");
   while (trace) {
-    Obj loc = global_src_locs.fetch(trace->code);
-    if (!loc.vld()) {
+    auto lookup = global_src_locs.find(trace->code);
+    if (lookup == global_src_locs.end()) {
       errFL("  %o", trace->code);
     } else {
+      Obj loc = lookup->second;
+      assert(loc.vld());
       Obj path = cmpd_el(loc, 0);
       Obj src = cmpd_el(loc, 1);
       Obj pos = cmpd_el(loc, 2);

@@ -36,7 +36,7 @@ static Str data_str(Obj d);
 static Obj data_new_from_str(Str s);
 
 static Obj sym_new(Str s) {
-  static Hash_map<String, Obj> cache;
+  static Dict<String, Obj> cache;
   Obj& sym = cache[s]; // on missing key, inserts default, obj0.
   if (!sym.vld()) {
     Obj d = data_new_from_str(s);

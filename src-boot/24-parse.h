@@ -4,6 +4,9 @@
 #include "23-fmt.h"
 
 
+typedef Dict<Obj, Obj, Obj::Hash_is> Dict_src_locs; // maps parsed expressions to Src-locs.
+
+
 struct Src_pos {
   Int off;
   Int line;
@@ -13,13 +16,13 @@ struct Src_pos {
 
 
 struct Parser {
-  Dict* locs; // maps parsed expressions to Src-locs.
+  Dict_src_locs* locs;
   Obj path;
   Obj src;
   Str s;
   Src_pos pos;
   CharsM e; // error message.
-  Parser(Dict* _locs, Obj _path, Obj _src, Str _s, Src_pos _pos, CharsM _e):
+  Parser(Dict_src_locs* _locs, Obj _path, Obj _src, Str _s, Src_pos _pos, CharsM _e):
   locs(_locs), path(_path), src(_src), s(_s), pos(_pos), e(_e) {}
 };
 
@@ -514,14 +517,17 @@ static Obj parse_expr(Parser& p) {
   parse_errFL("%o", expr);
 #endif
   if (!p.e && expr.is_ref()) {
-    Obj src_loc = cmpd_new(t_Src_loc.ret(),
+    Obj loc = cmpd_new(t_Src_loc.ret(),
       p.path.ret(),
       p.src.ret(),
       int_new(pos.off),
       int_new(p.pos.off - pos.off),
       int_new(pos.line),
       int_new(pos.col));
-    p.locs->insert(expr.ret(), src_loc); // dict owns k, v.
+    auto& locs = *p.locs;
+    Obj& v = locs[expr.ret()];
+    assert(!v.vld()); // expr is not yet a key.
+    v = loc; // p.locs owns k, v.
   }
   return expr;
 }
@@ -533,9 +539,9 @@ static Obj parse_sub_expr(Parser& p) {
 }
 
 
-static Obj parse_src(Dict& src_locs, Obj path, Obj src, CharsM* e) {
+static Obj parse_src(Dict_src_locs& src_locs, Obj path, Obj src, CharsM* e) {
   // caller must free e.
-  Parser p = Parser(&src_locs, path, src, data_str(src),Src_pos(0, 0, 0), null);
+  Parser p = Parser(&src_locs, path, src, data_str(src), Src_pos(0, 0, 0), null);
   Array a = parse_exprs(p, 0);
   Obj o;
   if (p.e) {
