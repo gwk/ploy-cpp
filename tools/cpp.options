@@ -1,0 +1,11 @@
+-std=c++11
+-Werror
+-Weverything
+-Wno-c++98-compat-pedantic
+-Wno-global-constructors
+-Wno-exit-time-destructors
+-Wno-gnu-zero-variadic-macro-arguments
+-fstrict-aliasing
+-ftrapv
+-fno-cxx-exceptions
+-g

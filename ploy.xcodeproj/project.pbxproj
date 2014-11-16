@@ -6,12 +6,16 @@
 	objectVersion = 46;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		EC1D6AC61A195DFB0099011C /* ploy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC1D6AC51A195DFB0099011C /* ploy.cpp */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
+		EC1D6AC51A195DFB0099011C /* ploy.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = ploy.cpp; path = "src-boot/ploy.cpp"; sourceTree = "<group>"; };
 		EC35627718527BA500805877 /* _repro.ploy */ = {isa = PBXFileReference; lastKnownFileType = text; path = _repro.ploy; sourceTree = "<group>"; };
 		ECA9C4561963681C00DBC30A /* ploy */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = ploy; sourceTree = BUILT_PRODUCTS_DIR; };
 		ECA9C45719636CC600DBC30A /* src-boot */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "src-boot"; sourceTree = "<group>"; };
 		ECA9C45819636CC600DBC30A /* src-core */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "src-core"; sourceTree = "<group>"; };
-		ECAAB28B1993C16D00AF9057 /* ploy-dbg */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "ploy-dbg"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -19,10 +23,10 @@
 			isa = PBXGroup;
 			children = (
 				EC35627718527BA500805877 /* _repro.ploy */,
+				EC1D6AC51A195DFB0099011C /* ploy.cpp */,
 				ECA9C45719636CC600DBC30A /* src-boot */,
 				ECA9C45819636CC600DBC30A /* src-core */,
 				ECA9C4561963681C00DBC30A /* ploy */,
-				ECAAB28B1993C16D00AF9057 /* ploy-dbg */,
 			);
 			sourceTree = "<group>";
 		};
@@ -33,7 +37,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = EC508F48184D795E00803072 /* Build configuration list for PBXNativeTarget "ploy" */;
 			buildPhases = (
-				EC996D721896CBAF0082CFD5 /* ShellScript */,
+				EC1D6AC21A195DAA0099011C /* Sources */,
 			);
 			buildRules = (
 			);
@@ -42,21 +46,6 @@
 			name = ploy;
 			productName = ploy;
 			productReference = ECA9C4561963681C00DBC30A /* ploy */;
-			productType = "com.apple.product-type.tool";
-		};
-		ECAAB2861993C16D00AF9057 /* ploy-dbg */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = ECAAB2881993C16D00AF9057 /* Build configuration list for PBXNativeTarget "ploy-dbg" */;
-			buildPhases = (
-				ECAAB2871993C16D00AF9057 /* ShellScript */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = "ploy-dbg";
-			productName = ploy;
-			productReference = ECAAB28B1993C16D00AF9057 /* ploy-dbg */;
 			productType = "com.apple.product-type.tool";
 		};
 /* End PBXNativeTarget section */
@@ -81,79 +70,56 @@
 			projectRoot = "";
 			targets = (
 				EC508F3E184D795E00803072 /* ploy */,
-				ECAAB2861993C16D00AF9057 /* ploy-dbg */,
 			);
 		};
 /* End PBXProject section */
 
-/* Begin PBXShellScriptBuildPhase section */
-		EC996D721896CBAF0082CFD5 /* ShellScript */ = {
-			isa = PBXShellScriptBuildPhase;
+/* Begin PBXSourcesBuildPhase section */
+		EC1D6AC21A195DAA0099011C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-			);
-			inputPaths = (
-			);
-			outputPaths = (
+				EC1D6AC61A195DFB0099011C /* ploy.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "set -ex\nexport PATH=/usr/local/llvm/3.5.0/bin:$PATH\nmake _bld/ploy\nmkdir -p $BUILT_PRODUCTS_DIR\ncp _bld/ploy $BUILT_PRODUCTS_DIR/$FULL_PRODUCT_NAME\n";
-			showEnvVarsInLog = 0;
 		};
-		ECAAB2871993C16D00AF9057 /* ShellScript */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "set -ex\nexport PATH=/usr/local/llvm/3.5.0/bin:$PATH\nmake _bld/ploy-dbg\nmkdir -p $BUILT_PRODUCTS_DIR\ncp _bld/ploy-dbg $BUILT_PRODUCTS_DIR/$FULL_PRODUCT_NAME\n\n";
-			showEnvVarsInLog = 0;
-		};
-/* End PBXShellScriptBuildPhase section */
+/* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
 		EC508F46184D795E00803072 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ONLY_ACTIVE_ARCH = YES;
-				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
 		};
 		EC508F47184D795E00803072 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
 		};
 		EC508F49184D795E00803072 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				OTHER_CPLUSPLUSFLAGS = (
+					"$(OTHER_CFLAGS)",
+					"@$(PROJECT_DIR)/tools/cpp.options",
+					"@$(PROJECT_DIR)/tools/cpp-dbg.options",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
 		};
 		EC508F4A184D795E00803072 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-			};
-			name = Release;
-		};
-		ECAAB2891993C16D00AF9057 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-			};
-			name = Debug;
-		};
-		ECAAB28A1993C16D00AF9057 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
+				OTHER_CPLUSPLUSFLAGS = (
+					"$(OTHER_CFLAGS)",
+					"@$(PROJECT_DIR)/tools/cpp.options",
+					"@$(PROJECT_DIR)/tools/cpp-rel.options",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
 		};
@@ -174,15 +140,6 @@
 			buildConfigurations = (
 				EC508F49184D795E00803072 /* Debug */,
 				EC508F4A184D795E00803072 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		ECAAB2881993C16D00AF9057 /* Build configuration list for PBXNativeTarget "ploy-dbg" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				ECAAB2891993C16D00AF9057 /* Debug */,
-				ECAAB28A1993C16D00AF9057 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

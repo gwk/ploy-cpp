@@ -17,34 +17,9 @@ fi
 
 if [[ "$1" == "-dbg" ]]; then
   shift
-  opts="\
--DOPT=0 \
--fstack-protector \
--fsanitize=local-bounds \
--fsanitize=undefined \
--fno-limit-debug-info \
--fno-sanitize-recover \
--O0
-"
-#-fsanitize=address # fails on clang 3.5: loader error on libclang_rt.asan_osx_dynamic.dylib.
-#-fsanitize-memory-track-origins  Enable origins tracking in MemorySanitizer
-#-fstandalone-debug         Emit full debug info for all types used by the program
-#-fstack-protector-strong   Use a strong heuristic to apply stack protectors to functions
-#-fstack-protector-all      Force the usage of stack protectors for all functions
-#-ftrapv-handler=func-name  Specify the function to be called on overflow
-
+  suffix="-dbg"
 else
-  opts="\
--DOPT=1 \
--Ofast \
-"
-#-freg-struct-return        Override the default ABI to return small structs in registers
-#-funroll-loops             Turn on loop unroller
-#-freroll-loops             Turn on loop reroller
-#-fvectorize                Enable the loop vectorization passes
-#-fslp-vectorize            Enable the superword-level parallelism vectorization passes
-#-fslp-vectorize-aggressive Enable the BB vectorization passes
-
+  suffix="-rel"
 fi
 
 if [[ "$#" == 0 ]]; then
@@ -57,21 +32,8 @@ set -e
 mkdir -p _bld
 
 $cmd_prefix clang++ \
--std=c++14 \
--Werror \
--Weverything \
--Wno-c++98-compat-pedantic \
--Wno-global-constructors \
--Wno-exit-time-destructors \
--Wno-gnu-zero-variadic-macro-arguments \
--fstrict-aliasing \
--ftrapv \
--fno-cxx-exceptions \
--g \
+@tools/cpp.options \
+@tools/cpp$suffix.options \
 -ferror-limit=1 \
-$opts \
 -I _bld \
 "$@"
-
-#-fno-rtti
-#-fstrict-enums   Enable optimizations based on the strict definition of an enum's value range

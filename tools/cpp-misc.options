@@ -1,0 +1,22 @@
+-fno-rtti
+-fstrict-enums  # Enable optimizations based on the strict definition of an enum's value range
+
+
+# debug
+-fsanitize=local-bounds # Xcode 6.1.1 does not recognize.
+-fsanitize=undefined    # Xcode 6.1.1 does not recognize.
+
+-fsanitize=address # fails on clang 3.5: loader error on libclang_rt.asan_osx_dynamic.dylib.
+-fsanitize-memory-track-origins  # Enable origins tracking in MemorySanitizer
+-fstandalone-debug         # Emit full debug info for all types used by the program
+-fstack-protector-strong   # Use a strong heuristic to apply stack protectors to functions
+-fstack-protector-all      # Force the usage of stack protectors for all functions
+-ftrapv-handler=func-name  # Specify the function to be called on overflow
+
+#rel
+-freg-struct-return        # Override the default ABI to return small structs in registers
+-funroll-loops             # Turn on loop unroller
+-freroll-loops             # Turn on loop reroller
+-fvectorize                # Enable the loop vectorization passes
+-fslp-vectorize            # Enable the superword-level parallelism vectorization passes
+-fslp-vectorize-aggressive # Enable the BB vectorization passes

@@ -1,0 +1,5 @@
+-DOPT=0
+-O0
+-fstack-protector
+-fno-limit-debug-info
+-fno-sanitize-recover
