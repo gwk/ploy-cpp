@@ -135,6 +135,7 @@ static Step run_Fn(UNUSED Int d, Trace* t, Obj env, Obj code) {
   Obj pars_exprs = cmpd_el(pars_seq, 0);
   Obj pars = cmpd_new_raw(t_Arr_Par.ret(), cmpd_len(pars_exprs));
   Obj variad = s_void.ret_val();
+  Obj assoc = s_void.ret_val();
   for_in(i, cmpd_len(pars_exprs)) {
     Obj syn = cmpd_el(pars_exprs, i);
     Obj syn_type = syn.type();
@@ -167,6 +168,7 @@ static Step run_Fn(UNUSED Int d, Trace* t, Obj env, Obj code) {
     is_macro.ret_val(),
     env.ret(),
     variad,
+    assoc,
     pars,
     ret_type.ret(),
     body.ret());
@@ -268,14 +270,15 @@ static Obj run_bind_vals(Int d, Trace* t, Obj env, Obj call, Obj variad, Obj par
 static Step run_call_Func(Int d, Trace* t, Obj env, Obj call, Array vals, Bool is_call) {
   // owns env, func.
   Obj func = vals.el(0);
-  assert(cmpd_len(func) == 7);
+  assert(cmpd_len(func) == 8);
   Obj is_native = cmpd_el(func, 0);
   Obj is_macro  = cmpd_el(func, 1);
   Obj lex_env   = cmpd_el(func, 2);
   Obj variad    = cmpd_el(func, 3);
-  Obj pars      = cmpd_el(func, 4);
-  Obj ret_type  = cmpd_el(func, 5);
-  Obj body      = cmpd_el(func, 6);
+  UNUSED Obj assoc = cmpd_el(func, 4);
+  Obj pars      = cmpd_el(func, 5);
+  Obj ret_type  = cmpd_el(func, 6);
+  Obj body      = cmpd_el(func, 7);
   exc_check(is_native.is_bool(), "func: %o\nis-native is not a Bool: %o", func, is_native);
   exc_check(is_macro.is_bool(), "func: %o\nis-macro is not a Bool: %o", func, is_macro);
   // TODO: check that variad is an Expr.

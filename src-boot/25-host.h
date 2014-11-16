@@ -289,6 +289,7 @@ static Obj host_init_func(Obj env, Int len_pars, Chars name, Func_host_ptr ptr) 
     bool_new(false),
     env.ret(),
     s_void.ret_val(),
+    s_void.ret_val(),
     pars,
     s_nil.ret_val(), // TODO: specify actual return type?
     ptr_new(Raw(ptr)));
