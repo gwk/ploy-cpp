@@ -24,7 +24,7 @@ if [[ "$1" == "-dbg" ]]; then
 -fsanitize=undefined \
 -fno-limit-debug-info \
 -fno-sanitize-recover \
--O1
+-O0
 "
 #-fsanitize=address # fails on clang 3.5: loader error on libclang_rt.asan_osx_dynamic.dylib.
 #-fsanitize-memory-track-origins  Enable origins tracking in MemorySanitizer

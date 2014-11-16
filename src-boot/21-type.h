@@ -50,6 +50,7 @@ T(Arr_Type,         arr, t_Type) \
 T(Arr_Par,          arr, t_Par) \
 T(Arr_Obj,          arr, t_Obj) \
 T(Arr_Expr,         arr, t_Expr) \
+T(Arr_Sym,          arr, t_Sym) \
 T(Expr,             union_expr) \
 T(Type_kind,        union_type_kind) \
 T(Type_kind_unit,   unit) \
@@ -59,6 +60,7 @@ T(Type_kind_struct, struct2, "fields", t_Arr_Par, "dispatcher", t_Dispatcher) \
 T(Type_kind_union,  struct1, "variants", t_Arr_Type) \
 T(Type_kind_class,  unit) \
 T(Type_kind_var,    struct1, "name", t_Sym) \
+T(Labeled_args,     struct2, "keys", t_Arr_Sym, "vals", t_Arr_Obj) \
 T(Obj,              class_obj) \
 T(Bool,             class_bool) \
 T(Dispatcher,       class_dispatcher) \

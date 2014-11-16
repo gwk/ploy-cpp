@@ -143,14 +143,22 @@ static Step run_Fn(UNUSED Int d, Trace* t, Obj env, Obj code) {
     Obj par_type;
     Obj par_dflt;
     Bool is_variad = false;
+    Bool is_assoc = false;
     if (syn_type == t_Label) {
       par_name = cmpd_el(syn, 0).ret();
       par_type = cmpd_el(syn, 1).ret();
       par_dflt = cmpd_el(syn, 2).ret();
     } else if (syn_type == t_Variad) {
-      is_variad = true;
-      par_name = cmpd_el(syn, 0).ret();
-      par_type = cmpd_el(syn, 1).ret();
+      Obj par_hd = cmpd_el(syn, 0);
+      if (par_hd.type() == t_Variad) { // nested variad indicates assoc.
+        is_assoc = true;
+        par_name = cmpd_el(par_hd, 0).ret();
+        par_type = cmpd_el(par_hd, 1).ret(); // TODO: derive correct Array type.
+      } else {
+        is_variad = true;
+        par_name = par_hd.ret();
+        par_type = cmpd_el(syn, 1).ret(); // TODO: derive correct Keyed-args type.
+      }
       par_dflt = s_void.ret_val(); // TODO?
     } else {
       exc_raise("Fn: parameter %i is malformed: %o", i, syn);
@@ -159,8 +167,12 @@ static Step run_Fn(UNUSED Int d, Trace* t, Obj env, Obj code) {
     cmpd_put(pars, i, par);
     if (is_variad) {
       exc_check(variad == s_void, "Fn: multiple variadic parameters: %o", syn);
-      variad.rel();
+      variad.rel_val();
       variad = par.ret();
+    } else if (is_assoc) {
+      exc_check(assoc == s_void, "Fn: multiple assoc parameters: %o", syn);
+      assoc.rel_val();
+      assoc = par.ret();
     }
   }
   Obj f = cmpd_new(t_Func.ret(),
@@ -232,7 +244,7 @@ static Obj bind_variad(UNUSED Int d, Trace* t, Obj env, Obj par, Array vals,
   }
   *i_vals = end;
   Int len = (end - start) / 2;
-  Obj vrd = cmpd_new_raw(t_Arr_Obj.ret(), len); // TODO: set correct type.
+  Obj vrd = cmpd_new_raw(t_Arr_Obj.ret(), len); // TODO: correct type is derived from par_el_type.
   Int j = 0;
   for_imns(i, start + 1, end, 2) {
     Obj arg = vals.el_move(i);
@@ -243,7 +255,30 @@ static Obj bind_variad(UNUSED Int d, Trace* t, Obj env, Obj par, Array vals,
 }
 
 
-static Obj run_bind_vals(Int d, Trace* t, Obj env, Obj call, Obj variad, Obj pars,
+static Obj bind_assoc(UNUSED Int d, Trace* t, Obj env, Obj par, Array vals, Int start) {
+  // owns env.
+  UNPACK_PAR(par); UNUSED_VAR(par_el_type);
+  exc_check(par_el_dflt == s_void, "assoc parameter has non-void default argument: %o", par);
+  Int end = vals.len();
+  Int len = (end - start) / 2;
+  Obj keys = cmpd_new_raw(t_Arr_Sym.ret(), len);
+  Obj assoc_vals = cmpd_new_raw(t_Arr_Obj.ret(), len); // TODO: correct type is derived from par_el_type.
+  Obj assoc = cmpd_new(t_Labeled_args.ret(), keys, assoc_vals); // TODO: derive from type of vals.
+  Int j = 0;
+  for_imns(ik, start, end, 2) {
+    Int iv = ik + 1;
+    Obj name = vals.el_move(ik);
+    Obj arg = vals.el_move(iv);
+    exc_check(name.vld(), "arg %i is not labeled", iv / 2);
+    cmpd_put(keys, j, name.ret_val()); // name is not already owned.
+    cmpd_put(assoc_vals, j++, arg);
+  }
+  env = bind_val(t, false, env, par_el_name.ret_val(), assoc);
+  return env;
+}
+
+
+static Obj run_bind_vals(Int d, Trace* t, Obj env, Obj call, Obj variad, Obj assoc, Obj pars,
   Array vals) {
   // owns env.
   env = bind_val(t, false, env, s_self.ret_val(), vals.el_move(0));
@@ -258,6 +293,9 @@ static Obj run_bind_vals(Int d, Trace* t, Obj env, Obj call, Obj variad, Obj par
       exc_check(!has_variad, "call: %o\nmultiple variad parameters", call);
       has_variad = true;
       env = bind_variad(d, t, env, par, vals, &i_vals);
+    } else if (par == assoc) {
+      env = bind_assoc(d, t, env, par, vals, i_vals);
+      return env;
     } else {
       env = bind_par(d, t, env, call, par, vals, &i_vals);
     }
@@ -275,7 +313,7 @@ static Step run_call_Func(Int d, Trace* t, Obj env, Obj call, Array vals, Bool i
   Obj is_macro  = cmpd_el(func, 1);
   Obj lex_env   = cmpd_el(func, 2);
   Obj variad    = cmpd_el(func, 3);
-  UNUSED Obj assoc = cmpd_el(func, 4);
+  Obj assoc = cmpd_el(func, 4);
   Obj pars      = cmpd_el(func, 5);
   Obj ret_type  = cmpd_el(func, 6);
   Obj body      = cmpd_el(func, 7);
@@ -294,7 +332,7 @@ static Step run_call_Func(Int d, Trace* t, Obj env, Obj call, Array vals, Bool i
   Obj callee_env = env_push_frame(lex_env.ret());
   // NOTE: because func is bound to self in callee_env, and func contains body,
   // we can give func to callee_env and still safely return the unretained body as tail.code.
-  callee_env = run_bind_vals(d, t, callee_env, call, variad, pars, vals);
+  callee_env = run_bind_vals(d, t, callee_env, call, variad, assoc, pars, vals);
   vals.dealloc();
   if (bool_is_true(is_native)) {
 #if OPTION_TCO
