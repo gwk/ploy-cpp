@@ -265,7 +265,7 @@ static Obj run_bind_vals(Int d, Trace* t, Obj env, Obj call, Obj variad, Obj par
 }
 
 
-static Step run_call_func(Int d, Trace* t, Obj env, Obj call, Array vals, Bool is_call) {
+static Step run_call_Func(Int d, Trace* t, Obj env, Obj call, Array vals, Bool is_call) {
   // owns env, func.
   Obj func = vals.el(0);
   assert(cmpd_len(func) == 7);
@@ -312,7 +312,7 @@ static Step run_call_func(Int d, Trace* t, Obj env, Obj call, Array vals, Bool i
 }
 
 
-static Step run_call_accessor(UNUSED Int d, Trace* t, Obj env, Obj call, Array vals) {
+static Step run_call_Accessor(UNUSED Int d, Trace* t, Obj env, Obj call, Array vals) {
   // owns env, vals.
   exc_check(vals.len() == 3, "call: %o\naccessor requires 1 argument", call);
   exc_check(!vals.el(1).vld(), "call:%o\naccessee is a label", call);
@@ -348,7 +348,7 @@ static Step run_call_accessor(UNUSED Int d, Trace* t, Obj env, Obj call, Array v
 }
 
 
-static Step run_call_mutator(UNUSED Int d, Trace* t, Obj env, Obj call, Array vals) {
+static Step run_call_Mutator(UNUSED Int d, Trace* t, Obj env, Obj call, Array vals) {
   // owns env, vals.
   exc_check(vals.len() == 5, "call: %o\nmutator requires 2 arguments", call);
   exc_check(!vals.el(1).vld(), "call:%o\nmutatee is a label", call);
@@ -538,9 +538,9 @@ static Step run_Call_disp(Int d, Trace* t, Obj env, Obj code, Array vals) {
   Obj type = callee.type();
   Int ti = type_index(type);
   switch (ti) {
-    case ti_Func:     return run_call_func(d, t, env, code, vals, true);
-    case ti_Accessor: return run_call_accessor(d, t, env, code, vals);
-    case ti_Mutator:  return run_call_mutator(d, t, env, code, vals);
+    case ti_Func:     return run_call_Func(d, t, env, code, vals, true);
+    case ti_Accessor: return run_call_Accessor(d, t, env, code, vals);
+    case ti_Mutator:  return run_call_Mutator(d, t, env, code, vals);
     case ti_Sym:
       switch (sym_index(callee)) {
         case si_EXPAND: return run_call_EXPAND(d, t, env, code, vals);
@@ -714,7 +714,7 @@ static Obj run_macro(Trace* t, Obj env, Obj code) {
     vals.put(i * 2 - 1, obj0);
     vals.put(i * 2, expr.ret());
   }
-  Step step = run_call_func(0, t, env, code, vals, false); // owns env, macro.
+  Step step = run_call_Func(0, t, env, code, vals, false); // owns env, macro.
   step = run_tail(0, t, step); // handle any TCO steps.
   step.res.env.rel();
   run_err_trace(0, trace_expand_val_prefix, step.res.val);
