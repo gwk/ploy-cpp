@@ -25,7 +25,7 @@ static const Uns obj_body_mask = ~obj_tag_mask;
 static const Int max_Int_tagged = (1L << width_tagged_word) - 1;
 static const Uns max_Uns_tagged = max_Int_tagged;
 // we cannot shift signed values in C so we use multiplication by powers of 2 instead.
-static const Int shift_factor_Int = 1L << width_obj_tag;
+static const Int scale_factor_Int = 1L << width_obj_tag;
 
 enum Obj_tag {
   ot_ref = 0,  // pointer to managed object.
@@ -208,12 +208,25 @@ union Obj {
     }
   }
 
-
   Raw ptr() {
     assert(is_ptr());
     return Raw(u & ~obj_tag_mask);
   }
 
+  Int int_val() {
+    assert(tag() == ot_int);
+    Int val = i & Int(obj_body_mask);
+    return val / scale_factor_Int;
+  }
+
+  Int sym_index() {
+    assert(is_sym());
+    return i >> width_sym_tags;
+  }
+
+  Bool is_special_sym();
+  
+  Obj sym_data();
 
   struct Hash_is {
     Int operator()(Obj o) const { return o.id_hash(); }
@@ -229,6 +242,8 @@ union Obj {
 DEF_SIZE(Obj);
 
 #define obj0 Obj()
+
+static const Obj int0 = Obj(Int(ot_int));
 
 
 struct Head { // common header for all heap objects.
@@ -316,4 +331,20 @@ static Obj ptr_new(Raw p) {
   assert(!(u & obj_tag_mask));
   return Obj(Uns(u | ot_ptr)).ret_val();
 }
+
+
+static Obj int_new(Int i) {
+  check(i >= -max_Int_tagged && i <= max_Int_tagged, "large Int values not yet suppported.");
+  Int shifted = i * scale_factor_Int;
+  return Obj(Int(shifted | ot_int)).ret_val();
+}
+
+
+static Obj int_new_from_U64(U64 u) {
+  check(u < U64(max_Uns_tagged), "large Uns values not yet supported.");
+  return int_new(Int(u));
+}
+
+
+
 

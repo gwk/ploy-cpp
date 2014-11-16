@@ -42,7 +42,7 @@ static Obj track_src(Obj original, Obj derived) {
       Obj line = cmpd_el(loc, 4);
       Obj col = cmpd_el(loc, 5);
       CharsM msg = str_src_loc_str(data_str(path), data_str(src),
-        int_val(pos), int_val(len), int_val(line), int_val(col), "");
+        pos.int_val(), len.int_val(), line.int_val(), col.int_val(), "");
       fputs("  ", stderr);
       fputs(msg, stderr);
       raw_dealloc(msg, ci_Chars);

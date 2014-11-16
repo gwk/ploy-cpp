@@ -98,7 +98,7 @@ static Step run_Bind(Int d, Trace* t, Obj env, Obj code) {
     is_public);
   exc_check(sym.is_sym(), "Bind requires argument 3 to be a bindable sym; received: %o",
     sym);
-  exc_check(!sym_is_special(sym), "Bind cannot bind to special sym: %o", sym);
+  exc_check(!sym.is_special_sym(), "Bind cannot bind to special sym: %o", sym);
   Step step = run(d, t, env, expr);
   Obj env1 = bind_val(t, bool_is_true(is_mutable), step.res.env, sym.ret_val(),
     step.res.val.ret());
@@ -583,7 +583,7 @@ static Step run_Call_disp(Int d, Trace* t, Obj env, Obj code, Array vals) {
     case ti_Accessor: return run_call_Accessor(d, t, env, code, vals);
     case ti_Mutator:  return run_call_Mutator(d, t, env, code, vals);
     case ti_Sym:
-      switch (sym_index(callee)) {
+      switch (callee.sym_index()) {
         case si_EXPAND: return run_call_EXPAND(d, t, env, code, vals);
         case si_RUN:    return run_call_RUN(d, t, env, code, vals);
         case si_CONS:   return run_call_CONS(d, t, env, code, vals);

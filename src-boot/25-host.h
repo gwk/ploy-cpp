@@ -47,7 +47,7 @@ static Obj host_id_hash(UNUSED Trace* t, Obj env) {
 static Obj host_ineg(Trace* t, Obj env) {
   GET_A;
   exc_check(a.is_int(), "ineg requires Int; received: %o", a);
-  Int i = int_val(a);
+  Int i = a.int_val();
   return int_new(-i);
 }
 
@@ -55,7 +55,7 @@ static Obj host_ineg(Trace* t, Obj env) {
 static Obj host_iabs(Trace* t, Obj env) {
   GET_A;
   exc_check(a.is_int(), "iabs requires Int; received: %o", a);
-  Int i = int_val(a);
+  Int i = a.int_val();
   return int_new(i < 0 ? -i : i);
 }
 
@@ -66,7 +66,7 @@ static Obj host_##op(Trace* t, Obj env) { \
   GET_AB; \
   exc_check(a.is_int(), #op " requires arg 1 to be a Int; received: %o", a); \
   exc_check(b.is_int(), #op " requires arg 2 to be a Int; received: %o", b); \
-  Int i = op(int_val(a), int_val(b)); \
+  Int i = op(a.int_val(), b.int_val()); \
   return type_name##_new(i); \
 }
 
@@ -140,7 +140,7 @@ static Obj host_cmpd_field(Trace* t, Obj env) {
   exc_check(a.is_cmpd(), "field requires arg 1 to be a Cmpd; received: %o", a);
   exc_check(b.is_int(), "field requires arg 2 to be an Int; received: %o", b);
   Int l = cmpd_len(a);
-  Int i = int_val(b);
+  Int i = b.int_val();
   exc_check(i >= 0 && i < l, "field index out of range; index: %i; len: %i", i, l);
   Obj field = cmpd_el(a, i);
   return field.ret();
@@ -152,7 +152,7 @@ static Obj host_ael(Trace* t, Obj env) {
   exc_check(a.is_cmpd(), "ael requires arg 1 to be an Arr; received: %o", a);
   exc_check(b.is_int(), "ael requires arg 2 to be a Int; received: %o", b);
   Int l = cmpd_len(a);
-  Int i = int_val(b);
+  Int i = b.int_val();
   exc_check(i >= 0 && i < l, "ael index out of range; index: %i; len: %i", i, l);
   Obj el = cmpd_el(a, i);
   return el.ret();
@@ -163,7 +163,7 @@ static Obj host_anew(Trace* t, Obj env) {
   GET_AB;
   exc_check(a.is_type(), "anew requires arg 1 to be a Type; received: %o", a);
   exc_check(b.is_int(), "anew requires arg 2 to be an Int; received: %o", b);
-  Int len = int_val(b);
+  Int len = b.int_val();
   Obj res = cmpd_new_raw(a.ret(), len);
   for_in(i, len) {
     cmpd_put(res, i, s_UNINIT.ret_val());
@@ -177,7 +177,7 @@ static Obj host_aput(Trace* t, Obj env) {
   exc_check(a.is_cmpd(), "el requires arg 1 to be a Arr; received: %o", a);
   exc_check(b.is_int(), "el requires arg 2 to be a Int; received: %o", b);
   Int l = cmpd_len(a);
-  Int i = int_val(b);
+  Int i = b.int_val();
   exc_check(i >= 0 && i < l, "el index out of range; index: %i; len: %i", i, l);
   Array array = cmpd_array(a);
   array.el_move(i).rel();
@@ -191,8 +191,8 @@ static Obj host_aslice(Trace* t, Obj env) {
   exc_check(a.is_cmpd(), "el requires arg 1 to be a Arr; received: %o", a);
   exc_check(b.is_int(), "el requires arg 2 to be a Int; received: %o", b);
   exc_check(c.is_int(), "el requires arg 3 to be a Int; received: %o", c);
-  Int fr = int_val(b);
-  Int to = int_val(c);
+  Int fr = b.int_val();
+  Int to = c.int_val();
   return cmpd_slice(a, fr, to);
 }
 
@@ -229,7 +229,7 @@ static Obj host_flush(Trace* t, Obj env) {
 static Obj host_exit(Trace* t, Obj env) {
   GET_A;
   exc_check(a.is_int(), "exit requires arg 1 to be an Int; recived: %o", a);
-  exit(I32(int_val(a)));
+  exit(I32(a.int_val()));
   // TODO: throw exception to unwind, cleanup, and report counts?
 }
 

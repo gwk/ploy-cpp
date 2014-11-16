@@ -20,15 +20,9 @@ static Obj sym_with_index(Int i) {
 }
 
 
-static Int sym_index(Obj s) {
-  assert(s.is_sym());
-  return s.i >> width_sym_tags;
-}
-
-
-static Obj sym_data(Obj s) {
-  assert(s.is_sym());
-  return global_sym_names.el(sym_index(s));
+Obj Obj::sym_data() {
+  assert(is_sym());
+  return global_sym_names.el(sym_index());
 }
 
 
@@ -128,12 +122,13 @@ static void sym_init() {
   for_in(i, si_END) {
     Chars name = sym_index_names[i];
     Obj sym = sym_new_from_c(name);
-    assert(sym_index(sym) == i);
+    assert(sym.sym_index() == i);
     sym.rel_val();
   }
 }
 
 
-static Bool sym_is_special(Obj s) {
-  return sym_index(s) <= si_END_SPECIAL_SYMS;
+Bool Obj::is_special_sym() {
+  return sym_index() <= si_END_SPECIAL_SYMS;
 }
+

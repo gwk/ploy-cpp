@@ -33,7 +33,7 @@ static Bool is_true(Obj o) {
     case ot_int:
       return o != int0;
     case ot_sym:
-      return (sym_index(o) >= si_true);
+      return (o.sym_index() >= si_true);
   }
   assert(0);
 }

@@ -12,10 +12,10 @@ static void write_data(CFile f, Obj d) {
 
 static void write_repr_Sym(CFile f, Obj s, Bool is_quoted) {
   assert(s.is_sym());
-  if (!is_quoted && !sym_is_special(s)) {
+  if (!is_quoted && !s.is_special_sym()) {
     fputc('`', f);
   }
-  Obj d = sym_data(s);
+  Obj d = s.sym_data();
   write_data(f, d);
 }
 
@@ -251,7 +251,7 @@ static void write_repr_obj(CFile f, Obj o, Bool is_quoted, Int depth, Set& set) 
     fprintf(f, NO_REPR_PO "%p" NO_REPR_PC, o.ptr());
 #endif
   } else if (ot == ot_int) {
-    fprintf(f, "%ld", int_val(o));
+    fprintf(f, "%ld", o.int_val());
   } else if (ot == ot_sym) {
     if (o.is_data_word()) {
       // TODO: support all word values.

@@ -52,7 +52,7 @@ static Obj env_new(Bool is_mutable, Bool is_public, Obj key, Obj val, Obj tl) {
 
 
 static Obj env_get(Obj env, Obj key) {
-  assert(!sym_is_special(key));
+  assert(!key.is_special_sym());
   while (env != s_ENV_END) {
     assert(env.is_env());
     if (env.e->key == key) { // key is never ENV_FRAME_KEY, since marker is special.
@@ -73,7 +73,7 @@ static Obj env_push_frame(Obj env) {
 static Obj env_bind(Obj env, Bool is_mutable, Bool is_public, Obj key, Obj val) {
   // owns env, key, val.
   // returns obj0 on failure.
-  assert(!sym_is_special(key));
+  assert(!key.is_special_sym());
   Obj e = env;
   while (e != s_ENV_END) { // check that symbol is not already bound.
     assert(e.is_env());
