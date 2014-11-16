@@ -248,7 +248,7 @@ static void write_repr_obj(CFile f, Obj o, Bool is_quoted, Int depth, Set& set) 
 #if OPTION_BLANK_PTR_REPR
     fprintf(f, NO_REPR_PO "Ptr" NO_REPR_PC);
 #else
-    fprintf(f, NO_REPR_PO "%p" NO_REPR_PC, ptr_val(o));
+    fprintf(f, NO_REPR_PO "%p" NO_REPR_PC, o.ptr());
 #endif
   } else if (ot == ot_int) {
     fprintf(f, "%ld", int_val(o));

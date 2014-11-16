@@ -29,7 +29,7 @@ static Bool is_true(Obj o) {
       return !!cmpd_len(o);
     }
     case ot_ptr:
-      return (ptr_val(o) != null);
+      return (o.ptr() != null);
     case ot_int:
       return o != int0;
     case ot_sym:

@@ -208,6 +208,13 @@ union Obj {
     }
   }
 
+
+  Raw ptr() {
+    assert(is_ptr());
+    return Raw(u & ~obj_tag_mask);
+  }
+
+
   struct Hash_is {
     Int operator()(Obj o) const { return o.id_hash(); }
   };
@@ -302,3 +309,11 @@ Obj Obj::dealloc() const {
 #endif
   return tail;
 }
+
+
+static Obj ptr_new(Raw p) {
+  Uns u = Uns(p);
+  assert(!(u & obj_tag_mask));
+  return Obj(Uns(u | ot_ptr)).ret_val();
+}
+

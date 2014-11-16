@@ -345,7 +345,7 @@ static Step run_call_Func(Int d, Trace* t, Obj env, Obj call, Array vals, Bool i
 #endif
   } else { // host function.
     exc_check(body.is_ptr(), "host func: %o\nbody is not a Ptr: %o", func, body);
-    Func_host_ptr f_ptr = Func_host_ptr(ptr_val(body));
+    Func_host_ptr f_ptr = Func_host_ptr(body.ptr());
     Obj res = f_ptr(t, callee_env);
     callee_env.rel();
     return Step(env, res); // NO TCO.
