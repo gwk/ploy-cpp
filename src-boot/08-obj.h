@@ -64,10 +64,15 @@ struct Head { // common header for all heap objects.
   Raw type; // actually Obj; declared as untyped so that Head can be declared above Obj.
   Uns rc;
   Head(Raw t): type(t), rc((1<<1) + 1) {}
-};
+} ALIGNED_TO_WORD;
+
+struct Data {
+  Head head;
+  Int len;
+} ALIGNED_TO_WORD;
+DEF_SIZE(Data);
 
 
-struct Data;
 struct Env;
 struct Cmpd;
 struct Type;
@@ -349,16 +354,26 @@ union Obj {
 
 #pragma mark Data
   
-  Int data_ref_len();
+  Int data_ref_len() {
+    assert(ref_is_data());
+    assert(d->len > 0);
+    return d->len;
+  }
   
   Int data_len() {
     if (*this == blank) return 0; // TODO: support all data-word values.
     return data_ref_len();
   }
   
-  Chars data_ref_chars();
+  Chars data_ref_chars() {
+    assert(ref_is_data());
+    return reinterpret_cast<Chars>(d + 1); // address past data header.
+  }
   
-  CharsM data_ref_charsM();
+  CharsM data_ref_charsM() {
+    assert(ref_is_data());
+    return reinterpret_cast<CharsM>(d + 1); // address past data header.
+  }
   
   Chars data_chars() {
     if (*this == blank) return null; // TODO: support all data-word values.
@@ -386,35 +401,6 @@ const Obj int0 = Obj(Int(ot_int));
 
 // zero length data word.
 const Obj blank = Obj(Uns(ot_sym | data_word_bit));
-
-
-struct Data {
-  Head head;
-  Int len;
-  
-  
-} ALIGNED_TO_WORD;
-DEF_SIZE(Data);
-
-
-
-Int Obj::data_ref_len() {
-  assert(ref_is_data());
-  assert(d->len > 0);
-  return d->len;
-}
-
-
-Chars Obj::data_ref_chars() {
-  assert(ref_is_data());
-  return reinterpret_cast<Chars>(d + 1); // address past data header.
-}
-
-
-CharsM Obj::data_ref_charsM() {
-  assert(ref_is_data());
-  return reinterpret_cast<CharsM>(d + 1); // address past data header.
-}
 
 
 static Obj ptr_new(Raw p) {
