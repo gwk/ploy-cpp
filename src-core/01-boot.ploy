@@ -216,10 +216,11 @@
 # comparison.
 
 <pub-fn iso [-a -b]
-  <let t (type-of a)>
-  <if (not (is t (type-of b))) false
-    (not (is-ref a)) (is a b)
+  <if (is a b) true
+    (not (is (type-of a) (type-of b))) false
+    (not (is-ref a)) false
     (is-data a) (data-ref-iso a b)
+    (is-env a) false # environments have identity equality.
     <do
       <let len (cmpd-len a)>
       <if (ine len (cmpd-len b)) false
