@@ -23,7 +23,7 @@ static Obj expand_quasiquote(Int qua_depth, Obj o) {
   }
   Obj type = o.type();
   if (!qua_depth && type == t_Unq) { // unquote is only performed at the same (innermost) level.
-    check(cmpd_len(o) == 1, "malformed Unq: %o", o);
+    check(o.cmpd_len() == 1, "malformed Unq: %o", o);
     Obj e = cmpd_el(o, 0).ret();
     o.rel();
     return e;
@@ -35,10 +35,10 @@ static Obj expand_quasiquote(Int qua_depth, Obj o) {
     } else if (type == t_Unq) {
       qd1--;
     }
-    Obj exprs = cmpd_new_raw(t_Arr_Expr.ret(), cmpd_len(o) + 2);
+    Obj exprs = cmpd_new_raw(t_Arr_Expr.ret(), o.cmpd_len() + 2);
     cmpd_put(exprs, 0, s_CONS.ret_val());
     cmpd_put(exprs, 1, type_name(type).ret());
-    for_in(i, cmpd_len(o)) {
+    for_in(i, o.cmpd_len()) {
       Obj e = cmpd_el(o, i);
       cmpd_put(exprs, i + 2, expand_quasiquote(qd1, e.ret())); // propagate the quotation.
     }
@@ -66,11 +66,11 @@ static Obj expand(Int d, Obj env, Obj code) {
   }
   Obj type = code.ref_type();
   if (type == t_Quo) {
-    exc_check(cmpd_len(code) == 1, "malformed Quo: %o", code);
+    exc_check(code.cmpd_len() == 1, "malformed Quo: %o", code);
     return code;
   }
   if (type == t_Qua) {
-    exc_check(cmpd_len(code) == 1, "malformed Qua: %o", code);
+    exc_check(code.cmpd_len() == 1, "malformed Qua: %o", code);
     Obj expr = cmpd_el(code, 0).ret();
     code.rel();
     return expand_quasiquote(0, expr);
@@ -87,9 +87,9 @@ static Obj expand(Int d, Obj env, Obj code) {
     // TODO: collapse comment and VOID nodes or perhaps a special COLLAPSE node?
     // this might allow for us to do away with the preprocess phase,
     // and would also allow a macro to collapse into nothing.
-    Obj expanded = cmpd_new_raw(code.ref_type().ret(), cmpd_len(code));
-    Obj* expanded_els = cmpd_els(expanded);
-    for_in(i, cmpd_len(code)) {
+    Obj expanded = cmpd_new_raw(code.ref_type().ret(), code.cmpd_len());
+    Obj* expanded_els = expanded.cmpd_els();
+    for_in(i, code.cmpd_len()) {
       expanded_els[i] = expand(d + 1, env, cmpd_el(code, i).ret());
     }
     track_src(code, expanded);

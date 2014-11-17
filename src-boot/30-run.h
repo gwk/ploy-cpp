@@ -43,7 +43,7 @@ static Step run_sym(Trace* t, Obj env, Obj code) {
 
 static Step run_Quo(UNUSED Int d, Trace* t, Obj env, Obj code) {
   // owns env.
-  exc_check(cmpd_len(code) == 1, "Quo requires 1 field; received %i", cmpd_len(code));
+  exc_check(code.cmpd_len() == 1, "Quo requires 1 field; received %i", code.cmpd_len());
   return Step(env, cmpd_el(code, 0).ret());
 }
 
@@ -52,9 +52,9 @@ static Step run(Int depth, Trace* parent_trace, Obj env, Obj code);
 
 static Step run_Do(Int d, Trace* t, Obj env, Obj code) {
   // owns env.
-  assert(cmpd_len(code) == 1);
+  assert(code.cmpd_len() == 1);
   Obj exprs = cmpd_el(code, 0);
-  Int len = cmpd_len(exprs);
+  Int len = exprs.cmpd_len();
   if (!len) {
     return Step(env, s_void.ret_val());
   }
@@ -70,7 +70,7 @@ static Step run_Do(Int d, Trace* t, Obj env, Obj code) {
 
 static Step run_Scope(UNUSED Int d, Trace* t, Obj env, Obj code) {
   // owns env.
-  exc_check(cmpd_len(code) == 1, "Scope requires 1 field; received %i", cmpd_len(code));
+  exc_check(code.cmpd_len() == 1, "Scope requires 1 field; received %i", code.cmpd_len());
   Obj expr = cmpd_el(code, 0);
   Obj sub_env = env_push_frame(env.ret());
   return Step(env, sub_env, expr);
@@ -87,7 +87,7 @@ static Obj bind_val(Trace* t, Bool is_mutable, Obj env, Obj key, Obj val) {
 
 static Step run_Bind(Int d, Trace* t, Obj env, Obj code) {
   // owns env.
-  exc_check(cmpd_len(code) == 4, "Bind requires 4 fields; received %i", cmpd_len(code));
+  exc_check(code.cmpd_len() == 4, "Bind requires 4 fields; received %i", code.cmpd_len());
   Obj is_mutable = cmpd_el(code, 0);
   Obj is_public = cmpd_el(code, 1);
   Obj sym = cmpd_el(code, 2);
@@ -108,7 +108,7 @@ static Step run_Bind(Int d, Trace* t, Obj env, Obj code) {
 
 static Step run_If(Int d, Trace* t, Obj env, Obj code) {
   // owns env.
-  exc_check(cmpd_len(code) == 3, "If requires 3 fields; received %i", cmpd_len(code));
+  exc_check(code.cmpd_len() == 3, "If requires 3 fields; received %i", code.cmpd_len());
   Obj pred = cmpd_el(code, 0);
   Obj then = cmpd_el(code, 1);
   Obj else_ = cmpd_el(code, 2);
@@ -122,7 +122,7 @@ static Step run_If(Int d, Trace* t, Obj env, Obj code) {
 
 static Step run_Fn(UNUSED Int d, Trace* t, Obj env, Obj code) {
   // owns env.
-  exc_check(cmpd_len(code) == 5, "Fn requires 5 fields; received %i", cmpd_len(code));
+  exc_check(code.cmpd_len() == 5, "Fn requires 5 fields; received %i", code.cmpd_len());
   Obj is_native = cmpd_el(code, 0);
   Obj is_macro  = cmpd_el(code, 1);
   Obj pars_seq  = cmpd_el(code, 2);
@@ -131,12 +131,12 @@ static Step run_Fn(UNUSED Int d, Trace* t, Obj env, Obj code) {
   exc_check(is_macro.is_bool(), "Fn: is-macro is not a Bool: %o", is_macro);
   exc_check(pars_seq.type() == t_Syn_seq,
     "Fn: pars is not a sequence literal: %o", pars_seq);
-  assert(cmpd_len(pars_seq) == 1);
+  assert(pars_seq.cmpd_len() == 1);
   Obj pars_exprs = cmpd_el(pars_seq, 0);
-  Obj pars = cmpd_new_raw(t_Arr_Par.ret(), cmpd_len(pars_exprs));
+  Obj pars = cmpd_new_raw(t_Arr_Par.ret(), pars_exprs.cmpd_len());
   Obj variad = s_void.ret_val();
   Obj assoc = s_void.ret_val();
-  for_in(i, cmpd_len(pars_exprs)) {
+  for_in(i, pars_exprs.cmpd_len()) {
     Obj syn = cmpd_el(pars_exprs, i);
     Obj syn_type = syn.type();
     Obj par_name;
@@ -284,7 +284,7 @@ static Obj run_bind_vals(Int d, Trace* t, Obj env, Obj call, Obj variad, Obj ass
   env = bind_val(t, false, env, s_self.ret_val(), vals.el_move(0));
   Int i_vals = 1; // first name of the interleaved name/value pairs.
   Bool has_variad = false;
-  for_in(i_pars, cmpd_len(pars)) {
+  for_in(i_pars, pars.cmpd_len()) {
     assert(i_vals <= vals.len() && i_vals % 2 == 1);
     Obj par = cmpd_el(pars, i_pars);
     exc_check(par.type() == t_Par, "call: %o\nparameter %i is malformed: %o",
@@ -308,7 +308,7 @@ static Obj run_bind_vals(Int d, Trace* t, Obj env, Obj call, Obj variad, Obj ass
 static Step run_call_Func(Int d, Trace* t, Obj env, Obj call, Array vals, Bool is_call) {
   // owns env, func.
   Obj func = vals.el(0);
-  assert(cmpd_len(func) == 8);
+  assert(func.cmpd_len() == 8);
   Obj is_native = cmpd_el(func, 0);
   Obj is_macro  = cmpd_el(func, 1);
   Obj lex_env   = cmpd_el(func, 2);
@@ -360,7 +360,7 @@ static Step run_call_Accessor(UNUSED Int d, Trace* t, Obj env, Obj call, Array v
   Obj accessor = vals.el_move(0);
   Obj accessee = vals.el_move(2);
   vals.dealloc();
-  assert(cmpd_len(accessor) == 1);
+  assert(accessor.cmpd_len() == 1);
   Obj name = cmpd_el(accessor, 0);
   exc_check(name.is_sym(), "call: %o\naccessor expr is not a sym: %o", call, name);
   exc_check(accessee.is_cmpd(), "call: %o\naccessee is not a struct: %o", call, accessee);
@@ -369,8 +369,8 @@ static Step run_call_Accessor(UNUSED Int d, Trace* t, Obj env, Obj call, Array v
   Obj kind = cmpd_el(type, 1);
   exc_check(is_kind_struct(kind), "call: %o\naccessee is not a struct: %o", call, accessee);
   Obj fields = cmpd_el(kind, 0);
-  assert(cmpd_len(fields) == cmpd_len(accessee));
-  for_in(i, cmpd_len(fields)) {
+  assert(fields.cmpd_len() == accessee.cmpd_len());
+  for_in(i, fields.cmpd_len()) {
     Obj field = cmpd_el(fields, i);
     Obj field_name = cmpd_el(field, 0);
     if (field_name == name) {
@@ -398,7 +398,7 @@ static Step run_call_Mutator(UNUSED Int d, Trace* t, Obj env, Obj call, Array va
   Obj mutatee = vals.el_move(2);
   Obj val = vals.el_move(4);
   vals.dealloc();
-  assert(cmpd_len(mutator) == 1);
+  assert(mutator.cmpd_len() == 1);
   Obj name = cmpd_el(mutator, 0);
   exc_check(name.is_sym(), "call: %o\nmutator expr is not a sym: %o", call, name);
   exc_check(mutatee.is_cmpd(), "call: %o\nmutatee is not a struct: %o", call, mutatee);
@@ -406,8 +406,8 @@ static Step run_call_Mutator(UNUSED Int d, Trace* t, Obj env, Obj call, Array va
   assert(type.type() == t_Type);
   Obj kind = cmpd_el(type, 1);
   Obj fields = cmpd_el(kind, 0);
-  assert(cmpd_len(fields) == cmpd_len(mutatee));
-  for_in(i, cmpd_len(fields)) {
+  assert(fields.cmpd_len() == mutatee.cmpd_len());
+  for_in(i, fields.cmpd_len()) {
     Obj field = cmpd_el(fields, i);
     Obj field_name = cmpd_el(field, 0);
     if (field_name == name) {
@@ -467,8 +467,8 @@ static Step run_call_CONS(UNUSED Int d, Trace* t, Obj env, Obj call, Array vals)
   if (is_kind_struct(kind)) {
     Obj fields = kind_fields(kind);
     // TODO: support field defaults.
-    exc_check(cmpd_len(fields) == len, "call: %o\nCONS: type %o expects %i fields; received %i",
-      call, type, len, cmpd_len(fields));
+    exc_check(fields.cmpd_len() == len, "call: %o\nCONS: type %o expects %i fields; received %i",
+      call, type, len, fields.cmpd_len());
     for_in(i, len) {
       Obj field = cmpd_el(fields, i);
       Obj field_name = cmpd_el(field, 0);
@@ -526,9 +526,9 @@ static Step run_call_dispatcher(Int d, Trace* t, Obj env, Obj call, Array vals,
 
 static Step run_Call(Int d, Trace* t, Obj env, Obj code) {
   // owns env.
-  assert(cmpd_len(code) == 1);
+  assert(code.cmpd_len() == 1);
   Obj exprs = cmpd_el(code, 0);
-  Int len = cmpd_len(exprs);
+  Int len = exprs.cmpd_len();
   exc_check(len > 0, "call is empty: %o", code);
   // assemble vals as an array of interleaved name, value pairs.
   // the callee never has a name, so there are an odd number of elements.
@@ -739,9 +739,9 @@ static Step run_code(Obj env, Obj code) {
 static Obj run_macro(Trace* t, Obj env, Obj code) {
   // owns env.
   run_err_trace(0, trace_expand_prefix, code);
-  assert(cmpd_len(code) == 1);
+  assert(code.cmpd_len() == 1);
   Obj exprs = cmpd_el(code, 0);
-  Int len = cmpd_len(exprs); 
+  Int len = exprs.cmpd_len(); 
   exc_check(len > 0, "expand: %o\nempty", code);
   Obj macro_sym = cmpd_el(exprs, 0);
   exc_check(macro_sym.is_sym(), "expand: %o\nargument 0 must be a Sym; found: %o",

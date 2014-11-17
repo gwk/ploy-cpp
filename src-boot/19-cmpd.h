@@ -6,19 +6,11 @@
 
 // iterate over a compound.
 #define it_cmpd(it, c) \
-for (Obj *it = cmpd_els(c), *_end_##it = it + cmpd_len(c); \
+for (Obj *it = c.cmpd_els(), *_end_##it = it + c.cmpd_len(); \
 it < _end_##it; \
 it++)
 
 
-struct Cmpd {
-  Head head;
-  Int len;
-} ALIGNED_TO_WORD;
-DEF_SIZE(Cmpd);
-
-
-static Obj* cmpd_els(Obj c);
 static void cmpd_put(Obj c, Int i, Obj el);
 
 static Obj cmpd_new_raw(Obj type, Int len) {
@@ -28,7 +20,7 @@ static Obj cmpd_new_raw(Obj type, Int len) {
   *o.h = Head(type.r);
   o.c->len = len;
 #if OPTION_MEM_ZERO
-  memset(cmpd_els(o), 0, Uns(size_Obj * len));
+  memset(o.cmpd_els(), 0, Uns(size_Obj * len));
 #endif
   return o;
 }
@@ -66,21 +58,8 @@ static Obj cmpd_new(Obj type, T el, Ts... rest) {
 }
 
 
-static Int cmpd_len(Obj c) {
-  assert(c.ref_is_cmpd());
-  assert(c.c->len >= 0);
-  return c.c->len;
-}
-
-
-static Obj* cmpd_els(Obj c) {
-  assert(c.ref_is_cmpd());
-  return reinterpret_cast<Obj*>(c.c + 1); // address past header.
-}
-
-
 static Array cmpd_array(Obj c) {
-  return Array(cmpd_len(c), cmpd_els(c));
+  return Array(c.cmpd_len(), c.cmpd_els());
 }
 
 
@@ -93,27 +72,6 @@ static Obj cmpd_el(Obj c, Int i) {
 
 static void cmpd_put(Obj c, Int i, Obj e) {
   cmpd_array(c).put(i, e);
-}
-
-
-static Obj cmpd_slice(Obj c, Int f, Int t) {
-  assert(c.ref_is_cmpd());
-  Int l = cmpd_len(c);
-  if (f < 0) f += l;
-  if (t < 0) t += l;
-  f = int_clamp(f, 0, l);
-  t = int_clamp(t, 0, l);
-  Int ls = t - f; // length of slice.
-  if (ls == l) {
-    return c; // no ret/rel necessary.
-  }
-  Obj slice = cmpd_new_raw(c.ref_type().ret(), ls);
-  Obj* src = cmpd_els(c);
-  Obj* dst = cmpd_els(slice);
-  for_in(i, ls) {
-    dst[i] = src[i + f].ret();
-  }
-  return slice;
 }
 
 
@@ -139,3 +97,4 @@ static void cmpd_dissolve_fields(Obj c) {
     *it = s_DISSOLVED.ret_val();
   }
 }
+

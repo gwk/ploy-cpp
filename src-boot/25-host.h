@@ -120,7 +120,7 @@ static Obj host_dlen(Trace* t, Obj env) {
 static Obj host_cmpd_len(Trace* t, Obj env) {
   GET_A;
   exc_check(a.is_cmpd(), "cmpd-len requires Cmpd; received: %o", a);
-  Int l = cmpd_len(a);
+  Int l = a.cmpd_len();
   return Obj::with_Int(l);
 }
 
@@ -139,7 +139,7 @@ static Obj host_cmpd_field(Trace* t, Obj env) {
   GET_AB;
   exc_check(a.is_cmpd(), "field requires arg 1 to be a Cmpd; received: %o", a);
   exc_check(b.is_int(), "field requires arg 2 to be an Int; received: %o", b);
-  Int l = cmpd_len(a);
+  Int l = a.cmpd_len();
   Int i = b.int_val();
   exc_check(i >= 0 && i < l, "field index out of range; index: %i; len: %i", i, l);
   Obj field = cmpd_el(a, i);
@@ -151,7 +151,7 @@ static Obj host_ael(Trace* t, Obj env) {
   GET_AB;
   exc_check(a.is_cmpd(), "ael requires arg 1 to be an Arr; received: %o", a);
   exc_check(b.is_int(), "ael requires arg 2 to be a Int; received: %o", b);
-  Int l = cmpd_len(a);
+  Int l = a.cmpd_len();
   Int i = b.int_val();
   exc_check(i >= 0 && i < l, "ael index out of range; index: %i; len: %i", i, l);
   Obj el = cmpd_el(a, i);
@@ -176,7 +176,7 @@ static Obj host_aput(Trace* t, Obj env) {
   GET_ABC;
   exc_check(a.is_cmpd(), "el requires arg 1 to be a Arr; received: %o", a);
   exc_check(b.is_int(), "el requires arg 2 to be a Int; received: %o", b);
-  Int l = cmpd_len(a);
+  Int l = a.cmpd_len();
   Int i = b.int_val();
   exc_check(i >= 0 && i < l, "el index out of range; index: %i; len: %i", i, l);
   Array array = cmpd_array(a);
@@ -193,7 +193,7 @@ static Obj host_aslice(Trace* t, Obj env) {
   exc_check(c.is_int(), "el requires arg 3 to be a Int; received: %o", c);
   Int fr = b.int_val();
   Int to = c.int_val();
-  return cmpd_slice(a, fr, to);
+  return a.cmpd_slice(fr, to);
 }
 
 

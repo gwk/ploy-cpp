@@ -52,13 +52,14 @@ static const Uns data_word_bit = (1 << width_obj_tag);
 
 static const Int width_sym_tags = width_obj_tag + 1; // extra bit for Data-word flag.
 
+static const Int sym_index_end = 1L << (size_Int * 8 - width_sym_tags);
+
 static Chars obj_tag_names[] = {
   "Ref",
   "Ptr",
   "Int",
   "Sym",
 };
-
 
 struct Head { // common header for all heap objects.
   Raw type; // actually Obj; declared as untyped so that Head can be declared above Obj.
@@ -72,9 +73,13 @@ struct Data {
 } ALIGNED_TO_WORD;
 DEF_SIZE(Data);
 
+struct Cmpd {
+  Head head;
+  Int len;
+} ALIGNED_TO_WORD;
+DEF_SIZE(Cmpd);
 
 struct Env;
-struct Cmpd;
 struct Type;
 
 union Obj;
@@ -83,7 +88,7 @@ extern const Obj s_true, s_false, int0, blank;
 extern Obj t_Data, t_Env, t_Int, t_Ptr, t_Sym, t_Type;
 
 static void cmpd_dissolve_fields(Obj c);
-static Int cmpd_len(Obj c);
+static Obj cmpd_new_raw(Obj type, Int len);
 static Obj cmpd_rel_fields(Obj c);
 static Obj env_rel_fields(Obj o);
 static Obj type_name(Obj t);
@@ -364,7 +369,7 @@ union Obj {
         Obj type = ref_type();
         if (type == t_Data) return *this != blank;
         if (type == t_Env) return true;
-        return !!cmpd_len(*this);
+        return !!cmpd_len();
       }
       case ot_ptr:
         return (ptr() != null);
@@ -455,6 +460,39 @@ union Obj {
     return d;
   }
   
+  // Cmpd.
+
+  Int cmpd_len() const {
+    assert(ref_is_cmpd());
+    assert(c->len >= 0);
+    return c->len;
+  }
+
+  Obj* cmpd_els() const {
+    assert(ref_is_cmpd());
+    return reinterpret_cast<Obj*>(c + 1); // address past header.
+  }
+
+  Obj cmpd_slice(Int fr, Int to) {
+    assert(ref_is_cmpd());
+    Int l = cmpd_len();
+    if (fr < 0) fr += l;
+    if (to < 0) to += l;
+    fr = int_clamp(fr, 0, l);
+    to = int_clamp(to, 0, l);
+    Int ls = to - fr; // length of slice.
+    if (ls == l) {
+      return *this; // no ret/rel necessary.
+    }
+    Obj slice = cmpd_new_raw(ref_type().ret(), ls);
+    Obj* src = cmpd_els();
+    Obj* dst = slice.cmpd_els();
+    for_in(_i, ls) {
+      dst[_i] = src[_i + fr].ret();
+    }
+    return slice;
+  }
+
 };
 DEF_SIZE(Obj);
 

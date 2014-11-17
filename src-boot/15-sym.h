@@ -4,10 +4,6 @@
 #include "14-int.h"
 
 
-#define ERR_SYM(s) errFL("SYM %s: u:%lu; si:%li", #s, s.u, sym_index(s))
-
-static const Int sym_index_end = 1L << (size_Int * 8 - width_sym_tags);
-
 // each Sym object is an index into this list of strings.
 static List global_sym_names;
 

@@ -324,11 +324,11 @@ static void obj_validate(Set* s, Obj o) {
   s->insert(o);
   obj_validate(s, o.type());
   if (!o.is_cmpd()) return;
-  Int len = cmpd_len(o);
+  Int len = o.cmpd_len();
   if (o.type() == t_Type) {
     check(len == 2, "Type: bad len: %i", len);
   }
-  for_in(i, cmpd_len(o)) {
+  for_in(i, o.cmpd_len()) {
     obj_validate(s, cmpd_el(o, i));
   }
 }
