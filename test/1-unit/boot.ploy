@@ -1,3 +1,18 @@
+<scope # boolean ops.
+  <utest false   <or>>
+  <utest false  <or 0>>
+  <utest true   <or 1>>
+  <utest false  <or 0 0>>
+  <utest true   <or 1 0>>
+  <utest true   <or 0 1>>
+  <utest true   <or 1 1>>
+  <utest true   <and>>
+  <utest false  <and 0>>
+  <utest true   <and 1>>
+  <utest false  <and 0 0>>
+  <utest false  <and 1 0>>
+  <utest false  <and 0 1>>
+  <utest true   <and 1 1>>>
 
 <scope # iso.
   <utest true (iso 0 0)>

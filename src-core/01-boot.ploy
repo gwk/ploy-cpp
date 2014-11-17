@@ -138,6 +138,18 @@
 <macro check [-condition -msg]
   ~<do <if (not ,condition) (error ,msg)> void>> # void foils TCO so that trace reveals test.
 
+<macro or [&exprs]
+  <let len (alen exprs)>
+  <recur [-i=0]
+    <if (ieq i len) false
+      (CONS If (ael exprs i) true (self (iinc i)))>>>
+
+<macro and [&exprs]
+  <let len (alen exprs)>
+  <recur [-i=0]
+    <if (ieq i len) true
+      (CONS If (ael exprs i) (self (iinc i)) false)>>>
+
 # output functions.
 
 <let-fn write1 [-file -str]
