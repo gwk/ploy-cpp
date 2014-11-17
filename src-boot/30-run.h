@@ -382,8 +382,8 @@ static Step run_call_Accessor(UNUSED Int d, Trace* t, Obj env, Obj call, Array v
   }
   errFL("call: %o\naccessor field not found: %o\ntype: %o\nfields:",
     call, name, type_name(type));
-  it_cmpd(it, fields) {
-    errFL("  %o", cmpd_el(*it, 0));
+  for (Obj e : fields.cmpd_it()) {
+    errFL("  %o", cmpd_el(e, 0));
   }
   exc_raise("");
 }
@@ -420,8 +420,8 @@ static Step run_call_Mutator(UNUSED Int d, Trace* t, Obj env, Obj call, Array va
   }
   errFL("call: %o\nmutator field not found: %o\ntype: %o\nfields:",
     call, name, type_name(type));
-  it_cmpd(it, fields) {
-    errFL("  %o", cmpd_el(*it, 0));
+  for (Obj e : fields.cmpd_it()) {
+    errFL("  %o", cmpd_el(e, 0));
   }
   exc_raise("");
 }
@@ -549,9 +549,9 @@ static Step run_Call(Int d, Trace* t, Obj env, Obj code) {
       env = step.res.env;
       Obj val = step.res.val;
       exc_check(val.is_cmpd(), "call: %o\nspliced value is not of a compound type: %o", val);
-      it_cmpd(it, val) {
+      for (Obj e : val.cmpd_it()) {
         vals.append(obj0); // no name.
-        vals.append(it->ret());
+        vals.append(e.ret());
       }
       val.rel();
     } else if (expr_t == t_Label) {

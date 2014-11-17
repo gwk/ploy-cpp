@@ -473,6 +473,11 @@ union Obj {
     return reinterpret_cast<Obj*>(c + 1); // address past header.
   }
 
+  Range<Obj*>cmpd_it() const {
+    Obj* b = cmpd_els();
+    return Range<Obj*>(b, b + cmpd_len());
+  }
+
   Obj cmpd_slice(Int fr, Int to) {
     assert(ref_is_cmpd());
     Int l = cmpd_len();

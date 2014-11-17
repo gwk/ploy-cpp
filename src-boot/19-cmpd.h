@@ -4,13 +4,6 @@
 #include "18-env.h"
 
 
-// iterate over a compound.
-#define it_cmpd(it, c) \
-for (Obj *it = c.cmpd_els(), *_end_##it = it + c.cmpd_len(); \
-it < _end_##it; \
-it++)
-
-
 static void cmpd_put(Obj c, Int i, Obj el);
 
 static Obj cmpd_new_raw(Obj type, Int len) {
@@ -92,9 +85,9 @@ static Obj cmpd_rel_fields(Obj c) {
 
 
 static void cmpd_dissolve_fields(Obj c) {
-  it_cmpd(it, c) {
-    it->rel();
-    *it = s_DISSOLVED.ret_val();
+  for (Obj& e : c.cmpd_it()) {
+    e.rel();
+    e = s_DISSOLVED.ret_val();
   }
 }
 
