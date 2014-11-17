@@ -206,7 +206,7 @@ static Obj parse_Sym(Parser& p) {
     if (!(c == '-' || c == '_' || isalnum(c))) break;
   }
   Str s = str_slice(p.s, off, p.pos.off);
-  return sym_new(s);
+  return Obj::Sym(s);
 }
 
 

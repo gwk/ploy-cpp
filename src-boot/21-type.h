@@ -160,7 +160,7 @@ static Obj type_unit(Obj type) {
 
 
 static Obj par_new(Chars n, Obj t) {
-  return Obj::Cmpd(t_Par.ret(), sym_new_from_chars(n), t.ret(), s_void.ret_val());
+  return Obj::Cmpd(t_Par.ret(), Obj::Sym(n), t.ret(), s_void.ret_val());
 }
 
 
@@ -298,7 +298,7 @@ static void type_add(Obj type, Chars c_name, Obj kind) {
   assert(type.rc());
   type.h->type = t_Type.ret().t;
   type.t->len = 2;
-  type.t->name = sym_new_from_c(c_name);
+  type.t->name = Obj::Sym_from_c(c_name);
   type.t->kind = kind;
 }
 

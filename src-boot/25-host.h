@@ -266,13 +266,13 @@ typedef Obj(*Func_host_ptr)(Trace*, Obj);
 
 
 static Obj host_init_const(Obj env, Chars name, Obj val) {
-  return env_bind(env, false, sym_new_from_c(name), val);
+  return env_bind(env, false, Obj::Sym_from_c(name), val);
 }
 
 
 static Obj host_init_func(Obj env, Int len_pars, Chars name, Func_host_ptr ptr) {
   // owns env.
-  Obj sym = sym_new_from_c(name);
+  Obj sym = Obj::Sym_from_c(name);
   Obj pars; // TODO: add real types; unique value for expression default?
   #define PAR(s) \
   Obj::Cmpd(t_Par.ret(), s.ret_val(), s_nil.ret_val(), s_void.ret_val())
@@ -299,7 +299,7 @@ static Obj host_init_func(Obj env, Int len_pars, Chars name, Func_host_ptr ptr) 
 static Obj host_init_file(Obj env, Chars sym_name, Chars name, CFile f, Bool r,
   Bool w) {
   // owns env.
-  Obj sym = sym_new_from_chars(sym_name);
+  Obj sym = Obj::Sym(sym_name);
   Obj val = Obj::Cmpd(t_File.ret(), Obj::Data(name), Obj::with_Ptr(f),
     Obj::with_Bool(r), Obj::with_Bool(w));
   return env_bind(env, false, sym, val);

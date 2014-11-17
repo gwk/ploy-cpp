@@ -348,10 +348,37 @@ union Obj {
     return i >> width_sym_tags;
   }
   
+  static Obj Sym_with_index(Int idx) {
+    check(idx < sym_index_end, "Sym index is too large: %lx", idx);
+    return Obj(Uns((Uns(idx) << width_sym_tags) | ot_sym));
+  }
+
   Bool is_special_sym() const;
   
   Obj sym_data() const;
   
+  static Obj Sym(Str s);
+
+  static Obj Sym(Chars c) {
+    return Sym(Str(c));
+  }
+
+  static Obj Sym_from_c(Chars c) {
+    // create a symbol after converting underscores to dashes.
+    Int len = chars_len(c);
+    CharsM chars = CharsM(raw_alloc(len + 1, ci_Chars));
+    memcpy(chars, c, size_t(len + 1));
+    for_in(i, len) {
+      if (chars[i] == '_') {
+        chars[i] = '-';
+      }
+    }
+    Obj sym = Sym(chars);
+    raw_dealloc(chars, ci_Chars);
+    return sym;
+  }
+
+
   // Bool
   
   Bool is_true_bool() const {

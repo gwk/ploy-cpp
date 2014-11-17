@@ -4,58 +4,6 @@
 #include "14-int.h"
 
 
-// each Sym object is an index into this list of strings.
-static List global_sym_names;
-
-
-#define _sym_with_index(index) Obj(Uns((Uns(index) << width_sym_tags) | ot_sym))
-
-static Obj sym_with_index(Int i) {
-  check(i < sym_index_end, "Sym index is too large: %lx", i);
-  return _sym_with_index(i);
-}
-
-
-Obj Obj::sym_data() const {
-  assert(is_sym());
-  return global_sym_names.el(sym_index());
-}
-
-
-static Obj sym_new(Str s) {
-  static Hash_map<String, Obj> cache;
-  Obj& sym = cache[s]; // on missing key, inserts default, obj0.
-  if (!sym.vld()) {
-    Obj d = Obj::Data(s);
-    Int i = global_sym_names.append(d);
-    sym = sym_with_index(i);
-    //errFL("NEW SYM: %ld: %o", i, sym);
-  }
-  return sym.ret_val();
-}
-
-
-static Obj sym_new_from_chars(Chars c) {
-  return sym_new(Str(c));
-}
-
-
-static Obj sym_new_from_c(Chars c) {
-  // create a symbol after converting underscores to dashes.
-  Int len = chars_len(c);
-  CharsM chars = CharsM(raw_alloc(len + 1, ci_Chars));
-  memcpy(chars, c, size_t(len + 1));
-  for_in(i, len) {
-    if (chars[i] == '_') {
-      chars[i] = '-';
-    }
-  }
-  Obj sym = sym_new(Str(chars));
-  raw_dealloc(chars, ci_Chars);
-  return sym;
-}
-
-
 // notes:
 // syms with index lower than END_SPECIAL_SYMS are self-evaluating;
 // syms after END_SPECIAL_SYMS are looked up.
@@ -103,18 +51,22 @@ static Chars sym_index_names[] = {
 #undef S
 
 // sym Obj constants.
-#define S(s) const Obj s_##s = _sym_with_index(si_##s);
+#define S(s) const Obj s_##s = Obj::Sym_with_index(si_##s);
 SYM_LIST
 #undef S
 
 #undef SYM_LIST
 
 
+// each Sym object is an index into this list of strings.
+static List global_sym_names;
+
+
 static void sym_init() {
   assert(global_sym_names.len() == 0);
   for_in(i, si_END) {
     Chars name = sym_index_names[i];
-    Obj sym = sym_new_from_c(name);
+    Obj sym = Obj::Sym_from_c(name);
     assert(sym.sym_index() == i);
     sym.rel_val();
   }
@@ -124,3 +76,23 @@ static void sym_init() {
 Bool Obj::is_special_sym() const {
   return sym_index() <= si_END_SPECIAL_SYMS;
 }
+
+
+Obj Obj::sym_data() const {
+  assert(is_sym());
+  return global_sym_names.el(sym_index());
+}
+
+
+Obj Obj::Sym(Str s) {
+  static Hash_map<String, Obj> cache;
+  Obj& sym = cache[s]; // on missing key, inserts default, obj0.
+  if (!sym.vld()) {
+    Obj d = Obj::Data(s);
+    Int i = global_sym_names.append(d);
+    sym = Sym_with_index(i);
+    //errFL("NEW SYM: %ld: %o", i, sym);
+  }
+  return sym.ret_val();
+}
+
