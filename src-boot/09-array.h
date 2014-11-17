@@ -128,4 +128,3 @@ static Obj Cmpd_from_Array(Obj type, Array a) {
   }
   return c;
 }
-

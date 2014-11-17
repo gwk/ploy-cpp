@@ -8,4 +8,3 @@ static Obj compile(UNUSED Obj env, Obj code) {
   // owns code.
   return code;
 }
-

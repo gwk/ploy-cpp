@@ -147,4 +147,3 @@ static void assert_host_basic() {
   assert(size_Raw == size_Uns);
   assert(size_Raw == size_Raw);
 }
-

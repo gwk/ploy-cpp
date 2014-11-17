@@ -78,4 +78,3 @@ static Int chars_append(CharsM* p, Int* cap, Int len, Char c) {
   chars[len] = c;
   return len + 1;
 }
-

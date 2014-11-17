@@ -374,4 +374,3 @@ static void type_cleanup() {
   }
 }
 #endif
-

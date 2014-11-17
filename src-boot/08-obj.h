@@ -211,14 +211,14 @@ union Obj {
     }
   }
 
-// ref
+  // ref
   
   Obj ref_type() const {
     assert(is_ref());
     return Obj(h->type);
   }
   
-// rc
+  // rc
   
   Uns rc() const {
     // get the object's retain count for debugging purposes.
@@ -308,7 +308,7 @@ union Obj {
     return tail;
   }
   
-// Ptr
+  // Ptr
   
   Raw ptr() const {
     assert(is_ptr());
@@ -586,5 +586,3 @@ union Obj {
 
 };
 DEF_SIZE(Obj);
-
-

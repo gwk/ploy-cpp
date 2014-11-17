@@ -124,4 +124,3 @@ static void sym_init() {
 Bool Obj::is_special_sym() const {
   return sym_index() <= si_END_SPECIAL_SYMS;
 }
-

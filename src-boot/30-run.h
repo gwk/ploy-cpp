@@ -761,5 +761,3 @@ static Obj run_macro(Trace* t, Obj env, Obj code) {
   run_err_trace(0, trace_expand_val_prefix, step.res.val);
   return step.res.val;
 }
-
-

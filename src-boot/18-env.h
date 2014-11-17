@@ -112,5 +112,3 @@ static void env_cleanup() {
   global_env = obj0;
 }
 #endif
-
-
