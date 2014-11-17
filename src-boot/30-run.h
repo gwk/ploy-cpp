@@ -77,9 +77,9 @@ static Step run_Scope(UNUSED Int d, Trace* t, Obj env, Obj code) {
 }
 
 
-static Obj bind_val(Trace* t, Bool is_mutable, Obj env, Obj key, Obj val) {
+static Obj bind_val(Trace* t, Obj env, Bool is_public, Obj key, Obj val) {
   // owns env, key, val.
-  Obj env1 = env_bind(env, is_mutable, false, key, val);
+  Obj env1 = env_bind(env, is_public, key, val);
   exc_check(env1.vld(), "symbol is already bound: %o", key);
   return env1;
 }
@@ -87,20 +87,17 @@ static Obj bind_val(Trace* t, Bool is_mutable, Obj env, Obj key, Obj val) {
 
 static Step run_Bind(Int d, Trace* t, Obj env, Obj code) {
   // owns env.
-  exc_check(code.cmpd_len() == 4, "Bind requires 4 fields; received %i", code.cmpd_len());
-  Obj is_mutable = code.cmpd_el(0);
-  Obj is_public = code.cmpd_el(1);
-  Obj sym = code.cmpd_el(2);
-  Obj expr = code.cmpd_el(3);
-  exc_check(is_mutable.is_bool(), "Bind requires argument 1 to be a Bool; received: %o",
-    is_mutable);
+  exc_check(code.cmpd_len() == 3, "Bind requires 3 fields; received %i", code.cmpd_len());
+  Obj is_public = code.cmpd_el(0);
+  Obj sym = code.cmpd_el(1);
+  Obj expr = code.cmpd_el(2);
   exc_check(is_public.is_bool(), "Bind requires argument 2 to be a Bool; received: %o",
     is_public);
   exc_check(sym.is_sym(), "Bind requires argument 3 to be a bindable sym; received: %o",
     sym);
   exc_check(!sym.is_special_sym(), "Bind cannot bind to special sym: %o", sym);
   Step step = run(d, t, env, expr);
-  Obj env1 = bind_val(t, is_mutable.is_true_bool(), step.res.env, sym.ret_val(),
+  Obj env1 = bind_val(t, step.res.env, is_public.is_true_bool(), sym.ret_val(),
     step.res.val.ret());
   return Step(env1, step.res.val);
 }
@@ -224,7 +221,7 @@ static Obj bind_par(Int d, Trace* t, Obj env, Obj call, Obj par, Array vals, Int
   } else {
     exc_raise("call: %o\nreceived too few arguments", call);
   }
-  env = bind_val(t, false, env, par_el_name.ret_val(), val);
+  env = bind_val(t, env, false, par_el_name.ret_val(), val);
   return env;
 }
 
@@ -250,7 +247,7 @@ static Obj bind_variad(UNUSED Int d, Trace* t, Obj env, Obj par, Array vals,
     Obj arg = vals.el_move(i);
     vrd.cmpd_put(j++, arg);
   }
-  env = bind_val(t, false, env, par_el_name.ret_val(), vrd);
+  env = bind_val(t, env, false, par_el_name.ret_val(), vrd);
   return env;
 }
 
@@ -274,7 +271,7 @@ static Obj bind_assoc(UNUSED Int d, Trace* t, Obj env, Obj par, Array vals, Int 
     keys.cmpd_put(j, name.ret_val()); // name is not already owned.
     assoc_vals.cmpd_put(j++, arg);
   }
-  env = bind_val(t, false, env, par_el_name.ret_val(), assoc);
+  env = bind_val(t,  env, false, par_el_name.ret_val(), assoc);
   return env;
 }
 
@@ -282,7 +279,7 @@ static Obj bind_assoc(UNUSED Int d, Trace* t, Obj env, Obj par, Array vals, Int 
 static Obj run_bind_vals(Int d, Trace* t, Obj env, Obj call, Obj variad, Obj assoc, Obj pars,
   Array vals) {
   // owns env.
-  env = bind_val(t, false, env, s_self.ret_val(), vals.el_move(0));
+  env = bind_val(t, env, false, s_self.ret_val(), vals.el_move(0));
   Int i_vals = 1; // first name of the interleaved name/value pairs.
   Bool has_variad = false;
   for_in(i_pars, pars.cmpd_len()) {

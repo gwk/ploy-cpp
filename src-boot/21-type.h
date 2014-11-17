@@ -31,7 +31,7 @@ T(Bang,             struct1, "expr", t_Expr) \
 T(Quo,              struct1, "expr", t_Expr) \
 T(Do,               struct1, "exprs", t_Arr_Expr) \
 T(Scope,            struct1, "expr", t_Expr) \
-T(Bind, struct4, "is-mut", t_Bool, "is-pub", t_Bool, "name", t_Sym, "expr", t_Expr) \
+T(Bind,             struct3,  "is-pub", t_Bool, "name", t_Sym, "expr", t_Expr) \
 T(If,               struct3, "pred", t_Expr, "then", t_Expr, "else", t_Expr) \
 T(Fn,               struct_fn) \
 T(Call,             struct1, "exprs", t_Arr_Expr) \
@@ -342,7 +342,7 @@ static Obj type_init_values(Obj env) {
   #undef T
   for_in(i, ti_end) {
     Obj o = type_for_index(i);
-    env = env_bind(env, false, false, o.t->name.ret(), o.ret());
+    env = env_bind(env, false, o.t->name.ret(), o.ret());
   }
   // validate type graph.
   Set s;

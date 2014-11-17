@@ -1,10 +1,10 @@
 # tail recursive data structure requires that release/dealloc are tail-optimized.
-<var chain nil>
+<let box (CONS Arr-Obj nil)>
 # avoid deep recursion with repeated recurs.
 <macro grow []
   `<recur [-i=(isub OPTION-REC-LIMIT 4)] # just under the recursion limit.
     <when i
-      <var chain (CONS Arr-Obj i chain)>
+      (aput box 0 (CONS Arr-Obj i (ael box 0)))
       (self (idec i))>>>
 <grow>
 <grow>

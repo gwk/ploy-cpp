@@ -10,7 +10,6 @@
   # because we cannot use macro to define itself, we must define it using raw forms.
   # note the structural similarity between the outer Fn form and the inner struct literal.
   (CONS Bind
-    false # is-mutable.
     true # is-public.
     `macro # name.
     (CONS Fn # Fn creates both functions and macros.
@@ -19,7 +18,6 @@
       `[-sym -pars &body] # the parameter list, which does not get evaluated.
       nil # ret-type.
       `(CONS Bind # the body of the 'macro' macro is a Bind form.
-        false # is-mutable.
         true # is-public.
         sym # name.
         (CONS Fn # the value of the binding is created by evaluating the Fn form.
@@ -69,16 +67,12 @@
   (CONS Scope (CONS Do (CONS Arr-Expr *body)))>
 
 <macro let [-sym -expr]
-  # immutable, private binding.
-  (CONS Bind false false sym expr)>
-
-<macro var [-sym -expr]
-  # mutable, private binding.
-  (CONS Bind true false sym expr)>
+  # private binding.
+  (CONS Bind false sym expr)>
 
 <macro pub [-sym -expr]
-  # immutable, public binding.
-  (CONS Bind false true sym expr)>
+  # public binding.
+  (CONS Bind true sym expr)>
 
 # the raw forms are now available through macros.
 

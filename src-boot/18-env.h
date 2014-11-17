@@ -10,9 +10,8 @@
 
 struct Env {
   Head head;
-  Bool is_mutable: 1;
   Bool is_public : 1;
-  Uns bit_padding : 6;
+  Uns bit_padding : 7;
   Char padding[size_Word - 1];
   Obj key; // ENV_FRAME_KEY for frame.
   Obj val; // ENV_FRAME_VAL for frame.
@@ -34,14 +33,13 @@ static Obj env_rel_fields(Obj o) {
 }
 
 
-static Obj env_new(Bool is_mutable, Bool is_public, Obj key, Obj val, Obj tl) {
+static Obj env_new(Bool is_public, Obj key, Obj val, Obj tl) {
   // owns key, val, tl.
   assert(key.is_sym());
   assert(tl == s_ENV_END || tl.is_env());
   counter_inc(ci_Env_rc);
   Obj o = Obj(raw_alloc(size_Env, ci_Env_alloc));
   *o.h = Head(t_Env.ret().r);
-  o.e->is_mutable = is_mutable;
   o.e->is_public = is_public;
   o.e->key = key;
   o.e->val = val;
@@ -65,11 +63,11 @@ static Obj env_get(Obj env, Obj key) {
 
 static Obj env_push_frame(Obj env) {
   // owns env.
-  return env_new(false, false, s_ENV_FRAME_KEY.ret_val(), s_ENV_FRAME_VAL.ret_val(), env);
+  return env_new(false, s_ENV_FRAME_KEY.ret_val(), s_ENV_FRAME_VAL.ret_val(), env);
 }
 
 
-static Obj env_bind(Obj env, Bool is_mutable, Bool is_public, Obj key, Obj val) {
+static Obj env_bind(Obj env, Bool is_public, Obj key, Obj val) {
   // owns env, key, val.
   // returns obj0 on failure.
   assert(!key.is_special_sym());
@@ -77,24 +75,17 @@ static Obj env_bind(Obj env, Bool is_mutable, Bool is_public, Obj key, Obj val) 
   while (e != s_ENV_END) { // check that symbol is not already bound.
     assert(e.is_env());
     Obj k = e.e->key;
-    if (!is_mutable && k == s_ENV_FRAME_KEY) { // frame boundary; check is complete.
+    if (k == s_ENV_FRAME_KEY) { // frame boundary; check is complete.
       break;
     } else if (k == key) { // symbol is already bound.
-      if (is_mutable && e.e->is_mutable) { // mutate the mutable binding.
-        key.rel();
-        e.e->val.rel();
-        e.e->val = val;
-        return env;
-      } else { // immutable; cannot rebind.
-        env.rel();
-        key.rel();
-        val.rel();
-        return obj0;
-      }
+      env.rel();
+      key.rel();
+      val.rel();
+      return obj0;
     }
     e = e.e->tl;
   }
-  return env_new(is_mutable, is_public, key, val, env);
+  return env_new(is_public, key, val, env);
 }
 
 

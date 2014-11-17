@@ -266,7 +266,7 @@ typedef Obj(*Func_host_ptr)(Trace*, Obj);
 
 
 static Obj host_init_const(Obj env, Chars name, Obj val) {
-  return env_bind(env, false, false, sym_new_from_c(name), val);
+  return env_bind(env, false, sym_new_from_c(name), val);
 }
 
 
@@ -292,7 +292,7 @@ static Obj host_init_func(Obj env, Int len_pars, Chars name, Func_host_ptr ptr) 
     pars,
     s_nil.ret_val(), // TODO: specify actual return type?
     Obj::with_Ptr(Raw(ptr)));
-  return env_bind(env, false, false, sym, f);
+  return env_bind(env, false, sym, f);
 }
 
 
@@ -302,7 +302,7 @@ static Obj host_init_file(Obj env, Chars sym_name, Chars name, CFile f, Bool r,
   Obj sym = sym_new_from_chars(sym_name);
   Obj val = Obj::Cmpd(t_File.ret(), Obj::Data(name), Obj::with_Ptr(f),
     Obj::with_Bool(r), Obj::with_Bool(w));
-  return env_bind(env, false, false, sym, val);
+  return env_bind(env, false, sym, val);
 }
 
 
