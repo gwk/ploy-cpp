@@ -72,7 +72,7 @@
   <utest `vb1 (list-dict-fetch d `kb)>
   <utest nil (list-dict-fetch d `kc)>>
 
-<scope # derive-type.
+##<scope # derive-type.
   <utest
     (CONS Type `DERIVED-ARR (CONS Type-kind-arr Int))
     (derive-type Arr (list-dict-new T Int))>

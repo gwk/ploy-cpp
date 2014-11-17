@@ -202,11 +202,6 @@
   # Type-kind is a union of the various Type-kind-*.
   ~<let ,name (CONS Type `,name ,kind)>>
 
-# idiomatic type vars.
-<let-type T (CONS Type-kind-var `T)>
-<let-type K (CONS Type-kind-var `K)>
-<let-type V (CONS Type-kind-var `V)>
-
 # comparison.
 
 <pub-fn iso [-a -b]
@@ -241,11 +236,11 @@
 
 # Arr.
 
-<let-type Arr (CONS Type-kind-arr T)>
+#<let-type Arr (CONS Type-kind-arr T)>
 
 <let-type Arr-Int (CONS Type-kind-arr Int)>
 
-<let-fn arr-copy-to [-dst:Arr -src:Arr -to:Int]
+<let-fn arr-copy-to [-dst:Arr-Obj -src:Arr-Obj -to:Int]
   <check (ige (alen dst) to) "dst is smaller than end index 'to'">
   <check (ige (alen src) to) "src is smaller than end index 'to'">
   <recur [-i=0]
@@ -254,13 +249,13 @@
         (aput dst i (ael src i))
         (self (iinc i))>>>>
 
-<let-fn arr-copy [-dst:Arr -src:Arr] (arr-copy-to dst src (alen src))>
+<let-fn arr-copy [-dst:Arr-Obj -src:Arr-Obj] (arr-copy-to dst src (alen src))>
 
-<let-fn arr-clone [-arr:Arr] (arr-copy (anew (alen src)) src)>
+<let-fn arr-clone [-arr:Arr-Obj] (arr-copy (anew (alen src)) src)>
 
-<let-fn arr-resize [-arr:Arr -len:len]
+<let-fn arr-resize [-arr:Arr-Obj -len:len]
   # create a new array with elements copied from arr; further elements remain UNINIT.
-  (arr-copy-to (anew Arr len) arr (alen arr))>
+  (arr-copy-to (anew Arr-Obj len) arr (alen arr))>
 
 <let-fn arr-map [-arr -ret-type:Type -f]
   <let l (alen arr)>
@@ -285,7 +280,7 @@
 
 # List (untyped).
 
-<let-struct List -len:Int -arr:Arr> # resizable array.
+<let-struct List -len:Int -arr:Arr-Obj> # resizable array.
 
 <let-fn list-el [-list:List -index:Int]
   <check (ilt index (.len list)) "index out of bounds">
@@ -316,7 +311,7 @@
       (self (iinc i))>>>
 
 <let-fn list-new [&els]
-  <let l (CONS List 0 (CONS Arr))>
+  <let l (CONS List 0 (CONS Arr-Obj))>
   <recur [-i=0]
     <if (ieq i (alen els)) l
       <do
