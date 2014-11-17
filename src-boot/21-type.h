@@ -106,7 +106,7 @@ static Int type_index(Obj t) {
 
 static Obj type_name(Obj t) {
   assert(t.is_type());
-  Obj name = cmpd_el(t, 0);
+  Obj name = t.cmpd_el(0);
   assert(name.is_sym());
   return name;
 }
@@ -114,7 +114,7 @@ static Obj type_name(Obj t) {
 
 static Obj type_kind(Obj t) {
   assert(t.is_type());
-  Obj kind = cmpd_el(t, 1);
+  Obj kind = t.cmpd_el(1);
   return kind;
 }
 
@@ -131,13 +131,13 @@ static Bool is_kind_arr(Obj kind) {
 
 UNUSED static Obj kind_el_type(Obj kind) {
   assert(is_kind_arr(kind));
-  return cmpd_el(kind, 0);
+  return kind.cmpd_el(0);
 }
 
 
 static Obj kind_fields(Obj kind) {
   assert(is_kind_struct(kind));
-  return cmpd_el(kind, 0);
+  return kind.cmpd_el(0);
 }
 
 
@@ -329,7 +329,7 @@ static void obj_validate(Set* s, Obj o) {
     check(len == 2, "Type: bad len: %i", len);
   }
   for_in(i, o.cmpd_len()) {
-    obj_validate(s, cmpd_el(o, i));
+    obj_validate(s, o.cmpd_el(i));
   }
 }
 

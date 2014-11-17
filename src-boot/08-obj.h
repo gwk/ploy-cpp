@@ -473,6 +473,12 @@ union Obj {
     return reinterpret_cast<Obj*>(c + 1); // address past header.
   }
 
+  Obj cmpd_el(Int idx) {
+    assert(ref_is_cmpd());
+    assert(idx >= 0 && idx < cmpd_len());
+    return cmpd_els()[idx];
+  }
+
   Range<Obj*>cmpd_it() const {
     Obj* b = cmpd_els();
     return Range<Obj*>(b, b + cmpd_len());
@@ -492,8 +498,8 @@ union Obj {
     Obj slice = cmpd_new_raw(ref_type().ret(), ls);
     Obj* src = cmpd_els();
     Obj* dst = slice.cmpd_els();
-    for_in(_i, ls) {
-      dst[_i] = src[_i + fr].ret();
+    for_in(idx, ls) {
+      dst[idx] = src[idx + fr].ret();
     }
     return slice;
   }

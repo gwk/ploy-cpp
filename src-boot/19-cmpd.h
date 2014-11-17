@@ -56,13 +56,6 @@ static Array cmpd_array(Obj c) {
 }
 
 
-static Obj cmpd_el(Obj c, Int i) {
-  // assumes the caller knows the size of the compound.
-  assert(c.ref_is_cmpd());
-  return cmpd_array(c).el(i);
-}
-
-
 static void cmpd_put(Obj c, Int i, Obj e) {
   cmpd_array(c).put(i, e);
 }

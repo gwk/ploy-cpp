@@ -24,7 +24,7 @@ static Obj expand_quasiquote(Int qua_depth, Obj o) {
   Obj type = o.type();
   if (!qua_depth && type == t_Unq) { // unquote is only performed at the same (innermost) level.
     check(o.cmpd_len() == 1, "malformed Unq: %o", o);
-    Obj e = cmpd_el(o, 0).ret();
+    Obj e = o.cmpd_el(0).ret();
     o.rel();
     return e;
   }
@@ -39,7 +39,7 @@ static Obj expand_quasiquote(Int qua_depth, Obj o) {
     cmpd_put(exprs, 0, s_CONS.ret_val());
     cmpd_put(exprs, 1, type_name(type).ret());
     for_in(i, o.cmpd_len()) {
-      Obj e = cmpd_el(o, i);
+      Obj e = o.cmpd_el(i);
       cmpd_put(exprs, i + 2, expand_quasiquote(qd1, e.ret())); // propagate the quotation.
     }
     Obj cons = track_src(o, cmpd_new(t_Call.ret(), exprs));
@@ -71,7 +71,7 @@ static Obj expand(Int d, Obj env, Obj code) {
   }
   if (type == t_Qua) {
     exc_check(code.cmpd_len() == 1, "malformed Qua: %o", code);
-    Obj expr = cmpd_el(code, 0).ret();
+    Obj expr = code.cmpd_el(0).ret();
     code.rel();
     return expand_quasiquote(0, expr);
   }
@@ -90,7 +90,7 @@ static Obj expand(Int d, Obj env, Obj code) {
     Obj expanded = cmpd_new_raw(code.ref_type().ret(), code.cmpd_len());
     Obj* expanded_els = expanded.cmpd_els();
     for_in(i, code.cmpd_len()) {
-      expanded_els[i] = expand(d + 1, env, cmpd_el(code, i).ret());
+      expanded_els[i] = expand(d + 1, env, code.cmpd_el(i).ret());
     }
     track_src(code, expanded);
     code.rel();

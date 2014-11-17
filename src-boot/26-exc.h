@@ -35,12 +35,12 @@ static Obj track_src(Obj original, Obj derived) {
     if (!loc.vld()) {
       errFL("  %o", trace->code);
     } else {
-      Obj path = cmpd_el(loc, 0);
-      Obj src = cmpd_el(loc, 1);
-      Obj pos = cmpd_el(loc, 2);
-      Obj len = cmpd_el(loc, 3);
-      Obj line = cmpd_el(loc, 4);
-      Obj col = cmpd_el(loc, 5);
+      Obj path = loc.cmpd_el(0);
+      Obj src = loc.cmpd_el(1);
+      Obj pos = loc.cmpd_el(2);
+      Obj len = loc.cmpd_el(3);
+      Obj line = loc.cmpd_el(4);
+      Obj col = loc.cmpd_el(5);
       CharsM msg = str_src_loc_str(path.data_str(), src.data_str(),
         pos.int_val(), len.int_val(), line.int_val(), col.int_val(), "");
       fputs("  ", stderr);

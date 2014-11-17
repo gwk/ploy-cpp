@@ -142,7 +142,7 @@ static Obj host_cmpd_field(Trace* t, Obj env) {
   Int l = a.cmpd_len();
   Int i = b.int_val();
   exc_check(i >= 0 && i < l, "field index out of range; index: %i; len: %i", i, l);
-  Obj field = cmpd_el(a, i);
+  Obj field = a.cmpd_el(i);
   return field.ret();
 }
 
@@ -154,7 +154,7 @@ static Obj host_ael(Trace* t, Obj env) {
   Int l = a.cmpd_len();
   Int i = b.int_val();
   exc_check(i >= 0 && i < l, "ael index out of range; index: %i; len: %i", i, l);
-  Obj el = cmpd_el(a, i);
+  Obj el = a.cmpd_el(i);
   return el.ret();
 }
 

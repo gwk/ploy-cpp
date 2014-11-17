@@ -54,12 +54,12 @@ static void write_repr_obj(CFile f, Obj o, Bool is_quoted, Int depth, Set& set);
 static void write_repr_Comment(CFile f, Obj o, UNUSED Bool is_quoted, Int depth, Set& set) {
   assert(o.cmpd_len() == 2);
   fputs(NO_REPR_PO "#", f);
-  if (cmpd_el(o, 0).is_true_bool()) {
+  if (o.cmpd_el(0).is_true_bool()) {
     fputs("#", f);
   } else {
     fputs(" ", f);
   }
-  write_repr_obj(f, cmpd_el(o, 1), false, depth, set);
+  write_repr_obj(f, o.cmpd_el(1), false, depth, set);
   fputs(NO_REPR_PC, f);
 }
 
@@ -70,7 +70,7 @@ static void write_repr_Bang(CFile f, Obj o, Bool is_quoted, Int depth, Set& set)
     fputc('`', f);
   }
   fputc('!', f);
-  write_repr_obj(f, cmpd_el(o, 0), true, depth, set);
+  write_repr_obj(f, o.cmpd_el(0), true, depth, set);
 }
 
 
@@ -80,7 +80,7 @@ static void write_repr_Quo(CFile f, Obj o, Bool is_quoted, Int depth, Set& set) 
     fputc('`', f);
   }
   fputc('`', f);
-  write_repr_obj(f, cmpd_el(o, 0), true, depth, set);
+  write_repr_obj(f, o.cmpd_el(0), true, depth, set);
 }
 
 
@@ -90,7 +90,7 @@ static void write_repr_Qua(CFile f, Obj o, Bool is_quoted, Int depth, Set& set) 
     fputc('`', f);
   }
   fputc('~', f);
-  write_repr_obj(f, cmpd_el(o, 0), true, depth, set);
+  write_repr_obj(f, o.cmpd_el(0), true, depth, set);
 }
 
 
@@ -100,7 +100,7 @@ static void write_repr_Unq(CFile f, Obj o, Bool is_quoted, Int depth, Set& set) 
     fputc('`', f);
   }
   fputc(',', f);
-  write_repr_obj(f, cmpd_el(o, 0), true, depth, set);
+  write_repr_obj(f, o.cmpd_el(0), true, depth, set);
 }
 
 
@@ -110,7 +110,7 @@ static void write_repr_Splice(CFile f, Obj o, Bool is_quoted, Int depth, Set& se
     fputc('`', f);
   }
   fputc('*', f);
-  write_repr_obj(f, cmpd_el(o, 0), true, depth, set);
+  write_repr_obj(f, o.cmpd_el(0), true, depth, set);
 }
 
 
@@ -159,7 +159,7 @@ static void write_repr_Accessor(CFile f, Obj o, Bool is_quoted, Int depth, Set& 
     fputc('`', f);
   }
   fputc('.', f);
-  write_repr_obj(f, cmpd_el(o, 0), true, depth, set);
+  write_repr_obj(f, o.cmpd_el(0), true, depth, set);
 }
 
 
@@ -169,21 +169,21 @@ static void write_repr_Mutator(CFile f, Obj o, Bool is_quoted, Int depth, Set& s
     fputc('`', f);
   }
   fputs(".=", f);
-  write_repr_obj(f, cmpd_el(o, 0), true, depth, set);
+  write_repr_obj(f, o.cmpd_el(0), true, depth, set);
 }
 
 
 static void write_repr_syn_seq(CFile f, Obj s, Bool is_quoted, Int depth, Set& set,
   Chars chars_open, Char char_close) {
   assert(s.cmpd_len() == 1);
-  Obj exprs = cmpd_el(s, 0);
+  Obj exprs = s.cmpd_el(0);
   if (!is_quoted) {
     fputc('`', f);
   }
   fputs(chars_open, f);
   for_in(i, exprs.cmpd_len()) {
     if (i) fputc(' ', f);
-    write_repr_obj(f, cmpd_el(exprs, i), true, depth, set);
+    write_repr_obj(f, exprs.cmpd_el(i), true, depth, set);
   }
   fputc(char_close, f);
 }
@@ -199,7 +199,7 @@ static void write_repr_default(CFile f, Obj c, Bool is_quoted, Int depth, Set& s
   write_repr_obj(f, t.t->name, true, depth, set);
   for_in(i, c.cmpd_len()) {
     fputc(' ', f);
-    write_repr_obj(f, cmpd_el(c, i), false, depth, set);
+    write_repr_obj(f, c.cmpd_el(i), false, depth, set);
   }
   fputc(')', f);
 }
