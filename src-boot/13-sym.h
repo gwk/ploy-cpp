@@ -59,11 +59,11 @@ SYM_LIST
 
 
 // each Sym object is an index into this list of strings.
-static List global_sym_names;
+static List sym_names;
 
 
 static void sym_init() {
-  assert(global_sym_names.len() == 0);
+  assert(sym_names.len() == 0);
   for_in(i, si_END) {
     Chars name = sym_index_names[i];
     Obj sym = Obj::Sym_from_c(name);
@@ -80,7 +80,7 @@ Bool Obj::is_special_sym() const {
 
 Obj Obj::sym_data() const {
   assert(is_sym());
-  return global_sym_names.el(sym_index());
+  return sym_names.el(sym_index());
 }
 
 
@@ -89,7 +89,7 @@ Obj Obj::Sym(Str s) {
   Obj& sym = cache[s]; // on missing key, inserts default, obj0.
   if (!sym.vld()) {
     Obj d = Obj::Data(s);
-    Int i = global_sym_names.append(d);
+    Int i = sym_names.append(d);
     sym = Sym_with_index(i);
     //errFL("NEW SYM: %ld: %o", i, sym);
   }

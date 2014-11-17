@@ -31,7 +31,7 @@ enum Obj_tag {
   ot_ref = 0,  // pointer to managed object.
   ot_ptr = 1,  // Host pointer.
   ot_int = 2,  // val; 30/62 bit signed int; 30 bits gives a range of  +/-536M.
-  ot_sym = 3,  // Sym values are indices into global_sym_table, interleaved with Data words.
+  ot_sym = 3,  // Sym values are indices into sym_names, interleaved with Data words.
 };
 
 // note: previously there was a scheme to have a 31/63 bit float type;

@@ -336,7 +336,7 @@ static void obj_validate(Set* s, Obj o) {
 
 static Obj type_init_values(Obj env) {
   // this must be called after sym_init, because this adds symbols for the core types.
-  assert(global_sym_names.len());
+  assert(sym_names.len());
   #define T(t, k, ...) type_add(t_##t, #t, type_kind_init_##k(__VA_ARGS__));
   TYPE_LIST
   #undef T
