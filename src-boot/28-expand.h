@@ -36,11 +36,11 @@ static Obj expand_quasiquote(Int qua_depth, Obj o) {
       qd1--;
     }
     Obj exprs = cmpd_new_raw(t_Arr_Expr.ret(), o.cmpd_len() + 2);
-    cmpd_put(exprs, 0, s_CONS.ret_val());
-    cmpd_put(exprs, 1, type_name(type).ret());
+    exprs.cmpd_put(0, s_CONS.ret_val());
+    exprs.cmpd_put(1, type_name(type).ret());
     for_in(i, o.cmpd_len()) {
       Obj e = o.cmpd_el(i);
-      cmpd_put(exprs, i + 2, expand_quasiquote(qd1, e.ret())); // propagate the quotation.
+      exprs.cmpd_put(i + 2, expand_quasiquote(qd1, e.ret())); // propagate the quotation.
     }
     Obj cons = track_src(o, cmpd_new(t_Call.ret(), exprs));
     o.rel();

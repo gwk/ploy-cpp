@@ -166,7 +166,7 @@ static Obj host_anew(Trace* t, Obj env) {
   Int len = b.int_val();
   Obj res = cmpd_new_raw(a.ret(), len);
   for_in(i, len) {
-    cmpd_put(res, i, s_UNINIT.ret_val());
+    res.cmpd_put(i, s_UNINIT.ret_val());
   }
   return res;
 }

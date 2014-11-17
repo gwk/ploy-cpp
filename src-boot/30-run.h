@@ -164,7 +164,7 @@ static Step run_Fn(UNUSED Int d, Trace* t, Obj env, Obj code) {
       exc_raise("Fn: parameter %i is malformed: %o", i, syn);
     }
     Obj par =  cmpd_new(t_Par.ret(), par_name, par_type, par_dflt);
-    cmpd_put(pars, i, par);
+    pars.cmpd_put(i, par);
     if (is_variad) {
       exc_check(variad == s_void, "Fn: multiple variadic parameters: %o", syn);
       variad.rel_val();
@@ -248,7 +248,7 @@ static Obj bind_variad(UNUSED Int d, Trace* t, Obj env, Obj par, Array vals,
   Int j = 0;
   for_imns(i, start + 1, end, 2) {
     Obj arg = vals.el_move(i);
-    cmpd_put(vrd, j++, arg);
+    vrd.cmpd_put(j++, arg);
   }
   env = bind_val(t, false, env, par_el_name.ret_val(), vrd);
   return env;
@@ -270,8 +270,8 @@ static Obj bind_assoc(UNUSED Int d, Trace* t, Obj env, Obj par, Array vals, Int 
     Obj name = vals.el_move(ik);
     Obj arg = vals.el_move(iv);
     exc_check(name.vld(), "arg %i is not labeled", iv / 2);
-    cmpd_put(keys, j, name.ret_val()); // name is not already owned.
-    cmpd_put(assoc_vals, j++, arg);
+    keys.cmpd_put(j, name.ret_val()); // name is not already owned.
+    assoc_vals.cmpd_put(j++, arg);
   }
   env = bind_val(t, false, env, par_el_name.ret_val(), assoc);
   return env;
@@ -478,14 +478,14 @@ static Step run_call_CONS(UNUSED Int d, Trace* t, Obj env, Obj call, Array vals)
         exc_check(sym == field_name, "call: %o\nCONS: expected field label: %o; received: %o",
           call, field_name, sym);
       }
-      cmpd_put(res, i, val);
+      res.cmpd_put(i, val);
     }
   } else if (is_kind_arr(kind)) {
     for_in(i, len) {
       Obj sym = vals.el_move(i * 2 + 3);
       Obj val = vals.el_move(i * 2 + 4);
       exc_check(!sym.vld(), "call: %o\nCONS: unexpected element label: %o", call, sym);
-      cmpd_put(res, i, val);
+      res.cmpd_put(i, val);
     }
   } else {
     exc_raise("call: %o\nCONS type is not a struct or arr type", call);
@@ -506,7 +506,7 @@ static Step run_call_dispatcher(Int d, Trace* t, Obj env, Obj call, Array vals,
   Obj types = cmpd_new_raw(t_Arr_Type.ret(), types_len);
   for_in(i, types_len) {
     Obj val = vals.el(i * 2 + 2);
-    cmpd_put(types, i, val.type().ret());
+    types.cmpd_put(i, val.type().ret());
   }
   Array disp_vals(5);
   disp_vals.put(0, dispatcher.ret());

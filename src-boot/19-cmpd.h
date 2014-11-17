@@ -4,8 +4,6 @@
 #include "18-env.h"
 
 
-static void cmpd_put(Obj c, Int i, Obj el);
-
 static Obj cmpd_new_raw(Obj type, Int len) {
   // owns type.
   counter_inc(ci_Cmpd_rc);
@@ -23,7 +21,7 @@ static Obj cmpd_new_M(Obj type, Array a) {
   // owns type, elements of a.
   Obj c = cmpd_new_raw(type, a.len());
   for_in(i, a.len()) {
-    cmpd_put(c, i, a.el_move(i));
+    c.cmpd_put(i, a.el_move(i));
   }
   return c;
 }
@@ -32,7 +30,7 @@ static Obj cmpd_new_M(Obj type, Array a) {
 static Obj _cmpd_new(Obj type, Int i, Obj el) {
   // owns all arguments.
   Obj o = cmpd_new_raw(type, i + 1);
-  cmpd_put(o, i, el);
+  o.cmpd_put(i, el);
   return o;
 }
 
@@ -40,7 +38,7 @@ template <typename T, typename... Ts>
 static Obj _cmpd_new(Obj type, Int i, T el, Ts... rest) {
   // owns all arguments.
   Obj o = _cmpd_new(type, i + 1, rest...);
-  cmpd_put(o, i, el);
+  o.cmpd_put(i, el);
   return o;
 }
 
@@ -53,11 +51,6 @@ static Obj cmpd_new(Obj type, T el, Ts... rest) {
 
 static Array cmpd_array(Obj c) {
   return Array(c.cmpd_len(), c.cmpd_els());
-}
-
-
-static void cmpd_put(Obj c, Int i, Obj e) {
-  cmpd_array(c).put(i, e);
 }
 
 

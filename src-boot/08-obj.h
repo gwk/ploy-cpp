@@ -473,10 +473,18 @@ union Obj {
     return reinterpret_cast<Obj*>(c + 1); // address past header.
   }
 
-  Obj cmpd_el(Int idx) {
+  Obj cmpd_el(Int idx) const {
     assert(ref_is_cmpd());
     assert(idx >= 0 && idx < cmpd_len());
     return cmpd_els()[idx];
+  }
+
+  void cmpd_put(Int idx, Obj el) const {
+    assert(ref_is_cmpd());
+    assert(idx >= 0 && idx < cmpd_len());
+    Obj* slot = cmpd_els() + idx;
+    assert(!slot->vld());
+    *slot = el;
   }
 
   Range<Obj*>cmpd_it() const {
@@ -484,7 +492,7 @@ union Obj {
     return Range<Obj*>(b, b + cmpd_len());
   }
 
-  Obj cmpd_slice(Int fr, Int to) {
+  Obj cmpd_slice(Int fr, Int to) const {
     assert(ref_is_cmpd());
     Int l = cmpd_len();
     if (fr < 0) fr += l;
