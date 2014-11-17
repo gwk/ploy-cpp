@@ -16,31 +16,31 @@ static Obj host_identity(UNUSED Trace* t, Obj env) {
 
 static Obj host_is(UNUSED Trace* t, Obj env) {
   GET_AB;
-  return bool_new(a == b);
+  return Obj::with_Bool(a == b);
 }
 
 
 static Obj host_is_ref(UNUSED Trace* t, Obj env) {
   GET_A;
-  return bool_new(a.is_ref());
+  return Obj::with_Bool(a.is_ref());
 }
 
 
 static Obj host_is_true(UNUSED Trace* t, Obj env) {
   GET_A;
-  return bool_new(a.is_true());
+  return Obj::with_Bool(a.is_true());
 }
 
 
 static Obj host_not(UNUSED Trace* t, Obj env) {
   GET_A;
-  return bool_new(!a.is_true());
+  return Obj::with_Bool(!a.is_true());
 }
 
 
 static Obj host_id_hash(UNUSED Trace* t, Obj env) {
   GET_A;
-  return int_new(a.id_hash());
+  return Obj::with_Int(a.id_hash());
 }
 
 
@@ -48,7 +48,7 @@ static Obj host_ineg(Trace* t, Obj env) {
   GET_A;
   exc_check(a.is_int(), "ineg requires Int; received: %o", a);
   Int i = a.int_val();
-  return int_new(-i);
+  return Obj::with_Int(-i);
 }
 
 
@@ -56,7 +56,7 @@ static Obj host_iabs(Trace* t, Obj env) {
   GET_A;
   exc_check(a.is_int(), "iabs requires Int; received: %o", a);
   Int i = a.int_val();
-  return int_new(i < 0 ? -i : i);
+  return Obj::with_Int(i < 0 ? -i : i);
 }
 
 
@@ -67,7 +67,7 @@ static Obj host_##op(Trace* t, Obj env) { \
   exc_check(a.is_int(), #op " requires arg 1 to be a Int; received: %o", a); \
   exc_check(b.is_int(), #op " requires arg 2 to be a Int; received: %o", b); \
   Int i = op(a.int_val(), b.int_val()); \
-  return type_name##_new(i); \
+  return Obj::with_##type_name(i); \
 }
 
 
@@ -87,21 +87,21 @@ static Int igt(Int a, Int b)   { return a > b; }
 static Int ile(Int a, Int b)   { return a <= b; }
 static Int ige(Int a, Int b)   { return a >= b; }
 
-HOST_BIN_OP(int, iadd)
-HOST_BIN_OP(int, isub)
-HOST_BIN_OP(int, imul)
-HOST_BIN_OP(int, idiv)
-HOST_BIN_OP(int, imod)
-HOST_BIN_OP(int, ipow)
-HOST_BIN_OP(int, ishl)
-HOST_BIN_OP(int, ishr)
+HOST_BIN_OP(Int, iadd)
+HOST_BIN_OP(Int, isub)
+HOST_BIN_OP(Int, imul)
+HOST_BIN_OP(Int, idiv)
+HOST_BIN_OP(Int, imod)
+HOST_BIN_OP(Int, ipow)
+HOST_BIN_OP(Int, ishl)
+HOST_BIN_OP(Int, ishr)
 
-HOST_BIN_OP(bool, ieq)
-HOST_BIN_OP(bool, ine)
-HOST_BIN_OP(bool, ilt)
-HOST_BIN_OP(bool, igt)
-HOST_BIN_OP(bool, ile)
-HOST_BIN_OP(bool, ige)
+HOST_BIN_OP(Bool, ieq)
+HOST_BIN_OP(Bool, ine)
+HOST_BIN_OP(Bool, ilt)
+HOST_BIN_OP(Bool, igt)
+HOST_BIN_OP(Bool, ile)
+HOST_BIN_OP(Bool, ige)
 
 
 static Obj host_dlen(Trace* t, Obj env) {
@@ -113,7 +113,7 @@ static Obj host_dlen(Trace* t, Obj env) {
     exc_check(a.is_data(), "dlen requires Data; received: %o", a);
     l = a.data_len();
   }
-  return int_new(l);
+  return Obj::with_Int(l);
 }
 
 
@@ -121,7 +121,7 @@ static Obj host_cmpd_len(Trace* t, Obj env) {
   GET_A;
   exc_check(a.is_cmpd(), "cmpd-len requires Cmpd; received: %o", a);
   Int l = cmpd_len(a);
-  return int_new(l);
+  return Obj::with_Int(l);
 }
 
 
@@ -131,7 +131,7 @@ static Obj host_data_ref_iso(Trace* t, Obj env) {
     a);
   exc_check(a.is_data_ref(), "data-ref-iso requires arg 1 to be a Data ref; received: %o",
     a);
-  return bool_new(a.data_ref_iso(b));
+  return Obj::with_Bool(a.data_ref_iso(b));
 }
 
 
@@ -285,14 +285,14 @@ static Obj host_init_func(Obj env, Int len_pars, Chars name, Func_host_ptr ptr) 
   }
   #undef PAR
   Obj f = cmpd_new(t_Func.ret(),
-    bool_new(false),
-    bool_new(false),
+    Obj::with_Bool(false),
+    Obj::with_Bool(false),
     env.ret(),
     s_void.ret_val(),
     s_void.ret_val(),
     pars,
     s_nil.ret_val(), // TODO: specify actual return type?
-    ptr_new(Raw(ptr)));
+    Obj::with_Ptr(Raw(ptr)));
   return env_bind(env, false, false, sym, f);
 }
 
@@ -301,15 +301,15 @@ static Obj host_init_file(Obj env, Chars sym_name, Chars name, CFile f, Bool r,
   Bool w) {
   // owns env.
   Obj sym = sym_new_from_chars(sym_name);
-  Obj val = cmpd_new(t_File.ret(), data_new_from_chars(name), ptr_new(f),
-    bool_new(r), bool_new(w));
+  Obj val = cmpd_new(t_File.ret(), Obj::Data(name), Obj::with_Ptr(f),
+    Obj::with_Bool(r), Obj::with_Bool(w));
   return env_bind(env, false, false, sym, val);
 }
 
 
 static Obj host_init(Obj env) {
 
-#define DEF_CONST(c) env = host_init_const(env, #c, int_new(c))
+#define DEF_CONST(c) env = host_init_const(env, #c, Obj::with_Int(c))
   DEF_CONST(OPTION_REC_LIMIT);
 #undef DEF_CONST
 

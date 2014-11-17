@@ -189,6 +189,10 @@ union Obj {
       case ot_sym: return Int(u >> width_sym_tags);
     }
   }
+  
+  struct Hash_is {
+    Int operator()(Obj o) const { return o.id_hash(); }
+  };
 
   Counter_index counter_index() const {
     Obj_tag ot = tag();
@@ -204,14 +208,14 @@ union Obj {
     }
   }
 
-#pragma mark ref
+// ref
   
   Obj ref_type() const {
     assert(is_ref());
     return Obj(h->type);
   }
   
-#pragma mark rc
+// rc
   
   Uns rc() const {
     // get the object's retain count for debugging purposes.
@@ -301,14 +305,20 @@ union Obj {
     return tail;
   }
   
-#pragma mark Ptr
+// Ptr
   
   Raw ptr() {
     assert(is_ptr());
     return Raw(u & ~obj_tag_mask);
   }
 
-#pragma mark Int
+  static Obj with_Ptr(Raw p) {
+    Uns u = Uns(p);
+    assert(!(u & obj_tag_mask));
+    return Obj(Uns(u | ot_ptr)).ret_val();
+  }
+  
+  // Int
   
   Int int_val() {
     assert(tag() == ot_int);
@@ -316,18 +326,30 @@ union Obj {
     return val / scale_factor_Int;
   }
 
-#pragma mark Sym
+  static Obj with_Int(Int i) {
+    check(i >= -max_Int_tagged && i <= max_Int_tagged, "large Int values not yet suppported.");
+    Int shifted = i * scale_factor_Int;
+    return Obj(Int(shifted | ot_int)).ret_val();
+  }
+  
+  
+  static Obj with_U64(U64 u) {
+    check(u < U64(max_Uns_tagged), "large Uns values not yet supported.");
+    return with_Int(Int(u));
+  }
+  
+  // Sym
   
   Int sym_index() {
     assert(is_sym());
     return i >> width_sym_tags;
   }
-
+  
   Bool is_special_sym();
   
   Obj sym_data();
-
-#pragma mark Bool
+  
+  // Bool
   
   Bool is_true_bool() {
     if (*this == s_true) return true;
@@ -353,8 +375,12 @@ union Obj {
     }
     assert(0);
   }
-
-#pragma mark Data
+  
+  static Obj with_Bool(Bool b) {
+    return (b ? s_true : s_false).ret_val();
+  }
+  
+  // Data
   
   Int data_ref_len() {
     assert(ref_is_data());
@@ -391,76 +417,45 @@ union Obj {
     return len == o.data_ref_len() && !memcmp(data_ref_chars(), o.data_ref_chars(), Uns(len));
   }
   
-  struct Hash_is {
-    Int operator()(Obj o) const { return o.id_hash(); }
-  };
-
+  static Obj data_new_raw(Int len) {
+    counter_inc(ci_Data_ref_rc);
+    Obj o = Obj(raw_alloc(size_Data + len, ci_Data_ref_alloc));
+    *o.h = Head(t_Data.ret().r);
+    o.d->len = len;
+    return o;
+  }
+  
+  static Obj Data(Str s) {
+    if (!s.len) return blank.ret_val();
+    Obj d = data_new_raw(s.len);
+    memcpy(d.data_ref_charsM(), s.chars, Uns(s.len));
+    return d;
+  }
+  
+  static Obj Data(Chars c) {
+    Uns len = strnlen(c, max_Int);
+    check(len <= max_Int, "%s: string exceeded max length", __func__);
+    Obj d = data_new_raw(Int(len));
+    memcpy(d.data_ref_charsM(), c, len);
+    return d;
+  }
+  
+  static Obj Data_from_path(Chars path) {
+    CFile f = fopen(path, "r");
+    check(f, "could not open file: %s", path);
+    fseek(f, 0, SEEK_END);
+    Int len = ftell(f);
+    if (!len) return blank.ret_val();
+    Obj d = data_new_raw(len);
+    fseek(f, 0, SEEK_SET);
+    Uns items_read = fread(d.data_ref_charsM(), size_Char, Uns(len), f);
+    check(Int(items_read) == len,
+          "read failed; expected len: %i; actual: %u; path: %s", len, items_read, path);
+    fclose(f);
+    return d;
+  }
+  
 };
 DEF_SIZE(Obj);
 
 
-static Obj ptr_new(Raw p) {
-  Uns u = Uns(p);
-  assert(!(u & obj_tag_mask));
-  return Obj(Uns(u | ot_ptr)).ret_val();
-}
-
-
-static Obj int_new(Int i) {
-  check(i >= -max_Int_tagged && i <= max_Int_tagged, "large Int values not yet suppported.");
-  Int shifted = i * scale_factor_Int;
-  return Obj(Int(shifted | ot_int)).ret_val();
-}
-
-
-static Obj int_new_from_U64(U64 u) {
-  check(u < U64(max_Uns_tagged), "large Uns values not yet supported.");
-  return int_new(Int(u));
-}
-
-
-static Obj bool_new(Int i) {
-  return (i ? s_true : s_false).ret_val();
-}
-
-
-static Obj data_new_raw(Int len) {
-  counter_inc(ci_Data_ref_rc);
-  Obj o = Obj(raw_alloc(size_Data + len, ci_Data_ref_alloc));
-  *o.h = Head(t_Data.ret().r);
-  o.d->len = len;
-  return o;
-}
-
-
-static Obj data_new_from_str(Str s) {
-  if (!s.len) return blank.ret_val();
-  Obj d = data_new_raw(s.len);
-  memcpy(d.data_ref_charsM(), s.chars, Uns(s.len));
-  return d;
-}
-
-
-static Obj data_new_from_chars(Chars c) {
-  Uns len = strnlen(c, max_Int);
-  check(len <= max_Int, "data_new_from_chars: string exceeded max length");
-  Obj d = data_new_raw(Int(len));
-  memcpy(d.data_ref_charsM(), c, len);
-  return d;
-}
-
-
-static Obj data_new_from_path(Chars path) {
-  CFile f = fopen(path, "r");
-  check(f, "could not open file: %s", path);
-  fseek(f, 0, SEEK_END);
-  Int len = ftell(f);
-  if (!len) return blank.ret_val();
-  Obj d = data_new_raw(len);
-  fseek(f, 0, SEEK_SET);
-  Uns items_read = fread(d.data_ref_charsM(), size_Char, Uns(len), f);
-  check(Int(items_read) == len,
-        "read failed; expected len: %i; actual: %u; path: %s", len, items_read, path);
-  fclose(f);
-  return d;
-}

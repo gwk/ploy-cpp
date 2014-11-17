@@ -183,7 +183,7 @@ static U64 parse_U64(Parser& p) {
 static Obj parse_uns(Parser& p) {
   U64 u = parse_U64(p);
   if (p.e) return obj0;
-  return int_new_from_U64(u);
+  return Obj::with_U64(u);
 }
 
 
@@ -193,7 +193,7 @@ static Obj parse_Int(Parser& p, Int sign) {
   U64 u = parse_U64(p);
   if (p.e) return obj0;
   parse_check(u <= max_Int, "signed number literal is too large");
-  return int_new(Int(u) * sign);
+  return Obj::with_Int(Int(u) * sign);
 }
 
 
@@ -232,7 +232,7 @@ static Obj parse_Comment(Parser& p) {
     P_ADV(1, p.pos = pos; return parse_error(p, "unterminated comment (add newline)"));
   }
   Str s = str_slice(p.s, off_start, p.pos.off);
-  Obj d = data_new_from_str(s);
+  Obj d = Obj::Data(s);
   return cmpd_new(t_Comment.ret(), s_false.ret_val(), d);
 }
 
@@ -278,7 +278,7 @@ static Obj parse_Data(Parser& p, Char q) {
   }
   #undef APPEND
   P_ADV(1); // past closing quote.
-  Obj d = data_new_from_str(Str(len, len ? chars: null));
+  Obj d = Obj::Data(Str(len, len ? chars: null));
   chars_dealloc(chars);
   return d;
 }
@@ -517,10 +517,10 @@ static Obj parse_expr(Parser& p) {
     Obj src_loc = cmpd_new(t_Src_loc.ret(),
       p.path.ret(),
       p.src.ret(),
-      int_new(pos.off),
-      int_new(p.pos.off - pos.off),
-      int_new(pos.line),
-      int_new(pos.col));
+      Obj::with_Int(pos.off),
+      Obj::with_Int(p.pos.off - pos.off),
+      Obj::with_Int(pos.line),
+      Obj::with_Int(pos.col));
     p.locs->insert(expr.ret(), src_loc); // dict owns k, v.
   }
   return expr;

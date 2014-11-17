@@ -26,13 +26,11 @@ Obj Obj::sym_data() {
 }
 
 
-static Obj data_new_from_str(Str s);
-
 static Obj sym_new(Str s) {
   static Hash_map<String, Obj> cache;
   Obj& sym = cache[s]; // on missing key, inserts default, obj0.
   if (!sym.vld()) {
-    Obj d = data_new_from_str(s);
+    Obj d = Obj::Data(s);
     Int i = global_sym_names.append(d);
     sym = sym_with_index(i);
     //errFL("NEW SYM: %ld: %o", i, sym);
