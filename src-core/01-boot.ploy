@@ -232,8 +232,6 @@
       (outRSL 'actual:' act)
       (error "utest failure.")>>>
 
-<utest 0 0>
-
 # Arr.
 
 <let-type Arr (CONS Type-kind-arr T)>
@@ -326,7 +324,7 @@
 
 # List as Dict.
 
-<let-struct Dict-entry -key:K -val:V>
+<let-struct Dict-item -key:K -val:V>
 
 <let-fn list-dict-contains [-dict:List -key:K]
   <recur [-i=0]
@@ -346,7 +344,7 @@
 
 <let-fn list-dict-put [-dict:List -key:K -val:V]
   <recur [-i=0]
-    <if (ieq i (.len dict)) (list-append dict (CONS Dict-entry key val))
+    <if (ieq i (.len dict)) (list-append dict (CONS Dict-item key val))
       <do
         <let e (list-el dict i)>
         <if (iso (.key e) key) (.=val e val)
