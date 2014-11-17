@@ -751,6 +751,8 @@ static Obj run_macro(Trace* t, Obj env, Obj code) {
   Array vals(len * 2 - 1);
   vals.put(0, macro.ret());
   for_imn(i, 1, len) {
+    // note: labels and splices are passed directly through as arguments;
+    // otherwise we would need some sort of label 'escape' syntax.
     Obj expr = exprs.cmpd_el(i);
     vals.put(i * 2 - 1, obj0);
     vals.put(i * 2, expr.ret());
