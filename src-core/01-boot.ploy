@@ -120,9 +120,9 @@
 
 <macro if [&exprs]
   # generic 'if'. inspired by paul graham's arc-lisp.
-  <_if (ilt (alen exprs) 2) (error "degenerate if form")
+  <let len (alen exprs)>
+  <_if (ilt len 2) (error "degenerate if form")
     <recur [-i=0]
-      <let len (alen exprs)>
       <let pred (ael exprs i)>
       <let then (ael exprs (iinc i))>
       <_if (ieq (iadd i 2) len)
