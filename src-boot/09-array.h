@@ -118,3 +118,14 @@ public:
   }
 
 };
+
+
+static Obj Cmpd_from_Array(Obj type, Array a) {
+  // owns type, elements of a.
+  Obj c = Obj::Cmpd_raw(type, a.len());
+  for_in(i, a.len()) {
+    c.cmpd_put(i, a.el_move(i));
+  }
+  return c;
+}
+

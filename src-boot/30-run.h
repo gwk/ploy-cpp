@@ -133,7 +133,7 @@ static Step run_Fn(UNUSED Int d, Trace* t, Obj env, Obj code) {
     "Fn: pars is not a sequence literal: %o", pars_seq);
   assert(pars_seq.cmpd_len() == 1);
   Obj pars_exprs = pars_seq.cmpd_el(0);
-  Obj pars = cmpd_new_raw(t_Arr_Par.ret(), pars_exprs.cmpd_len());
+  Obj pars = Obj::Cmpd_raw(t_Arr_Par.ret(), pars_exprs.cmpd_len());
   Obj variad = s_void.ret_val();
   Obj assoc = s_void.ret_val();
   for_in(i, pars_exprs.cmpd_len()) {
@@ -163,7 +163,7 @@ static Step run_Fn(UNUSED Int d, Trace* t, Obj env, Obj code) {
     } else {
       exc_raise("Fn: parameter %i is malformed: %o", i, syn);
     }
-    Obj par =  cmpd_new(t_Par.ret(), par_name, par_type, par_dflt);
+    Obj par =  Obj::Cmpd(t_Par.ret(), par_name, par_type, par_dflt);
     pars.cmpd_put(i, par);
     if (is_variad) {
       exc_check(variad == s_void, "Fn: multiple variadic parameters: %o", syn);
@@ -175,7 +175,7 @@ static Step run_Fn(UNUSED Int d, Trace* t, Obj env, Obj code) {
       assoc = par.ret();
     }
   }
-  Obj f = cmpd_new(t_Func.ret(),
+  Obj f = Obj::Cmpd(t_Func.ret(),
     is_native.ret_val(),
     is_macro.ret_val(),
     env.ret(),
@@ -244,7 +244,7 @@ static Obj bind_variad(UNUSED Int d, Trace* t, Obj env, Obj par, Array vals,
   }
   *i_vals = end;
   Int len = (end - start) / 2;
-  Obj vrd = cmpd_new_raw(t_Arr_Obj.ret(), len); // TODO: correct type is derived from par_el_type.
+  Obj vrd = Obj::Cmpd_raw(t_Arr_Obj.ret(), len); // TODO: correct type is derived from par_el_type.
   Int j = 0;
   for_imns(i, start + 1, end, 2) {
     Obj arg = vals.el_move(i);
@@ -261,9 +261,10 @@ static Obj bind_assoc(UNUSED Int d, Trace* t, Obj env, Obj par, Array vals, Int 
   exc_check(par_el_dflt == s_void, "assoc parameter has non-void default argument: %o", par);
   Int end = vals.len();
   Int len = (end - start) / 2;
-  Obj keys = cmpd_new_raw(t_Arr_Sym.ret(), len);
-  Obj assoc_vals = cmpd_new_raw(t_Arr_Obj.ret(), len); // TODO: correct type is derived from par_el_type.
-  Obj assoc = cmpd_new(t_Labeled_args.ret(), keys, assoc_vals); // TODO: derive from type of vals.
+  Obj keys = Obj::Cmpd_raw(t_Arr_Sym.ret(), len);
+  Obj assoc_vals = Obj::Cmpd_raw(t_Arr_Obj.ret(), len);
+  // TODO: correct type is derived from par_el_type.
+  Obj assoc = Obj::Cmpd(t_Labeled_args.ret(), keys, assoc_vals); // TODO: derive type from vals.
   Int j = 0;
   for_imns(ik, start, end, 2) {
     Int iv = ik + 1;
@@ -382,7 +383,7 @@ static Step run_call_Accessor(UNUSED Int d, Trace* t, Obj env, Obj call, Array v
   }
   errFL("call: %o\naccessor field not found: %o\ntype: %o\nfields:",
     call, name, type_name(type));
-  for (Obj e : fields.cmpd_it()) {
+  for_val(e, fields.cmpd_it()) {
     errFL("  %o", e.cmpd_el(0));
   }
   exc_raise("");
@@ -411,16 +412,15 @@ static Step run_call_Mutator(UNUSED Int d, Trace* t, Obj env, Obj call, Array va
     Obj field = fields.cmpd_el(i);
     Obj field_name = field.cmpd_el(0);
     if (field_name == name) {
-      Array a = cmpd_array(mutatee);
-      a.el_move(i).rel();
-      a.put(i, val);
+      mutatee.cmpd_el_move(i).rel();
+      mutatee.cmpd_put(i, val);
       mutator.rel();
       return Step(env, mutatee);
     }
   }
   errFL("call: %o\nmutator field not found: %o\ntype: %o\nfields:",
     call, name, type_name(type));
-  for (Obj e : fields.cmpd_it()) {
+  for_val(e, fields.cmpd_it()) {
     errFL("  %o", e.cmpd_el(0));
   }
   exc_raise("");
@@ -463,7 +463,7 @@ static Step run_call_CONS(UNUSED Int d, Trace* t, Obj env, Obj call, Array vals)
   Obj type = vals.el_move(2);
   Obj kind = type_kind(type);
   Int len = (vals.len() - 3) / 2;
-  Obj res = cmpd_new_raw(type, len);
+  Obj res = Obj::Cmpd_raw(type, len);
   if (is_kind_struct(kind)) {
     Obj fields = kind_fields(kind);
     // TODO: support field defaults.
@@ -503,7 +503,7 @@ static Step run_call_dispatcher(Int d, Trace* t, Obj env, Obj call, Array vals,
   // owns env, vals.
   Obj callee = vals.el(0).ret();
   Int types_len = (vals.len() - 1) / 2;
-  Obj types = cmpd_new_raw(t_Arr_Type.ret(), types_len);
+  Obj types = Obj::Cmpd_raw(t_Arr_Type.ret(), types_len);
   for_in(i, types_len) {
     Obj val = vals.el(i * 2 + 2);
     types.cmpd_put(i, val.type().ret());
@@ -549,7 +549,7 @@ static Step run_Call(Int d, Trace* t, Obj env, Obj code) {
       env = step.res.env;
       Obj val = step.res.val;
       exc_check(val.is_cmpd(), "call: %o\nspliced value is not of a compound type: %o", val);
-      for (Obj e : val.cmpd_it()) {
+      for_val(e, val.cmpd_it()) {
         vals.append(obj0); // no name.
         vals.append(e.ret());
       }

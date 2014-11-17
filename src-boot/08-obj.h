@@ -84,12 +84,10 @@ struct Type;
 
 union Obj;
 
-extern const Obj s_true, s_false, int0, blank;
+extern const Int size_Obj;
+extern const Obj s_true, s_false, s_DISSOLVED;
 extern Obj t_Data, t_Env, t_Int, t_Ptr, t_Sym, t_Type;
 
-static void cmpd_dissolve_fields(Obj c);
-static Obj cmpd_new_raw(Obj type, Int len);
-static Obj cmpd_rel_fields(Obj c);
 static Obj env_rel_fields(Obj o);
 static Obj type_name(Obj t);
 
@@ -283,7 +281,7 @@ union Obj {
   
   void dissolve() const {
     if (is_cmpd()) {
-      cmpd_dissolve_fields(*this);
+      cmpd_dissolve_fields();
     }
     rel();
   }
@@ -299,7 +297,7 @@ union Obj {
     } else if (ref_is_env()) {
       tail = env_rel_fields(*this);
     } else {
-      tail = cmpd_rel_fields(*this);
+      tail = cmpd_rel_fields();
     }
     // ret/rel counter has already been decremented by rc_rel.
 #if !OPTION_DEALLOC_PRESERVE
@@ -312,7 +310,7 @@ union Obj {
   
 // Ptr
   
-  Raw ptr() {
+  Raw ptr() const {
     assert(is_ptr());
     return Raw(u & ~obj_tag_mask);
   }
@@ -325,7 +323,7 @@ union Obj {
   
   // Int
   
-  Int int_val() {
+  Int int_val() const {
     assert(tag() == ot_int);
     Int val = i & Int(obj_body_mask);
     return val / scale_factor_Int;
@@ -345,25 +343,25 @@ union Obj {
   
   // Sym
   
-  Int sym_index() {
+  Int sym_index() const {
     assert(is_sym());
     return i >> width_sym_tags;
   }
   
-  Bool is_special_sym();
+  Bool is_special_sym() const;
   
-  Obj sym_data();
+  Obj sym_data() const;
   
   // Bool
   
-  Bool is_true_bool() {
+  Bool is_true_bool() const {
     if (*this == s_true) return true;
     if (*this == s_false) return false;
     assert(0);
     exit(1);
   }
 
-  Bool is_true() {
+  Bool is_true() const {
     switch (tag()) {
       case ot_ref: {
         Obj type = ref_type();
@@ -387,37 +385,37 @@ union Obj {
   
   // Data
   
-  Int data_ref_len() {
+  Int data_ref_len() const {
     assert(ref_is_data());
     assert(d->len > 0);
     return d->len;
   }
   
-  Int data_len() {
+  Int data_len() const {
     if (*this == blank) return 0; // TODO: support all data-word values.
     return data_ref_len();
   }
   
-  Chars data_ref_chars() {
+  Chars data_ref_chars() const {
     assert(ref_is_data());
     return reinterpret_cast<Chars>(d + 1); // address past data header.
   }
   
-  CharsM data_ref_charsM() {
+  CharsM data_ref_charsM() const {
     assert(ref_is_data());
     return reinterpret_cast<CharsM>(d + 1); // address past data header.
   }
   
-  Chars data_chars() {
+  Chars data_chars() const {
     if (*this == blank) return null; // TODO: support all data-word values.
     return data_ref_chars();
   }
   
-  Str data_str() {
+  Str data_str() const {
     return Str(data_len(), data_chars());
   }
   
-  Bool data_ref_iso(Obj o) {
+  Bool data_ref_iso(Obj o) const {
     Int len = data_ref_len();
     return len == o.data_ref_len() && !memcmp(data_ref_chars(), o.data_ref_chars(), Uns(len));
   }
@@ -479,17 +477,36 @@ union Obj {
     return cmpd_els()[idx];
   }
 
+  Obj cmpd_el_move(Int idx) const {
+    assert(ref_is_cmpd());
+    assert(idx >= 0 && idx < cmpd_len());
+    Obj* slot = cmpd_els() + idx;
+    Obj el = *slot;
+#if OPTION_MEM_ZERO
+    *slot = obj0;
+#endif
+    return el;
+  }
+
   void cmpd_put(Int idx, Obj el) const {
     assert(ref_is_cmpd());
     assert(idx >= 0 && idx < cmpd_len());
     Obj* slot = cmpd_els() + idx;
+#if OPTION_MEM_ZERO
     assert(!slot->vld());
+#endif
     *slot = el;
   }
 
   Range<Obj*>cmpd_it() const {
     Obj* b = cmpd_els();
     return Range<Obj*>(b, b + cmpd_len());
+  }
+
+  Range<Obj*>cmpd_to(Int to) const {
+    assert(to <= cmpd_len());
+    Obj* b = cmpd_els();
+    return Range<Obj*>(b, b + to);
   }
 
   Obj cmpd_slice(Int fr, Int to) const {
@@ -503,13 +520,68 @@ union Obj {
     if (ls == l) {
       return *this; // no ret/rel necessary.
     }
-    Obj slice = cmpd_new_raw(ref_type().ret(), ls);
+    Obj slice = Obj::Cmpd_raw(ref_type().ret(), ls);
     Obj* src = cmpd_els();
     Obj* dst = slice.cmpd_els();
     for_in(idx, ls) {
       dst[idx] = src[idx + fr].ret();
     }
     return slice;
+  }
+
+  Obj cmpd_rel_fields() const {
+    Int len = cmpd_len();
+    if (!len) return obj0; // return the termination sentinel for rc_rel tail loop.
+    Int last_i = len - 1;
+    for_mut(el, cmpd_to(last_i)) {
+      el.rel();
+    }
+#if OPTION_TCO
+    return cmpd_el(last_i);
+#else
+    cmpd_el(last_i).rel();
+    return obj0;
+  #endif
+  }
+
+  void cmpd_dissolve_fields() const {
+    for_mut(el, cmpd_it()) {
+      el.rel();
+      el = s_DISSOLVED.ret_val();
+    }
+  }
+
+  static Obj Cmpd_raw(Obj type, Int len) {
+    // owns type.
+    counter_inc(ci_Cmpd_rc);
+    Obj o = Obj(raw_alloc(size_Cmpd + (size_Obj * len), ci_Cmpd_alloc));
+    *o.h = Head(type.r);
+    o.c->len = len;
+  #if OPTION_MEM_ZERO
+    memset(o.cmpd_els(), 0, Uns(size_Obj * len));
+  #endif
+    return o;
+  }
+  
+  static Obj _Cmpd(Obj type, Int i, Obj el) {
+    // owns all arguments.
+    Obj o = Cmpd_raw(type, i + 1);
+    o.cmpd_put(i, el);
+    return o;
+  }
+
+  template <typename T, typename... Ts>
+  static Obj _Cmpd(Obj type, Int i, T el, Ts... rest) {
+    // owns all arguments.
+    Obj o = _Cmpd(type, i + 1, rest...);
+    o.cmpd_put(i, el);
+    return o;
+  }
+
+  template <typename T, typename... Ts>
+  static Obj Cmpd(Obj type, T el, Ts... rest) {
+    // owns all arguments.
+    return _Cmpd(type, 0, el, rest...);
   }
 
 };

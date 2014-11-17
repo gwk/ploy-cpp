@@ -221,7 +221,7 @@ static Obj parse_Comment(Parser& p) {
     Obj expr = parse_sub_expr(p);
     if (p.e) return obj0;
     // first field indicates expression comment.
-    return cmpd_new(t_Comment.ret(), s_true.ret_val(), expr);
+    return Obj::Cmpd(t_Comment.ret(), s_true.ret_val(), expr);
   }
   // otherwise comment out a single line.
   while (PC == ' ') {
@@ -233,7 +233,7 @@ static Obj parse_Comment(Parser& p) {
   }
   Str s = str_slice(p.s, off_start, p.pos.off);
   Obj d = Obj::Data(s);
-  return cmpd_new(t_Comment.ret(), s_false.ret_val(), d);
+  return Obj::Cmpd(t_Comment.ret(), s_false.ret_val(), d);
 }
 
 
@@ -289,7 +289,7 @@ static Obj parse_Quo(Parser& p) {
   P_ADV(1);
   Obj o = parse_sub_expr(p);
   if (p.e) return obj0;
-  return cmpd_new(t_Quo.ret(), o);
+  return Obj::Cmpd(t_Quo.ret(), o);
 }
 
 
@@ -298,7 +298,7 @@ static Obj parse_Qua(Parser& p) {
   P_ADV(1);
   Obj o = parse_sub_expr(p);
   if (p.e) return obj0;
-  return cmpd_new(t_Qua.ret(), o);
+  return Obj::Cmpd(t_Qua.ret(), o);
 }
 
 
@@ -307,7 +307,7 @@ static Obj parse_Unq(Parser& p) {
   P_ADV(1);
   Obj o = parse_sub_expr(p);
   if (p.e) return obj0;
-  return cmpd_new(t_Unq.ret(), o);
+  return Obj::Cmpd(t_Unq.ret(), o);
 }
 
 
@@ -316,7 +316,7 @@ static Obj parse_Bang(Parser& p) {
   P_ADV(1);
   Obj o = parse_sub_expr(p);
   if (p.e) return obj0;
-  return cmpd_new(t_Bang.ret(), o);
+  return Obj::Cmpd(t_Bang.ret(), o);
 }
 
 
@@ -325,7 +325,7 @@ static Obj parse_Splice(Parser& p) {
   P_ADV(1);
   Obj o = parse_sub_expr(p);
   if (p.e) return obj0;
-  return cmpd_new(t_Splice.ret(), o);
+  return Obj::Cmpd(t_Splice.ret(), o);
 }
 
 
@@ -362,7 +362,7 @@ static Obj parse_Label(Parser& p) {
   } else {
     expr = s_void.ret_val();
   }
-  return cmpd_new(t_Label.ret(), name, type, expr);
+  return Obj::Cmpd(t_Label.ret(), name, type, expr);
 }
 
 
@@ -386,7 +386,7 @@ static Obj parse_Variad(Parser& p) {
   } else {
     type = s_nil.ret_val();
   }
-  return cmpd_new(t_Variad.ret(), expr, type);
+  return Obj::Cmpd(t_Variad.ret(), expr, type);
 }
 
 
@@ -397,7 +397,7 @@ static Obj parse_Accessor(Parser& p) {
     assert(!expr.vld());
     return obj0;
   }
-  return cmpd_new(t_Accessor.ret(), expr);
+  return Obj::Cmpd(t_Accessor.ret(), expr);
 }
 
 
@@ -408,7 +408,7 @@ static Obj parse_Mutator(Parser& p) {
     assert(!expr.vld());
     return obj0;
   }
-  return cmpd_new(t_Mutator.ret(), expr);
+  return Obj::Cmpd(t_Mutator.ret(), expr);
 }
 
 
@@ -433,7 +433,7 @@ static Obj parse_Expand(Parser& p) {
   P_ADV(1, return parse_error(p, "unterminated expand"));
   Array a = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR('>');
-  Obj e = cmpd_new(t_Expand.ret(), cmpd_new_M(t_Arr_Expr.ret(), a));
+  Obj e = Obj::Cmpd(t_Expand.ret(), Cmpd_from_Array(t_Arr_Expr.ret(), a));
   a.dealloc();
   return e;
 }
@@ -443,7 +443,7 @@ static Obj parse_Call(Parser& p) {
   P_ADV(1, return parse_error(p, "unterminated call"));
   Array a = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR(')');
-  Obj c = cmpd_new(t_Call.ret(), cmpd_new_M(t_Arr_Expr.ret(), a));
+  Obj c = Obj::Cmpd(t_Call.ret(), Cmpd_from_Array(t_Arr_Expr.ret(), a));
   a.dealloc();
   return c;
 }
@@ -453,7 +453,7 @@ static Obj parse_struct(Parser& p) {
   P_ADV(1, return parse_error(p, "unterminated constructor"));
   Array a = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR('}');
-  Obj s = cmpd_new(t_Syn_struct.ret(), cmpd_new_M(t_Arr_Expr.ret(), a));
+  Obj s = Obj::Cmpd(t_Syn_struct.ret(), Cmpd_from_Array(t_Arr_Expr.ret(), a));
   a.dealloc();
   return s;
 }
@@ -463,7 +463,7 @@ static Obj parse_seq(Parser& p) {
   P_ADV(1, return parse_error(p, "unterminated sequence"));
   Array a = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR(']');
-  Obj s = cmpd_new(t_Syn_seq.ret(), cmpd_new_M(t_Arr_Expr.ret(), a));
+  Obj s = Obj::Cmpd(t_Syn_seq.ret(), Cmpd_from_Array(t_Arr_Expr.ret(), a));
   a.dealloc();
   return s;
 }
@@ -514,7 +514,7 @@ static Obj parse_expr(Parser& p) {
   parse_errFL("%o", expr);
 #endif
   if (!p.e && expr.is_ref()) {
-    Obj src_loc = cmpd_new(t_Src_loc.ret(),
+    Obj src_loc = Obj::Cmpd(t_Src_loc.ret(),
       p.path.ret(),
       p.src.ret(),
       Obj::with_Int(pos.off),
@@ -545,7 +545,7 @@ static Obj parse_src(Dict& src_locs, Obj path, Obj src, CharsM* e) {
     o = parse_error(p, "parsing terminated early");
     a.rel_els_dealloc();
   } else {
-    o = cmpd_new_M(t_Arr_Expr.ret(), a);
+    o = Cmpd_from_Array(t_Arr_Expr.ret(), a);
     a.dealloc();
   }
   *e = p.e;

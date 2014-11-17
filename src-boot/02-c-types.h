@@ -76,7 +76,7 @@ typedef FILE* CFile; // 'File' refers to the ploy type.
 // terminology: size_* should always refer to size in bytes.
 // define signed Int constants to use instead of sizeof.
 // this lets us use signed Int with fewer casts, reducing the risk of overflows mistakes.
-#define DEF_SIZE(type) static const Int size_##type = sizeof(type)
+#define DEF_SIZE(type) const Int size_##type = sizeof(type)
 
 DEF_SIZE(Char);
 DEF_SIZE(Bool);

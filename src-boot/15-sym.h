@@ -16,7 +16,7 @@ static Obj sym_with_index(Int i) {
 }
 
 
-Obj Obj::sym_data() {
+Obj Obj::sym_data() const {
   assert(is_sym());
   return global_sym_names.el(sym_index());
 }
@@ -121,7 +121,7 @@ static void sym_init() {
 }
 
 
-Bool Obj::is_special_sym() {
+Bool Obj::is_special_sym() const {
   return sym_index() <= si_END_SPECIAL_SYMS;
 }
 

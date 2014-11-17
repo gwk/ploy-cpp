@@ -23,12 +23,12 @@ static Step eval_array_expr(Obj env, Obj exprs) {
   // besides evaluating a different, non-Expr type,
   // it also does the complete eval cycle on each item in turn.
   assert(exprs.type() == t_Arr_Expr);
-  Array a = cmpd_array(exprs);
-  if (a.len() == 0) {
+  Int len = exprs.cmpd_len();
+  if (len == 0) {
     return Step(env, s_void.ret_val());
   }
-  Int last = a.len() - 1;
-  for_ref(el, a.to(last)) {
+  Int last = len - 1;
+  for_val(el, exprs.cmpd_to(last)) {
     if (el == s_HALT) {
       return Step(env, s_HALT.ret_val());
     }
@@ -36,6 +36,6 @@ static Step eval_array_expr(Obj env, Obj exprs) {
     env = step.res.env;
     step.res.val.rel();
   }
-  Step step = eval(env, a.el(last));
+  Step step = eval(env, exprs.cmpd_el(last));
   return step;
 }

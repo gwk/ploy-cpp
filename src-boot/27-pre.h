@@ -15,13 +15,13 @@ static Obj preprocess(Obj code) {
     return obj0;
   }
   List dst;
-  for_val(el, cmpd_array(code)) {
+  for_val(el, code.cmpd_it()) {
     Obj o = preprocess(el);
     if (o.vld()) {
       dst.append(o); // owns o.
     }
   }
-  Obj c = cmpd_new_M(code.ref_type().ret(), dst.array());
+  Obj c = Cmpd_from_Array(code.ref_type().ret(), dst.array());
   dst.dealloc();
   return track_src(code, c);
 }

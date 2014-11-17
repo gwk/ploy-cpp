@@ -164,7 +164,7 @@ static Obj host_anew(Trace* t, Obj env) {
   exc_check(a.is_type(), "anew requires arg 1 to be a Type; received: %o", a);
   exc_check(b.is_int(), "anew requires arg 2 to be an Int; received: %o", b);
   Int len = b.int_val();
-  Obj res = cmpd_new_raw(a.ret(), len);
+  Obj res = Obj::Cmpd_raw(a.ret(), len);
   for_in(i, len) {
     res.cmpd_put(i, s_UNINIT.ret_val());
   }
@@ -179,9 +179,8 @@ static Obj host_aput(Trace* t, Obj env) {
   Int l = a.cmpd_len();
   Int i = b.int_val();
   exc_check(i >= 0 && i < l, "el index out of range; index: %i; len: %i", i, l);
-  Array array = cmpd_array(a);
-  array.el_move(i).rel();
-  array.put(i, c.ret());
+  a.cmpd_el_move(i).rel();
+  a.cmpd_put(i, c.ret());
   return a.ret();
 }
 
@@ -276,15 +275,15 @@ static Obj host_init_func(Obj env, Int len_pars, Chars name, Func_host_ptr ptr) 
   Obj sym = sym_new_from_c(name);
   Obj pars; // TODO: add real types; unique value for expression default?
   #define PAR(s) \
-  cmpd_new(t_Par.ret(), s.ret_val(), s_nil.ret_val(), s_void.ret_val())
+  Obj::Cmpd(t_Par.ret(), s.ret_val(), s_nil.ret_val(), s_void.ret_val())
   switch (len_pars) {
-    case 1: pars = cmpd_new(t_Arr_Par.ret(), PAR(s_a)); break;
-    case 2: pars = cmpd_new(t_Arr_Par.ret(), PAR(s_a), PAR(s_b)); break;
-    case 3: pars = cmpd_new(t_Arr_Par.ret(), PAR(s_a), PAR(s_b), PAR(s_c)); break;
+    case 1: pars = Obj::Cmpd(t_Arr_Par.ret(), PAR(s_a)); break;
+    case 2: pars = Obj::Cmpd(t_Arr_Par.ret(), PAR(s_a), PAR(s_b)); break;
+    case 3: pars = Obj::Cmpd(t_Arr_Par.ret(), PAR(s_a), PAR(s_b), PAR(s_c)); break;
     default: assert(0);
   }
   #undef PAR
-  Obj f = cmpd_new(t_Func.ret(),
+  Obj f = Obj::Cmpd(t_Func.ret(),
     Obj::with_Bool(false),
     Obj::with_Bool(false),
     env.ret(),
@@ -301,7 +300,7 @@ static Obj host_init_file(Obj env, Chars sym_name, Chars name, CFile f, Bool r,
   Bool w) {
   // owns env.
   Obj sym = sym_new_from_chars(sym_name);
-  Obj val = cmpd_new(t_File.ret(), Obj::Data(name), Obj::with_Ptr(f),
+  Obj val = Obj::Cmpd(t_File.ret(), Obj::Data(name), Obj::with_Ptr(f),
     Obj::with_Bool(r), Obj::with_Bool(w));
   return env_bind(env, false, false, sym, val);
 }
