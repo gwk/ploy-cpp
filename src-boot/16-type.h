@@ -3,7 +3,7 @@
 
 // type objects.
 
-#include "20-global.h"
+#include "15-global.h"
 
 
 struct Type {

@@ -5,7 +5,7 @@
 // frame boundaries are denoted by the special ENV_FRAME_MARKER symbol.
 // frame boundaries allow us to check for redefinitions within a frame.
 
-#include "17-data.h"
+#include "13-sym.h"
 
 
 struct Env {
