@@ -96,6 +96,8 @@ union Obj {
   Obj(): r(null) {} // constructs the invalid object; essentially the null pointer.
   // this works because references have the zero tag.
   
+#define obj0 Obj()
+  
   explicit Obj(Int _i): i(_i) {} // TODO: change semantics to shift?
   explicit Obj(Uns _u): u(_u) {} // TODO: change semantics to shift?
   explicit Obj(Raw _r): r(_r) {}
@@ -181,27 +183,6 @@ union Obj {
     }
   }
 
-  void dissolve() const {
-    if (is_cmpd()) {
-      cmpd_dissolve_fields(*this);
-    }
-    rel();
-  }
-
-  Obj ret_val() const {
-    // ret counting for non-ref objects. a no-op for optimized builds.
-    assert(is_val());
-    counter_inc(counter_index());
-    return *this;
-  }
-
-  Obj rel_val() const {
-    // rel counting for non-ref objects. a no-op for optimized builds.
-    assert(is_val());
-    counter_dec(counter_index());
-    return *this;
-  }
-
   Counter_index counter_index() const {
     Obj_tag ot = tag();
     switch (ot) {
@@ -216,17 +197,120 @@ union Obj {
     }
   }
 
+#pragma mark ref
+  
+  Obj ref_type() const {
+    assert(is_ref());
+    return Obj(h->type);
+  }
+  
+#pragma mark rc
+  
+  Uns rc() const {
+    // get the object's retain count for debugging purposes.
+    if (is_val()) return max_Uns;
+    assert(h->rc & 1); // TODO: support indirect counts.
+    return h->rc >> 1; // shift off the direct flag bit.
+  }
+  
+  Obj ret_val() const {
+    // ret counting for non-ref objects. a no-op for optimized builds.
+    assert(is_val());
+    counter_inc(counter_index());
+    return *this;
+  }
+
+  Obj rel_val() const {
+    // rel counting for non-ref objects. a no-op for optimized builds.
+    assert(is_val());
+    counter_dec(counter_index());
+    return *this;
+  }
+
+  Obj ret() const {
+    // increase the object's retain count by one.
+    assert(vld());
+    counter_inc(counter_index());
+    if (is_val()) return *this;
+    check(h->rc, "object was prematurely deallocated: %p", r);
+    assert(h->rc & 1); // TODO: support indirect counts.
+    assert(h->rc < max_Uns);
+    h->rc += 2; // increment by two to leave the flag bit intact.
+    return *this;
+  }
+  
+  void rel() const {
+    // decrease the object's retain count by one, or deallocate it.
+    Obj o = *this;
+    assert(vld());
+    do {
+      if (o.is_val()) {
+        counter_dec(o.counter_index());
+        return;
+      }
+      if (!o.h->rc) {
+        // cycle deallocation is complete, and we have arrived at an already-deallocated member.
+        errFL("CYCLE: %p", o.r);
+        assert(0); // TODO: support cycles.
+        return;
+      }
+      counter_dec(o.counter_index());
+      assert(o.h->rc & 1); // TODO: support indirect counts.
+      if (o.h->rc == (1<<1) + 1) { // count == 1.
+        o = o.dealloc(); // returns tail object to be released.
+      } else {
+        o.h->rc -= 2; // decrement by two to leave the flag bit intact.
+        break;
+      }
+    } while (o.vld());
+  }
+  
+  void dissolve() const {
+    if (is_cmpd()) {
+      cmpd_dissolve_fields(*this);
+    }
+    rel();
+  }
+
+  Obj dealloc() const {
+    assert(is_ref());
+    //errFL("DEALLOC: %p:%o", r, *this);
+    h->rc = 0;
+    ref_type().rel();
+    Obj tail;
+    if (ref_is_data()) { // no extra action required.
+      tail = obj0;
+    } else if (ref_is_env()) {
+      tail = env_rel_fields(*this);
+    } else {
+      tail = cmpd_rel_fields(*this);
+    }
+    // ret/rel counter has already been decremented by rc_rel.
+#if !OPTION_DEALLOC_PRESERVE
+    raw_dealloc(r, Counter_index(counter_index() + 1));
+#elif OPTION_ALLOC_COUNT
+    counter_dec(Counter_index(counter_index() + 1)); // do not dealloc, just count.
+#endif
+    return tail;
+  }
+  
+#pragma mark Ptr
+  
   Raw ptr() {
     assert(is_ptr());
     return Raw(u & ~obj_tag_mask);
   }
 
+#pragma mark Int
+  
   Int int_val() {
     assert(tag() == ot_int);
     Int val = i & Int(obj_body_mask);
     return val / scale_factor_Int;
   }
 
+#pragma mark Sym
+  
   Int sym_index() {
     assert(is_sym());
     return i >> width_sym_tags;
@@ -236,6 +320,8 @@ union Obj {
   
   Obj sym_data();
 
+#pragma mark Bool
+  
   Bool is_true_bool() {
     if (*this == s_true) return true;
     if (*this == s_false) return false;
@@ -261,6 +347,8 @@ union Obj {
     assert(0);
   }
 
+#pragma mark Data
+  
   Int data_ref_len();
   
   Int data_len() {
@@ -290,17 +378,9 @@ union Obj {
     Int operator()(Obj o) const { return o.id_hash(); }
   };
 
-  Obj ref_type() const;
-  Uns rc() const;
-  Obj ret() const;
-  void rel() const;
-  Obj dealloc() const;
-
 };
 DEF_SIZE(Obj);
 
-
-#define obj0 Obj()
 
 const Obj int0 = Obj(Int(ot_int));
 
@@ -316,79 +396,6 @@ struct Data {
 } ALIGNED_TO_WORD;
 DEF_SIZE(Data);
 
-
-
-Obj Obj::ref_type() const {
-  assert(is_ref());
-  return Obj(h->type);
-}
-
-Uns Obj::rc() const {
-  // get the object's retain count for debugging purposes.
-  if (is_val()) return max_Uns;
-  assert(h->rc & 1); // TODO: support indirect counts.
-  return h->rc >> 1; // shift off the direct flag bit.
-}
-
-Obj Obj::ret() const {
-  // increase the object's retain count by one.
-  assert(vld());
-  counter_inc(counter_index());
-  if (is_val()) return *this;
-  check(h->rc, "object was prematurely deallocated: %p", r);
-  assert(h->rc & 1); // TODO: support indirect counts.
-  assert(h->rc < max_Uns);
-  h->rc += 2; // increment by two to leave the flag bit intact.
-  return *this;
-}
-
-void Obj::rel() const {
-  // decrease the object's retain count by one, or deallocate it.
-  Obj o = *this;
-  assert(vld());
-  do {
-    if (o.is_val()) {
-      counter_dec(o.counter_index());
-      return;
-    }
-    if (!o.h->rc) {
-      // cycle deallocation is complete, and we have arrived at an already-deallocated member.
-      errFL("CYCLE: %p", o.r);
-      assert(0); // TODO: support cycles.
-      return;     
-    }
-    counter_dec(o.counter_index());
-    assert(o.h->rc & 1); // TODO: support indirect counts.
-    if (o.h->rc == (1<<1) + 1) { // count == 1.
-      o = o.dealloc(); // returns tail object to be released.
-    } else {
-      o.h->rc -= 2; // decrement by two to leave the flag bit intact.
-      break;
-    }
-  } while (o.vld());
-}
-
-Obj Obj::dealloc() const {
-  assert(is_ref());
-  //errFL("DEALLOC: %p:%o", r, *this);
-  h->rc = 0;
-  ref_type().rel();
-  Obj tail;
-  if (ref_is_data()) { // no extra action required.
-    tail = obj0;
-  } else if (ref_is_env()) {
-    tail = env_rel_fields(*this);
-  } else {
-    tail = cmpd_rel_fields(*this);
-  }
-  // ret/rel counter has already been decremented by rc_rel.
-#if !OPTION_DEALLOC_PRESERVE
-  raw_dealloc(r, Counter_index(counter_index() + 1));
-#elif OPTION_ALLOC_COUNT
-  counter_dec(Counter_index(counter_index() + 1)); // do not dealloc, just count.
-#endif
-  return tail;
-}
 
 
 Int Obj::data_ref_len() {
