@@ -101,12 +101,14 @@ union Obj {
   Obj(): r(null) {} // constructs the invalid object; essentially the null pointer.
   // this works because references have the zero tag.
   
-#define obj0 Obj()
-  
   explicit Obj(Int _i): i(_i) {} // TODO: change semantics to shift?
   explicit Obj(Uns _u): u(_u) {} // TODO: change semantics to shift?
   explicit Obj(Raw _r): r(_r) {}
   explicit Obj(Type* _t): t(_t) {}
+
+  #define obj0 Obj()
+  #define int0 Obj(Int(ot_int))
+  #define blank Obj(Uns(ot_sym | data_word_bit)) // zero length data word.
 
   Bool operator==(const Obj o) const { return u == o.u; }
   Bool operator!=(const Obj o) const { return u != o.u; }
@@ -395,12 +397,6 @@ union Obj {
 
 };
 DEF_SIZE(Obj);
-
-
-const Obj int0 = Obj(Int(ot_int));
-
-// zero length data word.
-const Obj blank = Obj(Uns(ot_sym | data_word_bit));
 
 
 static Obj ptr_new(Raw p) {
