@@ -25,8 +25,7 @@ static Obj cmpd_new_raw(Obj type, Int len) {
   // owns type.
   counter_inc(ci_Cmpd_rc);
   Obj o = Obj(raw_alloc(size_Cmpd + (size_Obj * len), ci_Cmpd_alloc));
-  o.h->type = type;
-  o.h->rc = (1<<1) + 1;
+  *o.h = Head(type.r);
   o.c->len = len;
 #if OPTION_MEM_ZERO
   memset(cmpd_els(o), 0, Uns(size_Obj * len));

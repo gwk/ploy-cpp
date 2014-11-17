@@ -59,7 +59,14 @@ static Chars obj_tag_names[] = {
   "Sym",
 };
 
-struct Head;
+
+struct Head { // common header for all heap objects.
+  Raw type; // actually Obj; declared as untyped so that Head can be declared above Obj.
+  Uns rc;
+  Head(Raw t): type(t), rc((1<<1) + 1) {}
+};
+
+
 struct Data;
 struct Env;
 struct Cmpd;
@@ -301,13 +308,6 @@ const Obj int0 = Obj(Int(ot_int));
 const Obj blank = Obj(Uns(ot_sym | data_word_bit));
 
 
-struct Head { // common header for all heap objects.
-  Obj type;
-  Uns rc;
-  Head(Obj t): type(t), rc(0) {}
-};
-
-
 struct Data {
   Head head;
   Int len;
@@ -320,7 +320,7 @@ DEF_SIZE(Data);
 
 Obj Obj::ref_type() const {
   assert(is_ref());
-  return h->type;
+  return Obj(h->type);
 }
 
 Uns Obj::rc() const {
@@ -438,8 +438,7 @@ static Obj bool_new(Int i) {
 static Obj data_new_raw(Int len) {
   counter_inc(ci_Data_ref_rc);
   Obj o = Obj(raw_alloc(size_Data + len, ci_Data_ref_alloc));
-  o.h->type = t_Data.ret();
-  o.h->rc = (1<<1) + 1;
+  *o.h = Head(t_Data.ret().r);
   o.d->len = len;
   return o;
 }

@@ -11,8 +11,7 @@ struct Type {
   Int len;
   Obj name;
   Obj kind;
-  Type(): head(obj0), len(0), name(obj0), kind(obj0) {} // TODO: remove this if possible.
-  Type(Head h, Int l, Obj n, Obj k): head(h), len(l), name(n), kind(k) {}
+  Type(): head(null), len(0), name(obj0), kind(obj0) {} // TODO: remove this if possible.
 } ALIGNED_TO_WORD;
 DEF_SIZE(Type);
 
@@ -297,7 +296,7 @@ static Obj type_kind_init_class_dispatcher() {
 
 static void type_add(Obj type, Chars c_name, Obj kind) {
   assert(type.rc());
-  type.h->type = t_Type.ret();
+  type.h->type = t_Type.ret().t;
   type.t->len = 2;
   type.t->name = sym_new_from_c(c_name);
   type.t->kind = kind;
@@ -366,10 +365,10 @@ static void type_cleanup() {
   }
   // run final cleanup in reverse so that Type is cleaned up last;
   // the type slot is released first, and then rc_remove is called,
-  // so that Type releases itself first and then verifies that its rc count is zero.
+  // so that Type releases itself first and then verifies that its rc count is one.
   for_in_rev(i, ti_end) {
     Obj o = type_for_index(i);
-    o.h->type.rel();
+    o.type().rel();
     o.t->name.rel_val(); // order does not matter as long as name is always a symbol.
     check(o.h->rc == (1<<1) + 1, "type_cleanup: unexpected rc: %u: %o", o.h->rc, o);
   }
