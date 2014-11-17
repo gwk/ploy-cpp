@@ -26,7 +26,6 @@ Obj Obj::sym_data() {
 }
 
 
-static Str data_str(Obj d);
 static Obj data_new_from_str(Str s);
 
 static Obj sym_new(Str s) {

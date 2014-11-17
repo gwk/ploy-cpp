@@ -6,7 +6,7 @@
 
 static void write_data(CFile f, Obj d) {
   assert(d.ref_is_data());
-  fwrite(data_chars(d), 1, Uns(data_len(d)), f);
+  fwrite(d.data_chars(), 1, Uns(d.data_len()), f);
 }
 
 
@@ -22,9 +22,9 @@ static void write_repr_Sym(CFile f, Obj s, Bool is_quoted) {
 
 static void write_repr_Data(CFile f, Obj d) {
   assert(d.ref_is_data());
-  Chars p = data_ref_chars(d);
+  Chars p = d.data_ref_chars();
   fputc('\'', f);
-  for_in(i, data_len(d)) {
+  for_in(i, d.data_len()) {
     fputs(char_repr(p[i]), f);
   }
   fputc('\'', f);

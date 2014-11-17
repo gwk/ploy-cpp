@@ -41,7 +41,7 @@ static Obj track_src(Obj original, Obj derived) {
       Obj len = cmpd_el(loc, 3);
       Obj line = cmpd_el(loc, 4);
       Obj col = cmpd_el(loc, 5);
-      CharsM msg = str_src_loc_str(data_str(path), data_str(src),
+      CharsM msg = str_src_loc_str(path.data_str(), src.data_str(),
         pos.int_val(), len.int_val(), line.int_val(), col.int_val(), "");
       fputs("  ", stderr);
       fputs(msg, stderr);

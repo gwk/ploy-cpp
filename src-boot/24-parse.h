@@ -47,7 +47,7 @@ static Obj parse_error(Parser& p, Chars fmt, ...) {
   va_end(args);
   check(msg_len >= 0, "parse_error allocation failed: %s", fmt);
   // parser owner must call raw_dealloc on e.
-  p.e = str_src_loc_str(data_str(p.path), p.s, p.pos.off, 0, p.pos.line, p.pos.col, msg);
+  p.e = str_src_loc_str(p.path.data_str(), p.s, p.pos.off, 0, p.pos.line, p.pos.col, msg);
   free(msg); // matches vasprintf above.
   return obj0;
 }
@@ -535,7 +535,7 @@ static Obj parse_sub_expr(Parser& p) {
 
 static Obj parse_src(Dict& src_locs, Obj path, Obj src, CharsM* e) {
   // caller must free e.
-  Parser p = Parser(&src_locs, path, src, data_str(src),Src_pos(0, 0, 0), null);
+  Parser p = Parser(&src_locs, path, src, src.data_str(), Src_pos(0, 0, 0), null);
   Array a = parse_exprs(p, 0);
   Obj o;
   if (p.e) {

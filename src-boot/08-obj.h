@@ -85,7 +85,7 @@ union Obj {
   Env* e;
   Cmpd* c;
   Type* t;
-
+  
   Obj(): r(null) {} // constructs the invalid object; essentially the null pointer.
   // this works because references have the zero tag.
   
@@ -254,6 +254,31 @@ union Obj {
     assert(0);
   }
 
+  Int data_ref_len();
+  
+  Int data_len() {
+    if (*this == blank) return 0; // TODO: support all data-word values.
+    return data_ref_len();
+  }
+  
+  Chars data_ref_chars();
+  
+  CharsM data_ref_charsM();
+  
+  Chars data_chars() {
+    if (*this == blank) return null; // TODO: support all data-word values.
+    return data_ref_chars();
+  }
+  
+  Str data_str() {
+    return Str(data_len(), data_chars());
+  }
+  
+  Bool data_ref_iso(Obj o) {
+    Int len = data_ref_len();
+    return len == o.data_ref_len() && !memcmp(data_ref_chars(), o.data_ref_chars(), Uns(len));
+  }
+  
   struct Hash_is {
     Int operator()(Obj o) const { return o.id_hash(); }
   };
@@ -267,9 +292,13 @@ union Obj {
 };
 DEF_SIZE(Obj);
 
+
 #define obj0 Obj()
 
 const Obj int0 = Obj(Int(ot_int));
+
+// zero length data word.
+const Obj blank = Obj(Uns(ot_sym | data_word_bit));
 
 
 struct Head { // common header for all heap objects.
@@ -277,6 +306,16 @@ struct Head { // common header for all heap objects.
   Uns rc;
   Head(Obj t): type(t), rc(0) {}
 };
+
+
+struct Data {
+  Head head;
+  Int len;
+  
+  
+} ALIGNED_TO_WORD;
+DEF_SIZE(Data);
+
 
 
 Obj Obj::ref_type() const {
@@ -352,6 +391,25 @@ Obj Obj::dealloc() const {
 }
 
 
+Int Obj::data_ref_len() {
+  assert(ref_is_data());
+  assert(d->len > 0);
+  return d->len;
+}
+
+
+Chars Obj::data_ref_chars() {
+  assert(ref_is_data());
+  return reinterpret_cast<Chars>(d + 1); // address past data header.
+}
+
+
+CharsM Obj::data_ref_charsM() {
+  assert(ref_is_data());
+  return reinterpret_cast<CharsM>(d + 1); // address past data header.
+}
+
+
 static Obj ptr_new(Raw p) {
   Uns u = Uns(p);
   assert(!(u & obj_tag_mask));
@@ -374,4 +432,47 @@ static Obj int_new_from_U64(U64 u) {
 
 static Obj bool_new(Int i) {
   return (i ? s_true : s_false).ret_val();
+}
+
+
+static Obj data_new_raw(Int len) {
+  counter_inc(ci_Data_ref_rc);
+  Obj o = Obj(raw_alloc(size_Data + len, ci_Data_ref_alloc));
+  o.h->type = t_Data.ret();
+  o.h->rc = (1<<1) + 1;
+  o.d->len = len;
+  return o;
+}
+
+
+static Obj data_new_from_str(Str s) {
+  if (!s.len) return blank.ret_val();
+  Obj d = data_new_raw(s.len);
+  memcpy(d.data_ref_charsM(), s.chars, Uns(s.len));
+  return d;
+}
+
+
+static Obj data_new_from_chars(Chars c) {
+  Uns len = strnlen(c, max_Int);
+  check(len <= max_Int, "data_new_from_chars: string exceeded max length");
+  Obj d = data_new_raw(Int(len));
+  memcpy(d.data_ref_charsM(), c, len);
+  return d;
+}
+
+
+static Obj data_new_from_path(Chars path) {
+  CFile f = fopen(path, "r");
+  check(f, "could not open file: %s", path);
+  fseek(f, 0, SEEK_END);
+  Int len = ftell(f);
+  if (!len) return blank.ret_val();
+  Obj d = data_new_raw(len);
+  fseek(f, 0, SEEK_SET);
+  Uns items_read = fread(d.data_ref_charsM(), size_Char, Uns(len), f);
+  check(Int(items_read) == len,
+        "read failed; expected len: %i; actual: %u; path: %s", len, items_read, path);
+  fclose(f);
+  return d;
 }

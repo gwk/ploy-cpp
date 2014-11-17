@@ -111,7 +111,7 @@ static Obj host_dlen(Trace* t, Obj env) {
     l = 0;
   } else {
     exc_check(a.is_data(), "dlen requires Data; received: %o", a);
-    l = data_len(a);
+    l = a.data_len();
   }
   return int_new(l);
 }
@@ -131,7 +131,7 @@ static Obj host_data_ref_iso(Trace* t, Obj env) {
     a);
   exc_check(a.is_data_ref(), "data-ref-iso requires arg 1 to be a Data ref; received: %o",
     a);
-  return bool_new(data_ref_iso(a, b));
+  return bool_new(a.data_ref_iso(b));
 }
 
 
@@ -203,7 +203,7 @@ static Obj host_write(Trace* t, Obj env) {
   exc_check(b.is_data(), "write requires arg 2 to be a Data; received: %o", b);
   CFile file = CFile(a.ptr());
   // for now, ignore the return value.
-  fwrite(data_chars(b), size_Char, Uns(data_len(b)), file);
+  fwrite(b.data_chars(), size_Char, Uns(b.data_len()), file);
   return s_void.ret_val();
 }
 
