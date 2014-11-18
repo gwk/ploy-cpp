@@ -428,11 +428,13 @@ union Obj {
     return reinterpret_cast<Chars>(d + 1); // address past data header.
   }
   
+private:
   CharsM data_ref_charsM() const {
     assert(ref_is_data());
     return reinterpret_cast<CharsM>(d + 1); // address past data header.
   }
   
+public:
   Chars data_chars() const {
     if (*this == blank) return null; // TODO: support all data-word values.
     return data_ref_chars();
