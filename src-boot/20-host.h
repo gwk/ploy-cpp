@@ -117,14 +117,6 @@ static Obj host_dlen(Trace* t, Obj env) {
 }
 
 
-static Obj host_cmpd_len(Trace* t, Obj env) {
-  GET_A;
-  exc_check(a.is_cmpd(), "cmpd-len requires Cmpd; received: %o", a);
-  Int l = a.cmpd_len();
-  return Obj::with_Int(l);
-}
-
-
 static Obj host_data_ref_iso(Trace* t, Obj env) {
   GET_AB;
   exc_check(a.is_data_ref(), "data-ref-iso requires arg 1 to be a Data ref; received: %o",
@@ -132,6 +124,14 @@ static Obj host_data_ref_iso(Trace* t, Obj env) {
   exc_check(a.is_data_ref(), "data-ref-iso requires arg 1 to be a Data ref; received: %o",
     a);
   return Obj::with_Bool(a.data_ref_iso(b));
+}
+
+
+static Obj host_cmpd_len(Trace* t, Obj env) {
+  GET_A;
+  exc_check(a.is_cmpd(), "cmpd-len requires Cmpd; received: %o", a);
+  Int l = a.cmpd_len();
+  return Obj::with_Int(l);
 }
 
 
@@ -336,8 +336,8 @@ static Obj host_init(Obj env) {
   DEF_FH(2, igt);
   DEF_FH(2, ige);
   DEF_FH(1, dlen);
-  DEF_FH(1, cmpd_len);
   DEF_FH(2, data_ref_iso);
+  DEF_FH(1, cmpd_len);
   DEF_FH(2, cmpd_field);
   DEF_FH(2, ael);
   DEF_FH(2, anew);
