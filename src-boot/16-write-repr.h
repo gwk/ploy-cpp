@@ -195,7 +195,6 @@ static void write_repr_default(CFile f, Obj c, Bool is_quoted, Int depth, Set& s
   fputs("(", f);
   Obj t = c.type();
   assert(t.is_type());
-  assert(t.t->name.is_sym());
   write_repr_obj(f, t.t->name, true, depth, set);
   for_in(i, c.cmpd_len()) {
     fputc(' ', f);

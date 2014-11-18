@@ -135,15 +135,28 @@ static Obj host_cmpd_len(Trace* t, Obj env) {
 }
 
 
-static Obj host_cmpd_field(Trace* t, Obj env) {
+static Obj host_cmpd_el(Trace* t, Obj env) {
   GET_AB;
-  exc_check(a.is_cmpd(), "field requires arg 1 to be a Cmpd; received: %o", a);
-  exc_check(b.is_int(), "field requires arg 2 to be an Int; received: %o", b);
+  exc_check(a.is_cmpd(), "cmpd-el requires arg 1 to be a Cmpd; received: %o", a);
+  exc_check(b.is_int(), "cmpd-el requires arg 2 to be an Int; received: %o", b);
   Int l = a.cmpd_len();
   Int i = b.int_val();
-  exc_check(i >= 0 && i < l, "field index out of range; index: %i; len: %i", i, l);
+  exc_check(i >= 0 && i < l, "cmpd-el index out of range; index: %i; len: %i", i, l);
   Obj field = a.cmpd_el(i);
   return field.ret();
+}
+
+
+static Obj host_cmpd_put(Trace* t, Obj env) {
+  GET_ABC;
+  exc_check(a.is_cmpd(), "cmpd-put requires arg 1 to be a Cmpd; received: %o", a);
+  exc_check(b.is_int(), "cmpd-put requires arg 2 to be a Int; received: %o", b);
+  Int l = a.cmpd_len();
+  Int i = b.int_val();
+  exc_check(i >= 0 && i < l, "cmpd-put index out of range; index: %i; len: %i", i, l);
+  a.cmpd_el_move(i).rel();
+  a.cmpd_put(i, c.ret());
+  return a.ret();
 }
 
 
@@ -174,11 +187,11 @@ static Obj host_anew(Trace* t, Obj env) {
 
 static Obj host_aput(Trace* t, Obj env) {
   GET_ABC;
-  exc_check(a.is_cmpd(), "el requires arg 1 to be a Arr; received: %o", a);
-  exc_check(b.is_int(), "el requires arg 2 to be a Int; received: %o", b);
+  exc_check(a.is_cmpd(), "aput requires arg 1 to be a Arr; received: %o", a);
+  exc_check(b.is_int(), "aput requires arg 2 to be a Int; received: %o", b);
   Int l = a.cmpd_len();
   Int i = b.int_val();
-  exc_check(i >= 0 && i < l, "el index out of range; index: %i; len: %i", i, l);
+  exc_check(i >= 0 && i < l, "aput index out of range; index: %i; len: %i", i, l);
   a.cmpd_el_move(i).rel();
   a.cmpd_put(i, c.ret());
   return a.ret();
@@ -187,9 +200,9 @@ static Obj host_aput(Trace* t, Obj env) {
 
 static Obj host_aslice(Trace* t, Obj env) {
   GET_ABC;
-  exc_check(a.is_cmpd(), "el requires arg 1 to be a Arr; received: %o", a);
-  exc_check(b.is_int(), "el requires arg 2 to be a Int; received: %o", b);
-  exc_check(c.is_int(), "el requires arg 3 to be a Int; received: %o", c);
+  exc_check(a.is_cmpd(), "aslice requires arg 1 to be a Arr; received: %o", a);
+  exc_check(b.is_int(), "aslice requires arg 2 to be a Int; received: %o", b);
+  exc_check(c.is_int(), "aslice requires arg 3 to be a Int; received: %o", c);
   Int fr = b.int_val();
   Int to = c.int_val();
   return a.cmpd_slice(fr, to);
@@ -338,7 +351,8 @@ static Obj host_init(Obj env) {
   DEF_FH(1, dlen);
   DEF_FH(2, data_ref_iso);
   DEF_FH(1, cmpd_len);
-  DEF_FH(2, cmpd_field);
+  DEF_FH(2, cmpd_el);
+  DEF_FH(3, cmpd_put);
   DEF_FH(2, ael);
   DEF_FH(2, anew);
   DEF_FH(3, aput);

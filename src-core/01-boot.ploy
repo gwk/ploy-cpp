@@ -68,15 +68,6 @@
 
 <pub-fn idec [-i] (isub i 1)>
 
-# type functions.
-
-<pub-fn is-ptr  [-o] (is (type-of o) Ptr)>
-<pub-fn is-int  [-o] (is (type-of o) Int)>
-<pub-fn is-sym  [-o] (is (type-of o) Sym)>
-<pub-fn is-data [-o] (is (type-of o) Data)>
-<pub-fn is-env  [-o] (is (type-of o) Env)>
-<pub-fn is-type [-o] (is (type-of o) Type)>
-
 # control flow.
 
 <pub-fn error [-msg]
@@ -121,6 +112,19 @@
   <recur [-i=0]
     <if (ieq i len) true
       (CONS If (ael exprs i) (self (iinc i)) false)>>>
+
+# type functions.
+
+<pub-fn is-ptr    [-o] (is (type-of o) Ptr)>
+<pub-fn is-int    [-o] (is (type-of o) Int)>
+<pub-fn is-sym    [-o] (is (type-of o) Sym)>
+<pub-fn is-data   [-o] (is (type-of o) Data)>
+<pub-fn is-env    [-o] (is (type-of o) Env)>
+<pub-fn is-type   [-o] (is (type-of o) Type)>
+<pub-fn is-label  [-o] (is (type-of o) Label)>
+<pub-fn is-variad [-o] (is (type-of o) Variad)>
+
+<pub-fn is-cmpd [-o] <and (is-ref o) (not <or (is-data o) (is-env o)>)>>
 
 # output functions.
 
@@ -195,8 +199,8 @@
         <do
           <let last (idec len)>
           <recur [-i=0]
-            <let ai (cmpd-field a i)>
-            <let bi (cmpd-field b i)>
+            <let ai (cmpd-el a i)>
+            <let bi (cmpd-el b i)>
             <if (ieq i last) (iso ai bi) # tail optimized.
               (not (iso ai bi)) false
               (self (iinc i))>>>>>>>
@@ -220,11 +224,11 @@
       (outRSL 'actual:' act)
       (error "utest failure.")>>>
 
+# cmpd.
+
+<let-fn cmpd-clone [-obj] (CONS (type-of obj) *obj)>
+
 # Arr.
-
-#<let-type Arr (CONS Type-kind-arr T)>
-
-<let-type Arr-Int (CONS Type-kind-arr Int)>
 
 <let-fn arr-copy-to [-dst:Arr-Obj -src:Arr-Obj -to:Int]
   <check (ige (alen dst) to) "dst is smaller than end index 'to'">
@@ -237,7 +241,9 @@
 
 <let-fn arr-copy [-dst:Arr-Obj -src:Arr-Obj] (arr-copy-to dst src (alen src))>
 
-<let-fn arr-clone [-arr:Arr-Obj] (arr-copy (anew (alen src)) src)>
+<let-fn arr-clone [-arr:Arr-Obj -len:Int=(alen arr)] (arr-copy (anew len) src)>
+
+# TODO: copy-deep, clone-deep?
 
 <let-fn arr-resize [-arr:Arr-Obj -len:len]
   # create a new array with elements copied from arr; further elements remain UNINIT.
@@ -252,7 +258,7 @@
         (aput res i (f (ael arr i)))
         (self (iinc i))>>>>
 
-# type declarations.
+# type definitions.
 
 <macro let-struct [-name &fields]
   <let pars (arr-map fields Arr-Par <fn [-field]
@@ -357,64 +363,43 @@
   <recur [-i=0]
     <if (ieq i (alen kv)) d
       <do
-        (list-dict-put d (ael kv i) (ael kv (iinc i)))
+        (list-dict-put is is d (ael kv i) (ael kv (iinc i)))
         (self (iadd i 2))>>>>
 
-# type derivation.
+# generics.
 
-<let-struct Type-derivation-key -type:Type -dict:Dict>
+<macro generic [-name -expr]
+  ~<let ,name `,expr>>
 
-<let derived-type-memo (list-new)>
+<let-struct Gnr-deriv-key -type:Obj -dict:Dict>
 
-<let-fn derive-type [-type:Type -dict:Dict]
+<let gnr-memo (list-new)>
+
+<let-fn derive [-expr:Expr -dict:Dict]
   # NOTE: dict entries must be in some canonical order or else memo fetch will fail.
-  <let k (.kind type)>
-  <let tk (type-of k)>
-  <if (is tk Type-kind-var)
-    <if (list-dict-contains dict type) (list-dict-fetch dict type) type>
+
+  <if (is-sym expr)
     <do
-      <let memo-key (CONS Type-derivation-key type dict)>
-      <let memoized (list-dict-fetch derived-type-memo memo-key)>
-      <if (not (is memoized nil)) memoized
+      <let item (list-dict-fetch is dict expr)>
+      <if (.found item) (.val item) expr>>
+    <do
+      <if (not (is-cmpd expr))
+        expr
         <do
-          <let res <if
-            (is tk Type-kind-arr)
-            <do
-              <let orig (.el-type k)>
-              <let derived (derive-type orig dict)>
-              <if (is derived orig) type (CONS Type `DERIVED-ARR (CONS Type-kind-arr derived))>>
-            (is tk Type-kind-struct)
-            <recur [-i=0 -t=type]
-              <let kind (.kind t)>
-              <let fields (.fields kind)>
-              <let field (ael fields i)>
-              <let orig (.type field)>
-              <let derived (derive-type orig dict)>
-              <if (is derived orig) (self (iinc i) t) # no change to result t.
+          <let-fn derive-cmpd []
+            # derive an instance from expr; the result will be checked against the memo cache.
+            <let len (cmpd-len expr)>
+            <let start <if (is-label expr) 1 0>> # special case for label names.
+            <recur [-i=start -res=expr]
+              <if (ieq i len) res
                 <do
-                  <let field-derived (CONS Par (.name field) derived (.dflt))>
-                  (self
-                    (iinc i)
-                    <if (is t type) # identical thus far; clone and alter.
-                      (CONS Type `DERIVED-STRUCT (CONS Type-kind-struct
-                        (aput (arr-clone fields) i field-derived)
-                        (.dispatcher type)))
-                      <do # already cloned.
-                        (aput fields i field-derived)
-                        t>>)>>>
-            (is tk Type-kind-union)
-            <recur [-i=0 -t=type]
-              <let kind (.kind t)>
-              <let variants (.variants kind)>
-              <let orig (ael variants i)>
-              <let derived (derive-type orig dict)>
-              (self
-                (iinc i)
-                <if (is derived orig) t # no change to result t.
-                  (is t type) # identical thus far; clone and alter.
-                  (CONS Type `DERIVED-UNION (CONS Type-kind-union
-                    (aput (arr-clone variants) i derived)))
-                    (aput i t derived)>)>
-          type>> # default case returns type unaltered.
-        (list-dict-put derived-type-memo memo-key res)
-        res>>>>>
+                  <let sub (cmpd-el expr i)>
+                  <let sub-derived (derive sub dict)>
+                  (self (iinc i)
+                    <if (is sub-derived sub) res # no change.
+                      (cmpd-put <if (is res expr) (cmpd-clone expr) res> i sub-derived)>)>>>>
+          (derive-cmpd)>>>>>
+
+<generic Arr (CONS Type `(Arr -E:E) (CONS Type-kind-arr E))>
+
+<let Arr-Int (RUN (derive Arr (list-dict-new `E `Int)))>

@@ -1,5 +1,5 @@
 <scope # boolean ops.
-  <utest false   <or>>
+  <utest false  <or>>
   <utest false  <or 0>>
   <utest true   <or 1>>
   <utest false  <or 0 0>>
@@ -13,6 +13,13 @@
   <utest false  <and 1 0>>
   <utest false  <and 0 1>>
   <utest true   <and 1 1>>>
+
+<scope # is-cmpd.
+  <utest false (is-cmpd 0)>
+  <utest false (is-cmpd false)>
+  <utest false (is-cmpd '')>
+  <utest false (is-cmpd 'long...!...!...!')>
+  <utest true  (is-cmpd (CONS Arr-Obj))>>
 
 <scope # iso.
   <utest true (iso 0 0)>
@@ -72,12 +79,7 @@
   <utest (CONS Dict-fetch true `vb) (list-dict-fetch is d `kb)>
   <utest (CONS Dict-fetch false nil) (list-dict-fetch is d `kc)>>
 
-##<scope # derive-type.
+<scope # derive.
   <utest
-    (CONS Type `DERIVED-ARR (CONS Type-kind-arr Int))
-    (derive-type Arr (list-dict-new T Int))>
-  <utest
-    true
-    <let A (derive-type Arr (list-dict-new T Int))>
-    <let B (derive-type Arr (list-dict-new T Int))>
-    (is A B)>>
+    (CONS Type `(Arr -E:Int) (CONS Type-kind-arr Int))
+    Arr-Int>>
