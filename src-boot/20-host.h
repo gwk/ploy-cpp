@@ -249,7 +249,7 @@ static Obj host_type_of(UNUSED Trace* t, Obj env) {
 static Obj host_globalize(UNUSED Trace* t, Obj env) {
   GET_A;
   global_push(a);
-  return s_void.ret_val();
+  return a.ret();
 }
 
 
