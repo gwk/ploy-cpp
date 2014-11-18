@@ -460,8 +460,9 @@ static Step run_call_CONS(UNUSED Int d, Trace* t, Obj env, Obj call, Array vals)
   Obj type = vals.el_move(2);
   Obj kind = type_kind(type);
   Int len = (vals.len() - 3) / 2;
-  Obj res = Obj::Cmpd_raw(type, len);
+  Obj res;
   if (is_kind_struct(kind)) {
+    res = Obj::Cmpd_raw(type, len);
     Obj fields = kind_fields(kind);
     // TODO: support field defaults.
     exc_check(fields.cmpd_len() == len, "call: %o\nCONS: type %o expects %i fields; received %i",
@@ -478,12 +479,19 @@ static Step run_call_CONS(UNUSED Int d, Trace* t, Obj env, Obj call, Array vals)
       res.cmpd_put(i, val);
     }
   } else if (is_kind_arr(kind)) {
+    res = Obj::Cmpd_raw(type, len);
     for_in(i, len) {
       Obj sym = vals.el_move(i * 2 + 3);
       Obj val = vals.el_move(i * 2 + 4);
       exc_check(!sym.vld(), "call: %o\nCONS: unexpected element label: %o", call, sym);
       res.cmpd_put(i, val);
     }
+  } else if (is_kind_unit(kind)) {
+    exc_check(!len, "call: %o\nCONS: unit type expects no arguments: %o", call, type);
+    Obj inst = type_unit_inst(type);
+    exc_check(inst.vld(), "call: %o\nCONS: unit type instance does not exist %o", call, type);
+    type.rel();
+    res = inst.ret();
   } else {
     exc_raise("call: %o\nCONS type is not a struct or arr type", call);
   }

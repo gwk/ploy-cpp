@@ -118,14 +118,9 @@ static Obj type_kind(Obj t) {
 }
 
 
-static Bool is_kind_struct(Obj kind) {
-  return kind.type() == t_Type_kind_struct;
-}
-
-
-static Bool is_kind_arr(Obj kind) {
-  return kind.type() == t_Type_kind_arr;
-}
+static Bool is_kind_struct(Obj kind)  { return kind.type() == t_Type_kind_struct; }
+static Bool is_kind_arr(Obj kind)     { return kind.type() == t_Type_kind_arr; }
+static Bool is_kind_unit(Obj kind)    { return kind.type() == t_Type_kind_unit; }
 
 
 UNUSED static Obj kind_el_type(Obj kind) {
@@ -141,20 +136,27 @@ static Obj kind_fields(Obj kind) {
 
 
 // flat list of unit type, singleton interleaved pairs.
+// TODO: use a table.
 static List global_singletons;
 
 
-static Obj type_unit(Obj type) {
-  // TODO: improve performance by using a hash table?
+static Obj type_unit_inst(Obj type) {
   for_ins(i, global_singletons.len(), 2) {
     if (global_singletons.el(i) == type) {
-      return global_singletons.el(i + 1).ret();
+      return global_singletons.el(i + 1);
     }
   }
-  Obj s = Obj::Cmpd_raw(type.ret(), 0);
+  return obj0;
+}
+
+
+static Obj type_unit(Obj type) {
+  Obj inst = type_unit_inst(type);
+  if (inst.vld()) return inst.ret();
+  inst = Obj::Cmpd_raw(type.ret(), 0);
   global_singletons.append(type.ret());
-  global_singletons.append(s);
-  return s.ret();
+  global_singletons.append(inst);
+  return inst.ret();
 }
 
 
