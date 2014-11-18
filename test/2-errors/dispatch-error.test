@@ -8,7 +8,7 @@
   'err': '''\
 raised: 'dispatcher cannot handle argument type (intentional test error)'
 trace:
-  src-core/01-boot.ploy:106:3:
+  src-core/01-boot.ploy:84:3:
       (raise msg)>
       ~~~~~~~~~~~
   … 6

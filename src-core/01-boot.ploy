@@ -38,28 +38,6 @@
     nil # ret-type.
     (CONS Do (CONS Arr-Expr *body)))>
 
-<macro quo [-expr]
-  # absolute quotation of an expression.
-  # evaluating a QUO form simply yields the contained expression, unevaluated.
-  (CONS Quo expr)>
-
-<macro qua [-expr]
-  # quasiquotation of an expression.
-  # this is similar to quo, except that subexpressions can be unquoted,
-  # in which case they are evaluated.
-  # QUA forms themselves do not evaluate; they are converted by the preprocessor.
-  # equivalent to `expr syntax.
-  # TODO: implement quasiquotation as a macro instead of in the preprocessor?
-  (CONS Qua expr)>
-
-<macro unq [-expr]
-  # unquotation of an expression.
-  # this form indicates that the unquoted subexpression should be evaluated within a qua form.
-  # this for does not evaluate, and therefore must be inside of a qua,
-  # where it will get transformed appropriately.
-  # equivalent to ,expr syntax
-  (CONS Unq expr)>
-
 <macro do [&body]
   (CONS Do (CONS Arr-Expr *body))>
 
