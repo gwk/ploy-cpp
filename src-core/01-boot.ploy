@@ -286,7 +286,7 @@
   <check (ilt index (.len list)) "index out of bounds">
   (ael (.arr list) index)>
 
-<let-fn list-put [-list:list -index:Int -el:T]
+<let-fn list-put [-list:list -index:Int -el:Obj]
   check((ilt index (.len list)) "index out of bounds")
   (aput (.arr list) index el)>
 
@@ -298,13 +298,13 @@
   <let cap <if len (imul len 2) 2>>
   (.=arr list (arr-resize (.arr list) cap))>
 
-<let-fn list-append [-list:List -el:T]
+<let-fn list-append [-list:List -el:Obj]
   <if (list-is-full list) (list-grow list)>
   <let index (.len list)>
   (.=len list (iinc index))
   (aput (.arr list) index el)>
 
-<let-fn list-contains [-list:List -el:T]
+<let-fn list-contains [-list:List -el:Obj]
   <recur [-i=0]
     <if (ieq i (.len list)) false
       (iso el (list-el list i)) true
@@ -320,15 +320,15 @@
 
 # List as Set.
 
-<let-fn list-set-put [-set:List -el:T]
+<let-fn list-set-put [-set:List -el:Obj]
   <if (not (list-contains set el))
     (list-append set el)>>
 
 # List as Dict.
 
-<let-struct Dict-item -key:K -val:V>
+<let-struct Dict-item -key:Obj -val:Obj>
 
-<let-fn list-dict-contains [-dict:List -key:K]
+<let-fn list-dict-contains [-dict:List -key:Obj]
   <recur [-i=0]
     <if (ieq i (.len dict)) false
       <do
@@ -336,7 +336,7 @@
         <if (iso (.key e) key) true
           (self (iinc i))>>>>>
 
-<let-fn list-dict-fetch [-dict:List -key:K]
+<let-fn list-dict-fetch [-dict:List -key:Obj]
   <recur [-i=0]
     <if (ieq i (.len dict)) nil # signal missing key with nil.
       <do
@@ -344,7 +344,7 @@
         <if (iso (.key e) key) (.val e)
           (self (iinc i))>>>>>
 
-<let-fn list-dict-put [-dict:List -key:K -val:V]
+<let-fn list-dict-put [-dict:List -key:Obj -val:Obj]
   <recur [-i=0]
     <if (ieq i (.len dict)) (list-append dict (CONS Dict-item key val))
       <do
