@@ -223,6 +223,14 @@
               (not (iso ai bi)) false
               (self (iinc i))>>>>>>>
 
+# const.
+
+<pub-fn const [-val] <fn [] val>>
+
+<pub-fn const1 [-val] <fn [-a] val>>
+
+<pub-fn const2 [-val] <fn [-a -b] val>>
+
 # unit tests.
 
 <macro utest [-expectation &body]
@@ -296,18 +304,20 @@
   <check (list-is-full list) "list should not grow unless arr is full">
   <let len (.len list)>
   <let cap <if len (imul len 2) 2>>
-  (.=arr list (arr-resize (.arr list) cap))>
+  (.=arr list (arr-resize (.arr list) cap))
+  list>
 
 <let-fn list-append [-list:List -el:Obj]
   <if (list-is-full list) (list-grow list)>
   <let index (.len list)>
   (.=len list (iinc index))
-  (aput (.arr list) index el)>
+  (aput (.arr list) index el)
+  list>
 
-<let-fn list-contains [-list:List -el:Obj]
+<let-fn list-contains [-cmp:Func -list:List -el:Obj]
   <recur [-i=0]
     <if (ieq i (.len list)) false
-      (iso el (list-el list i)) true
+      (cmp el (list-el list i)) true
       (self (iinc i))>>>
 
 <let-fn list-new [&els]
@@ -320,36 +330,47 @@
 
 # List as Set.
 
-<let-fn list-set-put [-set:List -el:Obj]
-  <if (not (list-contains set el))
-    (list-append set el)>>
+<let-fn list-set-put [-cmp:Func -set:List -el:Obj]
+  # returns false if set already contains the element.
+  <recur [-i=0]
+    <if (ieq i (.len set)) <do (list-append set el) true>
+      (cmp el (list-el set i)) false
+      (self (iinc i))>>>
 
 # List as Dict.
 
 <let-struct Dict-item -key:Obj -val:Obj>
+<let-struct Dict-fetch -found:Bool -val:Obj>
 
-<let-fn list-dict-contains [-dict:List -key:Obj]
+<let-fn list-dict-contains [-cmp:Func -dict:List -key:Obj]
   <recur [-i=0]
     <if (ieq i (.len dict)) false
       <do
         <let e (list-el dict i)>
-        <if (iso (.key e) key) true
+        <if (cmp (.key e) key) true
           (self (iinc i))>>>>>
 
-<let-fn list-dict-fetch [-dict:List -key:Obj]
+<let-fn list-dict-fetch [-cmp:Func -dict:List -key:Obj]
   <recur [-i=0]
-    <if (ieq i (.len dict)) nil # signal missing key with nil.
+    <if (ieq i (.len dict)) (CONS Dict-fetch false nil)
       <do
         <let e (list-el dict i)>
-        <if (iso (.key e) key) (.val e)
+        <if (cmp (.key e) key) (CONS Dict-fetch true (.val e))
           (self (iinc i))>>>>>
 
-<let-fn list-dict-put [-dict:List -key:Obj -val:Obj]
+<let-fn list-dict-put [-cmp:Func -cmp-val:Func -dict:List -key:Obj -val:Obj]
+  # returns false if dict already contains the item;
+  # raises an error if dict contains the key, but value does not match.
   <recur [-i=0]
-    <if (ieq i (.len dict)) (list-append dict (CONS Dict-item key val))
+    <if (ieq i (.len dict))
+      <do (list-append dict (CONS Dict-item key val)) true>
       <do
         <let e (list-el dict i)>
-        <if (iso (.key e) key) (.=val e val)
+        <if (cmp (.key e) key)
+          <do
+            <check (cmp-val (.val e) val)
+              "list-dict-put: different value already exists for key">
+            false>
           (self (iinc i))>>>>>
 
 <let-fn list-dict-new [&kv]

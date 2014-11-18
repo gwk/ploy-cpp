@@ -24,53 +24,53 @@
 
 <scope # List.
   <let l (list-new)>
-  <utest false (list-contains l `a)>
-  <utest false (list-contains l `d)>
+  <utest false (list-contains is l `a)>
+  <utest false (list-contains is l `d)>
   (list-append l `a)
   (list-append l `b)
   (list-append l `c)
   (list-append l `d)
   <utest `a (list-el l 0)>
   <utest `d (list-el l 3)>
-  <utest true (list-contains l `a)>
-  <utest true (list-contains l `d)>
-  <utest false (list-contains l `e)>>
+  <utest true (list-contains is l `a)>
+  <utest true (list-contains is l `d)>
+  <utest false (list-contains is l `e)>>
 
 <scope # List as Set.
   <let s (list-new)>
-  (list-set-put s `a)
-  (list-set-put s `b)
+  (list-set-put is s `a)
+  (list-set-put is s `b)
   <utest 2 (.len s)>
-  <utest true (list-contains s `a)>
-  <utest true (list-contains s `b)>
-  <utest false (list-contains s `c)>
-  (list-set-put s `a)
-  (list-set-put s `b)
+  <utest true (list-contains is s `a)>
+  <utest true (list-contains is s `b)>
+  <utest false (list-contains is s `c)>
+  (list-set-put is s `a)
+  (list-set-put is s `b)
   <utest 2 (.len s)>
-  <utest true (list-contains s `a)>
-  <utest true (list-contains s `b)>
-  <utest false (list-contains s `c)>>
+  <utest true (list-contains is s `a)>
+  <utest true (list-contains is s `b)>
+  <utest false (list-contains is s `c)>>
 
 <scope # List as Dict.
   <let d (list-new)>
-  (list-dict-put d `ka `va)
-  (list-dict-put d `kb `vb)
+  (list-dict-put is is d `ka `va)
+  (list-dict-put is is d `kb `vb)
   <utest 2 (.len d)>
-  <utest true (list-dict-contains d `ka)>
-  <utest true (list-dict-contains d `kb)>
-  <utest false (list-dict-contains d `kc)>
-  <utest `va (list-dict-fetch d `ka)>
-  <utest `vb (list-dict-fetch d `kb)>
-  <utest nil (list-dict-fetch d `kc)>
-  (list-dict-put d `ka `va1)
-  (list-dict-put d `kb `vb1)
+  <utest true (list-dict-contains is d `ka)>
+  <utest true (list-dict-contains is d `kb)>
+  <utest false (list-dict-contains is d `kc)>
+  <utest (CONS Dict-fetch true `va) (list-dict-fetch is d `ka)>
+  <utest (CONS Dict-fetch true `vb) (list-dict-fetch is d `kb)>
+  <utest (CONS Dict-fetch false nil) (list-dict-fetch is d `kc)>
+  (list-dict-put is (const2 true) d `ka `va1) # cmp-val ignores mismatch, does not raise.
+  (list-dict-put is (const2 true) d `kb `vb1) # " ".
   <utest 2 (.len d)>
-  <utest true (list-dict-contains d `ka)>
-  <utest true (list-dict-contains d `kb)>
-  <utest false (list-dict-contains d `kc)>
-  <utest `va1 (list-dict-fetch d `ka)>
-  <utest `vb1 (list-dict-fetch d `kb)>
-  <utest nil (list-dict-fetch d `kc)>>
+  <utest true (list-dict-contains is d `ka)>
+  <utest true (list-dict-contains is d `kb)>
+  <utest false (list-dict-contains is d `kc)>
+  <utest (CONS Dict-fetch true `va) (list-dict-fetch is d `ka)>
+  <utest (CONS Dict-fetch true `vb) (list-dict-fetch is d `kb)>
+  <utest (CONS Dict-fetch false nil) (list-dict-fetch is d `kc)>>
 
 ##<scope # derive-type.
   <utest
