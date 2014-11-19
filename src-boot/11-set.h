@@ -30,6 +30,8 @@ public:
     }
   }
 
+  Int len() { return _len; }
+  
   void dealloc(Bool dbg_cleared) {
     assert(vld());
     Int len_act = 0;

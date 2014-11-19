@@ -280,5 +280,6 @@ static void write_repr_obj(CFile f, Obj o, Bool is_quoted, Int depth, Set& set) 
 static void write_repr(CFile f, Obj o) {
   Set s;
   write_repr_obj(f, o, false, 0, s);
+  assert(!s.len());
   s.dealloc(true);
 }
