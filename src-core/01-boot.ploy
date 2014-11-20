@@ -124,7 +124,10 @@
 <pub-fn is-label  [-o] (is (type-of o) Label)>
 <pub-fn is-variad [-o] (is (type-of o) Variad)>
 
-<pub-fn is-cmpd [-o] <and (is-ref o) (not <or (is-data o) (is-env o)>)>>
+<pub-fn is-arr    [-o] (is (type-of (.kind (type-of o))) Type-kind-arr)>
+<pub-fn is-struct [-o] (is (type-of (.kind (type-of o))) Type-kind-struct)>
+
+<pub-fn is-cmpd [-o] <or (is-arr o) (is-struct o)>>
 
 # output functions.
 
