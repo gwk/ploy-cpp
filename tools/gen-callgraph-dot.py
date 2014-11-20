@@ -11,35 +11,30 @@
 
 import re
 import sys
+import subprocess
 from collections import defaultdict
 from pprint import pprint
-
 
 def errSL(*items):
   print(*items, file=sys.stderr)
 
 
-ignored_name_re = re.compile(r'''(?x)
+ignored_sym_re = re.compile(r'''(?x)
   null\ function
 | llvm\..+
 |  __assert_rtn
 |  __memset_chk
 ''')
 
-def quote_name(name):
-  'double-quote a name; unfortunately there is no way to force repr to use double quotes.'
-  assert not '"' in name
-  return '"{}"'.format(name)
 
+omitted_syms = set()
 
-omitted_names = set()
-
-def is_omitted(name):
-  'check if a name should be ommitted (some symbols are uninteresting).'
-  if name in omitted_names: return True
-  if ignored_name_re.fullmatch(name):
-    errSL('omitting:', name)
-    omitted_names.add(name)
+def is_omitted(sym):
+  'check if a sym should be ommitted (some symbols are uninteresting).'
+  if sym in omitted_syms: return True
+  if ignored_sym_re.fullmatch(sym):
+    errSL('omitting:', sym)
+    omitted_syms.add(sym)
     return True
   return False
 
@@ -63,38 +58,31 @@ def parse_callgraph(path):
   | \ \ CS<\w+>\ calls\ external\ node\n
   ''')
 
-  # read in the graph.
-  nodes = [] # (name, addr, uses) tuples.
-  edges = defaultdict(set) # maps node names to node name sets. TODO: use a counter instead?
+  g = defaultdict(set) # maps syms to sets of syms. TODO: use counters instead?
 
   with open(path) as f:
-    node_name = None # current node
+    node = None # current node.
     is_node_omitted = False
     for line in f:
       # look for a node line.
       m = node_re.match(line)
-      #errSL(repr(line))
       if m: # line defines a node.
-        n = m.groups()
-        #errSL('NODE:', n)
-        node_name, addr, uses = n
-        is_node_omitted = is_omitted(node_name)
-        if is_node_omitted: continue
-        nodes.append(n)
+        node, addr, uses = m.groups()
+        is_node_omitted = is_omitted(node)
+        #errSL('NODE:', node, addr, uses, is_node_omitted)
         continue
       # look for an edge line.
       m = edge_re.match(line)
       if m: # line defines an edge.
         e = m.groups()
-        #errSL('EDGE', e)
         callsite, callee = e
         if is_node_omitted or is_omitted(callee): continue
-        edges[node_name].add(callee)
+        g[node].add(callee)
         continue
-      # ignored line
+      # ignored line.
       if not ignored_line_re.match(line):
         errSL('SKIPPED:', repr(line))
-  return (sorted(nodes), edges)
+  return g
 
 
 def parse_sccs(path):
@@ -115,37 +103,74 @@ def parse_sccs(path):
       #errSL(repr(line))
       m = line_re.match(line)
       if not m: continue
-      names_str = m.group(1)
-      all_names = names_str.split(', ')
-      last_name = all_names[-1]
-      assert last_name in ('', ' (Has self-loop).')
-      names = all_names[:-1]
-      if len(names) == 1: continue # skip SCCs that do not show mutual recursion relationships.
-      sccs.append(names)
+      syms_str = m.group(1)
+      all_syms = syms_str.split(', ')
+      last_sym = all_syms[-1]
+      assert last_sym in ('', ' (Has self-loop).')
+      syms = all_syms[:-1]
+      if len(syms) == 1: continue # skip trivial SCCs.
+      sccs.append(tuple(syms))
   return sccs
 
 
+sym_names = {} # mangled sym -> full demangled name.
+short_names = {} # short -> full|None; shorten names that are not overloaded.
+sym_labels = {} # short names where possible, otherwise full names.
+
+def map_syms(graph):
+  syms = set()
+  for src, sinks in graph.items():
+    syms.add(src)
+    syms.update(sinks)
+  cmd = [path_demangle]
+  cmd.extend(syms)
+  demangle_out = subprocess.check_output(cmd)
+  for line_bytes in demangle_out.split(b'\n'):
+    line = line_bytes.decode('utf8')
+    sym, p, n = line.partition(' -> ')
+    short = n.partition('(')[0]
+    sym_names[sym] = n
+    sym_labels[sym] = short # first assume that all names can be shortened.
+    if short in short_names: # overloaded; no sym gets this short name.
+      short_names[short] = None
+    else:
+      short_names[short] = sym
+  for sym, n in sym_names.items():
+    if short_names[sym_labels[sym]] is None: # short is overloaded; revert to full name.
+      sym_labels[sym] = sym_names[sym]
+
+def quote(name):
+  'double-quote a string; unfortunately there is no way to force repr to use double quotes.'
+  assert not '"' in name
+  return '"{}"'.format(name)
+
+def label(sym):
+  return quote(sym_labels[sym])
+
+
 def write_scc_graphs(f, graph, sccs):
-  nodes, edges = graph
   for scc in sccs:
     f.write('\n') # extra line for distinguishing SCCs in the dot source.
-    for name, addr, uses in nodes:
-      if not name in scc: continue
-      f.write('  {};\n'.format(quote_name(name)))
-      for e_sink in sorted(edges[name]): # name is the edge source.
-        if not e_sink in scc: continue
-        f.write('  {:<24} -> {};\n'.format(quote_name(name), quote_name(e_sink)))
+    for sym in scc:
+      f.write('  {};\n'.format(label(sym)))
+      for e_sink in sorted(graph[sym]): # name is the edge source.
+        if not e_sink in scc: continue # omit calls that are not mutually recursive.
+        f.write('  {:<24} -> {};\n'.format(label(sym), label(e_sink)))
 
 
-path_graph, path_sccs, path_out = sys.argv[1:]
-g = parse_callgraph(path_graph)
+# main.
+
+path_demangle, path_graph, path_sccs, path_out = sys.argv[1:]
+graph = parse_callgraph(path_graph)
 sccs = parse_sccs(path_sccs)
+map_syms(graph)
 
+# produce call graph.
 with open(path_out, 'w') as f:
   f.write('''\
 digraph "Mutual Recursion Call Graphs" {
   label="Mutual Recursion Call Graphs";
 ''')
-  write_scc_graphs(f, g, sccs)
+  write_scc_graphs(f, graph, sccs)
   f.write('}\n')
 

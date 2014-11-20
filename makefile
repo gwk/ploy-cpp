@@ -5,6 +5,9 @@
 # first target is the default.
 default: parse
 
+_bld/demangle: tools/cc.sh tools/demangle.cpp
+	$^ -o $@
+
 _bld/prof-res-usage: tools/cc.sh tools/prof-res-usage.cpp
 	$^ -o $@
 
@@ -61,7 +64,7 @@ _bld/ploy-callgraph.txt: tools/gen-callgraph-txt.sh _bld/ploy-dbg.ll
 _bld/ploy-call-sccs.txt: tools/gen-call-sccs-txt.sh _bld/ploy-dbg.ll
 	$^ $@
 
-_bld/ploy-callgraph.dot: tools/gen-callgraph-dot.py _bld/ploy-callgraph.txt _bld/ploy-call-sccs.txt
+_bld/ploy-callgraph.dot: tools/gen-callgraph-dot.py _bld/demangle _bld/ploy-callgraph.txt _bld/ploy-call-sccs.txt
 	$^ $@
 
 _bld/ploy-callgraph.svg: tools/gen-callgraph-svg.sh _bld/ploy-callgraph.dot
