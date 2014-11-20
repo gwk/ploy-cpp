@@ -1,5 +1,4 @@
 -std=c++11
--Werror
 -Weverything
 -Wno-c++98-compat-pedantic
 -Wno-global-constructors
