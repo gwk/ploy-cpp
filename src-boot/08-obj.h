@@ -62,7 +62,7 @@ static Chars obj_tag_names[] = {
 };
 
 struct Head { // common header for all heap objects.
-  Raw type; // actually Obj; declared as untyped so that Head can be declared above Obj.
+  Raw type; // actually Obj; declared as Raw so that Head can be declared above Obj.
   Uns rc;
   Head(Raw t): type(t), rc((1<<1) + 1) {}
 } ALIGNED_TO_WORD;
@@ -495,11 +495,15 @@ public:
     return c->len;
   }
 
-  Obj* cmpd_els() const {
-    assert(ref_is_cmpd());
+  Obj* cmpd_els_unchecked() const {
     return reinterpret_cast<Obj*>(c + 1); // address past header.
   }
-
+  
+  Obj* cmpd_els() const {
+    assert(ref_is_cmpd());
+    return cmpd_els_unchecked();
+  }
+  
   Obj cmpd_el(Int idx) const {
     assert(ref_is_cmpd());
     assert(idx >= 0 && idx < cmpd_len());
@@ -587,7 +591,7 @@ public:
     *o.h = Head(type.r);
     o.c->len = len;
   #if OPTION_MEM_ZERO
-    memset(o.cmpd_els(), 0, Uns(size_Obj * len));
+    memset(o.cmpd_els_unchecked(), 0, Uns(size_Obj * len));
   #endif
     return o;
   }

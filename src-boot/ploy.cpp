@@ -50,7 +50,7 @@ int main(int argc, Chars argv[]) {
   assert_host_basic();
   assert(size_Obj == size_Raw);
   reduce_stack_limit();
-  type_init_table();
+  type_init_vars();
   sym_init(); // requires type_init_table.
   env_init();
   Obj env = type_init_values(s_ENV_END.ret_val()); // requires sym_init.

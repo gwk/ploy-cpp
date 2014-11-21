@@ -11,7 +11,6 @@ struct Type {
   Int len;
   Obj name;
   Obj kind;
-  Type(): head(null), len(0), name(obj0), kind(obj0) {} // TODO: remove this if possible.
 } ALIGNED_TO_WORD;
 DEF_SIZE(Type);
 
@@ -65,42 +64,14 @@ T(Dispatcher,       class_dispatcher) \
 T(File, struct4, "name", t_Data, "ptr", t_Ptr, "is-readable", t_Bool, "is_writeable", t_Bool) \
 
 
-// type indices for the basic types allow us to dispatch on type using a single index value,
-// rather than multiple pointer comparisons.
-#define T(t, ...) ti_##t,
-enum Type_index {
-  TYPE_LIST
-  ti_end
-};
-#undef T
-
 // the basic types are prefixed with t_.
 #define T(t, ...) extern Obj t_##t;
 TYPE_LIST
 #undef T
 
-#define T(t, ...) Obj t_##t;
+#define T(t, ...) Obj t_##t = obj0;
 TYPE_LIST
 #undef T
-
-
-// in order for type indices to work, the known types must be allocated in a single slab.
-static Type type_table[ti_end];
-
-
-#define assert_valid_type_index(ti) assert((ti) >= 0 && (ti) < ti_end)
-
-static Obj type_for_index(Int ti) {
-  assert_valid_type_index(ti);
-  return Obj(type_table + ti);
-}
-
-
-static Int type_index(Obj t) {
-  // note: it is ok to return an invalid type index, to default in various switch dispatchers.
-  Int ti = t.t - type_table;
-  return Type_index(ti);
-}
 
 
 static Obj type_name(Obj t) {
@@ -294,25 +265,27 @@ static Obj type_kind_init_class_dispatcher() {
 }
 
 
-static void type_add(Obj type, Chars c_name, Obj kind) {
-  assert(type.rc());
-  type.h->type = t_Type.ret().t;
-  type.t->len = 2;
-  type.t->name = Obj::Sym_from_c(c_name);
-  type.t->kind = kind;
+static void type_init_vars() {
+  // this must happen before any other objects are created,
+  // so that the t_* values are not obj0.
+  // thus we must initialize the types in two phases.
+  // note that Cmpd_raw does not retain the type argument.
+#define T(t, ...) t_##t = Obj::Cmpd_raw(t_Type, 2);
+  TYPE_LIST
+#undef T
+  // t_Type does not yet point to itself.
+  assert(t_Type.h->type == null);
+  t_Type.h->type = t_Type.r;
 }
 
 
-static void type_init_table() {
-  // the type table holds the core types, and is statically allocated,
-  // which allows us to map between type pointers and Type_index indices.
-  // even though the contents of the table are not yet initialized,
-  // we can now set all of the core type t_<T> variables,
-  // which are necessary for complete initialization of the types themselves.
-  // TODO: improve rc semantics so that we do not have to manually retain each item.
-#define T(t, ...) t_##t = Obj(type_table + ti_##t); t_##t.h->rc = (1<<1) + 1;
-  TYPE_LIST
-#undef T
+static Obj type_complete(Obj env, Obj type, Chars c_name, Obj kind) {
+  type.type().ret(); // now that Type points to itself, all types can be retained.
+  type.t->name = Obj::Sym_from_c(c_name);
+  type.t->kind = kind;
+  global_push(type);
+  type.rel(); // now that the types are in the global list, release them.
+  return env_bind(env, false, type.t->name.ret(), type.ret());
 }
 
 
@@ -337,19 +310,14 @@ static void obj_validate(Set* s, Obj o) {
 static Obj type_init_values(Obj env) {
   // this must be called after sym_init, because this adds symbols for the core types.
   assert(sym_names.len());
-  #define T(t, k, ...) type_add(t_##t, #t, type_kind_init_##k(__VA_ARGS__));
+  #define T(t, k, ...) env = type_complete(env, t_##t, #t, type_kind_init_##k(__VA_ARGS__));
   TYPE_LIST
   #undef T
-  for_in(i, ti_end) {
-    Obj o = type_for_index(i);
-    env = env_bind(env, false, o.t->name.ret(), o.ret());
-  }
   // validate type graph.
   Set s;
-  for_in(i, ti_end) {
-    Obj t = type_for_index(i);
-    obj_validate(&s, t);
-  }
+  #define T(t, k, ...) obj_validate(&s, t_##t);
+  TYPE_LIST
+  #undef T
   s.dealloc(false);
   return env;
 }
@@ -358,19 +326,15 @@ static Obj type_init_values(Obj env) {
 #if OPTION_ALLOC_COUNT
 static void type_cleanup() {
   global_singletons.rel_els_dealloc();
-  for_in(i, ti_end) {
-    Obj o = type_for_index(i);
-    o.t->kind.rel();
-    o.t->kind = s_DISSOLVED; // not counted; further access is invalid.
+  Uns type_rc = t_Type.rc();
+  if (type_rc != 1) { // only referent to Type should be itself.
+    errFL("LEAK: Type rc = %u", type_rc);
   }
-  // run final cleanup in reverse so that Type is cleaned up last;
-  // the type slot is released first, and then rc_remove is called,
-  // so that Type releases itself first and then verifies that its rc count is one.
-  for_in_rev(i, ti_end) {
-    Obj o = type_for_index(i);
-    o.type().rel();
-    o.t->name.rel_val(); // order does not matter as long as name is always a symbol.
-    check(o.h->rc == (1<<1) + 1, "type_cleanup: unexpected rc: %u: %o", o.h->rc, o);
-  }
+  // there is no easy way for type to release itself, so instead just decrement the counts.
+  Obj* els = t_Type.cmpd_els_unchecked();
+  els[0].rel_val();
+  els[1].rel_val();
+  counter_dec(ci_Cmpd_rc);
+  counter_dec(ci_Cmpd_alloc);
 }
 #endif

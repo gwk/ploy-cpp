@@ -582,17 +582,15 @@ static Step run_Call(Int d, Trace* t, Obj env, Obj code) {
 static Step run_Call_disp(Int d, Trace* t, Obj env, Obj code, Array vals) {
   Obj callee = vals.el(0);
   Obj type = callee.type();
-  Int ti = type_index(type);
-  switch (ti) {
-    case ti_Func:     return run_call_Func(d, t, env, code, vals, true);
-    case ti_Accessor: return run_call_Accessor(d, t, env, code, vals);
-    case ti_Mutator:  return run_call_Mutator(d, t, env, code, vals);
-    case ti_Sym:
-      switch (callee.sym_index()) {
-        case si_EXPAND: return run_call_EXPAND(d, t, env, code, vals);
-        case si_RUN:    return run_call_RUN(d, t, env, code, vals);
-        case si_CONS:   return run_call_CONS(d, t, env, code, vals);
-      }
+  if (type == t_Func)     return run_call_Func(d, t, env, code, vals, true);
+  if (type == t_Accessor) return run_call_Accessor(d, t, env, code, vals);
+  if (type == t_Mutator)  return run_call_Mutator(d, t, env, code, vals);
+  if (type == t_Sym) {
+    switch (callee.sym_index()) {
+      case si_EXPAND: return run_call_EXPAND(d, t, env, code, vals);
+      case si_RUN:    return run_call_RUN(d, t, env, code, vals);
+      case si_CONS:   return run_call_CONS(d, t, env, code, vals);
+    }
   }
   Obj kind = type_kind(type);
   if (is_kind_struct(kind)) {
@@ -639,22 +637,18 @@ static Step run_step_disp(Int d, Trace* t, Obj env, Obj code) {
   }
   assert(ot == ot_ref);
   Obj type = code.ref_type();
-  Int ti = type_index(type);
-#define RUN(type) case ti_##type: return run_##type(d, t, env, code)
-  switch (ti) {
-    case ti_Data:
-    case ti_Accessor:
-    case ti_Mutator:
-      return Step(env, code.ret()); // self-evaluating.
-    RUN(Quo);
-    RUN(Do);
-    RUN(Scope);
-    RUN(Bind);
-    RUN(If);
-    RUN(Fn);
-    RUN(Call);
+  if (type == t_Data || type == t_Accessor || type == t_Mutator) {
+    return Step(env, code.ret()); // self-evaluating.
   }
-#undef RUN
+#define DISP(form) if (type == t_##form) return run_##form(d, t, env, code)
+  DISP(Quo);
+  DISP(Do);
+  DISP(Scope);
+  DISP(Bind);
+  DISP(If);
+  DISP(Fn);
+  DISP(Call);
+#undef DISP
   exc_raise("cannot run object: %o", code);
 }
 
