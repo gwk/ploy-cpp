@@ -123,17 +123,17 @@ static Obj par_new(Chars n, Obj t) {
 }
 
 
-static Obj type_kind_init_unit() {
+static Obj type_kind_unit() {
   return type_unit(t_Type_kind_unit);
 }
 
 
-static Obj type_kind_init_prim() {
+static Obj type_kind_prim() {
   return type_unit(t_Type_kind_prim);
 }
 
 
-static Obj type_kind_init_arr(Obj el_type) {
+static Obj type_kind_arr(Obj el_type) {
   return Obj::Cmpd(t_Type_kind_arr.ret(), el_type.ret());
 }
 
@@ -145,33 +145,33 @@ static Obj type_kind_struct(Obj fields) {
 }
 
 
-static Obj type_kind_init_struct1(Chars n0, Obj t0) {
+static Obj type_kind_struct1(Chars n0, Obj t0) {
   return type_kind_struct(Obj::Cmpd(t_Arr_Par.ret(),
     par_new(n0, t0)));
 }
 
 
-static Obj type_kind_init_struct2(Chars n0, Obj t0, Chars n1, Obj t1) {
+static Obj type_kind_struct2(Chars n0, Obj t0, Chars n1, Obj t1) {
   return type_kind_struct(Obj::Cmpd(t_Arr_Par.ret(),
     par_new(n0, t0), par_new(n1, t1)));
 }
 
 
-static Obj type_kind_init_struct3(Chars n0, Obj t0, Chars n1, Obj t1,
+static Obj type_kind_struct3(Chars n0, Obj t0, Chars n1, Obj t1,
   Chars n2, Obj t2) {
   return type_kind_struct(Obj::Cmpd(t_Arr_Par.ret(),
     par_new(n0, t0), par_new(n1, t1), par_new(n2, t2)));
 }
 
 
-static Obj type_kind_init_struct4(Chars n0, Obj t0, Chars n1, Obj t1,
+static Obj type_kind_struct4(Chars n0, Obj t0, Chars n1, Obj t1,
   Chars n2, Obj t2, Chars n3, Obj t3) {
   return type_kind_struct(Obj::Cmpd(t_Arr_Par.ret(),
     par_new(n0, t0), par_new(n1, t1), par_new(n2, t2), par_new(n3, t3)));
 }
 
 
-static Obj type_kind_init_struct_fn() {
+static Obj type_kind_struct_fn() {
   return type_kind_struct(Obj::Cmpd(t_Type_kind_struct.ret(),
     par_new("is-native", t_Bool),
     par_new("is-macro", t_Bool),
@@ -181,7 +181,7 @@ static Obj type_kind_init_struct_fn() {
 }
 
 
-static Obj type_kind_init_struct_func() {
+static Obj type_kind_struct_func() {
   return type_kind_struct(Obj::Cmpd(t_Type_kind_struct.ret(),
     par_new("is-native", t_Bool),
     par_new("is-macro", t_Bool),
@@ -194,7 +194,7 @@ static Obj type_kind_init_struct_func() {
 }
 
 
-static Obj type_kind_init_struct_src_loc() {
+static Obj type_kind_struct_src_loc() {
   return type_kind_struct(Obj::Cmpd(t_Type_kind_struct.ret(),
     par_new("path", t_Data),
     par_new("src", t_Data),
@@ -205,7 +205,7 @@ static Obj type_kind_init_struct_src_loc() {
 }
 
 
-static Obj type_kind_init_union_expr() {
+static Obj type_kind_union_expr() {
   return Obj::Cmpd(t_Type_kind_struct.ret(),
       Obj::Cmpd(t_Arr_Type.ret(),
       t_Int.ret(),
@@ -225,7 +225,7 @@ static Obj type_kind_init_union_expr() {
 }
 
 
-static Obj type_kind_init_union_type_kind() {
+static Obj type_kind_union_type_kind() {
   return Obj::Cmpd(t_Type_kind_struct.ret(),
     Obj::Cmpd(t_Arr_Type.ret(),
       t_Type_kind_unit.ret(),
@@ -237,17 +237,17 @@ static Obj type_kind_init_union_type_kind() {
 }
 
 
-static Obj type_kind_init_class_obj() {
+static Obj type_kind_class_obj() {
   return type_unit(t_Type_kind_class);
 }
 
 
-static Obj type_kind_init_class_bool() {
+static Obj type_kind_class_bool() {
   return type_unit(t_Type_kind_class);
 }
 
 
-static Obj type_kind_init_class_dispatcher() {
+static Obj type_kind_class_dispatcher() {
   return type_unit(t_Type_kind_class);
 }
 
@@ -297,7 +297,7 @@ static void obj_validate(Set* s, Obj o) {
 static Obj type_init_values(Obj env) {
   // this must be called after sym_init, because this adds symbols for the core types.
   assert(sym_names.len());
-  #define T(t, k, ...) env = type_complete(env, t_##t, #t, type_kind_init_##k(__VA_ARGS__));
+  #define T(t, k, ...) env = type_complete(env, t_##t, #t, type_kind_##k(__VA_ARGS__));
   TYPE_LIST
   #undef T
   // validate type graph.
