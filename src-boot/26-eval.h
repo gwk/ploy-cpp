@@ -6,8 +6,8 @@
 
 static Step eval(Obj env, Obj code) {
   Obj preprocessed = preprocess(code); // borrows code.
-  if (!preprocessed.vld()) {
-    return Step(env, s_void.ret_val()); // TODO: document why this is necessary.
+  if (!preprocessed.vld()) { // expr was preprocessed out.
+    return Step(env, s_void.ret_val());
   }
   Obj expanded = expand(0, env, preprocessed); // owns preprocessed.
   Obj compiled = compile(env, expanded); // owns expanded.
