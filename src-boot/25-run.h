@@ -3,6 +3,7 @@
 
 #include "24-compile.h"
 
+
 // struct representing the result of a step of computation.
 struct Res {
   Obj env; // the env to be passed to the next step.
@@ -117,7 +118,7 @@ static Step run_If(Int d, Trace* t, Obj env, Obj code) {
 }
 
 
-static Step run_Fn(UNUSED Int d, Trace* t, Obj env, Obj code) {
+static Step run_Fn(Int d, Trace* t, Obj env, Obj code) {
   // owns env.
   exc_check(code.cmpd_len() == 5, "Fn requires 5 fields; received %i", code.cmpd_len());
   Obj is_native = code.cmpd_el(0);
@@ -126,6 +127,7 @@ static Step run_Fn(UNUSED Int d, Trace* t, Obj env, Obj code) {
   Obj ret_type  = code.cmpd_el(3);
   Obj body      = code.cmpd_el(4);
   exc_check(is_macro.is_bool(), "Fn: is-macro is not a Bool: %o", is_macro);
+  Bool is_macro_val = is_macro.is_true_bool();
   exc_check(pars_seq.type() == t_Syn_seq,
     "Fn: pars is not a sequence literal: %o", pars_seq);
   assert(pars_seq.cmpd_len() == 1);
@@ -137,26 +139,69 @@ static Step run_Fn(UNUSED Int d, Trace* t, Obj env, Obj code) {
     Obj syn = pars_exprs.cmpd_el(i);
     Obj syn_type = syn.type();
     Obj par_name;
+    Obj par_type_expr;
     Obj par_type;
     Obj par_dflt;
     Bool is_variad = false;
     Bool is_assoc = false;
     if (syn_type == t_Label) {
       par_name = syn.cmpd_el(0).ret();
-      par_type = syn.cmpd_el(1).ret();
+      exc_check(par_name.is_sym(), "Fn: par name is not sym: %o", syn);
+      par_type_expr = syn.cmpd_el(1);
       par_dflt = syn.cmpd_el(2).ret();
+      if (is_macro_val) {
+        exc_check(par_type_expr == s_nil, "Fn: macro par type must be nil:  %o", syn);
+        par_type = t_Expr.ret();
+      } else {
+        Step step = run(d, t, env, par_type_expr);
+        env = step.res.env;
+        par_type = step.res.val;
+        if (par_type == s_nil) {
+          par_type.rel_val();
+          par_type = t_Obj.ret();
+        }
+        exc_check(par_type.is_type(), "Fn: par expected a type: %o\nreceived: %o", syn, par_type);
+      }
     } else if (syn_type == t_Variad) {
       Obj par_hd = syn.cmpd_el(0);
+      par_dflt = s_void.ret_val(); // TODO: change to s_nil?
       if (par_hd.type() == t_Variad) { // nested variad indicates assoc.
+        exc_check(syn.cmpd_el(1) == s_nil,
+          "Fn: assoc par invalid syntax (second/nested type clause): %o", syn);
+        exc_check(!is_macro_val, "Fn: macros do not support assoc pars: %o", syn);
         is_assoc = true;
         par_name = par_hd.cmpd_el(0).ret();
-        par_type = par_hd.cmpd_el(1).ret(); // TODO: derive correct Array type.
+        exc_check(par_name.is_sym(), "Fn: par name is not sym: %o", syn);
+        par_type_expr = par_hd.cmpd_el(1);
+        Step step = run(d, t, env, par_type_expr);
+        env = step.res.env;
+        Obj el_type = step.res.val;
+        exc_check(el_type.is_type(), "Fn: assoc par expected a type: %o\nreceived: %o",
+          syn, el_type);
+        par_type = labeled_args_type(el_type);
+        el_type.rel();
       } else {
         is_variad = true;
         par_name = par_hd.ret();
-        par_type = syn.cmpd_el(1).ret(); // TODO: derive correct Keyed-args type.
+        exc_check(par_name.is_sym(), "Fn: par name is not sym: %o", syn);
+        par_type_expr = syn.cmpd_el(1);
+        if (is_macro_val) {
+          exc_check(par_type_expr == s_nil, "Fn: macro variad par type must be nil:  %o", syn);
+          par_type = t_Arr_Expr.ret();
+        } else {
+          Step step = run(d, t, env, par_type_expr);
+          env = step.res.env;
+          Obj el_type = step.res.val;
+          if (el_type == s_nil) {
+            el_type.rel_val();
+            el_type = t_Obj.ret();
+          }
+          exc_check(el_type.is_type(), "Fn: variad par expected a type: %o\nreceived: %o",
+            syn, el_type);
+          par_type = arr_type(el_type);
+          el_type.rel();
+        }
       }
-      par_dflt = s_void.ret_val(); // TODO?
     } else {
       exc_raise("Fn: parameter %i is malformed: %o", i, syn);
     }
@@ -229,7 +274,7 @@ static Obj bind_par(Int d, Trace* t, Obj env, Obj call, Obj par, Array vals, Int
 static Obj bind_variad(UNUSED Int d, Trace* t, Obj env, Obj par, Array vals,
   Int* i_vals) {
   // owns env.
-  UNPACK_PAR(par); UNUSED_VAR(par_el_type);
+  UNPACK_PAR(par);
   exc_check(par_el_dflt == s_void, "variad parameter has non-void default argument: %o", par);
   Int start = *i_vals;
   Int end = vals.len();
@@ -241,7 +286,7 @@ static Obj bind_variad(UNUSED Int d, Trace* t, Obj env, Obj par, Array vals,
   }
   *i_vals = end;
   Int len = (end - start) / 2;
-  Obj vrd = Obj::Cmpd_raw(t_Arr_Obj.ret(), len); // TODO: correct type is derived from par_el_type.
+  Obj vrd = Obj::Cmpd_raw(par_el_type.ret(), len);
   Int j = 0;
   for_imns(i, start + 1, end, 2) {
     Obj arg = vals.el_move(i);
@@ -254,14 +299,13 @@ static Obj bind_variad(UNUSED Int d, Trace* t, Obj env, Obj par, Array vals,
 
 static Obj bind_assoc(UNUSED Int d, Trace* t, Obj env, Obj par, Array vals, Int start) {
   // owns env.
-  UNPACK_PAR(par); UNUSED_VAR(par_el_type);
+  UNPACK_PAR(par);
   exc_check(par_el_dflt == s_void, "assoc parameter has non-void default argument: %o", par);
   Int end = vals.len();
   Int len = (end - start) / 2;
   Obj keys = Obj::Cmpd_raw(t_Arr_Sym.ret(), len);
   Obj assoc_vals = Obj::Cmpd_raw(t_Arr_Obj.ret(), len);
-  // TODO: correct type is derived from par_el_type.
-  Obj assoc = Obj::Cmpd(t_Labeled_args.ret(), keys, assoc_vals); // TODO: derive type from vals.
+  Obj assoc = Obj::Cmpd(par_el_type.ret(), keys, assoc_vals);
   Int j = 0;
   for_imns(ik, start, end, 2) {
     Int iv = ik + 1;

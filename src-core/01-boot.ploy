@@ -223,8 +223,8 @@
     <let exp ,expectation>
     <let act <scope ,*body>>
     <when (not (iso exp act))
-      (outRSL 'expect:' exp)
-      (outRSL 'actual:' act)
+      (errRSL 'expect:' exp)
+      (errRSL 'actual:' act)
       (error "utest failure.")>>>
 
 # cmpd.
@@ -248,7 +248,7 @@
 
 # TODO: copy-deep, clone-deep?
 
-<let-fn arr-resize [-arr:Arr-Obj -len:len]
+<let-fn arr-resize [-arr:Arr-Obj -len:Int]
   # create a new array with elements copied from arr; further elements remain UNINIT.
   (arr-copy-to (anew Arr-Obj len) arr (alen arr))>
 
@@ -281,7 +281,7 @@
   <check (ilt index (.len list)) "index out of bounds">
   (ael (.arr list) index)>
 
-<let-fn list-put [-list:list -index:Int -el:Obj]
+<let-fn list-put [-list:List -index:Int -el:Obj]
   check((ilt index (.len list)) "index out of bounds")
   (aput (.arr list) index el)>
 
@@ -374,11 +374,11 @@
 <macro generic [-name -expr]
   ~<let ,name `,expr>>
 
-<let-struct Gnr-deriv-key -type:Obj -dict:Dict>
+<let-struct Gnr-deriv-key -type:Obj -dict:List>
 
 <let gnr-memo (list-new)>
 
-<let-fn derive [-expr:Expr -dict:Dict]
+<let-fn derive [-expr:Expr -dict:List]
   # NOTE: dict entries must be in some canonical order or else memo fetch will fail.
 
   <if (is-sym expr)
@@ -405,4 +405,4 @@
 
 <generic Arr (CONS Type `(Arr -E:E) (CONS Type-kind-arr E))>
 
-<let Arr-Int (RUN (derive Arr (list-dict-new `E `Int)))>
+#<let Arr-Int (RUN (derive Arr (list-dict-new `E `Int)))>

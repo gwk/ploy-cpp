@@ -12,11 +12,20 @@ static void write_data(CFile f, Obj d) {
 
 static void write_repr_Sym(CFile f, Obj s, Bool is_quoted) {
   assert(s.is_sym());
-  if (!is_quoted && !s.is_special_sym()) {
-    fputc('`', f);
-  }
   Obj d = s.sym_data();
-  write_data(f, d);
+  Chars c = d.data_chars();
+  assert(c);
+  if (c[0] == '_' || isalpha(c[0])) { // assume this is a parseable sym.
+    if (!is_quoted && !s.is_special_sym()) {
+      fputc('`', f);
+    }
+    write_data(f, d);
+  } else { // not parseable.
+    if (is_quoted) fputs("¿", f);
+    fputs("(Sym ", f);
+    write_data(f, d);
+    fputc(')', f);
+  }
 }
 
 
@@ -195,7 +204,9 @@ static void write_repr_default(CFile f, Obj c, Bool is_quoted, Int depth, Set& s
   fputs("(", f);
   Obj t = c.type();
   assert(t.is_type());
-  write_repr_obj(f, t.t->name, true, depth, set);
+  Obj n = t.t->name;
+  assert(n.is_sym());
+  write_data(f, n.sym_data());
   for_in(i, c.cmpd_len()) {
     fputc(' ', f);
     write_repr_obj(f, c.cmpd_el(i), false, depth, set);

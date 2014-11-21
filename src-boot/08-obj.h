@@ -357,10 +357,10 @@ union Obj {
   
   Obj sym_data() const;
   
-  static Obj Sym(Str s);
+  static Obj Sym(Str s, Bool is_parseable);
 
   static Obj Sym(Chars c) {
-    return Sym(Str(c));
+    return Sym(Str(c), true);
   }
 
   static Obj Sym_from_c(Chars c) {

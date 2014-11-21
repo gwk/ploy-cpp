@@ -36,7 +36,13 @@ static Obj expand_quasiquote(Int qua_depth, Obj o) {
     }
     Obj exprs = Obj::Cmpd_raw(t_Arr_Expr.ret(), o.cmpd_len() + 2);
     exprs.cmpd_put(0, s_CONS.ret_val());
-    exprs.cmpd_put(1, type_name(type).ret());
+    Obj name;
+    if (type == t_Arr_Expr) { // this type's name is not parseable.
+      name = s_Arr_Expr;
+    } else {
+      name = type_name(type);
+    }
+    exprs.cmpd_put(1, name.ret());
     for_in(i, o.cmpd_len()) {
       Obj e = o.cmpd_el(i);
       exprs.cmpd_put(i + 2, expand_quasiquote(qd1, e.ret())); // propagate the quotation.

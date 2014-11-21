@@ -34,6 +34,9 @@ S(b) \
 S(c) \
 S(callee) \
 S(types) \
+S(Arr) \
+S(Arr_Expr) \
+S(Labeled_args) \
 
 
 // sym indices.
@@ -84,9 +87,21 @@ Obj Obj::sym_data() const {
 }
 
 
-Obj Obj::Sym(Str s) {
-  static Hash_map<String, Obj> cache;
-  Obj& sym = cache[s]; // on missing key, inserts default, obj0.
+DBG static Bool is_str_parseable_sym(Str s) {
+  if (!s.len) return false;
+  Char c = s.chars[0];
+  if (!(c == '_' || isalpha(c))) return false;
+  for_imn(i, 1, s.len) {
+    if (!(c == '_' || c == '-' || isalnum(c))) return false;
+  }
+  return true;
+}
+
+
+Obj Obj::Sym(Str s, DBG Bool is_parseable) {
+  assert(is_str_parseable_sym(s) == is_parseable);
+  static Hash_map<String, Obj> memo;
+  Obj& sym = memo[s]; // on missing key, inserts default, obj0.
   if (!sym.vld()) {
     Obj d = Obj::Data(s);
     Int i = sym_names.append(d);

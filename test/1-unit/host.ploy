@@ -1,6 +1,6 @@
 
-<scope # assoc.
-  <let-fn f [&&a] a>
-  <utest (CONS Labeled-args (CONS Arr-Sym) (CONS Arr-Obj)) (f)>
-  <utest (CONS Labeled-args (CONS Arr-Sym `a) (CONS Arr-Obj 0)) (f -a=0)>
-  <utest (CONS Labeled-args (CONS Arr-Sym `a `b) (CONS Arr-Obj 0 1)) (f -a=0 -b=1)>>
+##<scope # assoc.
+  <let-fn f [&&a:Int] a>
+  <utest (CONS Labeled-args (CONS Arr-Sym) (CONS Arr-Int)) (f)>
+  <utest (CONS Labeled-args (CONS Arr-Sym `a) (CONS Arr-Int 0)) (f -a=0)>
+  <utest (CONS Labeled-args (CONS Arr-Sym `a `b) (CONS Arr-Int 0 1)) (f -a=0 -b=1)>>

@@ -49,6 +49,7 @@ T(Arr_Par,          arr, t_Par) \
 T(Arr_Obj,          arr, t_Obj) \
 T(Arr_Expr,         arr, t_Expr) \
 T(Arr_Sym,          arr, t_Sym) \
+T(Arr_Int,          arr, t_Int) \
 T(Expr,             union_expr) \
 T(Type_kind,        union_type_kind) \
 T(Type_kind_unit,   unit) \
@@ -57,7 +58,6 @@ T(Type_kind_arr,    struct1, "el-type", t_Type) \
 T(Type_kind_struct, struct2, "fields", t_Arr_Par, "dispatcher", t_Dispatcher) \
 T(Type_kind_union,  struct1, "variants", t_Arr_Type) \
 T(Type_kind_class,  unit) \
-T(Labeled_args,     struct2, "keys", t_Arr_Sym, "vals", t_Arr_Obj) \
 T(Obj,              class_obj) \
 T(Bool,             class_bool) \
 T(Dispatcher,       class_dispatcher) \
@@ -252,6 +252,56 @@ static Obj type_kind_class_dispatcher() {
 }
 
 
+static Obj derive_arr_type_sym(Obj name, Obj el_type) {
+  assert(name.is_sym());
+  assert(el_type.is_type());
+  String s("(");
+  s.append(name.sym_data().data_str());
+  s.append(" -E=");
+  s.append(type_name(el_type).sym_data().data_str());
+  s.push_back(')');
+  return Obj::Sym(Str(s), false);
+}
+
+
+static Dict arr_types_memo;
+
+static Obj arr_type(Obj el_type) {
+  Obj type = arr_types_memo.fetch(el_type);
+  if (!type.vld()) {
+    Obj name = derive_arr_type_sym(s_Arr, el_type);
+    Obj kind = type_kind_arr(el_type.ret());
+    type = Obj::Cmpd(t_Type.ret(), name, kind);
+    arr_types_memo.insert(el_type.ret(), type);
+    //global_push(type); // TODO: necessary?
+  }
+  return type.ret();
+}
+
+
+static Dict labeled_args_types_memo;
+
+static Obj labeled_args_type(Obj el_type) {
+  Obj type = labeled_args_types_memo.fetch(el_type);
+  if (!type.vld()) {
+    Obj name = derive_arr_type_sym(s_Labeled_args, el_type);
+    Obj kind = type_kind_struct2("names", t_Arr_Sym, "args", arr_type(el_type));
+    type = Obj::Cmpd(t_Type.ret(), name, kind);
+    labeled_args_types_memo.insert(el_type.ret(), type);
+    //global_push(type); // TODO: necessary?
+  }
+  return type.ret();
+}
+
+
+static void fix_arr_type(Obj el_type, Obj type) {
+  Obj name = derive_arr_type_sym(s_Arr, el_type);
+  type.cmpd_el_move(0).rel_val();
+  type.cmpd_put(0, name);
+  arr_types_memo.insert(el_type.ret(), type.ret());
+}
+
+
 static void type_init_vars() {
   // this must happen before any other objects are created,
   // so that the t_* values are not obj0.
@@ -300,6 +350,12 @@ static Obj type_init_values(Obj env) {
   #define T(t, k, ...) env = type_complete(env, t_##t, #t, type_kind_##k(__VA_ARGS__));
   TYPE_LIST
   #undef T
+  fix_arr_type(t_Type, t_Arr_Type);
+  fix_arr_type(t_Par, t_Arr_Par);
+  fix_arr_type(t_Obj, t_Arr_Obj);
+  fix_arr_type(t_Expr, t_Arr_Expr);
+  fix_arr_type(t_Sym, t_Arr_Sym);
+  fix_arr_type(t_Int, t_Arr_Int);
   // validate type graph.
   Set s;
   #define T(t, k, ...) obj_validate(&s, t_##t);
@@ -313,6 +369,8 @@ static Obj type_init_values(Obj env) {
 #if OPTION_ALLOC_COUNT
 static void type_cleanup() {
   unit_inst_memo.rel_els_dealloc();
+  arr_types_memo.rel_els_dealloc();
+  labeled_args_types_memo.rel_els_dealloc();
   Uns type_rc = t_Type.rc();
   if (type_rc != 1) { // only referent to Type should be itself.
     errFL("LEAK: Type rc = %u", type_rc);

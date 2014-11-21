@@ -79,7 +79,7 @@
   <utest (CONS Dict-fetch true `vb) (list-dict-fetch is d `kb)>
   <utest (CONS Dict-fetch false nil) (list-dict-fetch is d `kc)>>
 
-<scope # derive.
+##<scope # derive.
   <utest
-    (CONS Type `(Arr -E:Int) (CONS Type-kind-arr Int))
+    (CONS Type `(Arr -E=Int) (CONS Type-kind-arr Int))
     Arr-Int>>
