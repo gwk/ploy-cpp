@@ -54,27 +54,3 @@ static Chars char_repr(Char c) {
   }
   return r;
 }
-
-
-static void chars_dealloc(CharsM c) {
-  raw_dealloc(c, ci_Chars);
-}
-
-
-static CharsM chars_alloc(Int len) {
-  return CharsM(raw_alloc(len, ci_Chars));
-}
-
-
-static Int chars_append(CharsM* p, Int* cap, Int len, Char c) {
-  // returns updated len.
-  assert(len <= *cap);
-  if (len == *cap) {
-    assert(*cap > 0);
-    *cap *= 2;
-    *p = CharsM(raw_realloc(*p, *cap, ci_Chars));
-  }
-  CharsM chars = *p;
-  chars[len] = c;
-  return len + 1;
-}

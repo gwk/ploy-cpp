@@ -12,20 +12,26 @@ struct Str {
   Int len;
   Chars chars;
 
-  Str(Int l, Chars c): len(l), chars(c) { assert(l > 0 || (!l && !c)); }
+  Str(Int l, Chars c): len(l), chars(c) { assert(l > 0 && c || (!l && !c)); }
   
+  Str(Uns l, Chars c): Str(Int(l), c) {
+    check(l <= max_Int, "Str: Chars overflowed max_Int; len: %u", l);
+  }
+
   explicit Str(Chars c) {
     Uns l = strnlen(c, max_Int);
     check(l <= max_Int, "Str: Chars overflowed max_Int; len: %u", l);
-    chars = l ? c : null;
     len = Int(l);
+    chars = l ? c : null;
   }
+
+  explicit Str(const String& s): Str(s.length(), s.length() ? s.c_str() : null) {}
 
   operator String() const { return String(chars, Uns(len)); }
 
 };
 
-#define str0 Str(0, null)
+#define str0 Str(Int(0), null)
 
 // for use with "%.*s" formatter.
 #define FMT_STR(str) I32((str).len), (str).chars

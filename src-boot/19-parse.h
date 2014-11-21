@@ -240,14 +240,11 @@ static Obj parse_Comment(Parser& p) {
 static Obj parse_Data(Parser& p, Char q) {
   DEF_POS;
   assert(PC == q);
-  Int cap = size_min_alloc;
-  CharsM chars = chars_alloc(cap);
-  Int len = 0;
+  String s;
   Bool escape = false;
-#define APPEND(c) { len = chars_append(&chars, &cap, len, c); }
   loop {
     P_ADV(1,
-      p.pos = pos; chars_dealloc(chars); return parse_error(p, "unterminated string literal"));
+      p.pos = pos; return parse_error(p, "unterminated string literal"));
     Char c = PC;
     if (escape) {
       escape = false;
@@ -267,19 +264,18 @@ static Obj parse_Data(Parser& p, Char q) {
         case 'x': // ordinal escapes not yet implemented. \xx byte value.
         case 'u': // \uuuu unicode.
         case 'U': // \UUUUUU unicode. 6 or 8 chars? utf-8 is restricted to end at U+10FFFF.
-        default: APPEND('\\'); // not a valid escape code, so add the leading backslash.
+        default: s.push_back('\\'); // not a valid escape code, so add the leading backslash.
       }
-      APPEND(ce);
+      s.push_back(ce);
     } else {
       if (c == q) break;
       if (c == '\\') escape = true;
-      else APPEND(c);
+      else s.push_back(c);
     }
   }
   #undef APPEND
   P_ADV(1); // past closing quote.
-  Obj d = Obj::Data(Str(len, len ? chars: null));
-  chars_dealloc(chars);
+  Obj d = Obj::Data(Str(s));
   return d;
 }
 
