@@ -488,10 +488,8 @@ static Step run_call_CONS(UNUSED Int d, Trace* t, Obj env, Obj call, Array vals)
     }
   } else if (is_kind_unit(kind)) {
     exc_check(!len, "call: %o\nCONS: unit type expects no arguments: %o", call, type);
-    Obj inst = type_unit_inst(type);
-    exc_check(inst.vld(), "call: %o\nCONS: unit type instance does not exist %o", call, type);
+    res = type_unit(type);
     type.rel();
-    res = inst.ret();
   } else {
     exc_raise("call: %o\nCONS type is not a struct or arr type", call);
   }

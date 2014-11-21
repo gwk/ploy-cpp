@@ -43,6 +43,11 @@ public:
     raw_dealloc(_buckets, ci_Dict);
   }
 
+  void rel_els_dealloc() {
+    rel_els();
+    dealloc();
+  }
+  
   Hash_bucket* bucket(Obj k) {
     assert(vld());
     assert(_len > 0);

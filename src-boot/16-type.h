@@ -106,27 +106,14 @@ static Obj kind_fields(Obj kind) {
 }
 
 
-// flat list of unit type, singleton interleaved pairs.
-// TODO: use a table.
-static List global_singletons;
-
-
-static Obj type_unit_inst(Obj type) {
-  for_ins(i, global_singletons.len(), 2) {
-    if (global_singletons.el(i) == type) {
-      return global_singletons.el(i + 1);
-    }
-  }
-  return obj0;
-}
-
+static Dict unit_inst_memo;
 
 static Obj type_unit(Obj type) {
-  Obj inst = type_unit_inst(type);
-  if (inst.vld()) return inst.ret();
-  inst = Obj::Cmpd_raw(type.ret(), 0);
-  global_singletons.append(type.ret());
-  global_singletons.append(inst);
+  Obj inst = unit_inst_memo.fetch(type);
+  if (!inst.vld()) {
+    inst = Obj::Cmpd_raw(type.ret(), 0);
+    unit_inst_memo.insert(type.ret(), inst);
+  }
   return inst.ret();
 }
 
@@ -325,7 +312,7 @@ static Obj type_init_values(Obj env) {
 
 #if OPTION_ALLOC_COUNT
 static void type_cleanup() {
-  global_singletons.rel_els_dealloc();
+  unit_inst_memo.rel_els_dealloc();
   Uns type_rc = t_Type.rc();
   if (type_rc != 1) { // only referent to Type should be itself.
     errFL("LEAK: Type rc = %u", type_rc);
