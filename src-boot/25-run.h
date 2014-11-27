@@ -123,8 +123,8 @@ static Step run_Fn(Int d, Trace* t, Obj env, Obj code) {
   exc_check(code.cmpd_len() == 5, "Fn requires 5 fields; received %i", code.cmpd_len());
   Obj is_native = code.cmpd_el(0);
   Obj is_macro  = code.cmpd_el(1);
-  Obj pars_seq  = code.cmpd_el(2);
-  Obj ret_type  = code.cmpd_el(3);
+  Obj ret_type  = code.cmpd_el(2);
+  Obj pars_seq  = code.cmpd_el(3);
   Obj body      = code.cmpd_el(4);
   exc_check(is_macro.is_bool(), "Fn: is-macro is not a Bool: %o", is_macro);
   Bool is_macro_val = is_macro.is_true_bool();
@@ -221,10 +221,10 @@ static Step run_Fn(Int d, Trace* t, Obj env, Obj code) {
     is_native.ret_val(),
     is_macro.ret_val(),
     env.ret(),
+    ret_type.ret(),
     variad,
     assoc,
     pars,
-    ret_type.ret(),
     body.ret());
   return Step(env, f);
 }
@@ -354,10 +354,10 @@ static Step run_call_Func(Int d, Trace* t, Obj env, Obj call, Array vals, Bool i
   Obj is_native = func.cmpd_el(0);
   Obj is_macro  = func.cmpd_el(1);
   Obj lex_env   = func.cmpd_el(2);
-  Obj variad    = func.cmpd_el(3);
-  Obj assoc     = func.cmpd_el(4);
-  Obj pars      = func.cmpd_el(5);
-  Obj ret_type  = func.cmpd_el(6);
+  Obj ret_type  = func.cmpd_el(3);
+  Obj variad    = func.cmpd_el(4);
+  Obj assoc     = func.cmpd_el(5);
+  Obj pars      = func.cmpd_el(6);
   Obj body      = func.cmpd_el(7);
   exc_check(is_native.is_bool(), "func: %o\nis-native is not a Bool: %o", func, is_native);
   exc_check(is_macro.is_bool(), "func: %o\nis-macro is not a Bool: %o", func, is_macro);

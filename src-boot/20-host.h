@@ -297,14 +297,14 @@ static Obj host_init_func(Obj env, Int len_pars, Chars name, Func_host_ptr ptr) 
   }
   #undef PAR
   Obj f = Obj::Cmpd(t_Func.ret(),
-    Obj::with_Bool(false),
-    Obj::with_Bool(false),
-    env.ret(),
-    s_void.ret_val(),
-    s_void.ret_val(),
-    pars,
-    s_nil.ret_val(), // TODO: specify actual return type?
-    Obj::with_Ptr(Raw(ptr)));
+    Obj::with_Bool(false), // is-native.
+    Obj::with_Bool(false), // is-macro.
+    env.ret(), // env.
+    s_nil.ret_val(), // ret-type. TODO: specify actual return type?
+    s_void.ret_val(), // variad.
+    s_void.ret_val(), // assoc.
+    pars, // pars.
+    Obj::with_Ptr(Raw(ptr))); // body.
   return env_bind(env, false, sym, f);
 }
 

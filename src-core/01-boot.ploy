@@ -15,16 +15,16 @@
     (CONS Fn # Fn creates both functions and macros.
       true # is-native.
       true # is-macro.
-      `[-sym -pars &body] # the parameter list, which does not get evaluated.
       nil # ret-type.
+      `[-sym -pars &body] # the parameter list, which does not get evaluated.
       `(CONS Bind # the body of the 'macro' macro is a Bind form.
         true # is-public.
         sym # name.
         (CONS Fn # the value of the binding is created by evaluating the Fn form.
           true # is-native.
           true # is-macro.
-          pars
           nil # ret-type.
+          pars
           (CONS Do (CONS Arr-Expr *body)))))))
 
 # define macros to wrap the special forms.
@@ -34,8 +34,8 @@
   (CONS Fn
     true # is-native.
     false # is-macro.
-    pars
     nil # ret-type.
+    pars
     (CONS Do (CONS Arr-Expr *body)))>
 
 <macro do [&body]

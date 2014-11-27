@@ -186,10 +186,10 @@ static Obj type_kind_struct_func() {
     par_new("is-native", t_Bool),
     par_new("is-macro", t_Bool),
     par_new("env", t_Env),
+    par_new("ret-type", t_Type),
     par_new("variad", t_Par),
     par_new("assoc", t_Par),
     par_new("pars", t_Syn_seq),
-    par_new("ret-type", t_Type),
     par_new("body", t_Expr)));
 }
 
