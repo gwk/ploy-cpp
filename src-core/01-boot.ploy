@@ -25,7 +25,7 @@
           true # is-macro.
           `Expr # ret-type.
           pars
-          (CONS Do (CONS Arr-Expr *body)))))))
+          (CONS Do body))))))
 
 # define macros to wrap the special forms.
 
@@ -36,13 +36,13 @@
     false # is-macro.
     `Obj # ret-type.
     pars
-    (CONS Do (CONS Arr-Expr *body)))>
+    (CONS Do body))>
 
 <macro do [&body]
-  (CONS Do (CONS Arr-Expr *body))>
+  (CONS Do body)>
 
 <macro scope [&body]
-  (CONS Scope (CONS Do (CONS Arr-Expr *body)))>
+  (CONS Scope (CONS Do body))>
 
 <macro let [-sym -expr]
   # private binding.
