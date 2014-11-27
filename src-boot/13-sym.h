@@ -37,6 +37,8 @@ S(types) \
 S(Arr) \
 S(Arr_Expr) \
 S(Labeled_args) \
+S(Obj) \
+S(Expr) \
 
 
 // sym indices.

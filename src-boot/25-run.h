@@ -364,12 +364,12 @@ static Step run_call_Func(Int d, Trace* t, Obj env, Obj call, Array vals, Bool i
   // TODO: check that variad is an Expr.
   exc_check(lex_env.is_env(), "func: %o\nenv is not an Env: %o", func, lex_env);
   exc_check(pars.type() == t_Arr_Par, "func: %o\npars is not an Arr-Par: %o", func, pars);
-  // TODO: check that ret-type is a Type.
-  exc_check(ret_type == s_nil, "func: %o\nret-type is non-nil: %o", func, ret_type);
   if (is_call) {
     exc_check(!is_macro.is_true_bool(), "cannot call macro");
+    exc_check(ret_type == s_Obj, "fn ret-type is not `Obj: %o", ret_type); // TODO: improve.
   } else {
     exc_check(is_macro.is_true_bool(), "cannot expand function");
+    exc_check(ret_type == s_Expr || ret_type == s_nil, "macro ret-type is not `Expr: %o", ret_type);
   }
   Obj callee_env = env_push_frame(lex_env.ret());
   // NOTE: because func is bound to self in callee_env, and func contains body,

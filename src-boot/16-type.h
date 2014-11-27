@@ -317,7 +317,7 @@ static void type_init_vars() {
 
 
 static Obj type_complete(Obj env, Obj type, Chars c_name, Obj kind) {
-  type.type().ret(); // now that Type points to itself, all types can be retained.
+  type.type().ret(); // now that Type points to itself, each instance can retain its type.
   type.t->name = Obj::Sym_from_c(c_name);
   type.t->kind = kind;
   global_push(type);

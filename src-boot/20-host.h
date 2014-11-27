@@ -300,7 +300,7 @@ static Obj host_init_func(Obj env, Int len_pars, Chars name, Func_host_ptr ptr) 
     Obj::with_Bool(false), // is-native.
     Obj::with_Bool(false), // is-macro.
     env.ret(), // env.
-    s_nil.ret_val(), // ret-type. TODO: specify actual return type?
+    s_Obj.ret_val(), // ret-type. TODO: specify actual return type?
     s_void.ret_val(), // variad.
     s_void.ret_val(), // assoc.
     pars, // pars.
