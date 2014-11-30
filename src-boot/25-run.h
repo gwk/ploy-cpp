@@ -203,7 +203,7 @@ static Step run_Fn(Int d, Trace* t, Obj env, Obj code) {
         }
       }
     } else {
-      exc_raise("Fn: parameter %i is malformed: %o", i, syn);
+      exc_raise("Fn: parameter %i is neither Label nor Variad: %o", i, syn);
     }
     Obj par =  Obj::Cmpd(t_Par.ret(), par_name, par_type, par_dflt);
     pars.cmpd_put(i, par);
@@ -342,7 +342,8 @@ static Obj run_bind_vals(Int d, Trace* t, Obj env, Obj call, Obj variad, Obj ass
       env = bind_par(d, t, env, call, par, vals, &i_vals);
     }
   }
-  exc_check(i_vals == vals.len(), "call: %o\nreceived too many arguments", call);
+  exc_check(i_vals == vals.len(), "call: %o\nreceived too many arguments; bound %i; received %i",
+    call, i_vals / 2, vals.len() / 2);
   return env;
 }
 
