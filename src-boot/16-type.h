@@ -176,7 +176,6 @@ static Obj type_kind_struct_fn() {
     par_new("is-native", t_Bool),
     par_new("is-macro", t_Bool),
     par_new("pars", t_Syn_seq),
-    par_new("ret-type", t_Type),
     par_new("body", t_Expr)));
 }
 

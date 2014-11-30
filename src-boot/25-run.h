@@ -120,14 +120,14 @@ static Step run_If(Int d, Trace* t, Obj env, Obj code) {
 
 static Step run_Fn(Int d, Trace* t, Obj env, Obj code) {
   // owns env.
-  exc_check(code.cmpd_len() == 5, "Fn requires 5 fields; received %i", code.cmpd_len());
+  exc_check(code.cmpd_len() == 4, "Fn requires 4 fields; received %i", code.cmpd_len());
   Obj is_native = code.cmpd_el(0);
   Obj is_macro  = code.cmpd_el(1);
-  Obj ret_type  = code.cmpd_el(2);
-  Obj pars_seq  = code.cmpd_el(3);
-  Obj body      = code.cmpd_el(4);
+  Obj pars_seq  = code.cmpd_el(2);
+  Obj body      = code.cmpd_el(3);
   exc_check(is_macro.is_bool(), "Fn: is-macro is not a Bool: %o", is_macro);
   Bool is_macro_val = is_macro.is_true_bool();
+  Obj ret_type = is_macro_val ? t_Expr : t_Obj;
   exc_check(pars_seq.type() == t_Syn_seq,
     "Fn: pars is not a sequence literal: %o", pars_seq);
   assert(pars_seq.cmpd_len() == 1);
@@ -367,10 +367,10 @@ static Step run_call_Func(Int d, Trace* t, Obj env, Obj call, Array vals, Bool i
   exc_check(pars.type() == t_Arr_Par, "func: %o\npars is not an Arr-Par: %o", func, pars);
   if (is_call) {
     exc_check(!is_macro.is_true_bool(), "cannot call macro");
-    exc_check(ret_type == s_Obj, "fn ret-type is not `Obj: %o", ret_type); // TODO: improve.
+    exc_check(ret_type == t_Obj, "fn ret-type is not Obj: %o", ret_type); // TODO: improve.
   } else {
     exc_check(is_macro.is_true_bool(), "cannot expand function");
-    exc_check(ret_type == s_Expr || ret_type == s_nil, "macro ret-type is not `Expr: %o", ret_type);
+    exc_check(ret_type == t_Expr, "macro ret-type is not Expr: %o", ret_type);
   }
   Obj callee_env = env_push_frame(lex_env.ret());
   // NOTE: because func is bound to self in callee_env, and func contains body,

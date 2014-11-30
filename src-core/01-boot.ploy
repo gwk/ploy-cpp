@@ -15,7 +15,6 @@
     (CONS Fn # Fn creates both functions and macros.
       true # is-native.
       true # is-macro.
-      `Expr # ret-type.
       `[-sym -pars &body] # the parameter list, which does not get evaluated.
       `(CONS Bind # the body of the 'macro' macro is a Bind form.
         true # is-public.
@@ -23,7 +22,6 @@
         (CONS Fn # the value of the binding is created by evaluating the Fn form.
           true # is-native.
           true # is-macro.
-          `Expr # ret-type.
           pars
           (CONS Do body))))))
 
@@ -34,7 +32,6 @@
   (CONS Fn
     true # is-native.
     false # is-macro.
-    `Obj # ret-type.
     pars
     (CONS Do body))>
 
