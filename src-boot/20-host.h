@@ -270,7 +270,7 @@ static Obj host_dbg(Trace* t, Obj env) {
   GET_AB; // label, obj.
   exc_check(a.type() == t_Data, "dbg expects argument 1 to be Data: %o", a);
   write_data(stderr, a);
-  errFL(": %p rc:%u %o", b, b.rc(), b);
+  errFL(": %p rc:%u %o", b.r, b.rc(), b);
   return s_void.ret_val();
 }
 
@@ -300,7 +300,7 @@ static Obj host_init_func(Obj env, Int len_pars, Chars name, Func_host_ptr ptr) 
     Obj::with_Bool(false), // is-native.
     Obj::with_Bool(false), // is-macro.
     env.ret(), // env.
-    s_Obj.ret_val(), // ret-type. TODO: specify actual return type?
+    t_Obj.ret(), // ret-type. TODO: specify actual return type?
     s_void.ret_val(), // variad.
     s_void.ret_val(), // assoc.
     pars, // pars.
