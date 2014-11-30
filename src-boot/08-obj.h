@@ -551,7 +551,7 @@ public:
     to = int_clamp(to, 0, l);
     Int ls = to - fr; // length of slice.
     if (ls == l) {
-      return *this; // no ret/rel necessary.
+      return ret();
     }
     Obj slice = Obj::Cmpd_raw(ref_type().ret(), ls);
     Obj* src = cmpd_els();
