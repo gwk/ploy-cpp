@@ -128,14 +128,14 @@ static Step run_Fn(Int d, Trace* t, Obj env, Obj code) {
   exc_check(is_macro.is_bool(), "Fn: is-macro is not a Bool: %o", is_macro);
   Bool is_macro_val = is_macro.is_true_bool();
   Obj ret_type = is_macro_val ? t_Expr : t_Obj;
-  exc_check(pars_seq.type() == t_Syn_seq,
-    "Fn: pars is not a sequence literal: %o", pars_seq);
-  assert(pars_seq.cmpd_len() == 1);
+  exc_check(pars_seq.type() == t_Syn_seq, "Fn: pars is not a sequence literal: %o", pars_seq);
+  assert(pars_seq.cmpd_len() == 1); // single element: the array of expressions.
   Obj pars_exprs = pars_seq.cmpd_el(0);
-  Obj pars = Obj::Cmpd_raw(t_Arr_Par.ret(), pars_exprs.cmpd_len());
+  Int len_pars = pars_exprs.cmpd_len();
+  Obj pars = Obj::Cmpd_raw(t_Arr_Par.ret(), len_pars);
   Obj variad = s_void.ret_val();
   Obj assoc = s_void.ret_val();
-  for_in(i, pars_exprs.cmpd_len()) {
+  for_in(i, len_pars) {
     Obj syn = pars_exprs.cmpd_el(i);
     Obj syn_type = syn.type();
     Obj par_name;
@@ -509,9 +509,10 @@ static Step run_call_CONS(UNUSED Int d, Trace* t, Obj env, Obj call, Array vals)
   if (is_kind_struct(kind)) {
     res = Obj::Cmpd_raw(type, len);
     Obj fields = kind_fields(kind);
+    Int len_exp = fields.cmpd_len();
     // TODO: support field defaults.
-    exc_check(fields.cmpd_len() == len, "call: %o\nCONS: type %o expects %i fields; received %i",
-      call, type, len, fields.cmpd_len());
+    exc_check(len == len_exp, "call: %o\nCONS: type %o expects %i fields; received %i",
+      call, type_name(type), len_exp, len);
     for_in(i, len) {
       Obj field = fields.cmpd_el(i);
       Obj field_name = field.cmpd_el(0);

@@ -188,7 +188,7 @@ static Obj type_kind_struct_func() {
     par_new("ret-type", t_Type),
     par_new("variad", t_Par),
     par_new("assoc", t_Par),
-    par_new("pars", t_Syn_seq),
+    par_new("pars", t_Arr_Par),
     par_new("body", t_Expr)));
 }
 
