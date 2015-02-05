@@ -272,6 +272,28 @@
         (aput res i (f (ael arr i)))
         (self (iinc i))>>>>
 
+# struct.
+
+<let-fn clone-struct [-obj] (CONS (type-of obj) *obj)>
+
+<let-fn transform-struct [-obj:Obj -by:Func]
+  # by signature: [-name:Sym -val:Obj | -transformed-val:Obj].
+  # by must return an object whose type conforms to that of the field;
+  # this requirement makes this function dependently typed.
+  <let type (type-of obj)>
+  <let fields (.fields (.kind type))>
+  <let len (cmpd-len obj)>
+  <recur [-i=0 -res=obj]
+    <if (ieq i len) res <do
+      <let field (ael fields i)>
+      <let name (.name field)>
+      <let orig (cmpd-el obj i)>
+      <let derived (by name orig)>
+      <check (is-type-conforming (type-of derived) (.type field))
+        "transform-struct: transformed value type does not conform to field">
+      (self (iinc i) <if (is derived orig) res
+        (cmpd-put <if (is res obj) (clone-struct obj) res> i derived)>)>>>>
+
 # type definitions.
 
 <macro let-type [-name -kind]
