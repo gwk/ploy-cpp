@@ -126,6 +126,10 @@
 
 <pub-fn is-cmpd [-o] <or (is-arr o) (is-struct o)>>
 
+<pub-fn is-type-conforming [-act:Type -req:Type]
+  # TODO!
+  true>
+
 # output functions.
 
 <let-fn write1 [-file -str]
