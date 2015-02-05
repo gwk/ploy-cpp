@@ -225,11 +225,11 @@
 
 # cmpd.
 
-<let-fn cmpd-clone [-obj] (CONS (type-of obj) *obj)>
+<let-fn clone-cmpd [-obj] (CONS (type-of obj) *obj)>
 
 # Arr.
 
-<let-fn arr-clone [-arr:Arr-Obj -len:Int=(alen arr)] (CONS (type-of arr) *arr)>
+<let-fn clone-arr [-arr:Arr-Obj -len:Int=(alen arr)] (CONS (type-of arr) *arr)>
 
 <let-fn transform-arr-by-el [-arr -by:Func]
   # by signature: [-val:Obj | -transformed-val:Obj].
@@ -244,7 +244,7 @@
       <check (is-type-conforming (type-of derived) el-type)
         "transform-arr-by-el: transformed value type does not conform to el-type">
       (self (iinc i) <if (is derived orig) res
-        (aput <if (is res arr) (arr-clone arr) res> i derived)>)>>>>
+        (aput <if (is res arr) (clone-arr arr) res> i derived)>)>>>>
 
 <let-fn arr-copy-to [-dst:Arr-Obj -src:Arr-Obj -to:Int]
   <check (ige (alen dst) to) "dst is smaller than end index 'to'">
@@ -447,7 +447,7 @@
                   <let sub-derived (derive sub dict)>
                   (self (iinc i)
                     <if (is sub-derived sub) res # no change.
-                      (cmpd-put <if (is res expr) (cmpd-clone expr) res> i sub-derived)>)>>>>
+                      (cmpd-put <if (is res expr) (clone-cmpd expr) res> i sub-derived)>)>>>>
           (derive-cmpd)>>>>>
 
 <generic Arr (CONS Type `(Arr -E:E) (CONS Type-kind-arr E))>
