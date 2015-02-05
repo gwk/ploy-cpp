@@ -58,6 +58,7 @@ T(Type_kind_arr,    struct1, "el-type", t_Type) \
 T(Type_kind_struct, struct2, "fields", t_Arr_Par, "dispatcher", t_Dispatcher) \
 T(Type_kind_union,  struct1, "variants", t_Arr_Type) \
 T(Type_kind_class,  unit) \
+T(Type_kind_var,    unit) \
 T(Obj,              class_obj) \
 T(Bool,             class_bool) \
 T(Dispatcher,       class_dispatcher) \
@@ -232,7 +233,8 @@ static Obj type_kind_union_type_kind() {
       t_Type_kind_arr.ret(),
       t_Type_kind_struct.ret(),
       t_Type_kind_union.ret(),
-      t_Type_kind_class.ret()));
+      t_Type_kind_class.ret(),
+      t_Type_kind_var.ret()));
 }
 
 

@@ -175,15 +175,6 @@
 <pub-writer errRSL writeR1 std-err ' ' '\n'>
 <pub-writer errRLL writeR1 std-err '\n' '\n'>
 
-# type bootstrapping.
-
-<macro let-type [-name -kind]
-  # type instances are structs of -name:Expr -kind:Type-kind.
-  # note that the type of name is Expr, not Sym,
-  # because the name of a derived type might be the expression used to derive it.
-  # Type-kind is a union of the various Type-kind-*.
-  ~<let ,name (CONS Type `,name ,kind)>>
-
 # comparison.
 
 <pub-fn iso [-a -b]
@@ -259,6 +250,20 @@
         (self (iinc i))>>>>
 
 # type definitions.
+
+<macro let-type [-name -kind]
+  # type instances are structs of -name:Expr -kind:Type-kind.
+  # note that the type of name is Expr, not Sym,
+  # because the name of a derived type might be the expression used to derive it.
+  # Type-kind is a union of the various Type-kind-*.
+  ~<let ,name (CONS Type `,name ,kind)>>
+
+<macro let-type-var [-name] ~<let-type ,name (CONS Type-kind-var)>>
+
+# idiomatic type vars.
+<let-type-var T>
+<let-type-var K>
+<let-type-var V>
 
 <macro let-struct [-name &fields]
   <let pars (arr-map fields Arr-Par <fn [-field]
