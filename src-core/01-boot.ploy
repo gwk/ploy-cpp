@@ -177,9 +177,11 @@
 
 # comparison.
 
+<pub-fn isnt [-a -b] (not (is a b))>
+
 <pub-fn iso [-a -b]
   <if (is a b) true
-    (not (is (type-of a) (type-of b))) false
+    (isnt (type-of a) (type-of b)) false
     (not (is-ref a)) false
     (is-data a) (data-ref-iso a b)
     (is-env a) false # environments have identity equality.
@@ -196,6 +198,8 @@
               (not (iso ai bi)) false
               (self (iinc i))>>>>>>>
 
+<pub-fn not-iso [-a -b] (not (iso a b))>
+
 # const.
 
 <pub-fn const [-val] <fn [] val>>
@@ -210,7 +214,7 @@
   ~<scope
     <let exp ,expectation>
     <let act <scope ,*body>>
-    <when (not (iso exp act))
+    <when (not-iso exp act)
       (errRSL 'expect:' exp)
       (errRSL 'actual:' act)
       (error "utest failure.")>>>
