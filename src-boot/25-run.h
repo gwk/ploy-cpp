@@ -537,7 +537,7 @@ static Step run_call_CONS(UNUSED Int d, Trace* t, Obj env, Obj call, Array vals)
     res = type_unit(type);
     type.rel();
   } else {
-    exc_raise("call: %o\nCONS type is not a struct or arr type", call);
+    exc_raise("call: %o\nCONS type is not a struct, arr, or unit type", call);
   }
   vals.dealloc();
   return Step(env, res);
