@@ -79,7 +79,7 @@ _bld/ploy-ast-print.txt: _bld/compile_commands.json src-boot/*
 _bld/ploy-ast-dump.txt: _bld/compile_commands.json src-boot/*
 	clang-check -p _bld/compile_commands.json src-boot/ploy.cpp -ast-dump > $@
 
-.PHONY: all basic clean default parse preprocess ast cov ll analyze callgraph test-dbg test-rel test perf-test
+.PHONY: all basic clean default parse preprocess ast cov ll analyze callgraph test-unit test-dbg test-rel test perf-test
 
 all: basic preprocess ast cov ll analyze callgraph test perf-test
 
@@ -108,6 +108,10 @@ analyze: tools/cc.sh src-boot/*
 
 callgraph: _bld/ploy-callgraph.svg
 	open -a Safari _bld/ploy-callgraph.svg
+
+test-unit: tools/run-tests.sh _bld/ploy-dbg
+	@echo "\ntest-unit:"
+	$^ test/1-unit/*
 
 # omit perf tests, which take too long in debug mode.
 test-dbg: tools/run-tests.sh _bld/ploy-dbg
