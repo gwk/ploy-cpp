@@ -29,6 +29,11 @@
   <utest true (iso (CONS Arr-Int 1 2) (CONS Arr-Int 1 2))>
   <utest false (iso (CONS Arr-Int 1) (CONS Arr-Int 1 2))>>
 
+<scope # transform-arr-by-el.
+  <let o (CONS Arr-Int 0 1 2)> # original.
+  <utest true (is o (transform-arr-by-el o <fn [-e] e>))>
+  <utest (CONS Arr-Int 0 2 3) (transform-arr-by-el o <fn [-e] <if e (iinc e) e>>)>>
+
 <scope # List.
   <let l (list-new)>
   <utest false (list-contains is l `a)>

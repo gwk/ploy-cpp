@@ -231,6 +231,21 @@
 
 <let-fn arr-clone [-arr:Arr-Obj -len:Int=(alen arr)] (CONS (type-of arr) *arr)>
 
+<let-fn transform-arr-by-el [-arr -by:Func]
+  # by signature: [-val:Obj | -transformed-val:Obj].
+  # transform must return an object whose type conforms to the element type.
+  <let type (type-of arr)>
+  <let el-type (.el-type (.kind type))>
+  <let len (alen arr)>
+  <recur [-i=0 -res=arr]
+    <if (ieq i len) res <do
+      <let orig (ael arr i)>
+      <let derived (by orig)>
+      <check (is-type-conforming (type-of derived) el-type)
+        "transform-arr-by-el: transformed value type does not conform to el-type">
+      (self (iinc i) <if (is derived orig) res
+        (aput <if (is res arr) (arr-clone arr) res> i derived)>)>>>>
+
 <let-fn arr-copy-to [-dst:Arr-Obj -src:Arr-Obj -to:Int]
   <check (ige (alen dst) to) "dst is smaller than end index 'to'">
   <check (ige (alen src) to) "src is smaller than end index 'to'">
