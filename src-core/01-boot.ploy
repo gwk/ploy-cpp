@@ -221,6 +221,8 @@
 
 # Arr.
 
+<let-fn arr-clone [-arr:Arr-Obj -len:Int=(alen arr)] (CONS (type-of arr) *arr)>
+
 <let-fn arr-copy-to [-dst:Arr-Obj -src:Arr-Obj -to:Int]
   <check (ige (alen dst) to) "dst is smaller than end index 'to'">
   <check (ige (alen src) to) "src is smaller than end index 'to'">
@@ -231,8 +233,6 @@
         (self (iinc i))>>>>
 
 <let-fn arr-copy [-dst:Arr-Obj -src:Arr-Obj] (arr-copy-to dst src (alen src))>
-
-<let-fn arr-clone [-arr:Arr-Obj -len:Int=(alen arr)] (arr-copy (anew len) src)>
 
 # TODO: copy-deep, clone-deep?
 
