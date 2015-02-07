@@ -112,13 +112,14 @@
 
 # type functions.
 
-<pub-fn is-ptr    [-o] (is (type-of o) Ptr)>
-<pub-fn is-int    [-o] (is (type-of o) Int)>
-<pub-fn is-sym    [-o] (is (type-of o) Sym)>
+<pub-fn is-call   [-o] (is (type-of o) Call)>
 <pub-fn is-data   [-o] (is (type-of o) Data)>
 <pub-fn is-env    [-o] (is (type-of o) Env)>
-<pub-fn is-type   [-o] (is (type-of o) Type)>
+<pub-fn is-int    [-o] (is (type-of o) Int)>
 <pub-fn is-label  [-o] (is (type-of o) Label)>
+<pub-fn is-ptr    [-o] (is (type-of o) Ptr)>
+<pub-fn is-sym    [-o] (is (type-of o) Sym)>
+<pub-fn is-type   [-o] (is (type-of o) Type)>
 <pub-fn is-variad [-o] (is (type-of o) Variad)>
 
 <pub-fn is-arr    [-o] (is (type-of (.kind (type-of o))) Type-kind-arr)>
@@ -307,6 +308,7 @@
 
 # idiomatic type vars.
 <let-type-var T>
+<let-type-var E>
 <let-type-var K>
 <let-type-var V>
 
@@ -393,8 +395,8 @@
           (self (iinc i))>>>>>
 
 <let-fn list-dict-put [-cmp:Func -cmp-val:Func -dict:List -key:Obj -val:Obj]
-  # returns false if dict already contains the item;
-  # raises an error if dict contains the key, but value does not match.
+  # returns "is-new": false if dict already contains the item;
+  # raises an error if dict contains the key, but value does not compare to true.
   <recur [-i=0]
     <if (ieq i (.len dict))
       <do (list-append dict (CONS Dict-item key val)) true>
@@ -402,12 +404,25 @@
         <let e (list-el dict i)>
         <if (cmp (.key e) key)
           <do
-            <check (cmp-val (.val e) val)
-              "list-dict-put: different value already exists for key">
+            <when (not (cmp-val (.val e) val))
+              (errL "list-dict-put: different value already exists for key")
+              (errRSL "original:" (.val e))
+              (errRSL "incoming:" val)
+              (raise "")>
             false>
           (self (iinc i))>>>>>
 
+<let-fn list-dict-memo [-cmp:Func -dict:List -key:Obj -val-fn:Func]
+  # return val for key if already memoized;
+  # otherwise evaluate val-fn, memoize result and return.
+  <let fetch (list-dict-fetch is dict key)>
+  <if (.found fetch) (.val fetch) <do
+    <let val (val-fn)>
+    <check (is (list-dict-put cmp is dict key val) true) "list-dict-memo: put should be new">
+    val>>>
+
 <let-fn list-dict-new [&kv]
+  # create a new list dictionary from interleaved key/val arguments.
   <check (not (imod (alen kv) 2)) "dangling key">
   <let d (list-new)>
   <recur [-i=0]
@@ -416,40 +431,89 @@
         (list-dict-put is is d (ael kv i) (ael kv (iinc i)))
         (self (iadd i 2))>>>>
 
-# generics.
+# type derivation.
 
-<macro generic [-name -expr]
-  ~<let ,name `,expr>>
+<let-struct Type-deriv-key -type:Type -dict:List> # key type for type-deriv-memo.
 
-<let-struct Gnr-deriv-key -type:Obj -dict:List>
+<let type-deriv-memo (list-dict-new)> # global type derivation memoizer.
 
-<let gnr-memo (list-new)>
+<let-fn derive-label [-derive-name:Func -label:Label -dict:List]
+  # derive a label expr as part of a derived type name expr,
+  # by making appropriate substitutions in the =expr portion of the label.
+  (transform-struct label <fn [-n -v]
+    <if (is n `expr)
+      <do
+        <let fetch (list-dict-fetch is dict n)>
+        <if (.found fetch) (.val fetch) (derive-name v dict)>>
+      v>>)> # only transform label expr.
 
-<let-fn derive [-expr:Expr -dict:List]
-  # NOTE: dict entries must be in some canonical order or else memo fetch will fail.
+<let-fn derive-call [-derive-name:Func -call:Call -dict:List]
+  # derive a call expr as part of a derived type name expr.
+  (transform-struct call <fn [-n -v]
+    <check (is n `exprs) "expected single 'exprs field for call">
+    (transform-arr-by-el v <fn [-e] (derive-name e dict)>)>)>
 
-  <if (is-sym expr)
-    <do
-      <let item (list-dict-fetch is dict expr)>
-      <if (.found item) (.val item) expr>>
-    <do
-      <if (not (is-cmpd expr))
-        expr
-        <do
-          <let-fn derive-cmpd []
-            # derive an instance from expr; the result will be checked against the memo cache.
-            <let len (cmpd-len expr)>
-            <let start <if (is-label expr) 1 0>> # special case for label names.
-            <recur [-i=start -res=expr]
-              <if (ieq i len) res
-                <do
-                  <let sub (cmpd-el expr i)>
-                  <let sub-derived (derive sub dict)>
-                  (self (iinc i)
-                    <if (is sub-derived sub) res # no change.
-                      (cmpd-put <if (is res expr) (clone-cmpd expr) res> i sub-derived)>)>>>>
-          (derive-cmpd)>>>>>
+<let-fn derive-name [-name:Expr -dict:List]
+  # derive a name expression from 'name by substituting appropriate values from 'dict.
+  <if
+    (is-sym name) <do
+      <let fetch (list-dict-fetch is dict name)>
+      <if (.found fetch) (.name (.val fetch)) name>>
+    (is-label name) (derive-label self name dict)
+    (is-call name) (derive-call self name dict)
+    (error "derive-name unexpected type")>>
 
-<generic Arr (CONS Type `(Arr -E:E) (CONS Type-kind-arr E))>
+<let-fn derive-arr [-derive-type:Func -type:Type -dict:List]
+  # derive an array type from an abstract type and a list-dict mapping type-vars to types.
+  <let n (.name type)>
+  <let k (.kind type)>
+  <let orig (.el-type k)>
+  <let derived (derive-type orig dict)>
+  <if (is derived orig) type
+    (CONS Type (derive-name (.name type) dict) (CONS Type-kind-arr derived))>>
 
-#<let Arr-Int (RUN (derive Arr (list-dict-new `E `Int)))>
+<let-fn derive-struct [-derive-type:Func -type:Type -dict:List]
+  # derive a struct type from an abstract type and a list-dict mapping type-vars to types.
+  <let kind (.kind t)>
+  <let fields-orig (.fields kind)>
+  <let fields-derived (transform-arr-by-el fields-orig <fn [-e] (derive-type e dict)>)>
+  <if (is fields-derived fields) type
+     # for now, just ignore the struct dispatcher.
+    (CONS Type (derive-name (.name type) dict) (CONS Type-kind-struct fields-derived nil))>>
+
+<let-fn derive-union [-derive-type:Func -name:Expr -kind:Type-kind-union -dict-List]
+  # derive a union type from an abstract type and a list-dict mapping type-vars to types.
+  <let kind (.kind t)>
+  <let variants-orig (.fields kind)>
+  <let variants-derived (transform-arr-by-el variants-orig <fn [-e] derive-type e dict>)>
+  <if (is fields-derived fields) type
+    (CONS Type (derive-name (.name type) dict) (CONS Type-kind-union variants-derived))>>
+
+<let-fn derive-type [-type:Type -dict:List]
+  # derive a type from an abstract type and a list-dict mapping type var name syms to types.
+  # NOTE: the list-dict must be in some canonical order or else memo fetch will fail.
+  <let key (CONS Type-deriv-key type dict)>
+  (list-dict-memo is type-deriv-memo key <fn []
+    <let n (.name type)>
+    <let k (.kind type)>
+    <let tk (type-of k)>
+    <if
+      (is tk Type-kind-unit) type
+      (is tk Type-kind-prim) type
+      (is tk Type-kind-class) type
+      (is tk Type-kind-arr) (derive-arr derive-type type dict)
+      (is tk Type-kind-struct) (derive-struct derive-type type dict)
+      (is tk Type-kind-union) (derive-union derive-type type dict)
+      (is tk Type-kind-var) <do
+        <let fetch (list-dict-fetch is dict n)>
+        # return either the replacement type val or the unreplaced var.
+        <if (.found fetch) (.val fetch) type>>
+      (error "derive-type: unknown type kind")>>)>
+
+<macro let-generic [-local-name -name-expr -kind]
+  ~<let ,local-name (CONS Type `,name-expr ,kind)>>
+
+<macro let-derived [-local-name -generic -var-sym -type-val]
+  ~<let ,local-name (derive-type ,generic (list-dict-new ,var-sym ,type-val))>>
+
+<let-generic Arr (Arr -E=E) (CONS Type-kind-arr E)>

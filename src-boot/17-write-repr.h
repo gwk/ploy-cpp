@@ -205,8 +205,12 @@ static void write_repr_default(CFile f, Obj c, Bool is_quoted, Int depth, Set& s
   Obj t = c.type();
   assert(t.is_type());
   Obj n = t.t->name;
-  assert(n.is_sym());
-  write_data(f, n.sym_data());
+  // HACK: currently we have both unparseable syms, and arbitrary expressions for names.
+  if (n.is_sym()) {
+    write_data(f, n.sym_data());
+  } else {
+    write_repr_obj(f, n, true, depth, set);
+  }
   for_in(i, c.cmpd_len()) {
     fputc(' ', f);
     write_repr_obj(f, c.cmpd_el(i), false, depth, set);

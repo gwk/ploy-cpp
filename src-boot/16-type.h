@@ -16,7 +16,7 @@ DEF_SIZE(Type);
 
 
 #define TYPE_LIST \
-T(Type,             struct2, "name", t_Sym, "kind", t_Type_kind) \
+T(Type,             struct2, "name", t_Expr, "kind", t_Type_kind) \
 T(Ptr,              prim) \
 T(Int,              prim) \
 T(Sym,              prim) \
