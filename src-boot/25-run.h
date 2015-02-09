@@ -638,7 +638,8 @@ static Step run_Call_disp(Int d, Trace* t, Obj env, Obj code, Array vals) {
   }
   Obj kind = type_kind(type);
   if (is_kind_struct(kind)) {
-    Obj dispatcher = kind.cmpd_el(1);
+    Obj dispatcher = obj0;
+    exc_raise("call: %o\ndispatchers not implemented");
     exc_check(dispatcher != s_nil, "call: %o\nobject type has nil dispatcher: %o", code, type);
     return run_call_dispatcher(d, t, env, code, vals, dispatcher);
   }

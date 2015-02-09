@@ -316,8 +316,7 @@
   <let pars (arr-map fields Arr-Par <fn [-field]
     (CONS Par (.name field) (.type field) (.expr field))>)>
   ~<let-type ,name (CONS Type-kind-struct
-      `,pars
-      nil)>> # dispatcher
+      `,pars)>>
 
 <macro let-union [-name &variants]
   ~<let-type ,name (CONS Type-kind-struct `,(arr-map variants Arr-Type identity))>>

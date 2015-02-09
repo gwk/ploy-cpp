@@ -55,13 +55,12 @@ T(Type_kind,        union_type_kind) \
 T(Type_kind_unit,   unit) \
 T(Type_kind_prim,   unit) \
 T(Type_kind_arr,    struct1, "el-type", t_Type) \
-T(Type_kind_struct, struct2, "fields", t_Arr_Par, "dispatcher", t_Dispatcher) \
+T(Type_kind_struct, struct1, "fields", t_Arr_Par) \
 T(Type_kind_union,  struct1, "variants", t_Arr_Type) \
 T(Type_kind_class,  unit) \
 T(Type_kind_var,    unit) \
 T(Obj,              class_obj) \
 T(Bool,             class_bool) \
-T(Dispatcher,       class_dispatcher) \
 T(File, struct4, "name", t_Data, "ptr", t_Ptr, "is-readable", t_Bool, "is_writeable", t_Bool) \
 
 
@@ -141,8 +140,7 @@ static Obj type_kind_arr(Obj el_type) {
 
 static Obj type_kind_struct(Obj fields) {
   // owns fields.
-  // all structs start with a nil dispatcher.
-  return Obj::Cmpd(t_Type_kind_struct.ret(), fields, s_nil.ret_val());
+  return Obj::Cmpd(t_Type_kind_struct.ret(), fields);
 }
 
 
@@ -244,11 +242,6 @@ static Obj type_kind_class_obj() {
 
 
 static Obj type_kind_class_bool() {
-  return type_unit(t_Type_kind_class);
-}
-
-
-static Obj type_kind_class_dispatcher() {
   return type_unit(t_Type_kind_class);
 }
 
