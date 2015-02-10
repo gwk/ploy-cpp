@@ -23,7 +23,7 @@
           true # is-native.
           true # is-macro.
           pars
-          (CONS Do body))))))
+          body)))))
 
 # define macros to wrap the special forms.
 
@@ -33,13 +33,13 @@
     true # is-native.
     false # is-macro.
     pars
-    (CONS Do body))>
+    body)>
 
 <macro do [&body]
-  (CONS Do body)>
+  body>
 
 <macro scope [&body]
-  (CONS Scope (CONS Do body))>
+  (CONS Scope body)>
 
 <macro let [-sym -expr]
   # private binding.
@@ -93,7 +93,7 @@
 
 <macro when [-pred &body]
   # if 'pred', do 'exprs'. else none.
-  (CONS If pred (CONS Do body) void)>
+  (CONS If pred body void)>
 
 <macro check [-condition -msg]
   ~<do <if (not ,condition) (error ,msg)> void>> # void foils TCO so that trace reveals test.

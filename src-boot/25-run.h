@@ -51,21 +51,19 @@ static Step run_Quo(UNUSED Int d, Trace* t, Obj env, Obj code) {
 
 static Step run(Int depth, Trace* parent_trace, Obj env, Obj code);
 
-static Step run_Do(Int d, Trace* t, Obj env, Obj code) {
+static Step run_Arr_Expr(Int d, Trace* t, Obj env, Obj code) {
   // owns env.
-  assert(code.cmpd_len() == 1);
-  Obj exprs = code.cmpd_el(0);
-  Int len = exprs.cmpd_len();
+  Int len = code.cmpd_len();
   if (!len) {
     return Step(env, s_void.ret_val());
   }
   Int last = len - 1;
   for_in(i, last) {
-    Step step = run(d, t, env, exprs.cmpd_el(i));
+    Step step = run(d, t, env, code.cmpd_el(i));
     env = step.res.env;
     step.res.val.rel(); // value ignored.
   };
-  return Step(env, env, exprs.cmpd_el(last));
+  return Step(env, env, code.cmpd_el(last));
 }
 
 
@@ -687,7 +685,7 @@ static Step run_step_disp(Int d, Trace* t, Obj env, Obj code) {
   }
 #define DISP(form) if (type == t_##form) return run_##form(d, t, env, code)
   DISP(Quo);
-  DISP(Do);
+  DISP(Arr_Expr);
   DISP(Scope);
   DISP(Bind);
   DISP(If);

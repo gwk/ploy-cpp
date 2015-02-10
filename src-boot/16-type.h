@@ -28,7 +28,6 @@ T(Unq,              struct1, "expr", t_Expr) \
 T(Expand,           struct1, "exprs", t_Arr_Expr) \
 T(Bang,             struct1, "expr", t_Expr) \
 T(Quo,              struct1, "expr", t_Expr) \
-T(Do,               struct1, "exprs", t_Arr_Expr) \
 T(Scope,            struct1, "expr", t_Expr) \
 T(Bind,             struct3,  "is-pub", t_Bool, "name", t_Sym, "expr", t_Expr) \
 T(If,               struct3, "pred", t_Expr, "then", t_Expr, "else", t_Expr) \
@@ -211,7 +210,7 @@ static Obj type_kind_union_expr() {
       t_Data.ret(),
       t_Bang.ret(),
       t_Quo.ret(),
-      t_Do.ret(),
+      t_Arr_Expr.ret(),
       t_Scope.ret(),
       t_Bind.ret(),
       t_If.ret(),

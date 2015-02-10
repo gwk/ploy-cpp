@@ -20,7 +20,7 @@ static Obj parse_and_eval(Dict& src_locs, Obj env, Obj path, Obj src, Bool shoul
 #if VERBOSE_PARSE
   errFL("parse_and_eval: %o\n%o", path, code);
 #endif
-  Step step = eval_array_expr(env, code);
+  Step step = eval_Arr_Expr(env, code);
   if (should_output_val && step.res.val != s_void) {
     write_repr(stdout, step.res.val);
     fputc('\n', stdout);

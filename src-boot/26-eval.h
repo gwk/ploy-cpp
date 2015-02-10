@@ -17,11 +17,10 @@ static Step eval(Obj env, Obj code) {
 }
 
 
-static Step eval_array_expr(Obj env, Obj exprs) {
+static Step eval_Arr_Expr(Obj env, Obj exprs) {
   // top level eval of a series of expressions.
-  // this is quite different than calling eval on a Do instance;
-  // besides evaluating a different, non-Expr type,
-  // it also does the complete eval cycle on each item in turn.
+  // this is quite different than run_Arr_Expr:
+  // it does the complete eval cycle on each item in turn.
   assert(exprs.type() == t_Arr_Expr);
   Int len = exprs.cmpd_len();
   if (len == 0) {
