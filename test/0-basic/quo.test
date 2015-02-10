@@ -9,9 +9,9 @@
 nil
 nil
 ``nil
-((Arr -E=Expr) 0 1 nil)
-((Arr -E=Expr) `x 1 nil)
-((Arr -E=Expr) ``x ``1 ``nil)
+`{0 1 nil}
+`{x 1 nil}
+`{`x `1 `nil}
 `(CONS Arr-Expr x 1 nil)
 `(CONS Arr-Expr `x `1 `nil)
 `(CONS Arr-Expr ``x ``1 ``nil)

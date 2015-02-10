@@ -445,18 +445,18 @@ static Obj parse_Call(Parser& p) {
 }
 
 
-static Obj parse_struct(Parser& p) {
-  P_ADV(1, return parse_error(p, "unterminated constructor"));
+static Obj parse_seq(Parser& p) {
+  P_ADV(1, return parse_error(p, "unterminated sequence"));
   Array a = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR('}');
-  Obj s = Obj::Cmpd(t_Syn_struct.ret(), Cmpd_from_Array(t_Arr_Expr.ret(), a));
+  Obj s = Cmpd_from_Array(t_Arr_Expr.ret(), a);
   a.dealloc();
   return s;
 }
 
 
-static Obj parse_seq(Parser& p) {
-  P_ADV(1, return parse_error(p, "unterminated sequence"));
+static Obj parse_tuple(Parser& p) {
+  P_ADV(1, return parse_error(p, "unterminated tuple"));
   Array a = parse_exprs(p, 0);
   P_CONSUME_TERMINATOR(']');
   Obj s = Obj::Cmpd(t_Syn_seq.ret(), Cmpd_from_Array(t_Arr_Expr.ret(), a));
@@ -471,8 +471,8 @@ static Obj parse_expr_dispatch(Parser& p) {
   switch (c) {
     case '<':   return parse_Expand(p);
     case '(':   return parse_Call(p);
-    case '{':   return parse_struct(p);
-    case '[':   return parse_seq(p);
+    case '{':   return parse_seq(p);
+    case '[':   return parse_tuple(p);
     case '`':   return parse_Quo(p);
     case '~':   return parse_Qua(p);
     case ',':   return parse_Unq(p);

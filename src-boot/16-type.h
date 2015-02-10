@@ -41,7 +41,6 @@ T(Label,            struct3, "name", t_Expr, "type", t_Expr, "expr", t_Expr) \
 T(Variad,           struct2, "name", t_Expr, "type", t_Expr) \
 T(Src_loc,          struct_src_loc) \
 T(Par,              struct3, "name", t_Sym, "type", t_Type, "dflt", t_Expr) \
-T(Syn_struct,       struct1, "exprs", t_Arr_Expr) \
 T(Syn_seq,          struct1, "exprs", t_Arr_Expr) \
 T(Arr_Type,         arr, t_Type) \
 T(Arr_Par,          arr, t_Par) \
@@ -215,7 +214,6 @@ static Obj type_kind_union_expr() {
       t_Bind.ret(),
       t_If.ret(),
       t_Fn.ret(),
-      t_Syn_struct.ret(),
       t_Syn_seq.ret(),
       t_Call.ret(),
       t_Expand.ret()));
