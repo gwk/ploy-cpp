@@ -1,9 +1,8 @@
 <let-fn f [-n]
   <if n
     <scope
-      <do
-        (self (isub n 1))
-        void>>
+      { (self (isub n 1))
+        void}>
     unbound>>
 
 (f 5)

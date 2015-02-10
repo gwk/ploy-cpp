@@ -5,7 +5,7 @@ lookup error: `unbound
 trace:
   `unbound
   … 32
-  test/2-errors/trace-tco.ploy:9:1:
+  test/2-errors/trace-tco.ploy:8:1:
     (f 5)
     ~~~~~
 '''
