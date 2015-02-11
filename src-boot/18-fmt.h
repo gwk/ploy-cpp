@@ -53,7 +53,6 @@ static Chars _fmt_adv(CFile f, Chars fmt) {
 }
 
 
-template <typename... Ts>
 static void fmt_to_file(CFile f, Chars fmt) {
   fmt = _fmt_adv(f, fmt);
   check(!fmt, "missing format arguments: '%s'", fmt);

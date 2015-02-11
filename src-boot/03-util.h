@@ -16,7 +16,6 @@
 #define err_flush() fflush(stderr)
 #define errL(s) { err(s); err_nl(); }
 
-template <typename... Ts>
 static void fmt_to_file(CFile f, Chars fmt);
 
 template <typename T, typename... Ts>
