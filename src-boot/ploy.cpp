@@ -6,17 +6,9 @@
 
 static Obj parse_and_eval(Dict& src_locs, Obj env, Obj path, Obj src, Bool should_output_val) {
   // owns path, src.
-  CharsM e = null;
-  Obj code = parse_src(src_locs, path, src, &e);
+  Obj code = parse_src(src_locs, path, src);
   path.rel();
   src.rel();
-  if (e) {
-    err("parse error: ");
-    err(e);
-    raw_dealloc(e, ci_Chars);
-    assert(!code.vld());
-    fail();
-  }
 #if VERBOSE_PARSE
   errFL("parse_and_eval: %o\n%o", path, code);
 #endif
