@@ -33,6 +33,9 @@ typedef std::string String;
 template <typename A, typename B>
 using Pair = std::pair<A, B>;
 
+template <class T>
+using Vector = std::vector<T>;
+
 template <class T, class Hash = std::hash<T>, class Pred = std::equal_to<T>>
 using Hash_set = std::unordered_map<T, Hash, Pred>;
 

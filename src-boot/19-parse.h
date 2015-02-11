@@ -8,6 +8,7 @@ struct Src_pos {
   Int off;
   Int line;
   Int col;
+  Src_pos(): off(-1), line(-1), col(-1) {}
   Src_pos(Int o, Int l, Int c): off(o), line(l), col(c) {}
 };
 
@@ -18,6 +19,7 @@ struct Parser {
   Obj src;
   Str s;
   Src_pos pos;
+  Vector<Src_pos> start_positions;
   Parser(Dict* _locs, Obj _path, Obj _src, Str _s, Src_pos _pos):
   locs(_locs), path(_path), src(_src), s(_s), pos(_pos) {}
 };
@@ -70,11 +72,7 @@ if (!(condition)) parse_error(p, fmt, ##__VA_ARGS__)
 
 static Bool char_is_seq_term(Char c) {
   // character terminates a syntactic sequence.
-  return
-  c == ')' ||
-  c == ']' ||
-  c == '}' ||
-  c == '>';
+  return c == ')' || c == ']' || c == '}' || c == '>';
 }
 
 
@@ -82,51 +80,6 @@ static Bool char_is_atom_term(Char c) {
   // character terminates an atom.
   return c == '|' || c == ':' || c == '=' || isspace(c) || char_is_seq_term(c);
 }
-
-
-static Bool parse_space(Parser& p) {
-  // return true if parsing can continue.
-  while (PP) {
-    Char c = PC;
-    switch (c) {
-      case ' ':
-        P_ADV(1, break);
-       break ;
-      case '\n':
-        p.pos.off++;
-        p.pos.line++;
-        p.pos.col = 0;
-        break;
-      case '\t':
-        parse_error(p, "illegal tab character");
-      default:
-        parse_check(!isspace(c), "illegal space character: '%c' (%02x)", c, c);
-        return true;
-    }
-  }
-  return false; // EOS.
-}
-
-
-static Bool parser_has_next_expr(Parser& p) {
-  return parse_space(p) && !char_is_seq_term(PC);
-}
-
-
-static Obj parse_expr(Parser& p);
-
-static Array parse_exprs(Parser& p, Char term) {
-  // caller must call array.rel_dealloc or array.dealloc on returned Array.
-  // term is a the expected terminator character (e.g. closing paren).
-  List a;
-  while (parser_has_next_expr(p)) {
-    if (term && PC == term) break;
-    Obj o = parse_expr(p);
-    a.append(o);
-  }
-  return a.array();
-}
-
 
 
 static U64 parse_U64(Parser& p) {
@@ -348,49 +301,59 @@ static Obj parse_Mutator(Parser& p) {
 }
 
 
-static void parse_terminator(Parser& p, Char t) {
-  parse_check(PC == t, "expected terminator: '%c'", t);
+static Bool parse_space(Parser& p) {
+  // return true if parsing can continue.
+  while (PP) {
+    Char c = PC;
+    switch (c) {
+      case ' ':
+        P_ADV(1, break);
+       break ;
+      case '\n':
+        p.pos.off++;
+        p.pos.line++;
+        p.pos.col = 0;
+        break;
+      case '\t':
+        parse_error(p, "illegal tab character");
+      default:
+        parse_check(!isspace(c), "illegal space character: '%c' (%02x)", c, c);
+        return true;
+    }
+  }
+  return false; // EOS.
+}
+
+
+static Obj parse_expr(Parser& p);
+
+static Obj parse_exprs(Parser& p) {
+  List l;
+  while (parse_space(p) && !char_is_seq_term(PC)) {
+    Obj o = parse_expr(p);
+    l.append(o);
+  }
+  Obj a = Cmpd_from_Array(t_Arr_Expr.ret(), l.array());
+  l.dealloc();
+  return a;
+}
+
+
+static Obj parse_seq(Parser& p, Obj type, Chars chars_open, Char char_close) {
+  p.start_positions.push_back(p.pos);
+  while (*chars_open) {
+    assert(PC == *chars_open);
+    chars_open++;
+    P_ADV(1, parse_error(p, "expected terminator: '%c'", char_close));
+  }
+  Obj a = parse_exprs(p);
+  parse_check(PC == char_close, "expected terminator: '%c'", char_close);
   P_ADV(1);
-}
-
-
-static Obj parse_Expand(Parser& p) {
-  P_ADV(1, parse_error(p, "unterminated expand"));
-  Array a = parse_exprs(p, 0);
-  parse_terminator(p, '>');
-  Obj e = Obj::Cmpd(t_Expand.ret(), Cmpd_from_Array(t_Arr_Expr.ret(), a));
-  a.dealloc();
-  return e;
-}
-
-
-static Obj parse_Call(Parser& p) {
-  P_ADV(1, parse_error(p, "unterminated call"));
-  Array a = parse_exprs(p, 0);
-  parse_terminator(p, ')');
-  Obj c = Obj::Cmpd(t_Call.ret(), Cmpd_from_Array(t_Arr_Expr.ret(), a));
-  a.dealloc();
-  return c;
-}
-
-
-static Obj parse_seq(Parser& p) {
-  P_ADV(1, parse_error(p, "unterminated sequence"));
-  Array a = parse_exprs(p, 0);
-  parse_terminator(p, '}');
-  Obj s = Cmpd_from_Array(t_Arr_Expr.ret(), a);
-  a.dealloc();
-  return s;
-}
-
-
-static Obj parse_tuple(Parser& p) {
-  P_ADV(1, parse_error(p, "unterminated tuple"));
-  Array a = parse_exprs(p, 0);
-  parse_terminator(p, ']');
-  Obj s = Obj::Cmpd(t_Syn_seq.ret(), Cmpd_from_Array(t_Arr_Expr.ret(), a));
-  a.dealloc();
-  return s;
+  p.start_positions.pop_back();
+  if (type == t_Arr_Expr) {
+    return a;
+  }
+  return Obj::Cmpd(type.ret(), a);
 }
 
 
@@ -398,10 +361,10 @@ static Obj parse_tuple(Parser& p) {
 static Obj parse_expr_dispatch(Parser& p) {
   Char c = PC;
   switch (c) {
-    case '<':   return parse_Expand(p);
-    case '(':   return parse_Call(p);
-    case '{':   return parse_seq(p);
-    case '[':   return parse_tuple(p);
+    case '<':   return parse_seq(p, t_Expand,   "<", '>');
+    case '(':   return parse_seq(p, t_Call,     "(", ')');
+    case '{':   return parse_seq(p, t_Arr_Expr, "{", '}');
+    case '[':   return parse_seq(p, t_Syn_seq,  "[", ']');
     case '`':   return parse_Quo(p);
     case '~':   return parse_Qua(p);
     case ',':   return parse_Unq(p);
@@ -460,12 +423,9 @@ static Obj parse_sub_expr(Parser& p) {
 
 static Obj parse_src(Dict& src_locs, Obj path, Obj src) {
   Parser p = Parser(&src_locs, path, src, src.data_str(), Src_pos(0, 0, 0));
-  Array a = parse_exprs(p, 0);
+  Obj a = parse_exprs(p);
   if (p.pos.off != p.s.len) {
     parse_error(p, "parsing terminated early");
-  } else {
-    Obj o = Cmpd_from_Array(t_Arr_Expr.ret(), a);
-    a.dealloc();
-    return o;
   }
+  return a;
 }
