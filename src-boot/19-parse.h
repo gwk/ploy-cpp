@@ -19,7 +19,6 @@ struct Parser {
   Obj src;
   Str s;
   Src_pos pos;
-  Vector<Src_pos> start_positions;
   Parser(Dict* _locs, Obj _path, Obj _src, Str _s, Src_pos _pos):
   locs(_locs), path(_path), src(_src), s(_s), pos(_pos) {}
 };
@@ -39,21 +38,19 @@ static void parse_err_prefix(Parser& p) {
 #endif
 
 
-#define fmt_parse_error(fmt, ...) { \
-  CharsM pos_info = str_src_loc(p.path.data_str(), p.pos.line, p.pos.col); \
+#define fmt_parse_error(pos, fmt, ...) { \
+  CharsM pos_info = str_src_loc(p.path.data_str(), pos.line, pos.col); \
   errFL("%s " fmt, pos_info, ##__VA_ARGS__); \
   raw_dealloc(pos_info, ci_Chars); \
-  CharsM underline = str_src_underline(p.s, p.pos.off, 0, p.pos.col); \
+  CharsM underline = str_src_underline(p.s, pos.off, 0, pos.col); \
   err(underline); \
   raw_dealloc(underline, ci_Chars); \
-  fail(); \
 }
 
 #define parse_error(fmt, ...) { \
-  fmt_parse_error("parse error: " fmt, ##__VA_ARGS__); \
+  fmt_parse_error(p.pos, "parse error: " fmt, ##__VA_ARGS__); \
   fail(); \
 }
-
 
 #define parse_check(condition, fmt, ...) \
 if (!(condition)) parse_error(fmt, ##__VA_ARGS__)
@@ -340,16 +337,20 @@ static Obj parse_exprs(Parser& p) {
 
 
 static Obj parse_seq(Parser& p, Obj type, Chars chars_open, Char char_close) {
-  p.start_positions.push_back(p.pos);
+  Src_pos pos = p.pos;
   while (*chars_open) {
     assert(PC == *chars_open);
     chars_open++;
     P_ADV(1, parse_error("expected terminator: '%c'", char_close));
   }
   Obj a = parse_exprs(p);
-  parse_check(PC == char_close, "expected terminator: '%c'", char_close);
+  if (PC != char_close) {
+    fmt_parse_error(pos, "parse error: expression starting here is missing terminator: '%c'",
+      char_close);
+    fmt_parse_error(p.pos, "expression appears to end here");
+    fail();
+  }
   P_ADV(1);
-  p.start_positions.pop_back();
   if (type == t_Arr_Expr) {
     return a;
   }
