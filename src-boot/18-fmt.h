@@ -19,8 +19,7 @@ static void _fmt1(CFile f, Chars fmt, T item) { \
   if (*fmt != c_exp) { \
     fprintf(stderr, "formatter '%c' received %s; fmt: '%s'", *fmt, #T, fmt); \
     fflush(stderr); \
-    assert(0); \
-    exit(1); \
+    fail(); \
   } \
   __VA_ARGS__; \
 } \

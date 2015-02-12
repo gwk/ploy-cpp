@@ -384,8 +384,7 @@ union Obj {
   Bool is_true_bool() const {
     if (*this == s_true) return true;
     if (*this == s_false) return false;
-    assert(0);
-    exit(1);
+    fail();
   }
 
   Bool is_true() const {
@@ -403,7 +402,7 @@ union Obj {
       case ot_sym:
         return (u >= s_true.u);
     }
-    assert(0);
+    fail();
   }
   
   static Obj with_Bool(Bool b) {
