@@ -1,9 +1,9 @@
 <let-fn fib [-n]
-  <if
+  <cond
     (ieq n 0) 0
     (ieq n 1) 1
     <recur [-i=n -a=0 -b=1]
-      <if (ieq i 1) b
+      <_if (ieq i 1) b
         (self (idec i) b (iadd a b))>>>>
 
 # 89 is the max value for 64 bit builds;

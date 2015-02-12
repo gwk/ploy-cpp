@@ -75,8 +75,7 @@
   # bootstrap 'if' that takes exactly three expressions.
   (CONS If pred then else)>
 
-<macro if [&exprs]
-  # generic 'if'. inspired by paul graham's arc-lisp.
+<macro cond [&exprs]
   <let len (alen exprs)>
   <_if (ilt len 2) (error "degenerate if form")
     <recur [-i=0]
@@ -93,18 +92,18 @@
   (CONS If pred body void)>
 
 <macro check [-condition -msg]
-  ~{<if (not ,condition) (error ,msg)> void}> # void foils TCO so that trace reveals test.
+  ~{<when (not ,condition) (error ,msg)> void}> # void foils TCO so that trace reveals test.
 
 <macro or [&exprs]
   <let len (alen exprs)>
   <recur [-i=0]
-    <if (ieq i len) false
+    <_if (ieq i len) false
       (CONS If (ael exprs i) true (self (iinc i)))>>>
 
 <macro and [&exprs]
   <let len (alen exprs)>
   <recur [-i=0]
-    <if (ieq i len) true
+    <_if (ieq i len) true
       (CONS If (ael exprs i) (self (iinc i)) false)>>>
 
 # type functions.
@@ -142,9 +141,9 @@
 <macro pub-writer [-name -writer1 -file -sep -end]
   ~<pub-fn ,name [&items]
     <recur [-i=0]
-      <if (ieq i (alen items))
+      <_if (ieq i (alen items))
         (write1 ,file ,end)
-        { <if i (write1 ,file ,sep)>
+        { <when i (write1 ,file ,sep)>
           (,writer1 ,file (ael items i))
           (self (iinc i))}>>>>
 
@@ -181,19 +180,22 @@
 <pub-fn isnt [-a -b] (not (is a b))>
 
 <pub-fn iso [-a -b]
-  <if (is a b) true
+  <cond
+    (is a b) true
     (isnt (type-of a) (type-of b)) false
     (not (is-ref a)) false
     (is-data a) (data-ref-iso a b)
     (is-env a) false # environments have identity equality.
     { <let len (cmpd-len a)>
-      <if (ine len (cmpd-len b)) false
+      <cond
+        (ine len (cmpd-len b)) false
         (not len) true
         { <let last (idec len)>
           <recur [-i=0]
             <let ai (cmpd-el a i)>
             <let bi (cmpd-el b i)>
-            <if (ieq i last) (iso ai bi) # tail optimized.
+            <cond
+              (ieq i last) (iso ai bi) # tail optimized.
               (not (iso ai bi)) false
               (self (iinc i))>>}>}>>
 
@@ -233,19 +235,19 @@
   <let el-type (.el-type (.kind type))>
   <let len (alen arr)>
   <recur [-i=0 -res=arr]
-    <if (ieq i len) res {
+    <_if (ieq i len) res {
       <let orig (ael arr i)>
       <let derived (by orig)>
       <check (is-type-conforming (type-of derived) el-type)
         "transform-arr-by-el: transformed value type does not conform to el-type">
-      (self (iinc i) <if (is derived orig) res
-        (aput <if (is res arr) (clone-arr arr) res> i derived)>)}>>>
+      (self (iinc i) <_if (is derived orig) res
+        (aput <_if (is res arr) (clone-arr arr) res> i derived)>)}>>>
 
 <let-fn arr-copy-to [-dst:Arr-Obj -src:Arr-Obj -to:Int]
   <check (ige (alen dst) to) "dst is smaller than end index 'to'">
   <check (ige (alen src) to) "src is smaller than end index 'to'">
   <recur [-i=0]
-    <if (ieq i to) dst
+    <_if (ieq i to) dst
       { (aput dst i (ael src i))
         (self (iinc i))}>>>
 
@@ -261,7 +263,7 @@
   <let l (alen arr)>
   <let res (anew ret-type l)>
   <recur [-i=0]
-    <if (ieq i l) res
+    <_if (ieq i l) res
       { (aput res i (f (ael arr i)))
         (self (iinc i))}>>>
 
@@ -277,15 +279,15 @@
   <let fields (.fields (.kind type))>
   <let len (cmpd-len obj)>
   <recur [-i=0 -res=obj]
-    <if (ieq i len) res {
+    <_if (ieq i len) res {
       <let field (ael fields i)>
       <let name (.name field)>
       <let orig (cmpd-el obj i)>
       <let derived (by name orig)>
       <check (is-type-conforming (type-of derived) (.type field))
         "transform-struct: transformed value type does not conform to field">
-      (self (iinc i) <if (is derived orig) res
-        (cmpd-put <if (is res obj) (clone-struct obj) res> i derived)>)}>>>
+      (self (iinc i) <_if (is derived orig) res
+        (cmpd-put <_if (is res obj) (clone-struct obj) res> i derived)>)}>>>
 
 # type definitions.
 
@@ -330,12 +332,12 @@
 <let-fn list-grow [-list:List]
   <check (list-is-full list) "list should not grow unless arr is full">
   <let len (.len list)>
-  <let cap <if len (imul len 2) 2>>
+  <let cap <_if len (imul len 2) 2>>
   (.=arr list (arr-resize (.arr list) cap))
   list>
 
 <let-fn list-append [-list:List -el:Obj]
-  <if (list-is-full list) (list-grow list)>
+  <when (list-is-full list) (list-grow list)>
   <let index (.len list)>
   (.=len list (iinc index))
   (aput (.arr list) index el)
@@ -343,14 +345,15 @@
 
 <let-fn list-contains [-cmp:Func -list:List -el:Obj]
   <recur [-i=0]
-    <if (ieq i (.len list)) false
+    <cond
+      (ieq i (.len list)) false
       (cmp el (list-el list i)) true
       (self (iinc i))>>>
 
 <let-fn list-new [&els]
   <let l (CONS List 0 (CONS Arr-Obj))>
   <recur [-i=0]
-    <if (ieq i (alen els)) l
+    <_if (ieq i (alen els)) l
       { (list-append l (ael els i))
         (self (iinc i))}>>>
 
@@ -359,7 +362,8 @@
 <let-fn list-set-put [-cmp:Func -set:List -el:Obj]
   # returns false if set already contains the element.
   <recur [-i=0]
-    <if (ieq i (.len set)) {(list-append set el) true}
+    <cond
+      (ieq i (.len set)) {(list-append set el) true}
       (cmp el (list-el set i)) false
       (self (iinc i))>>>
 
@@ -370,26 +374,26 @@
 
 <let-fn list-dict-contains [-cmp:Func -dict:List -key:Obj]
   <recur [-i=0]
-    <if (ieq i (.len dict)) false
+    <_if (ieq i (.len dict)) false
       { <let e (list-el dict i)>
-        <if (cmp (.key e) key) true
+        <_if (cmp (.key e) key) true
           (self (iinc i))>}>>>
 
 <let-fn list-dict-fetch [-cmp:Func -dict:List -key:Obj]
   <recur [-i=0]
-    <if (ieq i (.len dict)) (CONS Dict-fetch false nil)
+    <_if (ieq i (.len dict)) (CONS Dict-fetch false nil)
       { <let e (list-el dict i)>
-        <if (cmp (.key e) key) (CONS Dict-fetch true (.val e))
+        <_if (cmp (.key e) key) (CONS Dict-fetch true (.val e))
           (self (iinc i))>}>>>
 
 <let-fn list-dict-put [-cmp:Func -cmp-val:Func -dict:List -key:Obj -val:Obj]
   # returns "is-new": false if dict already contains the item;
   # raises an error if dict contains the key, but value does not compare to true.
   <recur [-i=0]
-    <if (ieq i (.len dict))
+    <_if (ieq i (.len dict))
       { (list-append dict (CONS Dict-item key val)) true}
       { <let e (list-el dict i)>
-        <if (cmp (.key e) key)
+        <_if (cmp (.key e) key)
           { <when (not (cmp-val (.val e) val))
               (errL "list-dict-put: different value already exists for key")
               (errRSL "original:" (.val e))
@@ -402,7 +406,7 @@
   # return val for key if already memoized;
   # otherwise evaluate val-fn, memoize result and return.
   <let fetch (list-dict-fetch is dict key)>
-  <if (.found fetch) (.val fetch)
+  <_if (.found fetch) (.val fetch)
     { <let val (val-fn)>
       <check (is (list-dict-put cmp is dict key val) true) "list-dict-memo: put should be new">
       val}>>
@@ -412,7 +416,7 @@
   <check (not (imod (alen kv) 2)) "dangling key">
   <let d (list-new)>
   <recur [-i=0]
-    <if (ieq i (alen kv)) d
+    <_if (ieq i (alen kv)) d
       { (list-dict-put is is d (ael kv i) (ael kv (iinc i)))
         (self (iadd i 2))}>>>
 
@@ -426,9 +430,9 @@
   # derive a label expr as part of a derived type name expr,
   # by making appropriate substitutions in the =expr portion of the label.
   (transform-struct label <fn [-n -v]
-    <if (is n `expr)
+    <_if (is n `expr)
       { <let fetch (list-dict-fetch is dict n)>
-        <if (.found fetch) (.val fetch) (derive-name v dict)>}
+        <_if (.found fetch) (.val fetch) (derive-name v dict)>}
       v>>)> # only transform label expr.
 
 <let-fn derive-call [-derive-name:Func -call:Call -dict:List]
@@ -439,10 +443,10 @@
 
 <let-fn derive-name [-name:Expr -dict:List]
   # derive a name expression from 'name by substituting appropriate values from 'dict.
-  <if
+  <cond
     (is-sym name) {
       <let fetch (list-dict-fetch is dict name)>
-      <if (.found fetch) (.name (.val fetch)) name>}
+      <_if (.found fetch) (.name (.val fetch)) name>}
     (is-label name) (derive-label self name dict)
     (is-call name) (derive-call self name dict)
     (error "derive-name unexpected type")>>
@@ -453,7 +457,7 @@
   <let k (.kind type)>
   <let orig (.el-type k)>
   <let derived (derive-type orig dict)>
-  <if (is derived orig) type
+  <_if (is derived orig) type
     (CONS Type (derive-name (.name type) dict) (CONS Type-kind-arr derived))>>
 
 <let-fn derive-struct [-derive-type:Func -type:Type -dict:List]
@@ -461,7 +465,7 @@
   <let kind (.kind t)>
   <let fields-orig (.fields kind)>
   <let fields-derived (transform-arr-by-el fields-orig <fn [-e] (derive-type e dict)>)>
-  <if (is fields-derived fields) type
+  <_if (is fields-derived fields) type
      # for now, just ignore the struct dispatcher.
     (CONS Type (derive-name (.name type) dict) (CONS Type-kind-struct fields-derived nil))>>
 
@@ -470,7 +474,7 @@
   <let kind (.kind t)>
   <let variants-orig (.fields kind)>
   <let variants-derived (transform-arr-by-el variants-orig <fn [-e] derive-type e dict>)>
-  <if (is fields-derived fields) type
+  <_if (is fields-derived fields) type
     (CONS Type (derive-name (.name type) dict) (CONS Type-kind-union variants-derived))>>
 
 <let-fn derive-type [-type:Type -dict:List]
@@ -481,7 +485,7 @@
     <let n (.name type)>
     <let k (.kind type)>
     <let tk (type-of k)>
-    <if
+    <cond
       (is tk Type-kind-unit) type
       (is tk Type-kind-prim) type
       (is tk Type-kind-class) type
@@ -491,7 +495,7 @@
       (is tk Type-kind-var) {
         <let fetch (list-dict-fetch is dict n)>
         # return either the replacement type val or the unreplaced var.
-        <if (.found fetch) (.val fetch) type>}
+        <_if (.found fetch) (.val fetch) type>}
       (error "derive-type: unknown type kind")>>)>
 
 <macro let-generic [-local-name -name-expr -kind]

@@ -1,5 +1,5 @@
 <let-fn f [-n]
-  <if n
+  <_if n
     <scope
       { (self (isub n 1))
         void}>

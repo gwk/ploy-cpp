@@ -1,4 +1,4 @@
 # tail recursive function; this should fail if OPTION_TCO == 0.
 <let-fn f [-n -i]
-  <if (not n) i (self (idec n) (iinc i))>>
+  <_if (not n) i (self (idec n) (iinc i))>>
 (f OPTION-REC-LIMIT 0)
