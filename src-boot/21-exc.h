@@ -41,11 +41,13 @@ static Obj track_src(Obj original, Obj derived) {
       Obj len = loc.cmpd_el(3);
       Obj line = loc.cmpd_el(4);
       Obj col = loc.cmpd_el(5);
-      CharsM msg = str_src_loc_str(path.data_str(), src.data_str(),
-        pos.int_val(), len.int_val(), line.int_val(), col.int_val(), "");
-      fputs("  ", stderr);
-      fputs(msg, stderr);
-      raw_dealloc(msg, ci_Chars);
+      CharsM pos_info = str_src_loc(path.data_str(), line.int_val(), col.int_val());
+      errFL("  %s", pos_info);
+      raw_dealloc(pos_info, ci_Chars);
+      CharsM underline =
+      str_src_underline(src.data_str(), pos.int_val(), len.int_val(), col.int_val());
+      err(underline);
+      raw_dealloc(underline, ci_Chars);
     }
     if (trace->elided_step_count > 0) { // tail 
       errFL("  … %i", trace->elided_step_count);

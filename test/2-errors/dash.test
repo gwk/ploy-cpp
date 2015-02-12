@@ -1,7 +1,7 @@
 {
   'code' : 1,
   'err' : '''\
-parse error: test/2-errors/dash.ploy:1:2: unexpected character: '\\n'
+test/2-errors/dash.ploy:1:2: parse error: unexpected character: '\\n'
     -
      ^
 '''

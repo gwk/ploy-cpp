@@ -97,15 +97,20 @@ static Str str_line_at_pos_exc(Str s, Int pos) {
 }
 
 
-static CharsM str_src_loc_str(Str path, Str src, Int pos, Int len, Int line_num, Int col,
-  Chars msg) {
-  // get source line.
-  // caller is responsible for raw_dealloc of returned CharsM.
+static CharsM str_src_loc(Str path, Int line_num, Int col) {
+  // create a string for displaying file:line:col info.
+  CharsM s;
+  Int s_len = asprintf(&s, "%.*s:%ld:%ld:", FMT_STR(path), line_num + 1, col + 1);
+  counter_inc(ci_Chars); // matches asprinf.
+  check(s_len > 0, "str_src_loc allocation failed");
+  return s;
+}
+
+
+static CharsM str_src_underline(Str src, Int pos, Int len, Int col) {
   Str line = str_line_at_pos_exc(src, pos);
-  Chars opt_sp = (*msg ? " " : ""); // no space for empty message.
-  // create underline.
   Char under[len_buffer] = {}; // zeroes all elements.
-  if (line.len < len_buffer) { // draw underline
+  if (line.len < len_buffer) { // draw underline.
     for_in(i, col) under[i] = ' ';
     if (len > 0) {
       Int last = line.len - col;
@@ -122,11 +127,9 @@ static CharsM str_src_loc_str(Str path, Str src, Int pos, Int len, Int line_num,
       under[col] = '^';
     }
   }
-  // create result.
   CharsM s;
-  Int s_len = asprintf(&s, "%.*s:%ld:%ld:%s%s\n    %.*s\n    %s\n",
-    FMT_STR(path), line_num + 1, col + 1, opt_sp, msg, FMT_STR(line), under);
+  Int s_len = asprintf(&s, "    %.*s\n    %s\n", FMT_STR(line), under);
   counter_inc(ci_Chars); // matches asprinf.
-  check(s_len > 0, "str_src_loc_str allocation failed: %s", msg);
+  check(s_len > 0, "str_src_underline allocation failed");
   return s;
 }

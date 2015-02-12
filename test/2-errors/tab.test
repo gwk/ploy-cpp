@@ -1,7 +1,7 @@
 {
   'code' : 1,
   'err' : '''\
-parse error: test/2-errors/tab.ploy:2:1: illegal tab character
+test/2-errors/tab.ploy:2:1: parse error: illegal tab character
     \t# <-- tab
     ^
 '''

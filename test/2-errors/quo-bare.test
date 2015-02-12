@@ -1,7 +1,7 @@
 {
   'code' : 1,
   'err' : '''\
-parse error: test/2-errors/quo-bare.ploy:1:2: expected sub-expression
+test/2-errors/quo-bare.ploy:1:2: parse error: expected sub-expression
     `
      ^
 '''
