@@ -4,8 +4,6 @@
 set -e
 [[ $(dirname "$0") == sh ]] || { echo "error: must run from root dir" 1>&2; exit 1; }
 
-make -s _bld/ploy-dbg
-
 if [[ $1 == '-b' ]]; then
   echo "NOTE: run.sh -b will omit core files."
   shift;
@@ -13,6 +11,8 @@ if [[ $1 == '-b' ]]; then
 else
   core_files=src-core/*
 fi
+
+make -s _bld/ploy-dbg
 
 #export MallocLogFile=<f> # create/append messages to file <f> instead of stderr.
 export MallocGuardEdges=1 # add 2 guard pages for each large block.
