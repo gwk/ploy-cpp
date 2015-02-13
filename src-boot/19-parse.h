@@ -401,7 +401,8 @@ static Obj parse_expr_dispatch(Parser& p) {
     return parse_Sym(p);
   }
   if (isalpha(c)) {
-    if (P_MATCH(2, "if")) return parse_seq_wrapped(p, t_If, "if", ';');
+    if (P_MATCH(2, "if"))   return parse_seq_wrapped(p, t_If, "if", ';');
+    if (P_MATCH(4, "bind")) return parse_seq_wrapped(p, t_Bind, "bind", ';');
     return parse_Sym(p);
   }
   parse_error("unexpected character: '%s'", char_repr(c));

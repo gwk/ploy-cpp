@@ -86,10 +86,12 @@ static Obj bind_val(Trace* t, Obj env, Bool is_public, Obj key, Obj val) {
 
 static Step run_Bind(Int d, Trace* t, Obj env, Obj code) {
   // owns env.
-  exc_check(code.cmpd_len() == 3, "Bind requires 3 fields; received %i", code.cmpd_len());
-  Obj is_public = code.cmpd_el(0);
-  Obj sym = code.cmpd_el(1);
-  Obj expr = code.cmpd_el(2);
+  assert(code.cmpd_len() == 1);
+  Obj exprs = code.cmpd_el(0);
+  exc_check(exprs.cmpd_len() == 3, "Bind requires 3 fields; received %i", code.cmpd_len());
+  Obj is_public = exprs.cmpd_el(0);
+  Obj sym = exprs.cmpd_el(1);
+  Obj expr = exprs.cmpd_el(2);
   exc_check(is_public.is_bool(), "Bind requires argument 2 to be a Bool; received: %o",
     is_public);
   exc_check(sym.is_sym(), "Bind requires argument 3 to be a bindable sym; received: %o",
@@ -351,6 +353,7 @@ static Obj run_bind_vals(Int d, Trace* t, Obj env, Obj call, Obj variad, Obj ass
 static Step run_call_Func(Int d, Trace* t, Obj env, Obj call, Array vals, Bool is_call) {
   // owns env, func.
   Obj func = vals.el(0);
+  assert(func.type() == t_Func);
   assert(func.cmpd_len() == 8);
   Obj is_native = func.cmpd_el(0);
   Obj is_macro  = func.cmpd_el(1);
@@ -792,6 +795,7 @@ static Obj run_macro(Trace* t, Obj env, Obj code) {
     code, macro_sym);
   Obj macro = env_get(env, macro_sym);
   exc_check(macro.vld(), "expand: %o\nmacro lookup error: %o", code, macro_sym);
+  exc_check(macro.type() == t_Func, "expand; %o\nmacro is not a Func: %o", code, macro);
   Array vals(len * 2 - 1);
   vals.put(0, macro.ret());
   for_imn(i, 1, len) {

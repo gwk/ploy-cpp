@@ -5,25 +5,25 @@
 # this module defines initial versions of many core constructs;
 # some are imported into core, and others are replaced with more capable implementations.
 
-(RUN # special call form to run the argument as code in the current environment.
+bind
   # the 'macro' macro defines a new macro in the current environment.
   # because we cannot use macro to define itself, we must define it using raw forms.
   # note the structural similarity between the outer Fn form and the inner struct literal.
-  (CONS Bind
-    true # is-public.
-    `macro # name.
+  true # is-public.
+  macro # name.
+  (RUN # evaluate the Fn immediately, which returns a Func.
     (CONS Fn # Fn creates both functions and macros.
       true # is-native.
       true # is-macro.
       `[-sym -pars &body] # the parameter list, which does not get evaluated.
-      `(CONS Bind # the body of the 'macro' macro is a Bind form.
+      `(CONS Bind (CONS Arr-Expr # the body of the 'macro' macro is a Bind form.
         true # is-public.
         sym # name.
         (CONS Fn # the value of the binding is created by evaluating the Fn form.
           true # is-native.
           true # is-macro.
           pars
-          body)))))
+          body)))));
 
 # define macros to wrap the special forms.
 
@@ -40,11 +40,11 @@
 
 <macro let [-sym -expr]
   # private binding.
-  (CONS Bind false sym expr)>
+  ~bind false ,sym ,expr;>
 
 <macro pub [-sym -expr]
   # public binding.
-  (CONS Bind true sym expr)>
+  ~bind true ,sym ,expr;>
 
 # the raw forms are now available through macros.
 
