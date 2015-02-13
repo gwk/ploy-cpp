@@ -104,10 +104,12 @@ static Step run_Bind(Int d, Trace* t, Obj env, Obj code) {
 
 static Step run_If(Int d, Trace* t, Obj env, Obj code) {
   // owns env.
-  exc_check(code.cmpd_len() == 3, "If requires 3 fields; received %i", code.cmpd_len());
-  Obj pred = code.cmpd_el(0);
-  Obj then = code.cmpd_el(1);
-  Obj else_ = code.cmpd_el(2);
+  assert(code.cmpd_len() == 1);
+  Obj exprs = code.cmpd_el(0);
+  exc_check(exprs.cmpd_len() == 3, "If requires 3 fields; received %i", exprs.cmpd_len());
+  Obj pred = exprs.cmpd_el(0);
+  Obj then = exprs.cmpd_el(1);
+  Obj else_ = exprs.cmpd_el(2);
   Step step = run(d, t, env, pred);
   env = step.res.env;
   Obj branch = step.res.val.is_true() ? then : else_;

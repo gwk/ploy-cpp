@@ -32,14 +32,14 @@
 <scope # transform-arr-by-el.
   <let o (CONS Arr-Int 0 1 2)> # original.
   <utest true (is o (transform-arr-by-el o <fn [-e] e>))>
-  <utest (CONS Arr-Int 0 2 3) (transform-arr-by-el o <fn [-e] <_if e (iinc e) e>>)>>
+  <utest (CONS Arr-Int 0 2 3) (transform-arr-by-el o <fn [-e] if e (iinc e) e;>)>>
 
 <scope # transform-struct.
   <let o `-a:b=c> # original.
   <utest true (is o (transform-struct o <fn [-n -v] v>))>
-  <utest `-n:b=c (transform-struct o <fn [-n -v] <_if (is n `name) `n v>>)>
-  <utest `-a:t=c (transform-struct o <fn [-n -v] <_if (is n `type) `t v>>)>
-  <utest `-a:b=e (transform-struct o <fn [-n -v] <_if (is n `expr) `e v>>)>>
+  <utest `-n:b=c (transform-struct o <fn [-n -v] if (is n `name) `n v;>)>
+  <utest `-a:t=c (transform-struct o <fn [-n -v] if (is n `type) `t v;>)>
+  <utest `-a:b=e (transform-struct o <fn [-n -v] if (is n `expr) `e v;>)>>
 
 <scope # List.
   <let l (list-new)>

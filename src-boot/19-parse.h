@@ -66,10 +66,15 @@ if (!(condition)) parse_error(fmt, ##__VA_ARGS__)
 
 #define P_CHARS (p.s.chars + p.pos.off)
 
+#define P_MATCH(kw_len, kw_chars) \
+((p.pos.off < p.s.len - kw_len) && \
+  memcmp(P_CHARS, kw_chars, kw_len) == 0 && \
+  isspace(p.s.chars[p.pos.off + kw_len]))
+
 
 static Bool char_is_seq_term(Char c) {
   // character terminates a syntactic sequence.
-  return c == ')' || c == ']' || c == '}' || c == '>';
+  return c == ')' || c == ']' || c == '}' || c == '>' || c == ';';
 }
 
 
@@ -336,7 +341,7 @@ static Obj parse_exprs(Parser& p) {
 }
 
 
-static Obj parse_seq(Parser& p, Obj type, Chars chars_open, Char char_close) {
+static Obj parse_seq(Parser& p, Chars chars_open, Char char_close) {
   Src_pos pos = p.pos;
   while (*chars_open) {
     assert(PC == *chars_open);
@@ -351,9 +356,12 @@ static Obj parse_seq(Parser& p, Obj type, Chars chars_open, Char char_close) {
     fail();
   }
   P_ADV(1);
-  if (type == t_Arr_Expr) {
-    return a;
-  }
+  return a;
+}
+
+
+static Obj parse_seq_wrapped(Parser& p, Obj type, Chars chars_open, Char char_close) {
+  Obj a = parse_seq(p, chars_open, char_close);
   return Obj::Cmpd(type.ret(), a);
 }
 
@@ -362,10 +370,10 @@ static Obj parse_seq(Parser& p, Obj type, Chars chars_open, Char char_close) {
 static Obj parse_expr_dispatch(Parser& p) {
   Char c = PC;
   switch (c) {
-    case '<':   return parse_seq(p, t_Expand,   "<", '>');
-    case '(':   return parse_seq(p, t_Call,     "(", ')');
-    case '{':   return parse_seq(p, t_Arr_Expr, "{", '}');
-    case '[':   return parse_seq(p, t_Syn_seq,  "[", ']');
+    case '{':   return parse_seq(p, "{", '}');
+    case '<':   return parse_seq_wrapped(p, t_Expand,   "<", '>');
+    case '(':   return parse_seq_wrapped(p, t_Call,     "(", ')');
+    case '[':   return parse_seq_wrapped(p, t_Syn_seq,  "[", ']');
     case '`':   return parse_Quo(p);
     case '~':   return parse_Qua(p);
     case ',':   return parse_Unq(p);
@@ -389,7 +397,11 @@ static Obj parse_expr_dispatch(Parser& p) {
   if (isdigit(c)) {
     return parse_uns(p);
   }
-  if (c == '_' || isalpha(c)) {
+  if (c == '_') {
+    return parse_Sym(p);
+  }
+  if (isalpha(c)) {
+    if (P_MATCH(2, "if")) return parse_seq_wrapped(p, t_If, "if", ';');
     return parse_Sym(p);
   }
   parse_error("unexpected character: '%s'", char_repr(c));

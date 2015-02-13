@@ -258,6 +258,7 @@ static void write_repr_dispatch(CFile f, Obj s, Bool is_quoted, Int depth, Set& 
   DISP_SEQ(Syn_seq, "[", ']');
   DISP_SEQ(Expand, "<", '>');
   DISP_SEQ(Call, "(", ')');
+  DISP_SEQ(If, "if ", ';');
   #undef DISP_SEQ
 
   write_repr_default(f, s, is_quoted, depth, set);

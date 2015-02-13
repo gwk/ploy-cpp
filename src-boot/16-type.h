@@ -34,7 +34,7 @@ T(Mutator,          struct1, "name", t_Sym) \
 T(Expand,           struct1, "exprs", t_Arr_Expr) \
 T(Call,             struct1, "exprs", t_Arr_Expr) \
 T(Syn_seq,          struct1, "exprs", t_Arr_Expr) \
-T(If,               struct3, "pred", t_Expr, "then", t_Expr, "else", t_Expr) \
+T(If,               struct1, "exprs", t_Arr_Expr) \
 T(Bind,             struct3,  "is-pub", t_Bool, "name", t_Sym, "expr", t_Expr) \
 T(Label,            struct3, "name", t_Expr, "type", t_Expr, "expr", t_Expr) \
 T(Variad,           struct2, "name", t_Expr, "type", t_Expr) \

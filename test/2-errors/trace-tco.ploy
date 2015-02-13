@@ -1,8 +1,8 @@
 <let-fn f [-n]
-  <_if n
+  if n
     <scope
       { void
         (self (isub n 1))}>
-    unbound>>
+    unbound;>
 
 (f 5)
