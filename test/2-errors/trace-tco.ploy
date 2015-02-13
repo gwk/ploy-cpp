@@ -2,7 +2,7 @@
   if n
     <scope
       { void
-        (self (isub n 1))}>
+        (f (isub n 1))}>
     unbound;>
 
 (f 5)

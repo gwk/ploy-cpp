@@ -67,15 +67,6 @@ static Step run_Arr_Expr(Int d, Trace* t, Obj env, Obj code) {
 }
 
 
-static Step run_Scope(UNUSED Int d, Trace* t, Obj env, Obj code) {
-  // owns env.
-  exc_check(code.cmpd_len() == 1, "Scope requires 1 field; received %i", code.cmpd_len());
-  Obj expr = code.cmpd_el(0);
-  Obj sub_env = env_push_frame(env.ret());
-  return Step(env, sub_env, expr);
-}
-
-
 static Obj bind_val(Trace* t, Obj env, Bool is_public, Obj key, Obj val) {
   // owns env, key, val.
   Obj env1 = env_bind(env, is_public, key, val);
@@ -691,7 +682,6 @@ static Step run_step_disp(Int d, Trace* t, Obj env, Obj code) {
 #define DISP(form) if (type == t_##form) return run_##form(d, t, env, code)
   DISP(Quo);
   DISP(Arr_Expr);
-  DISP(Scope);
   DISP(Bind);
   DISP(If);
   DISP(Fn);

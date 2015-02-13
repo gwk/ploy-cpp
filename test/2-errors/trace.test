@@ -6,39 +6,39 @@ trace:
   `unbound
   … 2
   test/2-errors/trace.ploy:4:9:
-          { (self (isub n 1))
-            ~~~~~~~~~~~~~~~~~
+          { (f (isub n 1))
+            ~~~~~~~~~~~~~~
   test/2-errors/trace.ploy:4:7:
-          { (self (isub n 1))
-          ~~~~~~~~~~~~~~~~~~~-
+          { (f (isub n 1))
+          ~~~~~~~~~~~~~~~~-
   … 4
   test/2-errors/trace.ploy:4:9:
-          { (self (isub n 1))
-            ~~~~~~~~~~~~~~~~~
+          { (f (isub n 1))
+            ~~~~~~~~~~~~~~
   test/2-errors/trace.ploy:4:7:
-          { (self (isub n 1))
-          ~~~~~~~~~~~~~~~~~~~-
+          { (f (isub n 1))
+          ~~~~~~~~~~~~~~~~-
   … 4
   test/2-errors/trace.ploy:4:9:
-          { (self (isub n 1))
-            ~~~~~~~~~~~~~~~~~
+          { (f (isub n 1))
+            ~~~~~~~~~~~~~~
   test/2-errors/trace.ploy:4:7:
-          { (self (isub n 1))
-          ~~~~~~~~~~~~~~~~~~~-
+          { (f (isub n 1))
+          ~~~~~~~~~~~~~~~~-
   … 4
   test/2-errors/trace.ploy:4:9:
-          { (self (isub n 1))
-            ~~~~~~~~~~~~~~~~~
+          { (f (isub n 1))
+            ~~~~~~~~~~~~~~
   test/2-errors/trace.ploy:4:7:
-          { (self (isub n 1))
-          ~~~~~~~~~~~~~~~~~~~-
+          { (f (isub n 1))
+          ~~~~~~~~~~~~~~~~-
   … 4
   test/2-errors/trace.ploy:4:9:
-          { (self (isub n 1))
-            ~~~~~~~~~~~~~~~~~
+          { (f (isub n 1))
+            ~~~~~~~~~~~~~~
   test/2-errors/trace.ploy:4:7:
-          { (self (isub n 1))
-          ~~~~~~~~~~~~~~~~~~~-
+          { (f (isub n 1))
+          ~~~~~~~~~~~~~~~~-
   … 4
   test/2-errors/trace.ploy:8:1:
     (f 5)

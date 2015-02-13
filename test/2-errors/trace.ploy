@@ -1,7 +1,7 @@
 <let-fn f [-n]
   if n
     <scope
-      { (self (isub n 1))
+      { (f (isub n 1))
         void}>
     unbound;>
 

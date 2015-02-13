@@ -27,7 +27,6 @@ T(Qua,              struct1, "expr", t_Expr) \
 T(Unq,              struct1, "expr", t_Expr) \
 T(Bang,             struct1, "expr", t_Expr) \
 T(Quo,              struct1, "expr", t_Expr) \
-T(Scope,            struct1, "expr", t_Expr) \
 T(Splice,           struct1, "expr", t_Expr) \
 T(Accessor,         struct1, "name", t_Sym) \
 T(Mutator,          struct1, "name", t_Sym) \
@@ -210,7 +209,6 @@ static Obj type_kind_union_expr() {
       t_Bang.ret(),
       t_Quo.ret(),
       t_Arr_Expr.ret(),
-      t_Scope.ret(),
       t_Bind.ret(),
       t_If.ret(),
       t_Fn.ret(),

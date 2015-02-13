@@ -35,9 +35,6 @@ bind
     pars
     body)>
 
-<macro scope [&body]
-  (CONS Scope body)>
-
 <macro let [-sym -expr]
   # private binding.
   ~bind false ,sym ,expr;>
@@ -47,6 +44,9 @@ bind
   ~bind true ,sym ,expr;>
 
 # the raw forms are now available through macros.
+
+<macro scope [&body]
+  ~(<fn [] ,*body>)>
 
 <macro let-fn [-sym -pars &body]
   ~<let ,sym <fn ,pars <let ,sym self> ,*body>>>
