@@ -465,8 +465,7 @@ bind
   <let fields-orig (.fields kind)>
   <let fields-derived (transform-arr-by-el fields-orig <fn [-e] (derive-type e dict)>)>
   if (is fields-derived fields) type
-     # for now, just ignore the struct dispatcher.
-    (CONS Type (derive-name (.name type) dict) (CONS Type-kind-struct fields-derived nil));>
+    (CONS Type (derive-name (.name type) dict) (CONS Type-kind-struct fields-derived));>
 
 <let-fn derive-union [-derive-type:Func -name:Expr -kind:Type-kind-union -dict-List]
   # derive a union type from an abstract type and a list-dict mapping type-vars to types.
