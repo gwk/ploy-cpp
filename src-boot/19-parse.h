@@ -56,8 +56,8 @@ static void parse_err_prefix(Parser& p) {
 if (!(condition)) parse_error(fmt, ##__VA_ARGS__)
 
 
-#define PP  (p.pos.off < p.s.len)
-#define PP1 (p.pos.off < p.s.len - 1)
+#define PP  (p.pos.off < p.s.len - 1) // 1 for null terminator.
+#define PP1 (p.pos.off < p.s.len - 2) // 2 for next plus null terminator.
 
 #define PC  p.s.chars[p.pos.off]
 #define PC1 p.s.chars[p.pos.off + 1]
@@ -74,7 +74,7 @@ if (!(condition)) parse_error(fmt, ##__VA_ARGS__)
 
 static Bool char_is_seq_term(Char c) {
   // character terminates a syntactic sequence.
-  return c == ')' || c == ']' || c == '}' || c == '>' || c == ';';
+  return c == ')' || c == ']' || c == '}' || c == '>' || c == ';' || c == '\0';
 }
 
 
@@ -104,7 +104,7 @@ static U64 parse_U64(Parser& p) {
   }
   Chars start = p.s.chars + p.pos.off;
   CharsM end;
-  // TODO: this appears unsafe if source string is not null-terminated.
+  // note: this is safe only because source string is guaranteed to be null-terminated.
   U64 u = strtoull(start, &end, base);
   int en = errno;
   parse_check(!en, "malformed number literal: %s", strerror(en));
@@ -430,15 +430,17 @@ static Obj parse_expr(Parser& p) {
 
 
 static Obj parse_sub_expr(Parser& p) {
-  parse_check(PP, "expected sub-expression");
+  parse_check(p.pos.off < p.s.len - 1, "expected sub-expression");
   return parse_expr(p);
 }
 
 
 static Obj parse_src(Dict& src_locs, Obj path, Obj src) {
   Parser p = Parser(&src_locs, path, src, src.data_str(), Src_pos(0, 0, 0));
+  // input string is required to be null terminated, due to use of strtoull.
+  assert(p.s.chars[p.s.len - 1] == '\0');
   Obj a = parse_exprs(p);
-  if (p.pos.off != p.s.len) {
+  if (PP) {
     parse_error("parsing terminated early");
   }
   return a;

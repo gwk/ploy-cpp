@@ -34,6 +34,7 @@ static Chars char_repr(Char c) {
   CharsM r = reprs[Int(c)];
   if (*r) return r;
   switch (c) {
+    case '\0': strcpy(r, "\\0");   break; // null.
     case '\a': strcpy(r, "\\a");   break; // bell - BEL
     case '\b': strcpy(r, "\\b");   break; // backspace - BS
     case '\f': strcpy(r, "\\f");   break; // form feed - FF

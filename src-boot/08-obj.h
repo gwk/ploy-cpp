@@ -463,26 +463,37 @@ public:
     return d;
   }
   
-  static Obj Data(Chars c) {
-    Uns len = strnlen(c, max_Int);
-    check(len <= max_Int, "%s: string exceeded max length", __func__);
-    Obj d = data_new_raw(Int(len));
-    memcpy(d.data_ref_charsM(), c, len);
+  static Obj Data(Chars c, Bool add_null_term=false) {
+    Int null_pad = add_null_term ? 1 : 0;
+    Int exc_len = max_Int - null_pad;
+    Int len = Int(strnlen(c, Uns(exc_len)));
+    check(len < exc_len, "%s: string exceeded max length", __func__);
+    Obj d = data_new_raw(len + null_pad);
+    CharsM p = d.data_ref_charsM();
+    memcpy(p, c, Uns(len));
+    if (add_null_term) {
+      p[len] = '\0';
+    }
     return d;
   }
   
-  static Obj Data_from_path(Chars path) {
+  static Obj Data_from_path(Chars path, Bool add_null_term=false) {
+    Int null_pad = add_null_term ? 1 : 0;
     CFile f = fopen(path, "r");
     check(f, "could not open file: %s", path);
     fseek(f, 0, SEEK_END);
     Int len = ftell(f);
-    if (!len) return blank.ret_val();
-    Obj d = data_new_raw(len);
+    if (len + null_pad == 0) return blank.ret_val();
+    Obj d = data_new_raw(len + null_pad);
     fseek(f, 0, SEEK_SET);
-    Uns items_read = fread(d.data_ref_charsM(), size_Char, Uns(len), f);
+    CharsM p = d.data_ref_charsM();
+    Uns items_read = fread(p, size_Char, Uns(len), f);
     check(Int(items_read) == len,
           "read failed; expected len: %i; actual: %u; path: %s", len, items_read, path);
     fclose(f);
+    if (add_null_term) {
+      p[len] = '\0';
+    }
     return d;
   }
   

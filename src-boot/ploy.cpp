@@ -79,13 +79,13 @@ int main(int argc, Chars argv[]) {
   for_in(i, path_count) {
     env = env_push_frame(env);
     path = Obj::Data(paths[i]);
-    src = Obj::Data_from_path(paths[i]);
+    src = Obj::Data_from_path(paths[i], true);
     env = parse_and_eval(global_src_locs, env, path, src, false);
   }
   if (expr) {
     env = env_push_frame(env);
     path = Obj::Data("<expr>");
-    src = Obj::Data(expr);
+    src = Obj::Data(expr, true);
     env = parse_and_eval(global_src_locs, env, path, src, should_output_val);
   }
 
