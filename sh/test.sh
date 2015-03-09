@@ -11,4 +11,5 @@ else
   suffix=''
 fi
 
+make -s _bld/ploy$suffix
 tools/run-tests.sh _bld/ploy$suffix "$@"
