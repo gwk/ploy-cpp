@@ -1,0 +1,8 @@
+{
+  'code' : 1,
+  'err' : '''\
+test/2-errors/uns-2exp64.ploy:1:1: parse error: malformed number literal: Result too large
+    18446744073709551616 # 2^64.
+    ^
+'''
+}

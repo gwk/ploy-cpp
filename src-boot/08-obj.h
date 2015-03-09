@@ -22,8 +22,7 @@ static const Int width_tagged_word = width_Word - width_obj_tag;
 
 static const Uns obj_tag_mask = obj_tag_end - 1;
 static const Uns obj_body_mask = ~obj_tag_mask;
-static const Int max_Int_tagged = (1L << width_tagged_word) - 1;
-static const Uns max_Uns_tagged = max_Int_tagged;
+static const Int max_Int_tagged = (1L << (width_tagged_word - 1)) - 1;
 // we cannot shift signed values in C so we use multiplication by powers of 2 instead.
 static const Int scale_factor_Int = 1L << width_obj_tag;
 
@@ -337,7 +336,7 @@ union Obj {
   
   
   static Obj with_U64(U64 u) {
-    check(u < U64(max_Uns_tagged), "large Uns values not yet supported.");
+    check(u < U64(max_Int_tagged), "large Uns values not yet supported.");
     return with_Int(Int(u));
   }
   

@@ -1,0 +1,8 @@
+{
+  'code' : 1,
+  'err' : '''\
+test/2-errors/uns-incomplete-eos.ploy:1:3: parse error: incomplete number literal (EOS)
+    0x
+      ^
+'''
+}

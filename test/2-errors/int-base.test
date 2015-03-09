@@ -1,8 +1,0 @@
-{
-  'code' : 1,
-  'err' : '''\
-test/2-errors/int-base.ploy:1:2: parse error: invalid number literal terminator: z
-    0z0
-     ^
-'''
-}
