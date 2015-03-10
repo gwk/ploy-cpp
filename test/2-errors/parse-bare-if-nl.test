@@ -1,0 +1,11 @@
+{
+  'code' : 1,
+  'err' : '''\
+test/2-errors/parse-bare-if-nl.ploy:1:1: parse error: expression starting here is missing terminator: ';'
+    if
+    ^
+test/2-errors/parse-bare-if-nl.ploy:2:1: expression appears to end here
+    
+    ^
+'''
+}

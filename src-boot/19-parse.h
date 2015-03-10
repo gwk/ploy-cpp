@@ -67,10 +67,12 @@ if (!(condition)) parser_error(fmt, ##__VA_ARGS__)
 
 #define P_CHARS (p.s.chars + p.pos.off)
 
+// note: we specify "kw_len - 1" to allow matching a bare, terminal keyword;
+// this allows the parser to diagnose the keyword as such, rather than treating it as a Sym.
 #define P_MATCH(kw_len, kw_chars) \
-(P_SOME_AHEAD(kw_len + 1) && \
+(P_SOME_AHEAD(kw_len - 1) && \
   memcmp(P_CHARS, kw_chars, kw_len) == 0 && \
-  isspace(P_CHARS[kw_len])) // 1 accounts for required trailing space.
+  !char_is_sym_subsequent(P_CHARS[kw_len]))
 
 
 static Bool char_is_seq_term(Char c) {
@@ -82,6 +84,14 @@ static Bool char_is_seq_term(Char c) {
 static Bool char_is_atom_term(Char c) {
   // character terminates an atom.
   return c == '|' || c == ':' || c == '=' || isspace(c) || char_is_seq_term(c);
+}
+
+static Bool char_is_sym_init(Char c) {
+  return c == '_' || isalpha(c);
+}
+
+static Bool char_is_sym_subsequent(Char c) {
+  return char_is_sym_init(c) || c == '-' || isdigit(c);
 }
 
 
@@ -134,12 +144,12 @@ static Obj parse_Int(Parser& p, Int sign) {
 
 
 static Obj parse_Sym(Parser& p) {
-  assert(P_CHAR == '_' || isalpha(P_CHAR));
+  assert(char_is_sym_init(P_CHAR));
   Int off = p.pos.off;
   loop {
     P_ADV(1, break);
     Char c = P_CHAR;
-    if (!(c == '-' || c == '_' || isalnum(c))) break;
+    if (!char_is_sym_subsequent(c)) break;
   }
   Str s = str_slice(p.s, off, p.pos.off);
   return Obj::Sym(s, true);
@@ -342,13 +352,10 @@ static Obj parse_exprs(Parser& p) {
 }
 
 
-static Obj parse_seq(Parser& p, Chars chars_open, Char char_close) {
-  Src_pos pos = p.pos;
-  while (*chars_open) {
-    assert(P_CHAR == *chars_open);
-    chars_open++;
-    P_ADV(1, parser_error("expected terminator: '%c'", char_close));
-  }
+static Obj parse_seq(Parser& p, Int len_open, Chars chars_open, Char char_close) {
+  DEF_POS;
+  P_ADV(len_open, parser_error("'%s' expression missing terminator: '%c'",
+   chars_open, char_close));
   Obj a = parse_exprs(p);
   if (P_CHAR != char_close) {
     fmt_parser_error(pos, "parse error: expression starting here is missing terminator: '%c'",
@@ -361,8 +368,9 @@ static Obj parse_seq(Parser& p, Chars chars_open, Char char_close) {
 }
 
 
-static Obj parse_seq_wrapped(Parser& p, Obj type, Chars chars_open, Char char_close) {
-  Obj a = parse_seq(p, chars_open, char_close);
+static Obj parse_seq_wrapped(Parser& p, Obj type, Int len_open, Chars chars_open,
+  Char char_close) {
+  Obj a = parse_seq(p, len_open, chars_open, char_close);
   return Obj::Cmpd(type.ret(), a);
 }
 
@@ -371,10 +379,10 @@ static Obj parse_seq_wrapped(Parser& p, Obj type, Chars chars_open, Char char_cl
 static Obj parse_expr_dispatch(Parser& p) {
   Char c = P_CHAR;
   switch (c) {
-    case '{':   return parse_seq(p, "{", '}');
-    case '<':   return parse_seq_wrapped(p, t_Expand,   "<", '>');
-    case '(':   return parse_seq_wrapped(p, t_Call,     "(", ')');
-    case '[':   return parse_seq_wrapped(p, t_Syn_seq,  "[", ']');
+    case '{':   return parse_seq(p, 1, "{", '}');
+    case '<':   return parse_seq_wrapped(p, t_Expand,   1, "<", '>');
+    case '(':   return parse_seq_wrapped(p, t_Call,     1, "(", ')');
+    case '[':   return parse_seq_wrapped(p, t_Syn_seq,  1, "[", ']');
     case '`':   return parse_Quo(p);
     case '~':   return parse_Qua(p);
     case ',':   return parse_Unq(p);
@@ -393,7 +401,6 @@ static Obj parse_expr_dispatch(Parser& p) {
     case '-':
       if (P_SOME_AHEAD(1) && isdigit(P_NEXT)) return parse_Int(p, -1);
       return parse_Label(p);
-
   }
   if (isdigit(c)) {
     return parse_uns(p);
@@ -402,9 +409,8 @@ static Obj parse_expr_dispatch(Parser& p) {
     return parse_Sym(p);
   }
   if (isalpha(c)) {
-    // note: P_MATCH requires a trailing space, which is later consumed by parse_exprs.
-    if (P_MATCH(2, "if"))   return parse_seq_wrapped(p, t_If, "if", ';');
-    if (P_MATCH(4, "bind")) return parse_seq_wrapped(p, t_Bind, "bind", ';');
+    if (P_MATCH(2, "if"))   return parse_seq_wrapped(p, t_If, 2, "if", ';');
+    if (P_MATCH(4, "bind")) return parse_seq_wrapped(p, t_Bind, 4, "bind", ';');
     return parse_Sym(p);
   }
   parser_error("unexpected character: '%s'", char_repr(c));

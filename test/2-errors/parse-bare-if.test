@@ -1,0 +1,8 @@
+{
+  'code' : 1,
+  'err' : '''\
+test/2-errors/parse-bare-if.ploy:1:3: parse error: 'if' expression missing terminator: ';'
+    if
+      ^
+'''
+}
