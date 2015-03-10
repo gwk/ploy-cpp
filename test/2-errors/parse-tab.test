@@ -1,0 +1,8 @@
+{
+  'code' : 1,
+  'err' : '''\
+test/2-errors/parse-tab.ploy:2:1: parse error: illegal tab character
+    \t# <-- tab
+    ^
+'''
+}

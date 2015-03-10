@@ -1,0 +1,8 @@
+{
+  'code' : 1,
+  'err' : '''\
+test/2-errors/parse-bare-quo-nl.ploy:1:2: parse error: unexpected character: '\\n'
+    `
+     ^
+'''
+}
