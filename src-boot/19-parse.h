@@ -320,13 +320,13 @@ static Bool parse_space(Parser& p) {
     Char c = P_CHAR;
     switch (c) {
       case ' ':
-        P_ADV(1, break);
-       break ;
-      case '\n':
+        P_ADV(1, return false); // note: failure clause is redundant with while loop termination.
+        continue;
+      case '\n': // advance source position line instead of usual P_ADV.
         p.pos.off++;
         p.pos.line++;
         p.pos.col = 0;
-        break;
+        continue;
       case '\t':
         parser_error("illegal tab character");
       default:
@@ -335,6 +335,14 @@ static Bool parse_space(Parser& p) {
     }
   }
   return false; // EOS.
+}
+
+static Obj parse_adj(Parser& p, Obj type, Int len_open, Chars chars_adj) {
+  P_ADV(len_open, parser_error("adjective '%s' expects subexpression", chars_adj));
+  parser_check(isspace(P_CHAR), "adjective '%s' requires space", chars_adj);
+  parse_space(p);
+  Obj expr = parse_sub_expr(p);
+  return Obj::Cmpd(type.ret(), expr);
 }
 
 
@@ -411,6 +419,7 @@ static Obj parse_expr_dispatch(Parser& p) {
   if (isalpha(c)) {
     if (P_MATCH(2, "if"))   return parse_seq_wrapped(p, t_If, 2, "if", ';');
     if (P_MATCH(4, "bind")) return parse_seq_wrapped(p, t_Bind, 4, "bind", ';');
+    if (P_MATCH(3, "pub"))  return parse_adj(p, t_Pub, 3, "pub");
     return parse_Sym(p);
   }
   parser_error("unexpected character: '%s'", char_repr(c));
@@ -438,7 +447,7 @@ static Obj parse_expr(Parser& p) {
 
 
 static Obj parse_sub_expr(Parser& p) {
-  parser_check(p.pos.off < p.s.len - 1, "expected sub-expression");
+  parser_check(P_SOME, "expected sub-expression");
   return parse_expr(p);
 }
 

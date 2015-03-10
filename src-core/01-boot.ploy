@@ -39,10 +39,6 @@ bind
   # private binding.
   ~bind false ,sym ,expr;>
 
-<macro pub [-sym -expr]
-  # public binding.
-  ~bind true ,sym ,expr;>
-
 # the raw forms are now available through macros.
 
 <macro scope [&body]
@@ -51,20 +47,17 @@ bind
 <macro let-fn [-sym -pars &body]
   ~<let ,sym <fn ,pars <let ,sym self> ,*body>>>
 
-<macro pub-fn [-sym -pars &body]
-  ~<pub ,sym <fn ,pars <let ,sym self> ,*body>>>
-
 <let alen cmpd-len> # for now use a simple alias.
 
 # math functions.
 
-<pub-fn iinc [-i] (iadd i 1)>
+pub <let-fn iinc [-i] (iadd i 1)>
 
-<pub-fn idec [-i] (isub i 1)>
+pub <let-fn idec [-i] (isub i 1)>
 
 # control flow.
 
-<pub-fn error [-msg]
+pub <let-fn error [-msg]
   # raise an error. for now we can only print the message and exit.
   (raise msg)>
 
@@ -104,22 +97,22 @@ bind
 
 # type functions.
 
-<pub-fn is-call   [-o] (is (type-of o) Call)>
-<pub-fn is-data   [-o] (is (type-of o) Data)>
-<pub-fn is-env    [-o] (is (type-of o) Env)>
-<pub-fn is-int    [-o] (is (type-of o) Int)>
-<pub-fn is-label  [-o] (is (type-of o) Label)>
-<pub-fn is-ptr    [-o] (is (type-of o) Ptr)>
-<pub-fn is-sym    [-o] (is (type-of o) Sym)>
-<pub-fn is-type   [-o] (is (type-of o) Type)>
-<pub-fn is-variad [-o] (is (type-of o) Variad)>
+pub <let-fn is-call   [-o] (is (type-of o) Call)>
+pub <let-fn is-data   [-o] (is (type-of o) Data)>
+pub <let-fn is-env    [-o] (is (type-of o) Env)>
+pub <let-fn is-int    [-o] (is (type-of o) Int)>
+pub <let-fn is-label  [-o] (is (type-of o) Label)>
+pub <let-fn is-ptr    [-o] (is (type-of o) Ptr)>
+pub <let-fn is-sym    [-o] (is (type-of o) Sym)>
+pub <let-fn is-type   [-o] (is (type-of o) Type)>
+pub <let-fn is-variad [-o] (is (type-of o) Variad)>
 
-<pub-fn is-arr    [-o] (is (type-of (.kind (type-of o))) Type-kind-arr)>
-<pub-fn is-struct [-o] (is (type-of (.kind (type-of o))) Type-kind-struct)>
+pub <let-fn is-arr    [-o] (is (type-of (.kind (type-of o))) Type-kind-arr)>
+pub <let-fn is-struct [-o] (is (type-of (.kind (type-of o))) Type-kind-struct)>
 
-<pub-fn is-cmpd [-o] <or (is-arr o) (is-struct o)>>
+pub <let-fn is-cmpd [-o] <or (is-arr o) (is-struct o)>>
 
-<pub-fn is-type-conforming [-act:Type -req:Type]
+pub <let-fn is-type-conforming [-act:Type -req:Type]
   # TODO!
   true>
 
@@ -135,7 +128,7 @@ bind
   (write-repr (.ptr file) obj)>
 
 <macro pub-writer [-name -writer1 -file -sep -end]
-  ~<pub-fn ,name [&items]
+  ~pub <let-fn ,name [&items]
     <recur [-i=0]
       if (ieq i (alen items))
         (write1 ,file ,end)
@@ -173,9 +166,9 @@ bind
 
 # comparison.
 
-<pub-fn isnt [-a -b] (not (is a b))>
+pub <let-fn isnt [-a -b] (not (is a b))>
 
-<pub-fn iso [-a -b]
+pub <let-fn iso [-a -b]
   <cond
     (is a b) true
     (isnt (type-of a) (type-of b)) false
@@ -195,15 +188,15 @@ bind
               (not (iso ai bi)) false
               (self (iinc i))>>}>}>>
 
-<pub-fn not-iso [-a -b] (not (iso a b))>
+pub <let-fn not-iso [-a -b] (not (iso a b))>
 
 # const.
 
-<pub-fn const [-val] <fn [] val>>
+pub <let-fn const [-val] <fn [] val>>
 
-<pub-fn const1 [-val] <fn [-a] val>>
+pub <let-fn const1 [-val] <fn [-a] val>>
 
-<pub-fn const2 [-val] <fn [-a -b] val>>
+pub <let-fn const2 [-val] <fn [-a -b] val>>
 
 # unit tests.
 

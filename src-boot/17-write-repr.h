@@ -195,6 +195,17 @@ static void write_repr_Arr_Expr(CFile f, Obj o, Bool is_quoted, Int depth, Set& 
 }
 
 
+static void write_repr_adj(CFile f, Obj o, Bool is_quoted, Int depth, Set& set, Chars name) {
+  assert(o.cmpd_len() == 1);
+  if (!is_quoted) {
+    fputc('`', f);
+  }
+  fputs(name, f);
+  fputc(' ', f);
+  write_repr_obj (f, o.cmpd_el(0), true, depth, set);
+}
+
+
 static void write_repr_syn_seq(CFile f, Obj s, Bool is_quoted, Int depth, Set& set,
   Chars chars_open, Char char_close) {
   assert(s.cmpd_len() == 1);
@@ -251,6 +262,11 @@ static void write_repr_dispatch(CFile f, Obj s, Bool is_quoted, Int depth, Set& 
   DISP(Mutator);
   DISP(Arr_Expr);
   #undef DISP
+
+  #define DISP_ADJ(t, n) \
+  if (type == t_##t) { write_repr_adj(f, s, is_quoted, depth, set, n); return; }
+  DISP_ADJ(Pub, "pub");
+  #undef DISP_ADJ
 
   #define DISP_SEQ(t, o, c) \
   if (type == t_##t) { write_repr_syn_seq(f, s, is_quoted, depth, set, o, c); return; }

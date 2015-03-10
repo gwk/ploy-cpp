@@ -30,6 +30,7 @@ T(Quo,              struct1, "expr", t_Expr) \
 T(Splice,           struct1, "expr", t_Expr) \
 T(Accessor,         struct1, "name", t_Sym) \
 T(Mutator,          struct1, "name", t_Sym) \
+T(Pub,              struct1, "expr", t_Expr) \
 T(Expand,           struct1, "exprs", t_Arr_Expr) \
 T(Call,             struct1, "exprs", t_Arr_Expr) \
 T(Syn_seq,          struct1, "exprs", t_Arr_Expr) \
@@ -206,15 +207,24 @@ static Obj type_kind_union_expr() {
       t_Int.ret(),
       t_Sym.ret(),
       t_Data.ret(),
+      t_Comment.ret(),
+      t_Qua.ret(),
+      t_Unq.ret(),
       t_Bang.ret(),
       t_Quo.ret(),
-      t_Arr_Expr.ret(),
-      t_Bind.ret(),
-      t_If.ret(),
-      t_Fn.ret(),
-      t_Syn_seq.ret(),
+      t_Splice.ret(),
+      t_Accessor.ret(),
+      t_Mutator.ret(),
+      t_Pub.ret(),
+      t_Expand.ret(),
       t_Call.ret(),
-      t_Expand.ret()));
+      t_Syn_seq.ret(),
+      t_If.ret(),
+      t_Bind.ret(),
+      t_Label.ret(),
+      t_Variad.ret(),
+      t_Fn.ret(),
+      t_Arr_Expr.ret()));
 }
 
 

@@ -75,6 +75,16 @@ static Obj bind_val(Trace* t, Obj env, Bool is_public, Obj key, Obj val) {
 }
 
 
+static Step run_Pub(Int d, Trace* t, Obj env, Obj code) {
+  // owns env.
+  assert(code.cmpd_len() == 1);
+  Obj sub = code.cmpd_el(0);
+  Step step = run(d, t, env, sub);
+  // TODO: export.
+  return step;
+}
+
+
 static Step run_Bind(Int d, Trace* t, Obj env, Obj code) {
   // owns env.
   assert(code.cmpd_len() == 1);
@@ -683,6 +693,7 @@ static Step run_step_disp(Int d, Trace* t, Obj env, Obj code) {
   DISP(Quo);
   DISP(Arr_Expr);
   DISP(Bind);
+  DISP(Pub);
   DISP(If);
   DISP(Fn);
   DISP(Call);
