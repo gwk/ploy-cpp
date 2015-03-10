@@ -35,7 +35,7 @@ T(Expand,           struct1, "exprs", t_Arr_Expr) \
 T(Call,             struct1, "exprs", t_Arr_Expr) \
 T(Syn_seq,          struct1, "exprs", t_Arr_Expr) \
 T(If,               struct1, "exprs", t_Arr_Expr) \
-T(Bind,             struct1, "exprs", t_Arr_Expr) \
+T(Let,              struct1, "exprs", t_Arr_Expr) \
 T(Label,            struct3, "name", t_Expr, "type", t_Expr, "expr", t_Expr) \
 T(Variad,           struct2, "name", t_Expr, "type", t_Expr) \
 T(Fn,               struct_fn) \
@@ -220,7 +220,7 @@ static Obj type_kind_union_expr() {
       t_Call.ret(),
       t_Syn_seq.ret(),
       t_If.ret(),
-      t_Bind.ret(),
+      t_Let.ret(),
       t_Label.ret(),
       t_Variad.ret(),
       t_Fn.ret(),

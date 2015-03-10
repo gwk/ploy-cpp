@@ -5,19 +5,17 @@
 # this module defines initial versions of many core constructs;
 # some are imported into core, and others are replaced with more capable implementations.
 
-bind
+pub let
   # the 'macro' macro defines a new macro in the current environment.
   # because we cannot use macro to define itself, we must define it using raw forms.
   # note the structural similarity between the outer Fn form and the inner struct literal.
-  true # is-public.
   macro # name.
   (RUN # evaluate the Fn immediately, which returns a Func.
     (CONS Fn # Fn creates both functions and macros.
       true # is-native.
       true # is-macro.
       `[-sym -pars &body] # the parameter list, which does not get evaluated.
-      `(CONS Bind (CONS Arr-Expr # the body of the 'macro' macro is a Bind form.
-        true # is-public.
+      `(CONS Let (CONS Arr-Expr # the body of the 'macro' macro is a Bind form.
         sym # name.
         (CONS Fn # the value of the binding is created by evaluating the Fn form.
           true # is-native.
@@ -35,19 +33,15 @@ bind
     pars
     body)>
 
-<macro let [-sym -expr]
-  # private binding.
-  ~bind false ,sym ,expr;>
-
 # the raw forms are now available through macros.
 
 <macro scope [&body]
   ~(<fn [] ,*body>)>
 
 <macro let-fn [-sym -pars &body]
-  ~<let ,sym <fn ,pars <let ,sym self> ,*body>>>
+  ~let ,sym <fn ,pars let ,sym self; ,*body>;>
 
-<let alen cmpd-len> # for now use a simple alias.
+let alen cmpd-len; # for now use a simple alias.
 
 # math functions.
 
@@ -65,11 +59,11 @@ pub <let-fn error [-msg]
   ~(<fn ,pars ,*body>)>
 
 <macro cond [&exprs]
-  <let len (alen exprs)>
+  let len (alen exprs);
   if (ilt len 2) (error "degenerate cond form")
     <recur [-i=0]
-      <let pred (ael exprs i)>
-      <let then (ael exprs (iinc i))>
+      let pred (ael exprs i);
+      let then (ael exprs (iinc i));
       if (ieq (iadd i 2) len)
         ~if ,pred ,then void; # final if-else.
         if (ieq (iadd i 3) len)
@@ -84,13 +78,13 @@ pub <let-fn error [-msg]
   ~{<when (not ,condition) (error ,msg)> void}> # void foils TCO so that trace reveals test.
 
 <macro or [&exprs]
-  <let len (alen exprs)>
+  let len (alen exprs);
   <recur [-i=0]
     if (ieq i len) false
       ~if ,(ael exprs i) true ,(self (iinc i));;>>
 
 <macro and [&exprs]
-  <let len (alen exprs)>
+  let len (alen exprs);
   <recur [-i=0]
     if (ieq i len) true
       ~if ,(ael exprs i) ,(self (iinc i)) false;;>>
@@ -175,14 +169,14 @@ pub <let-fn iso [-a -b]
     (not (is-ref a)) false
     (is-data a) (data-ref-iso a b)
     (is-env a) false # environments have identity equality.
-    { <let len (cmpd-len a)>
+    { let len (cmpd-len a);
       <cond
         (ine len (cmpd-len b)) false
         (not len) true
-        { <let last (idec len)>
+        { let last (idec len);
           <recur [-i=0]
-            <let ai (cmpd-el a i)>
-            <let bi (cmpd-el b i)>
+            let ai (cmpd-el a i);
+            let bi (cmpd-el b i);
             <cond
               (ieq i last) (iso ai bi) # tail optimized.
               (not (iso ai bi)) false
@@ -202,8 +196,8 @@ pub <let-fn const2 [-val] <fn [-a -b] val>>
 
 <macro utest [-expectation &body]
   ~<scope
-    <let exp ,expectation>
-    <let act <scope ,*body>>
+    let exp ,expectation;
+    let act <scope ,*body>;
     <when (not-iso exp act)
       (errRSL 'expect:' exp)
       (errRSL 'actual:' act)
@@ -220,13 +214,13 @@ pub <let-fn const2 [-val] <fn [-a -b] val>>
 <let-fn transform-arr-by-el [-arr -by:Func]
   # by signature: [-val:Obj | -transformed-val:Obj].
   # transform must return an object whose type conforms to the element type.
-  <let type (type-of arr)>
-  <let el-type (.el-type (.kind type))>
-  <let len (alen arr)>
+  let type (type-of arr);
+  let el-type (.el-type (.kind type));
+  let len (alen arr);
   <recur [-i=0 -res=arr]
     if (ieq i len) res {
-      <let orig (ael arr i)>
-      <let derived (by orig)>
+      let orig (ael arr i);
+      let derived (by orig);
       <check (is-type-conforming (type-of derived) el-type)
         "transform-arr-by-el: transformed value type does not conform to el-type">
       (self (iinc i) if (is derived orig) res
@@ -249,8 +243,8 @@ pub <let-fn const2 [-val] <fn [-a -b] val>>
   (arr-copy-to (anew Arr-Obj len) arr (alen arr))>
 
 <let-fn arr-map [-arr -ret-type:Type -f]
-  <let l (alen arr)>
-  <let res (anew ret-type l)>
+  let l (alen arr);
+  let res (anew ret-type l);
   <recur [-i=0]
     if (ieq i l) res
       { (aput res i (f (ael arr i)))
@@ -264,15 +258,15 @@ pub <let-fn const2 [-val] <fn [-a -b] val>>
   # by signature: [-name:Sym -val:Obj | -transformed-val:Obj].
   # by must return an object whose type conforms to that of the field;
   # this requirement makes this function dependently typed.
-  <let type (type-of obj)>
-  <let fields (.fields (.kind type))>
-  <let len (cmpd-len obj)>
+  let type (type-of obj);
+  let fields (.fields (.kind type));
+  let len (cmpd-len obj);
   <recur [-i=0 -res=obj]
     if (ieq i len) res {
-      <let field (ael fields i)>
-      <let name (.name field)>
-      <let orig (cmpd-el obj i)>
-      <let derived (by name orig)>
+      let field (ael fields i);
+      let name (.name field);
+      let orig (cmpd-el obj i);
+      let derived (by name orig);
       <check (is-type-conforming (type-of derived) (.type field))
         "transform-struct: transformed value type does not conform to field">
       (self (iinc i) if (is derived orig) res
@@ -288,7 +282,7 @@ pub <let-fn const2 [-val] <fn [-a -b] val>>
   # note that the type of name is Expr, not Sym,
   # because the name of a derived type might be the expression used to derive it.
   # Type-kind is a union of the various Type-kind-*.
-  ~<let ,name (CONS Type `,name ,kind)>>
+  ~let ,name (CONS Type `,name ,kind);>
 
 <macro let-type-var [-name] ~<let-type ,name (CONS Type-kind-var)>>
 
@@ -299,8 +293,8 @@ pub <let-fn const2 [-val] <fn [-a -b] val>>
 <let-type-var V>
 
 <macro let-struct [-name &fields]
-  <let pars (arr-map fields Arr-Par <fn [-field]
-    (CONS Par (.name field) (.type field) (.expr field))>)>
+  let pars (arr-map fields Arr-Par <fn [-field]
+    (CONS Par (.name field) (.type field) (.expr field))>);
   ~<let-type ,name (CONS Type-kind-struct
       `,pars)>>
 
@@ -323,14 +317,14 @@ pub <let-fn const2 [-val] <fn [-a -b] val>>
 
 <let-fn list-grow [-list:List]
   <check (list-is-full list) "list should not grow unless arr is full">
-  <let len (.len list)>
-  <let cap if len (imul len 2) 2;>
+  let len (.len list);
+  let cap if len (imul len 2) 2;;
   (.=arr list (arr-resize (.arr list) cap))
   list>
 
 <let-fn list-append [-list:List -el:Obj]
   <when (list-is-full list) (list-grow list)>
-  <let index (.len list)>
+  let index (.len list);
   (.=len list (iinc index))
   (aput (.arr list) index el)
   list>
@@ -343,7 +337,7 @@ pub <let-fn const2 [-val] <fn [-a -b] val>>
       (self (iinc i))>>>
 
 <let-fn list-new [&els]
-  <let l (CONS List 0 (CONS Arr-Obj))>
+  let l (CONS List 0 (CONS Arr-Obj));
   <recur [-i=0]
     if (ieq i (alen els)) l
       { (list-append l (ael els i))
@@ -367,14 +361,14 @@ pub <let-fn const2 [-val] <fn [-a -b] val>>
 <let-fn list-dict-contains [-cmp:Func -dict:List -key:Obj]
   <recur [-i=0]
     if (ieq i (.len dict)) false
-      { <let e (list-el dict i)>
+      { let e (list-el dict i);
         if (cmp (.key e) key) true
           (self (iinc i));};>>
 
 <let-fn list-dict-fetch [-cmp:Func -dict:List -key:Obj]
   <recur [-i=0]
     if (ieq i (.len dict)) (CONS Dict-fetch false nil)
-      { <let e (list-el dict i)>
+      { let e (list-el dict i);
         if (cmp (.key e) key) (CONS Dict-fetch true (.val e))
           (self (iinc i));};>>
 
@@ -384,7 +378,7 @@ pub <let-fn const2 [-val] <fn [-a -b] val>>
   <recur [-i=0]
     if (ieq i (.len dict))
       { (list-append dict (CONS Dict-item key val)) true}
-      { <let e (list-el dict i)>
+      { let e (list-el dict i);
         if (cmp (.key e) key)
           { <when (not (cmp-val (.val e) val))
               (errL "list-dict-put: different value already exists for key")
@@ -397,16 +391,16 @@ pub <let-fn const2 [-val] <fn [-a -b] val>>
 <let-fn list-dict-memo [-cmp:Func -dict:List -key:Obj -val-fn:Func]
   # return val for key if already memoized;
   # otherwise evaluate val-fn, memoize result and return.
-  <let fetch (list-dict-fetch is dict key)>
+  let fetch (list-dict-fetch is dict key);
   if (.found fetch) (.val fetch)
-    { <let val (val-fn)>
+    { let val (val-fn);
       <check (is (list-dict-put cmp is dict key val) true) "list-dict-memo: put should be new">
       val};>
 
 <let-fn list-dict-new [&kv]
   # create a new list dictionary from interleaved key/val arguments.
   <check (not (imod (alen kv) 2)) "dangling key">
-  <let d (list-new)>
+  let d (list-new);
   <recur [-i=0]
     if (ieq i (alen kv)) d
       { (list-dict-put is is d (ael kv i) (ael kv (iinc i)))
@@ -416,14 +410,14 @@ pub <let-fn const2 [-val] <fn [-a -b] val>>
 
 <let-struct Type-deriv-key -type:Type -dict:List> # key type for type-deriv-memo.
 
-<let type-deriv-memo (list-dict-new)> # global type derivation memoizer.
+let type-deriv-memo (list-dict-new); # global type derivation memoizer.
 
 <let-fn derive-label [-derive-name:Func -label:Label -dict:List]
   # derive a label expr as part of a derived type name expr,
   # by making appropriate substitutions in the =expr portion of the label.
   (transform-struct label <fn [-n -v]
     if (is n `expr)
-      { <let fetch (list-dict-fetch is dict n)>
+      { let fetch (list-dict-fetch is dict n);
         if (.found fetch) (.val fetch) (derive-name v dict);}
       v;>)> # only transform label expr.
 
@@ -437,7 +431,7 @@ pub <let-fn const2 [-val] <fn [-a -b] val>>
   # derive a name expression from 'name by substituting appropriate values from 'dict.
   <cond
     (is-sym name) {
-      <let fetch (list-dict-fetch is dict name)>
+      let fetch (list-dict-fetch is dict name);
       if (.found fetch) (.name (.val fetch)) name;}
     (is-label name) (derive-label self name dict)
     (is-call name) (derive-call self name dict)
@@ -445,37 +439,37 @@ pub <let-fn const2 [-val] <fn [-a -b] val>>
 
 <let-fn derive-arr [-derive-type:Func -type:Type -dict:List]
   # derive an array type from an abstract type and a list-dict mapping type-vars to types.
-  <let n (.name type)>
-  <let k (.kind type)>
-  <let orig (.el-type k)>
-  <let derived (derive-type orig dict)>
+  let n (.name type);
+  let k (.kind type);
+  let orig (.el-type k);
+  let derived (derive-type orig dict);
   if (is derived orig) type
     (CONS Type (derive-name (.name type) dict) (CONS Type-kind-arr derived));>
 
 <let-fn derive-struct [-derive-type:Func -type:Type -dict:List]
   # derive a struct type from an abstract type and a list-dict mapping type-vars to types.
-  <let kind (.kind t)>
-  <let fields-orig (.fields kind)>
-  <let fields-derived (transform-arr-by-el fields-orig <fn [-e] (derive-type e dict)>)>
+  let kind (.kind t);
+  let fields-orig (.fields kind);
+  let fields-derived (transform-arr-by-el fields-orig <fn [-e] (derive-type e dict)>);
   if (is fields-derived fields) type
     (CONS Type (derive-name (.name type) dict) (CONS Type-kind-struct fields-derived));>
 
 <let-fn derive-union [-derive-type:Func -name:Expr -kind:Type-kind-union -dict-List]
   # derive a union type from an abstract type and a list-dict mapping type-vars to types.
-  <let kind (.kind t)>
-  <let variants-orig (.fields kind)>
-  <let variants-derived (transform-arr-by-el variants-orig <fn [-e] derive-type e dict>)>
+  let kind (.kind t);
+  let variants-orig (.fields kind);
+  let variants-derived (transform-arr-by-el variants-orig <fn [-e] derive-type e dict>);
   if (is fields-derived fields) type
     (CONS Type (derive-name (.name type) dict) (CONS Type-kind-union variants-derived));>
 
 <let-fn derive-type [-type:Type -dict:List]
   # derive a type from an abstract type and a list-dict mapping type var name syms to types.
   # NOTE: the list-dict must be in some canonical order or else memo fetch will fail.
-  <let key (CONS Type-deriv-key type dict)>
+  let key (CONS Type-deriv-key type dict);
   (list-dict-memo is type-deriv-memo key <fn []
-    <let n (.name type)>
-    <let k (.kind type)>
-    <let tk (type-of k)>
+    let n (.name type);
+    let k (.kind type);
+    let tk (type-of k);
     <cond
       (is tk Type-kind-unit) type
       (is tk Type-kind-prim) type
@@ -484,15 +478,15 @@ pub <let-fn const2 [-val] <fn [-a -b] val>>
       (is tk Type-kind-struct) (derive-struct derive-type type dict)
       (is tk Type-kind-union) (derive-union derive-type type dict)
       (is tk Type-kind-var) {
-        <let fetch (list-dict-fetch is dict n)>
+        let fetch (list-dict-fetch is dict n);
         # return either the replacement type val or the unreplaced var.
         if (.found fetch) (.val fetch) type;}
       (error "derive-type: unknown type kind")>>)>
 
 <macro let-generic [-local-name -name-expr -kind]
-  ~<let ,local-name (CONS Type `,name-expr ,kind)>>
+  ~let ,local-name (CONS Type `,name-expr ,kind);>
 
 <macro let-derived [-local-name -generic -var-sym -type-val]
-  ~<let ,local-name (derive-type ,generic (list-dict-new ,var-sym ,type-val))>>
+  ~let ,local-name (derive-type ,generic (list-dict-new ,var-sym ,type-val));>
 
 <let-generic Arr (Arr -E=E) (CONS Type-kind-arr E)>

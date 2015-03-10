@@ -1,7 +1,7 @@
 # Copyright 2014 George King.
 # Permission to use this file is granted in ploy/license.txt.
 
-<let depth 16>
+let depth 16;
 
 <let-fn gen-tree [-n -t]
   # generate a binary trie of zeros n branches deep.
@@ -16,6 +16,6 @@
     (iadd (self (ael t 0)) (self (ael t 1)));>
 
 
-<let leaf 1>
-<let t (gen-tree depth leaf)>
+let leaf 1;
+let t (gen-tree depth leaf);
 (outRL (sum-tree t))

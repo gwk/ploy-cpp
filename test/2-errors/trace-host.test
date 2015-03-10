@@ -10,7 +10,7 @@ trace:
   test/2-errors/trace-host.ploy:12:3:
       (h) # native call in non-tail position.
       ~~~
-  `{bind false i self; (h) void}
+  `{let i self; (h) void}
   test/2-errors/trace-host.ploy:15:1:
     (i)
     ~~~

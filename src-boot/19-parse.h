@@ -418,7 +418,7 @@ static Obj parse_expr_dispatch(Parser& p) {
   }
   if (isalpha(c)) {
     if (P_MATCH(2, "if"))   return parse_seq_wrapped(p, t_If, 2, "if", ';');
-    if (P_MATCH(4, "bind")) return parse_seq_wrapped(p, t_Bind, 4, "bind", ';');
+    if (P_MATCH(3, "let"))  return parse_seq_wrapped(p, t_Let, 3, "let", ';');
     if (P_MATCH(3, "pub"))  return parse_adj(p, t_Pub, 3, "pub");
     return parse_Sym(p);
   }

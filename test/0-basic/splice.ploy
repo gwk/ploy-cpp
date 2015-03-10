@@ -1,2 +1,2 @@
-<let x (CONS Arr-Int 1 2 3)>
+let x (CONS Arr-Int 1 2 3);
 (outRSL 0 *x)

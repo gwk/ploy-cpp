@@ -85,22 +85,17 @@ static Step run_Pub(Int d, Trace* t, Obj env, Obj code) {
 }
 
 
-static Step run_Bind(Int d, Trace* t, Obj env, Obj code) {
+static Step run_Let(Int d, Trace* t, Obj env, Obj code) {
   // owns env.
   assert(code.cmpd_len() == 1);
   Obj exprs = code.cmpd_el(0);
-  exc_check(exprs.cmpd_len() == 3, "Bind requires 3 fields; received %i", code.cmpd_len());
-  Obj is_public = exprs.cmpd_el(0);
-  Obj sym = exprs.cmpd_el(1);
-  Obj expr = exprs.cmpd_el(2);
-  exc_check(is_public.is_bool(), "Bind requires argument 2 to be a Bool; received: %o",
-    is_public);
-  exc_check(sym.is_sym(), "Bind requires argument 3 to be a bindable sym; received: %o",
-    sym);
-  exc_check(!sym.is_special_sym(), "Bind cannot bind to special sym: %o", sym);
+  exc_check(exprs.cmpd_len() == 2, "Let requires 2 fields; received %i", code.cmpd_len());
+  Obj sym = exprs.cmpd_el(0);
+  Obj expr = exprs.cmpd_el(1);
+  exc_check(sym.is_sym(), "Let requires argument 1 to be a bindable sym; received: %o", sym);
+  exc_check(!sym.is_special_sym(), "Let cannot bind to special sym: %o", sym);
   Step step = run(d, t, env, expr);
-  Obj env1 = bind_val(t, step.res.env, is_public.is_true_bool(), sym.ret_val(),
-    step.res.val.ret());
+  Obj env1 = bind_val(t, step.res.env, false, sym.ret_val(), step.res.val.ret());
   return Step(env1, step.res.val);
 }
 
@@ -692,7 +687,7 @@ static Step run_step_disp(Int d, Trace* t, Obj env, Obj code) {
 #define DISP(form) if (type == t_##form) return run_##form(d, t, env, code)
   DISP(Quo);
   DISP(Arr_Expr);
-  DISP(Bind);
+  DISP(Let);
   DISP(Pub);
   DISP(If);
   DISP(Fn);

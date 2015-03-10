@@ -1,0 +1,10 @@
+{
+  'code' : 1,
+  'err' : '''\
+symbol is already bound: `x
+trace:
+  test/2-errors/let-let.ploy:2:1:
+    let x 1;
+    ~~~~~~~~
+'''
+}

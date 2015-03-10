@@ -30,7 +30,7 @@
   <utest false (iso (CONS Arr-Int 1) (CONS Arr-Int 1 2))>>
 
 <scope # transform-arr-by-el.
-  <let o (CONS Arr-Int 0 1 2)> # original.
+  let o (CONS Arr-Int 0 1 2); # original.
   <utest true (is o (transform-arr-by-el o <fn [-e] e>))>
   <utest (CONS Arr-Int 0 2 3) (transform-arr-by-el o <fn [-e] if e (iinc e) e;>)>>
 
@@ -38,14 +38,14 @@
   <utest (CONS Arr-Int 2 3 4) (arr-map (CONS Arr-Int 1 2 3) Arr-Int <fn [-x] (iinc x)>)>>
 
 <scope # transform-struct.
-  <let o `-a:b=c> # original.
+  let o `-a:b=c; # original.
   <utest true (is o (transform-struct o <fn [-n -v] v>))>
   <utest `-n:b=c (transform-struct o <fn [-n -v] if (is n `name) `n v;>)>
   <utest `-a:t=c (transform-struct o <fn [-n -v] if (is n `type) `t v;>)>
   <utest `-a:b=e (transform-struct o <fn [-n -v] if (is n `expr) `e v;>)>>
 
 <scope # List.
-  <let l (list-new)>
+  let l (list-new);
   <utest false (list-contains is l `a)>
   <utest false (list-contains is l `d)>
   (list-append l `a)
@@ -59,7 +59,7 @@
   <utest false (list-contains is l `e)>>
 
 <scope # List as Set.
-  <let s (list-new)>
+  let s (list-new);
   (list-set-put is s `a)
   (list-set-put is s `b)
   <utest 2 (.len s)>
@@ -74,7 +74,7 @@
   <utest false (list-contains is s `c)>>
 
 <scope # List as Dict.
-  <let d (list-new)>
+  let d (list-new);
   (list-dict-put is is d `ka `va)
   (list-dict-put is is d `kb `vb)
   <utest 2 (.len d)>
