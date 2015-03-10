@@ -5,14 +5,15 @@
 
 <let-fn gen-tree [-n -t]
   # generate a binary trie of zeros n branches deep.
-  <if (not n) t
-  <do
-  (self (idec n) (CONS Arr-Int t t))>>>
+  if (not n)
+    t
+    (self (idec n) (CONS Arr-Int t t));>
 
 <let-fn sum-tree [-t]
   # walk a tree and add all of the leaves.
-  <if (is-int t) t
-    (iadd (self (ael t 0)) (self (ael t 1)))>>
+  if (is-int t)
+    t
+    (iadd (self (ael t 0)) (self (ael t 1)));>
 
 
 <let leaf 1>
