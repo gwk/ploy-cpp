@@ -1,0 +1,91 @@
+<scope # accessors.
+  <let l `-n:t=e>
+  <utest `n (.name l)>
+  <utest `t (.type l)>
+  <utest `e (.expr l)>>
+
+<scope # mutators.
+  <let l `-n:t=e>
+  <utest `-m:t=e (.=name l `m)>
+  <utest `-m:u=e (.=type l `u)>
+  <utest `-m:u=f (.=expr l `f)>>
+
+<scope # pub.
+  <pub f <fn [-x] x>>
+  <utest 1 (f 1)>>
+
+<scope # qua.
+  <let x 0>
+  <let y `x>
+  <utest 0 x>
+  <utest `x ~x>
+  <utest 0 ~,x>
+  <utest ``0 ~`,x>
+  <utest `~,x ~~,x>
+  <utest `~,0 ~~,,x>
+  <utest
+    `(CONS Arr-Expr x 0 `x `0 ~x ~,x ~,0 ~~,,x ~~,,0)
+    ~(CONS Arr-Expr x ,x `x `,x ~x ~,x ~,,x ~~,,x ~~,,,x)>
+  <utest `x ~,y>
+  <utest 0 (RUN ~,y)>>
+
+# arithmetic.
+
+<utest 0 (iadd 0 0)>
+<utest 0 (iadd 1 -1)>
+<utest 3 (iadd 1 2)>
+
+<utest 0 (isub 0 0)>
+<utest 0 (isub 1 1)>
+<utest 0 (isub -1 -1)>
+<utest -1 (isub 1 2)>
+<utest 1 (isub 2 1)>
+
+<utest 0 (imul 0 0)>
+<utest 0 (imul 0 1)>
+<utest -6 (imul 2 -3)>
+
+<utest 0 (idiv 0 1)>
+<utest 2 (idiv 5 2)>
+<utest 2 (idiv -5 -2)>
+<utest -2 (idiv -5 2)>
+<utest -2 (idiv 5 -2)>
+
+<utest 0 (ineg 0)>
+<utest 0 (ineg -0)>
+<utest -1 (ineg 1)>
+<utest 1 (ineg -1)>
+
+<utest 0 (iabs 0)>
+<utest 0 (iabs -0)>
+<utest 1 (iabs 1)>
+<utest 1 (iabs -1)>
+
+<utest 16 (ishl 1 4)>
+
+<utest 1 (ishr 16 4)>
+
+<scope # closure.
+  <let-fn f [-a]
+    <fn [-b]
+      (iadd a b)>>
+  <let f1 (f 1)>
+  <utest 3 (f1 2)>>
+
+<scope # fibonacci sequence.
+  <let-fn fib [-n]
+    <cond
+      (ieq n 0) 0
+      (ieq n 1) 1
+      <recur [-i=n -a=0 -b=1]
+        if (ieq i 1) b
+          (self (idec i) b (iadd a b));>>>
+
+  # 89 is the max value for 64 bit builds;
+  # 43 is the max for 32 bit builds.
+  <utest 433494437 (fib 43)>>
+
+<scope # RUN
+  <let x 1>
+  <utest 1 (RUN `x)>>
+

@@ -34,6 +34,9 @@
   <utest true (is o (transform-arr-by-el o <fn [-e] e>))>
   <utest (CONS Arr-Int 0 2 3) (transform-arr-by-el o <fn [-e] if e (iinc e) e;>)>>
 
+<scope # arr-map.
+  <utest (CONS Arr-Int 2 3 4) (arr-map (CONS Arr-Int 1 2 3) Arr-Int <fn [-x] (iinc x)>)>>
+
 <scope # transform-struct.
   <let o `-a:b=c> # original.
   <utest true (is o (transform-struct o <fn [-n -v] v>))>

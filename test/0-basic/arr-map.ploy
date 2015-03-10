@@ -1,1 +1,0 @@
-(outRL (arr-map (CONS Arr-Int 1 2 3) Arr-Int <fn [-x] (iinc x)>))

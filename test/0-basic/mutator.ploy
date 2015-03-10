@@ -1,2 +1,0 @@
-<let T (CONS Type `T `nil)>
-(outRL (.=name T `U))

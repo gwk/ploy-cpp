@@ -1,4 +1,0 @@
-{
-  'out' : 'hi! this is stdout.\n',
-  'err' : 'hi! this is stderr.\n',
-}
