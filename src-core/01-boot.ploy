@@ -73,7 +73,7 @@ bind
 
 <macro cond [&exprs]
   <let len (alen exprs)>
-  if (ilt len 2) (error "degenerate if form")
+  if (ilt len 2) (error "degenerate cond form")
     <recur [-i=0]
       <let pred (ael exprs i)>
       <let then (ael exprs (iinc i))>
