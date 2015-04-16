@@ -2,6 +2,8 @@
 # Permission to use this file is granted in ploy/license.txt.
 
 import string as _string
+import os as _os
+import os.path as _path
 import sys
 
 
@@ -175,6 +177,7 @@ def check_type(object, class_info):
     raise TypeError('expected type: {}; actual type: {};\n  object: {}'.format(
       class_info, type(object), repr(object)))
 
+
 # errors.
 
 def fail(*items, sep=''):
@@ -200,3 +203,64 @@ def checkS(condition, *items):
 
 def checkF(condition, fmt, *items, **keyed_items):
   if not condition: failF(fmt, *items, **keyed_items)
+
+
+# file system.
+
+def remove_dir_contents(path):
+  if _path.islink(path): raiseS(OSError, 'remove_dir_contents received symlink:', path)
+  l = _os.listdir(path)
+  for n in l:
+    p = _path.join(path, n)
+    if _path.isdir(p):
+      remove_dir_tree(p)
+    else:
+      _os.remove(p)
+
+
+def remove_dir_tree(path):
+  remove_dir_contents(path)
+  _os.rmdir(path)
+
+
+def _walk_all_paths_dirs_rec(paths, yield_files, yield_dirs, exts, hidden):
+  'generate file and dir paths after filtering.'
+  pairs = sorted(((1 if _path.isdir(p) else 0), p) for p in paths)
+  subs = []
+  for is_dir, p in pairs:
+    d, n = _path.split(p)
+    if not hidden and n.startswith('.'):
+      continue
+    if not is_dir: # file.
+      if yield_files and (exts is None or _path.splitext(n)[1] in exts):
+        yield p
+    else: # dir.
+      if yield_dirs:
+        yield p
+      subs.extend(_path.join(p, n) for n in _os.listdir(p))
+  if subs:
+    yield from _walk_all_paths_dirs_rec(subs, yield_files, yield_dirs, exts, hidden)
+
+
+def walk_all_paths_dirs(*paths, make_abs=False, yield_files=True, yield_dirs=True, exts=None,
+  hidden=False):
+  '''
+  generate file and dir paths,
+  after optionally filtering by file extension and/or hidden names (leading dot).
+  '''
+  assert not isinstance(exts, str) # should be a sequence of strings.
+  assert exts is None or all(e.startswith('.') for e in exts) # all extensions should begin with a dot.
+  norm_paths = (abs_path(p) for p in paths) if make_abs else paths
+  return _walk_all_paths_dirs_rec(norm_paths, yield_files, yield_dirs, exts, hidden)
+
+
+def walk_all_paths(*paths, make_abs=False, exts=None, hidden=False):
+  return walk_all_paths_dirs(*paths, make_abs=make_abs, yield_files=True, yield_dirs=False,
+    exts=exts, hidden=hidden)
+
+
+def walk_all_dirs(*paths, make_abs=False, exts=None, hidden=False):
+  return walk_all_paths_dirs(*paths, make_abs=make_abs, yield_files=False, yield_dirs=True,
+    exts=exts, hidden=hidden)
+
+

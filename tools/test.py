@@ -2,8 +2,6 @@
 # Copyright 2010 George King.
 # Permission to use this file is granted in ploy/license.txt.
 
-# forked from gloss python libs.
-# TODO: remove these dependencies.
 
 import ast
 import os
@@ -15,9 +13,8 @@ import string as _string
 import subprocess
 import sys
 
-import gloss_fork.arg as _arg
-import gloss_fork.fs as _fs
-import gloss_fork.ps as _ps
+import gloss_fork.arg as _arg # TODO: remove.
+import gloss_fork.ps as _ps # TODO: remove.
 
 from base import *
 
@@ -33,12 +30,12 @@ args = _arg.parse(
   _arg.Pattern('-timeout', type=int, help='subprocess timeout'),
   _arg.flag('-parse', help='parse test cases and exit'),
   _arg.flag('-fast',  help='exit on first error'),
-  _arg.flag('-debug', help='debug: do not catch errors (lets exceptions propagate; implies -fast)'),
+  _arg.flag('-dbg', help='debug mode: print extra info; propogate exceptions; implies -fast)'),
 
   paths=True,
 )
 
-dbg = args.debug
+dbg = args.dbg
 
 if dbg:
   fail_fast = True
@@ -214,9 +211,9 @@ def run_case(case_path, case):
   # setup directories.
   if dbg: errSL("setting up test directory:", test_dir)
   if _path.exists(test_dir):
-    _fs.remove_contents(test_dir)
+    remove_dir_contents(test_dir)
   else:
-    _fs.make_dirs(test_dir)
+    _os.makedirs(test_dir)
   # setup test values.
   if dbg: errLL(*('  {}: {}'.format(k, repr(v)) for k, v in sorted(case.items())))
 
@@ -316,7 +313,7 @@ def run_case(case_path, case):
   
 def read_case(test_path):
   'read the test file.'
-  with _fs.open_read(test_path) as f:
+  with open(test_path) as f:
     s = f.read()
   case = ast.literal_eval(s)
   check_type(case, dict)
@@ -368,11 +365,11 @@ def try_case(path):
 
 
 # setup
-if not _fs.exists(results_dir):
-  _fs.make_dirs(results_dir)
+if not _path.exists(results_dir):
+  _path.makedirs(results_dir)
 
 # parse and run tests
-for path in _fs.all_paths(*args.paths, exts=['.test']):
+for path in walk_all_paths(*args.paths, exts=('.test',)):
   if path == '<stdin>':
     errSL('reading test case from', path)
   try_case(path)
