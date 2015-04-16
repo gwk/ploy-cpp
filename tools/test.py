@@ -14,7 +14,6 @@ import string as _string
 import subprocess
 import sys
 
-import gloss_fork.ps as _ps # TODO: remove.
 
 from base import *
 
