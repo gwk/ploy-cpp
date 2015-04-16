@@ -15,18 +15,11 @@ import string as _string
 import subprocess
 import sys
 
-
 import gloss_fork.arg as _arg
 import gloss_fork.fs as _fs
 import gloss_fork.ps as _ps
 
-from gloss_fork.basic import *
-
-
-def set_defaults(d, defaults):
-  for k, v in defaults.items():
-    d.setdefault(k, v)
-  return d
+from base import *
 
 
 bar_width = 64
@@ -45,10 +38,14 @@ args = _arg.parse(
   paths=True,
 )
 
-if args.debug:
-  args.fast = True
-  push_vol_err('debug')
+dbg = args.debug
+
+if dbg:
+  fail_fast = True
   print("DEBUG")
+else:
+  fail_fast = args.fast
+
 
 def lex(string):
   return shlex.split(string)
@@ -107,14 +104,15 @@ def run_cmd(cmd, timeout, exp_code, in_path, out_path, err_path, env):
   'run a subprocess; return True if process completed and exit code matched expectation'
 
   # print verbose command info formatted as shell commands for manual repro
-  if env:
-    errSLI('env:', *['{}={};'.format(*p) for p in env.items()])
-  errSLI('cmd:', *(cmd + ['<{} # 1>{} 2>{}'.format(in_path, out_path, err_path)]))
+  if dbg:
+    if env:
+      errSL('env:', *['{}={};'.format(*p) for p in env.items()])
+    errSL('cmd:', *(cmd + ['<{} # 1>{} 2>{}'.format(in_path, out_path, err_path)]))
   
   # hacky, precautionary check to avoid weird overwrites; TODO: improve/remove?
   for word in cmd:
     if word in [out_path, err_path]:
-      errLW('WARNING: word in cmd is a standard output capture file path:', word)
+      errL('WARNING: word in cmd is a standard output capture file path:', word)
   
   # open outputs, create subprocess
   with open(in_path, 'r') as i, open(out_path, 'w') as o, open(err_path, 'w') as e:
@@ -143,7 +141,7 @@ def run_cmd(cmd, timeout, exp_code, in_path, out_path, err_path, env):
 
 def check_file_exp(path, mode, exp):
   'return True if file at path meets expectation.'
-  errFLD('check_file_exp: path: {}; mode: {}; exp: {}', path, mode, repr(exp))
+  if dbg: errFL('check_file_exp: path: {}; mode: {}; exp: {}', path, mode, repr(exp))
   try:
     with open(path) as f:
       val = f.read()
@@ -156,7 +154,8 @@ def check_file_exp(path, mode, exp):
     return True
   outFL('output file {} does not {} expectation:', repr(path), mode)
   for line in exp.split('\n'):
-    outL(sgr(GB), line, sgr(RG))
+    #outL(sgr(GB), line, sgr(RG))
+    outL(line)
   if mode == 'equal': # show a diff.
     exp_path = path + '-expected'
     with open(exp_path, 'w') as f: # write expectation to file.
@@ -189,10 +188,9 @@ def check_cmd(cmd, timeout, exp_code, exp_triples, in_path, std_file_prefix, env
 
 def make_exp_triples(test_dir, out_val, err_val, files, expand_fn):
   'each expectation is structured as (key, mode, expectation).'
-  errSLD("make_exp_triples:", out_val, err_val)
   exps  = { 'out' : out_val, 'err' : err_val }
   for k in exps:
-    checkS(k not in files, Error, 'file expectation shadowed by', k)
+    checkS(k not in files, 'file expectation shadowed by', k)
   set_defaults(exps, files)
   exp_triples = []
   for k, v in sorted(exps.items()):
@@ -201,7 +199,7 @@ def make_exp_triples(test_dir, out_val, err_val, files, expand_fn):
     if mode == 'equal':
       exp = expand_fn(exp)
     exp_triples.append((path, mode, exp))
-  errLLD('file exp triples:', *exp_triples)
+  if dbg: errLL('file exp triples:', *exp_triples)
   return exp_triples
 
 
@@ -209,26 +207,27 @@ def run_case(case_path, case):
   'execute the test at path in the current directory'
   outSL('executing:', case_path)
   # because we recreate the dir structure in the test results dir, parent dirs are forbidden.
-  checkS(case_path.find('..') == -1, Error, "case path cannot contain '..':", case_path)
+  checkS(case_path.find('..') == -1, "case path cannot contain '..':", case_path)
   src_dir, file_name = _path.split(case_path)
   case_name = _path.splitext(file_name)[0]
   test_dir = _path.join(results_dir, src_dir, case_name) # output directory.
   # setup directories.
-  errSLD("setting up test directory:", test_dir)
+  if dbg: errSL("setting up test directory:", test_dir)
   if _path.exists(test_dir):
     _fs.remove_contents(test_dir)
   else:
     _fs.make_dirs(test_dir)
   # setup test values.
-  errLLI(*('  {}: {}'.format(k, repr(v)) for k, v in sorted(case.items())))
+  if dbg: errLL(*('  {}: {}'.format(k, repr(v)) for k, v in sorted(case.items())))
 
   test_env_vars = {    
     'SRC_DIR' : src_dir,
     'COMPILER' : jsq(compiler or 'NO-COMPILER'),
     'INTERPRETER' : jsq(interpreter or 'NO-INTERPRETER'),
   }
-  errLI('test env vars:')
-  errLLI(*('  {}: {}'.format(k, repr(v)) for k, v, in sorted(test_env_vars.items())))
+  if dbg:
+    errL('test env vars:')
+    errLL(*('  {}: {}'.format(k, repr(v)) for k, v, in sorted(test_env_vars.items())))
 
   def expand(string):
     'test environment variable substitution; uses string template $ syntax.'
@@ -250,12 +249,13 @@ def run_case(case_path, case):
   else:
     in_path = '/dev/null'
 
-  errSLI('input path:', in_path)
+  if dbg: errSL('input path:', in_path)
 
   exp_code = case['code']
-  checkF(isinstance(exp_code, (int, bool)), Error, 'code {} has bad type:', repr(exp_code), type(exp_code))
+  checkF(isinstance(exp_code, (int, bool)), 'code {!r} has bad type: {!r}', exp_code, exp_code)
   timeout = case['timeout']
-  checkF(isinstance(timeout, int) and timeout > 0, Error, 'bad timeout: {}; type: {}', repr(timeout), type(timeout))
+  checkF(isinstance(timeout, int) and timeout > 0, 'bad timeout: {!r}; type: {}',
+    timeout, type(timeout))
   args, cmd, env, src_list = (expand_poly(case[k]) for k in ('args', 'cmd', 'env', 'src'))
   exp_triples = make_exp_triples(test_dir, case['out'], case['err'], case['files'], expand)
   
@@ -266,8 +266,8 @@ def run_case(case_path, case):
         base, ext = _path.splitext(n)
         return base == case_name and ext not in ('.test', '.h')
       src_list = [_path.join(src_dir, n) for n in all_files if is_src(n)]
-      errSLI('default src:', *src_list)
-      checkF(len(src_list) == 1, Error, 'test case name matches multiple source files: {}', src_list)
+      if dbg: errSL('default src:', *src_list)
+      checkF(len(src_list) == 1, 'test case name matches multiple source files: {}', src_list)
    
     _compiler = case.get('compiler')
     if not _compiler:
@@ -293,12 +293,12 @@ def run_case(case_path, case):
       _interpreter = case.get('interpreter')
       if not _interpreter:
         _interpreter = interpreter
-      checkS(len(src_list) == 1, Error, 'multiple interpreted sources:', src_list)
+      checkS(len(src_list) == 1, 'multiple interpreted sources:', src_list)
       cmd = [src_list[0]]
       checkS(_interpreter, 'no interpreter')
       cmd = _interpreter + cmd
 
-  check(cmd, Error, 'no cmd for execution test')
+  check(cmd, 'no cmd for execution test')
   
   # run test.
   ok = check_cmd(
@@ -322,7 +322,7 @@ def read_case(test_path):
   check_type(case, dict)
   for k in case:
     if k not in case_defaults:
-      errSLW('WARNING: bad test case key:', k)
+      errSL('WARNING: bad test case key:', k)
   set_defaults(case, case_defaults)
   return case
 
@@ -341,29 +341,29 @@ def try_case(path):
   try:
     case = read_case(path)
   except Exception as e:
-    errFLE('ERROR: could not read test case: {};\nexception: {}', path, e)
+    errFL('ERROR: could not read test case: {};\nexception: {}', path, e)
     skip_count += 1
-    if args.debug:
+    if dbg:
       raise
     else:
       return
   if case.get('ignore'):
-    errSLN('ignoring: ', path)
+    errSL('ignoring: ', path)
     ignore_count += 1
     return
   try:
     ok = run_case(path, case)
   except Exception as e:
-    errFLE('ERROR: could not run test case: {};\nexception: {}', path, e)
-    if args.debug:
+    errFL('ERROR: could not run test case: {};\nexception: {}', path, e)
+    if dbg:
       raise
     else:
       ok = False
   if not ok:
     fail_count += 1
     outL('=' * bar_width + '\n');
-    if args.fast:
-      errFLE('exiting fast.')
+    if fail_fast:
+      errFL('exiting fast.')
       sys.exit(1)
 
 
@@ -374,9 +374,9 @@ if not _fs.exists(results_dir):
 # parse and run tests
 for path in _fs.all_paths(*args.paths, exts=['.test']):
   if path == '<stdin>':
-    errSLN('reading test case from', path)
+    errSL('reading test case from', path)
   try_case(path)
-  errLI()
+  if dbg: errL()
 
 out('\n' + '#' * bar_width + '\nRESULTS: ')
 if not any([ignore_count, skip_count, fail_count]):
