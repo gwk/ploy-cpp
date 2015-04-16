@@ -3,6 +3,7 @@
 # Permission to use this file is granted in ploy/license.txt.
 
 
+import argparse
 import ast
 import os
 import os.path as _path
@@ -13,7 +14,6 @@ import string as _string
 import subprocess
 import sys
 
-import gloss_fork.arg as _arg # TODO: remove.
 import gloss_fork.ps as _ps # TODO: remove.
 
 from base import *
@@ -22,18 +22,16 @@ from base import *
 bar_width = 64
 results_dir = '_bld/test-results'
 
-args = _arg.parse(
-  'system test',
-  # compiler and interpreter options
-  _arg.Pattern('-compiler', help='compiler command string'),
-  _arg.Pattern('-interpreter', help='compiler command string'),
-  _arg.Pattern('-timeout', type=int, help='subprocess timeout'),
-  _arg.flag('-parse', help='parse test cases and exit'),
-  _arg.flag('-fast',  help='exit on first error'),
-  _arg.flag('-dbg', help='debug mode: print extra info; propogate exceptions; implies -fast)'),
+arg_parser = argparse.ArgumentParser(description='test harness for command line tools.')
+arg_parser.add_argument('-compiler', help='compiler command string')
+arg_parser.add_argument('-interpreter', help='compiler command string')
+arg_parser.add_argument('-timeout', type=int, help='subprocess timeout')
+arg_parser.add_argument('-parse', action='store_true', help='parse test cases and exit'),
+arg_parser.add_argument('-fast',  action='store_true', help='exit on first error'),
+arg_parser.add_argument('-dbg', action='store_true', help='debug mode: print extra info; propogate exceptions; implies -fast)'),
+arg_parser.add_argument('paths', nargs='*', help='test paths and/or directories to search')
 
-  paths=True,
-)
+args = arg_parser.parse_args()
 
 dbg = args.dbg
 
