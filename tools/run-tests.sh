@@ -8,7 +8,7 @@ interpreter=$1; shift
 
 cmd=$(echo $interpreter src-core/*) # expand wildcard inside string.
 
-# make sure that ploy can parse an empty file.
+# make sure that ploy can parse an empty file before running all tests.
 $cmd "test/0-basic/empty.ploy"
 
-tools/test.py -interpreters '.ploy' "$cmd" - "$@"
+tools/test.py -interpreter "$cmd" - "$@"

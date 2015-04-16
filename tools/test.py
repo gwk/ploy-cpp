@@ -30,8 +30,8 @@ results_dir = '_bld/test-results'
 args = _arg.parse(
   'system test',
   # compiler and interpreter options
-  _arg.Pattern('-compilers',     nargs='*', help='pairs of [source extension, command string]'),
-  _arg.Pattern('-interpreters',  nargs='*', help='pairs of [source extension, command string]'),
+  _arg.Pattern('-compiler', help='compiler command string'),
+  _arg.Pattern('-interpreter', help='compiler command string'),
   _arg.Pattern('-timeout', type=int, help='subprocess timeout'),
   _arg.flag('-parse', help='parse test cases and exit'),
   _arg.flag('-fast',  help='exit on first error'),
@@ -52,31 +52,8 @@ def jsq(words):
   'join lists with spaces, quoting elements.'
   return words if isinstance(words, str) else ' '.join(repr(w) for w in words)
 
-# known tools
-tools = {
-  'compilers' : {
-  },
-  'interpreters' : {
-    '.py'   : 'python3 -B',
-    '.sh'   : 'sh',
-    '.bash' : 'bash',
-  },
-}
-
-# update tools dict with command options.
-# t is the tool group key; d is the dict of ext : cmd pairs.
-for t, d in tools.items():
-  tool_args = args.args[t]
-  checkF(len(tool_args) % 2 == 0, Error, 'tool args must be specified as ".ext path" pairs; error in {}: {}', t, tool_args)
-  exts = tool_args[0::2]
-  paths = tool_args[1:2]
-  d.update(dict(zip(exts, paths))) # first add the custom tools specified on command line.
-  d.update({ k : lex(v) for k, v in d.items() }) # then lex the tool values for all items.
-  if d:
-    errLLI('{} ({}):'.format(t, len(d)), *('  {} : {}'.format(*p) for p in sorted(d.items())))
-  else:
-    errSLI('no', t)
-
+compiler = lex(args.compiler) if args.compiler else None
+interpreter = lex(args.interpreter) if args.interpreter else None
 
 # file checks
 
@@ -242,13 +219,9 @@ def run_case(case_path, case):
 
   test_env_vars = {    
     'SRC_DIR' : src_dir,
-    'COMPILER' : jsq(case['compiler'] or '[NO-COMPILER]'),
-    'INTERPRETER' : jsq(case['interpreter'] or '[NO-INTERPRETER]'),
+    'COMPILER' : jsq(compiler or 'NO-COMPILER'),
+    'INTERPRETER' : jsq(interpreter or 'NO-INTERPRETER'),
   }
-  for k, v in tools['compilers'].items():
-    test_env_vars['COMPILER_{}'.format(k[1:])] = jsq(v or '[NO-COMPILER]')
-  for k, v in tools['interpreters'].items():
-    test_env_vars['INTERPRETER_{}'.format(k[1:])] = jsq(v or '[NO-INTERPRETER]')
   errLI('test env vars:')
   errLLI(*('  {}: {}'.format(k, repr(v)) for k, v, in sorted(test_env_vars.items())))
 
@@ -272,6 +245,8 @@ def run_case(case_path, case):
   else:
     in_path = '/dev/null'
 
+  errSLI('input path:', in_path)
+
   exp_code = case['code']
   checkF(isinstance(exp_code, (int, bool)), Error, 'code {} has bad type:', repr(exp_code), type(exp_code))
   timeout = case['timeout']
@@ -279,54 +254,46 @@ def run_case(case_path, case):
   args, cmd, env, src_list = (expand_poly(case[k]) for k in ('args', 'cmd', 'env', 'src'))
   exp_triples = make_exp_triples(test_dir, case['out'], case['err'], case['files'], expand)
   
-  # defaults
-  if not (src_list or cmd): # find default sources
-    all_files = os.listdir(src_dir)
-    src_list = [_path.join(src_dir, n) for n in all_files if _path.base(n) == case_name and _path.ext(n) not in ('.test', '.h')]
-    errSLI('default src:', *src_list)
-    checkF(len(src_list) == 1, Error, 'test case name matches multiple source files: {}', src_list)
- 
-  if src_list and not cmd:
-    # choose default tools as necessary (results may be none depending on source type)
-    src_ext = _path.ext(src_list[0])
-    compiler = case.get('compiler')
-    if not compiler:
-      compiler = tools['compilers'].get(src_ext)
-      errSLI('default compiler:', compiler)
-
-    interpreter = case.get('interpreter')
-    if not interpreter:
-      interpreter = tools['interpreters'].get(src_ext)
-      errSLI('default interpreter:', interpreter)
-  errSLI('input path:', in_path)
-  # compile sources as necessary
-  #if compiler:
-  #  rel_src_list = [os.path.join(src_dir, s) for s in src_list]
-  #  compile_cmd = compiler + ['-o', name] + rel_src_list
-  #  ok = check_cmd(
-  #    compile_cmd,
-  #    timeout,
-  #    compile_exp,
-  #    self.compile_exps,
-  #    std_file_prefix=(test_dir + '/compile_'),
-  #    env=env
-  #  )
-  #  if errors or exp.startswith('compile'): return errors, 'compile' + res
-
   if not cmd:
-  # choose default command if necessary
-  #if compiler: # the compiled executable will be named after the test case; see execute()
-  #  self.cmd = ['./' + self.name]
-  #  n = 'compiled executable'
-  #else:
-    checkS(len(src_list) == 1, Error, 'multiple interpreted sources:', src_list)
-    cmd = [src_list[0]]
-    if interpreter: # use the interpreter on the source file
-      cmd = interpreter + cmd
-    errSLI('default cmd:', cmd)
+    if not src_list: # find default sources.
+      all_files = os.listdir(src_dir)
+      src_list = [_path.join(src_dir, n) for n in all_files if _path.base(n) == case_name and _path.ext(n) not in ('.test', '.h')]
+      errSLI('default src:', *src_list)
+      checkF(len(src_list) == 1, Error, 'test case name matches multiple source files: {}', src_list)
+   
+    src_ext = _path.ext(src_list[0])
+    _compiler = case.get('compiler')
+    if not _compiler:
+      _compiler = compiler
+
+    if _compiler:
+      fail("compilers not yet supported")
+      rel_src_list = [os.path.join(src_dir, s) for s in src_list]
+      compile_cmd = _compiler + ['-o', name] + rel_src_list
+      ok = check_cmd(
+        compile_cmd,
+        timeout,
+        compile_exp,
+        self.compile_exps,
+        std_file_prefix=(test_dir + '/compile_'),
+        env=env
+      )
+      if not ok or exp.startswith('compile'):
+        return ok
+      self.cmd = ['./' + self.name]
+
+    else:
+      _interpreter = case.get('interpreter')
+      if not _interpreter:
+        _interpreter = interpreter
+      checkS(len(src_list) == 1, Error, 'multiple interpreted sources:', src_list)
+      cmd = [src_list[0]]
+      checkS(_interpreter, 'no interpreter')
+      cmd = _interpreter + cmd
+
   check(cmd, Error, 'no cmd for execution test')
   
-  # run test
+  # run test.
   ok = check_cmd(
     cmd + args,
     timeout,
