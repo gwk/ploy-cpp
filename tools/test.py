@@ -5,24 +5,29 @@
 # forked from gloss python libs.
 # TODO: remove these dependencies.
 
+import ast
 import os
+import os.path as _path
 import re
-import subprocess
 import shlex
 import signal
+import string as _string
+import subprocess
 import sys
 
+
 import gloss_fork.arg as _arg
-import gloss_fork.dict_util as _d
-import gloss_fork.func as _func
-import gloss_fork.path as _path
 import gloss_fork.fs as _fs
-import gloss_fork.kv as _kv
 import gloss_fork.ps as _ps
-import gloss_fork.string as _string
 
 from gloss_fork.basic import *
-from gloss_fork.io.sgr import sgr, TR, TG, TB, TY, GR, GG, GB, GY, RT, RG
+
+
+def set_defaults(d, defaults):
+  for k, v in defaults.items():
+    d.setdefault(k, v)
+  return d
+
 
 bar_width = 64
 results_dir = '_bld/test-results'
@@ -188,7 +193,7 @@ def make_exp_triples(test_dir, out_val, err_val, files, expand_fn):
   exps  = { 'out' : out_val, 'err' : err_val }
   for k in exps:
     checkS(k not in files, Error, 'file expectation shadowed by', k)
-  _d.set_defaults(exps, files)
+  set_defaults(exps, files)
   exp_triples = []
   for k, v in sorted(exps.items()):
     path = os.path.join(test_dir, k)
@@ -205,12 +210,12 @@ def run_case(case_path, case):
   outSL('executing:', case_path)
   # because we recreate the dir structure in the test results dir, parent dirs are forbidden.
   checkS(case_path.find('..') == -1, Error, "case path cannot contain '..':", case_path)
-  src_dir, file_name = _path.split_dir(case_path)
-  case_name = _path.base(file_name)
+  src_dir, file_name = _path.split(case_path)
+  case_name = _path.splitext(file_name)[0]
   test_dir = _path.join(results_dir, src_dir, case_name) # output directory.
   # setup directories.
   errSLD("setting up test directory:", test_dir)
-  if _fs.exists(test_dir):
+  if _path.exists(test_dir):
     _fs.remove_contents(test_dir)
   else:
     _fs.make_dirs(test_dir)
@@ -227,11 +232,11 @@ def run_case(case_path, case):
 
   def expand(string):
     'test environment variable substitution; uses string template $ syntax.'
-    return _string.template(string, **test_env_vars) if string else string
+    t = _string.Template(string)
+    return t.substitute(**test_env_vars)
 
   def expand_poly(val):
-    'expand either a string or a list'
-    # TODO: document why this function does not always return a list??
+    'expand either a string or a list; polymorphic for ease of calling below.'
     if not val:
       return val
     if isinstance(val, str):
@@ -257,11 +262,13 @@ def run_case(case_path, case):
   if not cmd:
     if not src_list: # find default sources.
       all_files = os.listdir(src_dir)
-      src_list = [_path.join(src_dir, n) for n in all_files if _path.base(n) == case_name and _path.ext(n) not in ('.test', '.h')]
+      def is_src(n):
+        base, ext = _path.splitext(n)
+        return base == case_name and ext not in ('.test', '.h')
+      src_list = [_path.join(src_dir, n) for n in all_files if is_src(n)]
       errSLI('default src:', *src_list)
       checkF(len(src_list) == 1, Error, 'test case name matches multiple source files: {}', src_list)
    
-    src_ext = _path.ext(src_list[0])
     _compiler = case.get('compiler')
     if not _compiler:
       _compiler = compiler
@@ -308,12 +315,15 @@ def run_case(case_path, case):
 
   
 def read_case(test_path):
-  'read the test file'
-  case = dict(_kv.parse_kv_path(test_path))
+  'read the test file.'
+  with _fs.open_read(test_path) as f:
+    s = f.read()
+  case = ast.literal_eval(s)
+  check_type(case, dict)
   for k in case:
     if k not in case_defaults:
       errSLW('WARNING: bad test case key:', k)
-  _d.set_defaults(case, case_defaults)
+  set_defaults(case, case_defaults)
   return case
 
 
