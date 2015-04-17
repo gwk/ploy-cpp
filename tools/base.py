@@ -286,17 +286,18 @@ NULL = Marker('/dev/null')
 
 
 class SubprocessExpectation(Exception):
-  def __init__(self, cmd, return_code, expect):
-    super().__init__('Subprocess {} returned {}; expected {}'.format(cmd, return_code, expect))
+  def __init__(self, cmd, label, code_exp, code_act):
+    super().__init__('expected subprocess {} {} {}; received: {}'.format(
+      cmd, label, code_exp, code_act))
 
 
 _null_file = None
-def _transform_file(f):
-  global _null_file
+def _special_or_file(f):
   '''
   return the file, unless it is a special marker, in which case:
     - NULL: return opened /dev/null (reused).
   '''
+  global _null_file
   if f is NULL:
     if _null_file is None:
       _null_file = open('/dev/null', 'r+b') # read/write binary
@@ -308,101 +309,115 @@ def _decode(s):
   return s if s is None else s.decode('utf-8')
 
 
-def run_cmd(cmd, stdin, out, err, interpreter, shell, env):
+def run_cmd(cmd, stdin, out, err, env):
   '''
   run a command and return (exit_code, std_out, std_err).
+  the underlying Subprocess shell option is not supported
+  because the rules regarding splitting strings are complex.
+  user code is clearer by just specifying the complete sh command,
+  which is always split by shlex.split.
   '''
   if isinstance(cmd, str):
     cmd = _shlex.split(cmd)
 
-  if interpreter:
-    cmd = [interpreter] + cmd
-
   if isinstance(stdin, str):
-    f_in = _sp.PIPE
+    f_in = PIPE
     input_bytes = stdin.encode('utf-8')
   elif isinstance(stdin, bytes):
-    f_in = _sp.PIPE
+    f_in = PIPE
     input_bytes = stdin
   else:
-    f_in = _transform_file(stdin) # presume None, file, PIPE, or NULL
+    f_in = _special_or_file(stdin) # presume None, file, PIPE, or NULL.
     input_bytes = None
+
   p = _sp.Popen(
-    full_cmd,
+    cmd,
     stdin=f_in,
-    stdout=_transform_file(out),
-    stderr=_transform_file(err),
-    shell=shell,
+    stdout=_special_or_file(out),
+    stderr=_special_or_file(err),
+    shell=False,
     env=env
   )
   p_out, p_err = p.communicate(input_bytes)
   return p.returncode, _decode(p_out), _decode(p_err)
 
 
-def runCOE(cmd, stdin=None, interpreter=False, shell=False, env=None):
-  return run_cmd(cmd, stdin, _sp.PIPE, _sp.PIPE, interpreter, shell, env)
+def runCOE(cmd, stdin=None, env=None):
+  return run_cmd(cmd, stdin, PIPE, PIPE, env)
 
 
-def runC(cmd, stdin=None, out=None, err=None, interpreter=False, shell=False, env=None):
+def _check_output(exp, act):
+  if exp is None:
+    return
+  if isinstance(exp, bool):
+    if exp == bool(act):
+      return
+  else: # expect exact numeric code.
+    if exp == act:
+      return
+  raise SubprocessExpectation(cmd, 'return code', exp, act)
+
+
+def runC(cmd, stdin=None, out=None, err=None, env=None):
   'run a command and return exit code.'
-  assert out is not _sp.PIPE
-  assert err is not _sp.PIPE
-  c, o, e = run_cmd(cmd, stdin, out, err, interpreter, shell, env)
+  assert out is not PIPE
+  assert err is not PIPE
+  c, o, e = run_cmd(cmd, stdin, out, err, env)
   assert o is None
   assert e is None
   return c
 
 
-def runCO(cmd, stdin=None, err=None, interpreter=False, shell=False, env=None):
+def runCO(cmd, stdin=None, err=None, env=None):
   'run a command and return exit code, std out.'
-  assert err is not _sp.PIPE
-  c, o, e = run_cmd(cmd, stdin, _sp.PIPE, err, interpreter, shell, env)
+  assert err is not PIPE
+  c, o, e = run_cmd(cmd, stdin, PIPE, err, env)
   assert e is None
   return c, o
 
 
 
-def runCE(cmd, stdin=None, out=None, interpreter=False, shell=False, env=None):
+def runCE(cmd, stdin=None, out=None, env=None):
   'run a command and return exit code, std err.'
-  assert out is not _sp.PIPE
-  c, o, e = run_cmd(cmd, stdin, out, _sp.PIPE, interpreter, shell, env)
+  assert out is not PIPE
+  c, o, e = run_cmd(cmd, stdin, out, PIPE, env)
   assert o is None
   return c, e
 
 
-def _check_exp(c, cmd, exp):
+def _check_code(cmd, exp, act):
   if exp is None:
     return
   if isinstance(exp, bool):
-    if exp == bool(c):
+    if exp == bool(act):
       return
-  else: # expect exact numeric code
-    if exp == c:
+  else: # expect exact numeric code.
+    if exp == act:
       return
-  raise SubprocessExpectation(cmd, c, exp)
+  raise SubprocessExpectation(cmd, 'return code', exp, act)
 
 
-def runOE(cmd, stdin=None, interpreter=False, shell=False, env=None, exp=None):
+def runOE(cmd, stdin=None, env=None, exp=None):
   'run a command and return stdout, stderr as strings.'
-  c, o, e = run_cmd(cmd, stdin, _sp.PIPE, _sp.PIPE, interpreter, shell, env)
-  _check_exp(c, cmd, exp)
+  c, o, e = run_cmd(cmd, stdin, PIPE, PIPE, env)
+  _check_code(cmd, exp, act)
   return o, e
 
 
-def runO(cmd, stdin=None, err=None, interpreter=False, shell=False, env=None, exp=None):
+def runO(cmd, stdin=None, env=None, exp=None):
   'run a command and return stdout as a string.'
-  assert err is not _sp.PIPE
-  c, o, e = run_cmd(cmd, stdin, _sp.PIPE, err, interpreter, shell, env)
+  assert err is not PIPE
+  c, o, e = run_cmd(cmd, stdin, PIPE, err, env)
   assert e is None
-  _check_exp(c, cmd, exp)
+  _check_code(cmd, exp, act)
   return o
 
 
-def runE(cmd, stdin=None, out=None, interpreter=False, shell=False, env=None, exp=None):
+def runE(cmd, stdin=None, out=None, env=None, exp=None):
   'run a command and return stdout as a string.'
-  assert out is not _sp.PIPE
-  c, o, e = run_cmd(cmd, stdin, out, _sp.PIPE, interpreter, shell, env)
+  assert out is not PIPE
+  c, o, e = run_cmd(cmd, stdin, out, PIPE, env)
   assert o is None
-  _check_exp(c, cmd, exp)
+  _check_code(cmd, exp, act)
   return e
 

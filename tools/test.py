@@ -56,14 +56,11 @@ interpreter = lex(args.interpreter) if args.interpreter else None
 def compare_equal(exp, val):
   return exp == val
 
-def compare_contains(exp, val):
+def compare_contain(exp, val):
   return val.find(exp) != -1
 
 def compare_match(exp, val):
   return re.match(exp, val)
-
-def compare_search(exp, val):
-  return re.search(exp, val)
 
 def compare_ignore(exp, val):
   return True
@@ -71,9 +68,8 @@ def compare_ignore(exp, val):
 
 file_checks = {
   'equal'   : compare_equal,
-  'contain' : compare_contains,
+  'contain' : compare_contain,
   'match'   : compare_match,
-  'search'  : compare_search,
   'ignore'  : compare_ignore,
 }
 
@@ -148,22 +144,21 @@ def check_file_exp(path, mode, exp):
     return True
   outFL('output file {} does not {} expectation:', repr(path), mode)
   for line in exp.split('\n'):
-    #outL(sgr(GB), line, sgr(RG))
-    outL(line)
+    outL('\x1B[0;34m', line, '\x1B[0m') # blue text.
   if mode == 'equal': # show a diff.
     exp_path = path + '-expected'
     with open(exp_path, 'w') as f: # write expectation to file.
       f.write(exp)
     args = [exp_path, path]
-    diff_cmd = ['dl'] + args
+    diff_cmd = 'git diff --histogram --no-index --no-prefix --no-renames --exit-code --color'.split() + args
     outSL(*diff_cmd)
-    _ps.runC(diff_cmd, interpreter='sh')
+    runC(diff_cmd)
   else:
     outSL('cat', path)
     with open(path) as f:
       for line in f:
         l = line.rstrip('\n')
-        outL(sgr(GR), l, sgr(RG))
+        outL('\x1B[0;41m', l, '\x1B[0m') # red background.
         if not line.endswith('\n'):
           outL('(missing final newline)')
   outSL('-' * bar_width)
