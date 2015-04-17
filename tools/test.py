@@ -27,7 +27,7 @@ arg_parser.add_argument('-interpreter', help='compiler command string')
 arg_parser.add_argument('-timeout', type=int, help='subprocess timeout')
 arg_parser.add_argument('-parse', action='store_true', help='parse test cases and exit'),
 arg_parser.add_argument('-fast',  action='store_true', help='exit on first error'),
-arg_parser.add_argument('-dbg', action='store_true', help='debug mode: print extra info; propogate exceptions; implies -fast)'),
+arg_parser.add_argument('-dbg', action='store_true', help='debug mode: print extra info; propagate exceptions; implies -fast)'),
 arg_parser.add_argument('paths', nargs='*', help='test paths and/or directories to search')
 
 args = arg_parser.parse_args()

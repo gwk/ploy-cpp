@@ -290,36 +290,6 @@ class SubprocessExpectation(Exception):
     super().__init__('Subprocess {} returned {}; expected {}'.format(cmd, return_code, expect))
 
 
-def read_shebang(name_or_path):
-  '''
-  read the script shebang (e.g. "#!/usr/bin/env python3") from the beginning of a file.
-  TODO: add caching (requires converting name_or_path to an absolute path in case cwd changes?).
-  '''
-
-  if '/' in name_or_path:
-    path = name_or_path
-  else:
-    path = which(name_or_path)
-
-  with open(path) as f:
-    shebang = '#!'
-    magic = f.read(len(shebang))
-    if magic != shebang:
-      return None
-
-    interpreter = f.readline().strip()
-    return interpreter
-
-
-def _handle_script(cmd, interpreter):
-  'prepend the interpreter for the cmd if appropriate.'
-  if not interpreter:
-    return cmd
-  if not isinstance(interpreter, str): # interpreter is True
-    interpreter = read_shebang(cmd[0]) or 'sh'
-  return [interpreter] + cmd
-
-
 _null_file = None
 def _transform_file(f):
   global _null_file
@@ -345,7 +315,8 @@ def run_cmd(cmd, stdin, out, err, interpreter, shell, env):
   if isinstance(cmd, str):
     cmd = _shlex.split(cmd)
 
-  full_cmd = _handle_script(cmd, interpreter)
+  if interpreter:
+    cmd = [interpreter] + cmd
 
   if isinstance(stdin, str):
     f_in = _sp.PIPE
